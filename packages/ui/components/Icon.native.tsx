@@ -1,21 +1,24 @@
 import {
-  CircleHelp,
+  ArrowUpRight,
   Eye,
-  Facebook,
+  FacebookLogo,
   Globe,
-  Grid2x2,
   Heart,
-  Home,
-  Instagram,
-  LucideIcon,
-  Menu,
+  House,
+  InstagramLogo,
+  List,
+  MagnifyingGlass,
   Percent,
-  Search,
-  ShoppingCart,
+  Question,
+  ShoppingBag,
+  SquaresFour,
+  TrendUp,
   User,
-  Youtube,
-} from 'lucide-react-native'
+  YoutubeLogo,
+} from 'phosphor-react-native'
 import { colors, spacing } from '@real/tokens'
+
+export type IconWeight = 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
 
 export type IconName =
   | 'home'
@@ -31,38 +34,48 @@ export type IconName =
   | 'instagram'
   | 'facebook'
   | 'youtube'
+  | 'trending'
+  | 'trendArrow'
   | 'unknown'
 
-const ICON_BY_NAME: Record<IconName, LucideIcon> = {
-  home: Home,
-  categories: Grid2x2,
+type PhosphorComponent = React.ComponentType<{
+  size?: number
+  color?: string
+  weight?: IconWeight
+}>
+
+const ICON_BY_NAME: Record<IconName, PhosphorComponent> = {
+  home: House,
+  categories: SquaresFour,
   deals: Percent,
   account: User,
-  more: Menu,
+  more: List,
   wishlist: Heart,
-  cart: ShoppingCart,
-  search: Search,
+  cart: ShoppingBag,
+  search: MagnifyingGlass,
   quickView: Eye,
   language: Globe,
-  instagram: Instagram,
-  facebook: Facebook,
-  youtube: Youtube,
-  unknown: CircleHelp,
+  instagram: InstagramLogo,
+  facebook: FacebookLogo,
+  youtube: YoutubeLogo,
+  trending: TrendUp,
+  trendArrow: ArrowUpRight,
+  unknown: Question,
 }
 
 type IconProps = {
   name: IconName
   size?: number
   color?: string
-  strokeWidth?: number
+  weight?: IconWeight
 }
 
 export function Icon({
   name,
   size = spacing['16'],
   color = colors.textPrimary,
-  strokeWidth = 1.8,
+  weight = 'light',
 }: IconProps) {
   const Glyph = ICON_BY_NAME[name] ?? ICON_BY_NAME.unknown
-  return <Glyph size={size} color={color} strokeWidth={strokeWidth} />
+  return <Glyph size={size} color={color} weight={weight} />
 }
