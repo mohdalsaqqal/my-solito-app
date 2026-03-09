@@ -71,8 +71,9 @@ function ProductCardSkeleton({ width }: { width: number }) {
       <Box
         style={{
           gap: spacing.sm,
-          padding: spacing.sm,
-          paddingBottom: spacing.md,
+          paddingTop: spacing.sm,
+          paddingHorizontal: spacing['12'],
+          paddingBottom: spacing['12'],
         }}
       >
         <Box style={{ ...shimmer, height: 10, width: '40%' }} />
