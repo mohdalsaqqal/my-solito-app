@@ -5457,8 +5457,9 @@ __metadata:
     "@real/tokens": "npm:*"
     class-variance-authority: "npm:^0.7.1"
     clsx: "npm:^2.1.1"
-    lucide-react: "npm:^0.542.0"
-    lucide-react-native: "npm:^0.542.0"
+    moti: "npm:^0.30.0"
+    phosphor-react: "npm:^1.4.1"
+    phosphor-react-native: "npm:^2.2.1"
     react-native: "npm:0.81.4"
     react-native-svg: "npm:^15.12.1"
     tailwind-merge: "npm:^3.3.1"
@@ -16776,26 +16777,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lucide-react-native@npm:^0.542.0":
-  version: 0.542.0
-  resolution: "lucide-react-native@npm:0.542.0"
-  peerDependencies:
-    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-    react-native: "*"
-    react-native-svg: ^12.0.0 || ^13.0.0 || ^14.0.0 || ^15.0.0
-  checksum: 10/87cb9465825eea0dc5e44e5ed0b32f97d27f36063bc83a1abc859dd3c5383a38a736064e308bd2f78be76bfd3eae167cfe50aa943a13071b5712d54516d6663c
-  languageName: node
-  linkType: hard
-
-"lucide-react@npm:^0.542.0":
-  version: 0.542.0
-  resolution: "lucide-react@npm:0.542.0"
-  peerDependencies:
-    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-  checksum: 10/33a846d66ecf02332a75b4120f65cb5f7c025edf1591b11105392f81c20028674f6d0ef48152b2ff0700f2805d656b93abf7a308bba49abb6a801d4b87949319
-  languageName: node
-  linkType: hard
-
 "lucide-react@npm:^0.574.0":
   version: 0.574.0
   resolution: "lucide-react@npm:0.574.0"
@@ -19575,6 +19556,26 @@ __metadata:
   version: 2.6.1
   resolution: "pg-connection-string@npm:2.6.1"
   checksum: 10/882344a47e1ecf3a91383e0809bf2ac48facea97fcec0358d6e060e1cbcb8737acde419b4c86f05da4ce4a16634ee50fff1d2bb787d73b52ccbfde697243ad8a
+  languageName: node
+  linkType: hard
+
+"phosphor-react-native@npm:^2.2.1":
+  version: 2.3.1
+  resolution: "phosphor-react-native@npm:2.3.1"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-svg: "*"
+  checksum: 10/e0639e7d494db869a1db426c1538495661ce1044afa90fb0874b8f24400742ebfd14250c45e6f9e4b7fa475caf4a4d705a28e02df0678210965632b61d102a9a
+  languageName: node
+  linkType: hard
+
+"phosphor-react@npm:^1.4.1":
+  version: 1.4.1
+  resolution: "phosphor-react@npm:1.4.1"
+  peerDependencies:
+    react: ">=16"
+  checksum: 10/6ced12bcd268af6c87730f43512da6ea97588fc3f0d91090df4a825e1e83986df62e60052d6bda464eb23e67bbe859f52d5f98106402acb1758d787409dfe1df
   languageName: node
   linkType: hard
 
