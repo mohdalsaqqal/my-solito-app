@@ -1,4 +1,5 @@
 export * from './Button'
+export * from './StarRating'
 export * from './Card'
 export * from './Badge'
 export * from './Icon'
