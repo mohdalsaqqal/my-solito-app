@@ -328,20 +328,15 @@ export function ProductCard({
       <Card
         variant='flat'
         radiusKey='md'
-        style={
-          {
-            width,
-            gap: spacing.md,
-            padding: 0,
-            backgroundColor: colors.surface,
-            borderWidth: borderWidth.thin,
-            borderColor: colors.border,
-            transitionProperty: 'box-shadow, transform',
-            transitionDuration: `${motionDuration.hoverScale}ms`,
-            transitionTimingFunction: motionEasing.standard,
-            transform: hovered ? [{ translateY: 0 }] : [{ translateY: 0 }],
-          } as any
-        }
+        className="transition-[box-shadow,transform] duration-[400ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
+        style={{
+          width,
+          gap: spacing.md,
+          padding: 0,
+          backgroundColor: colors.surface,
+          borderWidth: borderWidth.thin,
+          borderColor: colors.border,
+        }}
       >
         <Box
           style={{
@@ -360,11 +355,8 @@ export function ProductCard({
                 backgroundColor: isBundle ? colors.surface : colors.backgroundSecondary,
                 opacity: disabled ? 0.55 : 1,
                 transform: hovered ? [{ scale: 1.02 }] : [{ scale: 1 }],
-                transitionProperty: 'transform',
-                transitionDuration: `${motionDuration.hoverScale}ms`,
-                transitionTimingFunction: motionEasing.standard,
-              } as any
-            }
+              }}
+            className="transition-transform duration-[400ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
           />
           {!disabled ? (
             <Box
@@ -377,11 +369,8 @@ export function ProductCard({
                   left: 0,
                   backgroundColor: colors.white,
                   opacity: isWeb && hovered ? 0.24 : 0,
-                  transitionProperty: 'opacity',
-                  transitionDuration: `${hoverFadeDuration}ms`,
-                  transitionTimingFunction: motionEasing.standard,
-                } as any
-              }
+                }}
+              className="transition-opacity duration-[300ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
             />
           ) : null}
 
@@ -481,21 +470,17 @@ export function ProductCard({
 
           {isWeb && !disabled ? (
             <Box
-              style={
-                {
-                  position: 'absolute',
-                  top: '50%',
-                  marginTop: -spacing['56'],
-                  start: spacing['16'],
-                  end: spacing['16'],
-                  gap: spacing['16'],
-                  opacity: hovered ? 1 : 0,
-                  transform: hovered ? [{ translateY: 0 }] : [{ translateY: spacing['8'] }],
-                  transitionProperty: 'opacity, transform',
-                  transitionDuration: `${hoverFadeDuration}ms`,
-                  transitionTimingFunction: motionEasing.standard,
-                } as any
-              }
+              style={{
+                position: 'absolute',
+                top: '50%',
+                marginTop: -spacing['56'],
+                start: spacing['16'],
+                end: spacing['16'],
+                gap: spacing['16'],
+                opacity: hovered ? 1 : 0,
+                transform: hovered ? [{ translateY: 0 }] : [{ translateY: spacing['8'] }],
+              }}
+              className="transition-[opacity,transform] duration-[300ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
             >
               <Touchable
                 disabled={!hovered}
@@ -688,21 +673,17 @@ export function ProductCard({
           <Touchable
             onPress={handleAddToCart}
             disabled={addState === 'loading'}
-            style={
-              {
-                minHeight: spacing['48'],
-                paddingHorizontal: spacing['16'],
-                backgroundColor: variant === 'flash' ? colors.primary : colors.black,
-                borderWidth: borderWidth.thin,
-                borderColor: variant === 'flash' ? colors.primary : colors.black,
-                borderRadius: radius.xs,
-                alignItems: 'center',
-                justifyContent: 'center',
-                transitionProperty: 'opacity, transform, background-color',
-                transitionDuration: `${motionDuration.microInteraction}ms`,
-                transitionTimingFunction: motionEasing.standard,
-              } as any
-            }
+            style={{
+              minHeight: spacing['48'],
+              paddingHorizontal: spacing['16'],
+              backgroundColor: variant === 'flash' ? colors.primary : colors.black,
+              borderWidth: borderWidth.thin,
+              borderColor: variant === 'flash' ? colors.primary : colors.black,
+              borderRadius: radius.xs,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            className="transition-[opacity,transform,background-color] duration-[300ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
           >
             <Text variant='caption' tone='inverse' weight='700' style={{ textTransform: 'uppercase' }}>
               {addButtonLabel}
