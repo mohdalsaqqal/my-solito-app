@@ -615,13 +615,13 @@ export function ProductCard({
             <Text
               variant='label'
               tone='muted'
-              weight='700'
+              weight='500'
               numberOfLines={1}
               style={{ textTransform: 'uppercase' }}
             >
               {item.brand}
             </Text>
-            <Text variant='bodySm' tone='muted' numberOfLines={2}>
+            <Text variant='bodySm' tone='default' numberOfLines={2}>
               {item.name}
             </Text>
             {resolvedSwatches.length > 0 ? (
@@ -649,12 +649,12 @@ export function ProductCard({
           </Box>
 
           {ratingValue !== null ? (
-            <StarRating value={ratingValue} reviewCount={reviewCount} size={12} />
+            <StarRating value={ratingValue} reviewCount={reviewCount} size={11} />
           ) : null}
 
           <Box style={{ gap: spacing.sm, minHeight: spacing['32'] }}>
             <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
-              <Text variant='price' size='3xl' tone='default' weight='700'>
+              <Text variant='price' tone='default' weight='700'>
                 {formatCurrency(item.price)}
               </Text>
               {compareAtPrice && hasDiscount ? (
