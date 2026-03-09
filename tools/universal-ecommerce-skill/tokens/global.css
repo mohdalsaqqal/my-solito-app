@@ -1,0 +1,328 @@
+/* ============================================================
+   Universal E-Commerce Design Tokens
+   Stack: Solito v5 + Uniwind (Tailwind v4) + RNR
+   ============================================================
+   Import in expo/global.css and next/app/globals.css:
+   
+   @import 'tailwindcss';
+   @import 'uniwind';
+   @source '../../packages/app';
+   @source '../../packages/ui';
+   
+   Then import this file:
+   @import '../../packages/ui/tokens/global.css';
+   ============================================================ */
+
+/* ────────────────────────────────────────────────────────────
+   1. TAILWIND THEME OVERRIDES
+   Customize the Tailwind scale for your design system
+   ──────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Typography */
+  --font-sans: "Inter", "system-ui", sans-serif;
+  --font-display: "Cal Sans", "Playfair Display", Georgia, serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Type Scale — mobile-first sizing */
+  --text-xs:   0.75rem;   /* 12px */
+  --text-sm:   0.875rem;  /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg:   1.125rem;  /* 18px */
+  --text-xl:   1.25rem;   /* 20px */
+  --text-2xl:  1.5rem;    /* 24px */
+  --text-3xl:  1.875rem;  /* 30px */
+  --text-4xl:  2.25rem;   /* 36px */
+  --text-5xl:  3rem;      /* 48px */
+
+  /* Spacing */
+  --spacing-px: 1px;
+  --spacing-0:  0;
+  --spacing-1:  0.25rem;
+  --spacing-2:  0.5rem;
+  --spacing-3:  0.75rem;
+  --spacing-4:  1rem;
+  --spacing-5:  1.25rem;
+  --spacing-6:  1.5rem;
+  --spacing-8:  2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+  --spacing-20: 5rem;
+  --spacing-24: 6rem;
+
+  /* Border Radius */
+  --radius-none: 0;
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-2xl:  1.25rem;
+  --radius-3xl:  1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm:  0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md:  0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg:  0 10px 15px -3px rgb(0 0 0 / 0.07), 0 4px 6px -4px rgb(0 0 0 / 0.04);
+  --shadow-xl:  0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04);
+  --shadow-card: 0 2px 8px 0 rgb(0 0 0 / 0.06), 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-card-hover: 0 8px 24px -4px rgb(0 0 0 / 0.12);
+
+  /* Brand Colors — override to match your brand */
+  --color-brand-50:  oklch(0.97 0.01 263);
+  --color-brand-100: oklch(0.93 0.03 263);
+  --color-brand-200: oklch(0.87 0.06 263);
+  --color-brand-300: oklch(0.78 0.10 263);
+  --color-brand-400: oklch(0.66 0.14 263);
+  --color-brand-500: oklch(0.55 0.18 263);
+  --color-brand-600: oklch(0.47 0.18 263);
+  --color-brand-700: oklch(0.39 0.15 263);
+  --color-brand-800: oklch(0.31 0.12 263);
+  --color-brand-900: oklch(0.24 0.08 263);
+}
+
+/* ────────────────────────────────────────────────────────────
+   2. SEMANTIC COLOR TOKENS (Light + Dark)
+   These map to Tailwind utilities automatically:
+   --color-background → bg-background, text-background
+   --color-primary    → bg-primary, text-primary, border-primary
+   ──────────────────────────────────────────────────────────── */
+
+@layer theme {
+  :root {
+    /* ══════════════════════════════════════
+       LIGHT THEME
+    ══════════════════════════════════════ */
+    @variant light {
+      /* Backgrounds */
+      --color-background:        oklch(1 0 0);          /* #ffffff */
+      --color-background-subtle: oklch(0.98 0 0);       /* #fafafa */
+      --color-card:              oklch(1 0 0);           /* #ffffff */
+      --color-card-hover:        oklch(0.97 0 0);       /* #f7f7f7 */
+      --color-popover:           oklch(1 0 0);
+
+      /* Text */
+      --color-foreground:        oklch(0.09 0 0);       /* ~#171717 */
+      --color-foreground-secondary: oklch(0.4 0 0);    /* ~#666 */
+      --color-muted-foreground:  oklch(0.55 0 0);      /* ~#8a8a8a */
+      --color-placeholder:       oklch(0.7 0 0);
+
+      /* Muted surfaces */
+      --color-muted:             oklch(0.96 0 0);       /* ~#f4f4f4 */
+      --color-muted-hover:       oklch(0.93 0 0);
+
+      /* Borders */
+      --color-border:            oklch(0.9 0 0);        /* ~#e5e5e5 */
+      --color-border-strong:     oklch(0.82 0 0);       /* ~#d1d1d1 */
+      --color-input:             oklch(0.9 0 0);
+
+      /* Primary CTA — customize to brand color */
+      --color-primary:           oklch(0.09 0 0);       /* Black (luxury default) */
+      --color-primary-foreground: oklch(1 0 0);         /* White text on primary */
+      --color-primary-hover:     oklch(0.18 0 0);
+
+      /* Secondary */
+      --color-secondary:         oklch(0.96 0 0);
+      --color-secondary-foreground: oklch(0.09 0 0);
+
+      /* Accent (hover highlights) */
+      --color-accent:            oklch(0.96 0 0);
+      --color-accent-foreground: oklch(0.09 0 0);
+
+      /* Semantic */
+      --color-destructive:       oklch(0.53 0.2 27.3);  /* Red */
+      --color-destructive-foreground: oklch(1 0 0);
+      --color-success:           oklch(0.46 0.15 162);  /* Green */
+      --color-success-foreground: oklch(1 0 0);
+      --color-warning:           oklch(0.73 0.16 70);   /* Amber */
+      --color-warning-foreground: oklch(0.15 0 0);
+
+      /* E-Commerce Specific */
+      --color-sale:              oklch(0.53 0.2 27.3);  /* Sale price red */
+      --color-sale-bg:           oklch(0.97 0.04 27.3); /* Sale badge bg */
+      --color-rating:            oklch(0.73 0.16 70);   /* Star yellow */
+      --color-badge-new:         oklch(0.46 0.15 240);  /* New badge blue */
+      --color-badge-new-bg:      oklch(0.95 0.04 240);
+      --color-badge-popular:     oklch(0.58 0.15 43);   /* Popular badge */
+      --color-badge-popular-bg:  oklch(0.96 0.04 43);
+
+      /* Ring (focus indicator) */
+      --color-ring:              oklch(0.09 0 0);
+    }
+
+    /* ══════════════════════════════════════
+       DARK THEME
+    ══════════════════════════════════════ */
+    @variant dark {
+      /* Backgrounds */
+      --color-background:        oklch(0.09 0 0);       /* ~#171717 */
+      --color-background-subtle: oklch(0.12 0 0);       /* ~#1f1f1f */
+      --color-card:              oklch(0.12 0 0);        /* ~#1f1f1f */
+      --color-card-hover:        oklch(0.15 0 0);       /* ~#262626 */
+      --color-popover:           oklch(0.12 0 0);
+
+      /* Text */
+      --color-foreground:        oklch(0.98 0 0);       /* ~#fafafa */
+      --color-foreground-secondary: oklch(0.72 0 0);   /* ~#b8b8b8 */
+      --color-muted-foreground:  oklch(0.55 0 0);      /* ~#8a8a8a */
+      --color-placeholder:       oklch(0.4 0 0);
+
+      /* Muted surfaces */
+      --color-muted:             oklch(0.16 0 0);       /* ~#292929 */
+      --color-muted-hover:       oklch(0.20 0 0);
+
+      /* Borders */
+      --color-border:            oklch(0.22 0 0);       /* ~#383838 */
+      --color-border-strong:     oklch(0.32 0 0);       /* ~#525252 */
+      --color-input:             oklch(0.22 0 0);
+
+      /* Primary */
+      --color-primary:           oklch(0.98 0 0);       /* White on dark */
+      --color-primary-foreground: oklch(0.09 0 0);      /* Black text */
+      --color-primary-hover:     oklch(0.90 0 0);
+
+      /* Secondary */
+      --color-secondary:         oklch(0.16 0 0);
+      --color-secondary-foreground: oklch(0.98 0 0);
+
+      /* Accent */
+      --color-accent:            oklch(0.16 0 0);
+      --color-accent-foreground: oklch(0.98 0 0);
+
+      /* Semantic */
+      --color-destructive:       oklch(0.63 0.24 27.3);
+      --color-destructive-foreground: oklch(1 0 0);
+      --color-success:           oklch(0.56 0.17 162);
+      --color-success-foreground: oklch(1 0 0);
+      --color-warning:           oklch(0.78 0.16 70);
+      --color-warning-foreground: oklch(0.15 0 0);
+
+      /* E-Commerce Specific (dark variants) */
+      --color-sale:              oklch(0.7 0.22 27.3);
+      --color-sale-bg:           oklch(0.16 0.06 27.3);
+      --color-rating:            oklch(0.78 0.16 70);
+      --color-badge-new:         oklch(0.68 0.15 240);
+      --color-badge-new-bg:      oklch(0.15 0.05 240);
+      --color-badge-popular:     oklch(0.72 0.14 43);
+      --color-badge-popular-bg:  oklch(0.16 0.04 43);
+
+      /* Ring */
+      --color-ring:              oklch(0.6 0 0);
+    }
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   3. PLATFORM-SPECIFIC FONT TOKENS
+   ──────────────────────────────────────────────────────────── */
+
+@layer theme {
+  :root {
+    @media ios {
+      --font-sans: "-apple-system", "SF Pro Text", "Helvetica Neue";
+      --font-display: "SF Pro Display", "-apple-system";
+    }
+    @media android {
+      --font-sans: "Roboto", "Google Sans", sans-serif;
+      --font-display: "Google Sans", "Roboto", sans-serif;
+    }
+    @media web {
+      --font-sans: "Inter", "system-ui", sans-serif;
+      --font-display: "Cal Sans", "Inter", sans-serif;
+    }
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   4. CUSTOM TAILWIND UTILITIES
+   ──────────────────────────────────────────────────────────── */
+
+@utility h-hairline {
+  height: hairlineWidth();
+}
+
+@utility w-hairline {
+  width: hairlineWidth();
+}
+
+/* Safe area padding — native only, web ignored */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 24px);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 44px);
+}
+
+/* Product card aspect ratio */
+@utility aspect-product {
+  aspect-ratio: 3/4;
+}
+
+/* Product image (square) */
+@utility aspect-product-square {
+  aspect-ratio: 1/1;
+}
+
+/* Full bleed on mobile */
+@utility bleed-x {
+  margin-left: calc(var(--spacing-4) * -1);
+  margin-right: calc(var(--spacing-4) * -1);
+}
+
+/* ────────────────────────────────────────────────────────────
+   5. COMPONENT-LEVEL CSS CLASSES
+   These use light-dark() for automatic theme handling
+   ──────────────────────────────────────────────────────────── */
+
+/* Product badge system */
+.badge-sale {
+  background-color: light-dark(oklch(0.97 0.04 27.3), oklch(0.16 0.06 27.3));
+  color: light-dark(oklch(0.53 0.2 27.3), oklch(0.7 0.22 27.3));
+}
+
+.badge-new {
+  background-color: light-dark(oklch(0.95 0.04 240), oklch(0.15 0.05 240));
+  color: light-dark(oklch(0.46 0.15 240), oklch(0.68 0.15 240));
+}
+
+.badge-popular {
+  background-color: light-dark(oklch(0.96 0.04 43), oklch(0.16 0.04 43));
+  color: light-dark(oklch(0.58 0.15 43), oklch(0.72 0.14 43));
+}
+
+.badge-out {
+  background-color: light-dark(oklch(0.96 0 0), oklch(0.16 0 0));
+  color: light-dark(oklch(0.55 0 0), oklch(0.5 0 0));
+}
+
+/* ────────────────────────────────────────────────────────────
+   6. STATIC VARIABLES (accessible via useCSSVariable)
+   Values used in JS logic, not className
+   ──────────────────────────────────────────────────────────── */
+
+@theme static {
+  /* Layout constants */
+  --nav-height: 64;
+  --nav-height-mobile: 56;
+  --tab-bar-height: 83;
+  --product-card-min-width: 160;
+
+  /* Animation durations (ms) */
+  --animation-fast: 150;
+  --animation-base: 200;
+  --animation-slow: 350;
+  --animation-spring: 400;
+
+  /* Cart */
+  --cart-max-width: 420;
+
+  /* Z-index scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-drawer: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+}

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Audit Log - Real Cosmetics Admin</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec1313",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221010",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex">
+<!-- Sidebar -->
+<aside class="w-[260px] h-screen sticky top-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+<div class="p-6 flex flex-col gap-8 h-full">
+<!-- Brand -->
+<div class="flex items-center gap-3">
+<div class="bg-primary/10 rounded-lg p-2 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">auto_awesome</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-slate-900 dark:text-white text-base font-bold leading-none">Real Cosmetics</h1>
+<p class="text-slate-500 dark:text-slate-400 text-xs mt-1">Admin UI System</p>
+</div>
+</div>
+<!-- Nav -->
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings_input_component</span>
+<span class="text-sm font-medium">Operations</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors ml-6 border-l-2 border-slate-200 dark:border-slate-700" href="#">
+<span class="text-sm font-medium">Audit Log</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="text-sm font-medium">Marketing</span>
+</a>
+</nav>
+<!-- Footer Nav -->
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<div class="flex items-center gap-3 px-3 py-4 mt-2">
+<div class="size-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/10">
+<img class="w-full h-full object-cover" data-alt="Admin user profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApjm2Rc8W2YH_d48hoJnP4uvgxd9QG0HIvnZFeubJgm30W5GoqLrpOo-Dn2K9Z3b_gfd3KOjJLTDMVqKsiJPRqCbBpkIowWJn0KRbfAnbAYk3IUFCLd8DuLoT23RQJf019ZuqTPDbIeRst6jeww9Z6jsSbmUDD3hY7Hyk8_PEN_JnbdqStdoh3Ckr7JzJQc5XxQutrrByyjKDgIp4x_ldqIu_x3wKExyCpz8FO5PGbwAi3Z6QTgkNLvyY4_WLmKhhOuMZurG9YPMc"/>
+</div>
+<div class="flex flex-col">
+<p class="text-sm font-semibold">Alex Admin</p>
+<p class="text-xs text-slate-500">Super Admin</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 min-w-0">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-8 flex items-center justify-between sticky top-0 z-10">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-full max-w-md">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-slate-700 transition-all" placeholder="Search audit events..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="size-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="size-10 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+</header>
+<!-- Page Container -->
+<div class="max-w-[1280px] mx-auto p-8">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+<a class="hover:text-primary" href="#">Operations</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-200 font-medium">Audit Log</span>
+</nav>
+<!-- Page Header -->
+<div class="flex flex-col gap-2 mb-8">
+<h2 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Operations Audit Log</h2>
+<p class="text-slate-500 dark:text-slate-400">Review and track system-wide administrative actions and security events.</p>
+</div>
+<!-- Action Row / Filters -->
+<div class="flex flex-wrap items-center gap-3 mb-8 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-2">
+<span class="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Active Filters:</span>
+</div>
+<!-- Filter Chips -->
+<div class="flex flex-wrap gap-2">
+<div class="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg text-sm font-medium text-primary">
+<span>User: <span class="font-bold">Alex Admin</span></span>
+<button class="material-symbols-outlined text-sm hover:bg-primary/20 rounded-full p-0.5">close</button>
+</div>
+<div class="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg text-sm font-medium text-primary">
+<span>Domain: <span class="font-bold">Marketing</span></span>
+<button class="material-symbols-outlined text-sm hover:bg-primary/20 rounded-full p-0.5">close</button>
+</div>
+<div class="flex items-center gap-2 bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-lg text-sm font-medium text-primary">
+<span>Date: <span class="font-bold">Last 30 Days</span></span>
+<button class="material-symbols-outlined text-sm hover:bg-primary/20 rounded-full p-0.5">close</button>
+</div>
+</div>
+<button class="ml-2 text-slate-500 hover:text-primary text-sm font-semibold flex items-center gap-1 transition-colors group">
+<span class="material-symbols-outlined text-lg group-hover:rotate-180 transition-transform">refresh</span>
+                        Clear Filters
+                    </button>
+<div class="ml-auto">
+<button class="flex items-center gap-2 bg-slate-900 dark:bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">download</span>
+                            Export CSV
+                        </button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Timestamp</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Action</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Domain</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">IP Address</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Oct 24, 2023</span>
+<span class="text-xs text-slate-500 italic">14:22:15 PM</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Small user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLaDfG4tcl-rW2nIeGQTDakf_GZ01g326vYAMKhRK2mxqtuDX0sPRC6S1XLFmXOrzebSyIsrXTPkn2IEr8xS7_qQO_6dFO5nUYCnO17dzNUEV2rsRORNK6vs4VMhoFTOeWbgDoDlbK02nM2ORAeWmQVZlq34KzS6qoEt2q5LMAyE3QTD6CAq4bu91NoZVZQo5jYrXv3A_r93hQBIIxiuxn23Cv9aLDEcIpUmxsiVS3wYTNvNYuNQpeq53uY_H9YtRt8jmJv_vKs0Y"/>
+</div>
+<span class="text-sm font-semibold">Alex Admin</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-bold">UPDATE_CAMPAIGN</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Marketing</span>
+</td>
+<td class="px-6 py-4">
+<code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">192.168.1.142</code>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+<span class="size-2 rounded-full bg-green-500"></span>
+                                        SUCCESS
+                                    </span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex flex-col">
+<span class="text-sm font-medium text-slate-900 dark:text-slate-200">Oct 23, 2023</span>
+<span class="text-xs text-slate-500 italic">09:15:44 AM</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Small user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhLpJiddWIguPyODGrg8bBdmCIGh_4wumDuTXcduTK8XKPCzYu5g9wNw1VIoMPG1oCl2BLG42rYaZ08qCHoaDLITaGKsWsKNjUmCKUtKlu9J8egkh6imH3ewzUV6oUulROugTRP9XgFOJKd_2WUd3lpmC8Wgbkq2XNb6b1j4On-kDbRFcFWYy6q4znqUAV_ncXaj_DbkpV6NWHCUeQQAHIfO3sYI_x4Z0ZoEPXgUh7mhegvtQD6cLMF95scbhkhjH31tCUTJJWymE"/>
+</div>
+<span class="text-sm font-semibold">Alex Admin</span>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-bold">DELETE_AD_SET</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400 font-medium">Marketing</span>
+</td>
+<td class="px-6 py-4">
+<code class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">192.168.1.142</code>
+</td>
+<td class="px-6 py-4 text-right">
+<span class="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+<span class="size-2 rounded-full bg-green-500"></span>
+                                        SUCCESS
+                                    </span>
+</td>
+</tr>
+<!-- Skeleton Loader Row (Loading State) -->
+<tr class="opacity-50 pointer-events-none">
+<td class="px-6 py-4"><div class="h-4 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div></td>
+<td class="px-6 py-4"><div class="h-8 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div></td>
+<td class="px-6 py-4"><div class="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div></td>
+<td class="px-6 py-4"><div class="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div></td>
+<td class="px-6 py-4"><div class="h-6 w-24 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div></td>
+<td class="px-6 py-4 text-right"><div class="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded ml-auto animate-pulse"></div></td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<p class="text-xs font-medium text-slate-500">Showing 1 to 2 of 142 results</p>
+<div class="flex items-center gap-2">
+<button class="size-8 flex items-center justify-center rounded border border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="size-8 flex items-center justify-center rounded bg-primary text-white text-xs font-bold">1</button>
+<button class="size-8 flex items-center justify-center rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-xs font-bold">2</button>
+<button class="size-8 flex items-center justify-center rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-xs font-bold">3</button>
+<button class="size-8 flex items-center justify-center rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Domain Insights (Additional Context) -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-3 mb-4 text-slate-500">
+<span class="material-symbols-outlined text-primary">analytics</span>
+<span class="text-sm font-bold uppercase tracking-wider">Filtered Volume</span>
+</div>
+<p class="text-2xl font-black mb-1">142 Events</p>
+<p class="text-xs text-green-600 font-bold">+12% from previous period</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-3 mb-4 text-slate-500">
+<span class="material-symbols-outlined text-primary">security</span>
+<span class="text-sm font-bold uppercase tracking-wider">Top Action</span>
+</div>
+<p class="text-2xl font-black mb-1">Update Campaign</p>
+<p class="text-xs text-slate-500 font-medium">84 occurrences (59%)</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center gap-3 mb-4 text-slate-500">
+<span class="material-symbols-outlined text-primary">error</span>
+<span class="text-sm font-bold uppercase tracking-wider">Failures</span>
+</div>
+<p class="text-2xl font-black mb-1">0 Events</p>
+<p class="text-xs text-slate-500 font-medium">Clean run in filtered set</p>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

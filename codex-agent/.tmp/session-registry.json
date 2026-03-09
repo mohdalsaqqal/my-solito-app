@@ -1,0 +1,15 @@
+{
+  "activeSessionId": "s-001",
+  "defaultEngine": "wsl",
+  "rows": [
+    {
+      "id": "s-001",
+      "label": "WSL s-001",
+      "engine": "wsl",
+      "repoPath": "/mnt/c/Users/hamoo/Downloads/solito v5 docs/my-solito-app",
+      "createdAt": "2026-03-02T20:22:16.320Z",
+      "lastUsedAt": "2026-03-03T07:43:21.690Z",
+      "promptCount": 5
+    }
+  ]
+}

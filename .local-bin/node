@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /mnt/c/Users/hamoo/AppData/Local/nvm/v20.20.0/node.exe "$@"

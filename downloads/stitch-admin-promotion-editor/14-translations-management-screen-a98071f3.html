@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Translations Management Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#191919",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden lg:flex flex-col sticky top-0 h-screen">
+<div class="p-6 flex flex-col h-full">
+<div class="flex items-center gap-3 mb-8">
+<div class="size-10 rounded-full bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">auto_fix_high</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm font-bold leading-tight">Real Cosmetics</h1>
+<p class="text-xs text-slate-500">Admin Console</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 grow">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">inventory_2</span>
+<span class="text-sm font-medium">Products</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+<span class="text-sm font-medium">Orders</span>
+</a>
+<div class="h-px bg-slate-200 dark:bg-slate-800 my-2"></div>
+<a class="flex items-center gap-3 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-primary dark:text-white rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1">translate</span>
+<span class="text-sm font-medium">Localization</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-6 border-t border-slate-200 dark:border-slate-800 flex items-center gap-3">
+<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-700" data-alt="User avatar profile picture" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDILe7wVv1ntTOyLzOoS8c1mc23H_FyTqpHjHGJUpfEN7fmmNccqiRaUsFNE4JW7kUrTv40FMI1h7YbtOdSgX2J0m2juDgxNHXnuyqFT5E6qdz19D5iIPyc1L5OmoV5AFR88nm_Jcw7ALkvt1md4r19spy4IeBTwRHG22m414URWmwmxMMujjk4UBZXJm_I-BQb7Ha6xwpxVEPY92vWAZ5VjnOyQ4dMK464ooP9T_UFnerG72nlHR87KjaIJtYSIZhPn6e7OY5Jof0");'></div>
+<div class="flex flex-col">
+<p class="text-xs font-bold">Admin User</p>
+<p class="text-[10px] text-slate-500">Sign out</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0">
+<!-- AdminHeader -->
+<header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<h2 class="text-sm font-bold tracking-tight">Admin UI System</h2>
+<div class="h-4 w-px bg-slate-200 dark:bg-slate-800"></div>
+<nav class="flex items-center gap-2 text-xs font-medium">
+<a class="text-slate-500 hover:text-primary transition-colors" href="#">Documentation</a>
+<span class="text-slate-300">/</span>
+<a class="text-slate-500 hover:text-primary transition-colors" href="#">Support</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="pl-10 pr-4 py-1.5 rounded-lg border-none bg-slate-100 dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary/20 w-64 transition-all" placeholder="Search keys..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-500 hover:text-primary">notifications</button>
+<div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-[1120px] mx-auto w-full">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-4">
+<a class="text-sm text-slate-500 hover:text-primary" href="#">Settings</a>
+<span class="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
+<a class="text-sm text-slate-500 hover:text-primary" href="#">Localization</a>
+<span class="material-symbols-outlined text-slate-400 text-sm">chevron_right</span>
+<span class="text-sm font-semibold text-slate-900 dark:text-white underline decoration-2 decoration-primary/20 underline-offset-4">Translations</span>
+</nav>
+<!-- Page Title Section -->
+<div class="flex items-end justify-between mb-8">
+<div>
+<h1 class="text-4xl font-black text-slate-900 dark:text-white tracking-tight mb-2">Translations</h1>
+<p class="text-slate-500 max-w-md">Manage multilingual content and localization keys across all platforms including web, iOS, and Android applications.</p>
+</div>
+<button class="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[20px]">add</span>
+<span>Add Language</span>
+</button>
+</div>
+<!-- Filters Bar -->
+<div class="flex flex-wrap items-center gap-3 mb-6 bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
+<span class="text-slate-500 uppercase tracking-wider">Status:</span>
+<select class="bg-transparent border-none p-0 focus:ring-0 text-xs font-bold">
+<option>All Statuses</option>
+<option>Translated</option>
+<option>Pending</option>
+</select>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">
+<span class="text-slate-500 uppercase tracking-wider">Platform:</span>
+<select class="bg-transparent border-none p-0 focus:ring-0 text-xs font-bold">
+<option>All Platforms</option>
+<option>Web</option>
+<option>Mobile</option>
+</select>
+</div>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
+<button class="flex items-center gap-2 px-4 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                    Advanced Filters
+                </button>
+<div class="ml-auto text-xs text-slate-500 font-medium">
+                    Showing <span class="text-primary font-bold">428</span> keys
+                </div>
+</div>
+<!-- Table Section -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50">
+<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800">Original Key</th>
+<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800">English (Source)</th>
+<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800">Arabic (RTL)</th>
+<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800">Spanish</th>
+<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800">Status</th>
+<th class="px-6 py-4 text-[11px] font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-5 font-mono text-xs text-slate-600 dark:text-slate-400">auth.login.title</td>
+<td class="px-6 py-5 text-sm font-medium">Welcome back to Real</td>
+<td class="px-6 py-5 text-sm font-medium text-right" dir="rtl">مرحباً بعودتك إلى ريال</td>
+<td class="px-6 py-5 text-sm font-medium italic text-slate-400">Not translated</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500">
+<span class="size-1.5 rounded-full bg-amber-500"></span>
+                                    Pending
+                                </span>
+</td>
+<td class="px-6 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary">edit_square</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-5 font-mono text-xs text-slate-600 dark:text-slate-400">global.button.submit</td>
+<td class="px-6 py-5 text-sm font-medium">Save Changes</td>
+<td class="px-6 py-5 text-sm font-medium text-right" dir="rtl">حفظ التغييرات</td>
+<td class="px-6 py-5 text-sm font-medium italic">Guardar cambios</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-500">
+<span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                    Translated
+                                </span>
+</td>
+<td class="px-6 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary">edit_square</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-5 font-mono text-xs text-slate-600 dark:text-slate-400">checkout.cart.empty</td>
+<td class="px-6 py-5 text-sm font-medium">Your cart is empty</td>
+<td class="px-6 py-5 text-sm font-medium text-right" dir="rtl">سلة التسوق الخاصة بك فارغة</td>
+<td class="px-6 py-5 text-sm font-medium italic">Tu carrito está vacío</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-500">
+<span class="size-1.5 rounded-full bg-emerald-500"></span>
+                                    Translated
+                                </span>
+</td>
+<td class="px-6 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary">edit_square</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group border-b-0">
+<td class="px-6 py-5 font-mono text-xs text-slate-600 dark:text-slate-400">product.grid.out_of_stock</td>
+<td class="px-6 py-5 text-sm font-medium">Out of stock</td>
+<td class="px-6 py-5 text-sm font-medium text-right" dir="rtl">غير متوفر في المخزون</td>
+<td class="px-6 py-5 text-sm font-medium italic text-slate-400">Not translated</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 py-1 px-2.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500">
+<span class="size-1.5 rounded-full bg-amber-500"></span>
+                                    Pending
+                                </span>
+</td>
+<td class="px-6 py-5 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary">edit_square</button>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<p class="text-[11px] font-bold text-slate-500 uppercase">Page 1 of 43</p>
+<div class="flex items-center gap-2">
+<button class="size-8 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="size-8 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center bg-primary text-white font-bold text-xs">1</button>
+<button class="size-8 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800">2</button>
+<button class="size-8 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-800">3</button>
+<button class="size-8 rounded border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Language Progress Summary -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="size-12 rounded-lg bg-primary flex items-center justify-center text-white shrink-0">
+<span class="font-black text-sm">EN</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1">
+<h3 class="text-xs font-black uppercase text-slate-500">English (Source)</h3>
+<span class="text-xs font-bold">100%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-full"></div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+<span class="font-black text-sm">AR</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1">
+<h3 class="text-xs font-black uppercase text-slate-500">Arabic</h3>
+<span class="text-xs font-bold">92%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[92%]"></div>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="size-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/20">
+<span class="font-black text-sm">ES</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-end mb-1">
+<h3 class="text-xs font-black uppercase text-slate-500">Spanish</h3>
+<span class="text-xs font-bold">64%</span>
+</div>
+<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[64%]"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<footer class="mt-auto p-8 text-center text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em]">
+            © 2024 Real Cosmetics — Localization Engine v4.2.0
+        </footer>
+</main>
+</div>
+
+```</body></html>

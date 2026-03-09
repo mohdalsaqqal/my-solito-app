@@ -1,0 +1,55 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Real Admin
+        - button "Toggle sidebar" [ref=e6] [cursor=pointer]: <
+      - navigation [ref=e7]:
+        - button "Dashboard" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10]: Dashboard
+        - button "Catalog +" [ref=e12] [cursor=pointer]:
+          - generic [ref=e13]: Catalog
+          - generic [ref=e14]: +
+        - button "Marketing +" [ref=e16] [cursor=pointer]:
+          - generic [ref=e17]: Marketing
+          - generic [ref=e18]: +
+        - button "Orders" [ref=e20] [cursor=pointer]:
+          - generic [ref=e21]: Orders
+        - button "Customers" [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]: Customers
+        - generic [ref=e25]:
+          - button "Operations -" [ref=e26] [cursor=pointer]:
+            - generic [ref=e27]: Operations
+            - generic [ref=e28]: "-"
+          - generic [ref=e29]:
+            - link "Cache" [ref=e30] [cursor=pointer]:
+              - /url: /admin/operations/cache
+            - link "Audit" [ref=e31] [cursor=pointer]:
+              - /url: /admin/operations/audit
+      - generic [ref=e32]:
+        - generic [ref=e33]: "Environment: development"
+        - generic [ref=e34]: "User: Admin User"
+    - main [ref=e35]:
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: Admin
+          - generic [ref=e39]: /admin/operations/cache
+        - generic [ref=e40]:
+          - link "Dashboard" [ref=e41] [cursor=pointer]:
+            - /url: /admin/dashboard
+          - link "Logout" [ref=e42] [cursor=pointer]:
+            - /url: /auth/login
+      - generic [ref=e44]:
+        - generic [ref=e46]:
+          - heading "Operations / Cache" [level=1] [ref=e47]
+          - paragraph [ref=e48]: Revalidate paths/tags with FLUSH confirmation and cooldown visibility.
+        - generic [ref=e51]:
+          - combobox [ref=e52]:
+            - option "revalidate_home_shop" [selected]
+            - option "revalidate_all_public"
+            - option "revalidate_account_surfaces"
+            - option "revalidate_admin_surfaces"
+            - option "full_stack_flush"
+          - textbox "Type FLUSH" [ref=e53]
+          - button "Run" [disabled] [ref=e54]
+  - alert [ref=e55]

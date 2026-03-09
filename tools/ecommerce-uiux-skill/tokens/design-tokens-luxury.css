@@ -1,0 +1,77 @@
+/* ============================================
+   E-Commerce Design Tokens — Luxury Variant
+   ============================================ */
+
+:root {
+  /* Brand Colors — Luxury */
+  --color-brand-primary: #0a0a0a;
+  --color-brand-accent: #b8965a;       /* Gold */
+  --color-brand-accent-hover: #9a7940;
+  --color-brand-secondary: #faf8f4;    /* Warm ivory */
+
+  /* Neutrals — Warm */
+  --color-bg: #ffffff;
+  --color-bg-subtle: #faf8f4;
+  --color-bg-muted: #f0ece4;
+  --color-border: #e8e0d4;
+  --color-border-strong: #c8bda8;
+  --color-text-primary: #0a0a0a;
+  --color-text-secondary: #4a4540;
+  --color-text-muted: #8a8278;
+  --color-text-inverse: #ffffff;
+
+  /* Semantic — Refined */
+  --color-sale: #8b1a1a;
+  --color-sale-bg: #fdf5f5;
+  --color-success: #2d5a3d;
+  --color-success-bg: #f0f7f3;
+
+  /* Typography — Luxury */
+  --font-display: 'Cormorant Garamond', 'Playfair Display', 'EB Garamond', Georgia, serif;
+  --font-body: 'Jost', 'Gill Sans', 'Optima', Futura, system-ui, sans-serif;
+
+  /* Spacing — More generous */
+  --space-section: 6rem;
+
+  /* Border Radius — Sharper */
+  --radius-sm: 0;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 8px;
+
+  /* Shadows — More subtle */
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 8px 24px -4px rgb(0 0 0 / 0.08);
+  --shadow-card-hover: 0 12px 40px -8px rgb(0 0 0 / 0.12);
+
+  /* Transitions — Slower, more deliberate */
+  --transition-fast: 200ms ease;
+  --transition-base: 350ms ease;
+  --transition-slow: 500ms ease;
+
+  /* Nav — Taller for luxury */
+  --nav-height: 80px;
+}
+
+/* Luxury-specific overrides */
+.btn {
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 0.6875rem; /* 11px */
+}
+
+.btn--primary {
+  background: var(--color-brand-primary);
+  border: 1px solid var(--color-brand-primary);
+}
+
+.btn--outline {
+  border: 1px solid var(--color-brand-primary);
+}
+
+.badge {
+  letter-spacing: 0.15em;
+  border-radius: 0;
+}

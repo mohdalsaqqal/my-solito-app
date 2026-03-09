@@ -1,0 +1,388 @@
+{
+  "toggleOverrides": {
+    "loyalty-redeem-checkout": {
+      "enabled": true,
+      "updatedAt": "2026-02-25T23:42:18.859Z",
+      "updatedBy": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      }
+    }
+  },
+  "userOverrides": {
+    "role-customer": {
+      "role": "customer",
+      "status": "active",
+      "permissions": {
+        "canManageCmsToggles": false,
+        "canManageUsers": false,
+        "canRunCacheOps": false
+      },
+      "updatedAt": "2026-03-04T09:49:05.520Z",
+      "updatedBy": {
+        "userId": "u-6",
+        "email": "support@realcosmetics.local"
+      }
+    }
+  },
+  "brandSpotlightsOverride": [
+    {
+      "id": "spotlight-fenty",
+      "enabled": true,
+      "bannerTitle": {
+        "en": "Fenty Beauty Spotlight",
+        "ar": "واجهة Fenty Beauty"
+      },
+      "bannerSubtitle": {
+        "en": "Editorial lip and gloss picks with premium finish.",
+        "ar": "اختيارات تحريرية للشفاه واللمعان بلمسة فاخرة."
+      },
+      "bannerCtaLabel": {
+        "en": "Shop Fenty",
+        "ar": "تسوق Fenty"
+      },
+      "bannerHref": "/shop",
+      "bannerImageUrl": "https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1800&h=700&q=80",
+      "railTitle": {
+        "en": "Fenty Highlights",
+        "ar": "منتجات Fenty المميزة"
+      },
+      "query": {
+        "source": "new_arrivals",
+        "limit": 8,
+        "sortBy": "price_desc",
+        "brandNames": [
+          "Fenty Beauty"
+        ]
+      }
+    },
+    {
+      "id": "spotlight-huda",
+      "enabled": true,
+      "bannerTitle": {
+        "en": "Huda Beauty Editorial",
+        "ar": "تحرير Huda Beauty"
+      },
+      "bannerSubtitle": {
+        "en": "Bold color stories and glossy seasonal edits.",
+        "ar": "تدرجات جريئة ولمسات لامعة موسمية."
+      },
+      "bannerCtaLabel": {
+        "en": "Shop Huda",
+        "ar": "تسوق Huda"
+      },
+      "bannerHref": "/shop",
+      "bannerImageUrl": "https://images.unsplash.com/photo-1590156203854-e88c6b4f6a43?auto=format&fit=crop&w=1800&h=700&q=80",
+      "railTitle": {
+        "en": "Huda New Arrivals",
+        "ar": "أحدث منتجات Huda"
+      },
+      "query": {
+        "source": "new_arrivals",
+        "limit": 8,
+        "sortBy": "price_desc",
+        "brandNames": [
+          "Huda Beauty"
+        ]
+      }
+    }
+  ],
+  "brandSpotlightMeta": {
+    "spotlight-fenty": {
+      "updatedAt": "2026-03-01T10:41:57.901Z",
+      "updatedBy": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      }
+    },
+    "spotlight-huda": {
+      "updatedAt": "2026-03-01T08:25:42.128Z",
+      "updatedBy": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      }
+    }
+  },
+  "audits": [
+    {
+      "id": "ops-1772710585242",
+      "type": "i18n",
+      "targetId": "translations.prefill",
+      "actor": {
+        "userId": "ops-1",
+        "email": "ops@realcosmetics.local"
+      },
+      "at": "2026-03-05T11:36:25.242Z",
+      "changes": {
+        "action": "translation.prefill",
+        "dryRun": "false",
+        "filledKeys": "12",
+        "missingBefore": "12",
+        "missingAfter": "0"
+      }
+    },
+    {
+      "id": "ops-1772710031518",
+      "type": "i18n",
+      "targetId": "translations.prefill",
+      "actor": {
+        "userId": "ops-1",
+        "email": "ops@realcosmetics.local"
+      },
+      "at": "2026-03-05T11:27:11.518Z",
+      "changes": {
+        "action": "translation.prefill",
+        "dryRun": "false",
+        "filledKeys": "12",
+        "missingBefore": "12",
+        "missingAfter": "0"
+      }
+    },
+    {
+      "id": "ops-1772617745520",
+      "type": "user",
+      "targetId": "role-customer",
+      "actor": {
+        "userId": "u-6",
+        "email": "support@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:49:05.520Z",
+      "changes": {
+        "previousRole": "customer",
+        "nextRole": "customer",
+        "previousStatus": "active",
+        "nextStatus": "active",
+        "previousCanManageCmsToggles": "false",
+        "nextCanManageCmsToggles": "false",
+        "previousCanManageUsers": "false",
+        "nextCanManageUsers": "false",
+        "previousCanRunCacheOps": "false",
+        "nextCanRunCacheOps": "false"
+      }
+    },
+    {
+      "id": "ops-1772617706966",
+      "type": "marketing",
+      "targetId": "qa-1772617688",
+      "actor": {
+        "userId": "u-4",
+        "email": "marketing@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:48:26.966Z",
+      "changes": {
+        "action": "query.delete"
+      }
+    },
+    {
+      "id": "ops-1772617704255",
+      "type": "marketing",
+      "targetId": "qa-1772617688",
+      "actor": {
+        "userId": "u-5",
+        "email": "catalog@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:48:24.255Z",
+      "changes": {
+        "action": "query.create"
+      }
+    },
+    {
+      "id": "ops-1772617702196",
+      "type": "user",
+      "targetId": "role-customer",
+      "actor": {
+        "userId": "u-6",
+        "email": "support@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:48:22.196Z",
+      "changes": {
+        "previousRole": "customer",
+        "nextRole": "customer",
+        "previousStatus": "active",
+        "nextStatus": "active",
+        "previousCanManageCmsToggles": "false",
+        "nextCanManageCmsToggles": "false",
+        "previousCanManageUsers": "false",
+        "nextCanManageUsers": "false",
+        "previousCanRunCacheOps": "false",
+        "nextCanRunCacheOps": "false"
+      }
+    },
+    {
+      "id": "ops-1772616954406",
+      "type": "user",
+      "targetId": "role-customer",
+      "actor": {
+        "userId": "u-6",
+        "email": "support@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:35:54.406Z",
+      "changes": {
+        "previousRole": "customer",
+        "nextRole": "customer",
+        "previousStatus": "active",
+        "nextStatus": "active",
+        "previousCanManageCmsToggles": "false",
+        "nextCanManageCmsToggles": "false",
+        "previousCanManageUsers": "false",
+        "nextCanManageUsers": "false",
+        "previousCanRunCacheOps": "false",
+        "nextCanRunCacheOps": "false"
+      }
+    },
+    {
+      "id": "ops-1772615235076",
+      "type": "marketing",
+      "targetId": "rel-1772615235072-ibso5z",
+      "actor": {
+        "userId": "u-4",
+        "email": "marketing@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:07:15.076Z",
+      "changes": {
+        "action": "release.create",
+        "environment": "staging",
+        "status": "draft"
+      }
+    },
+    {
+      "id": "ops-1772615210269",
+      "type": "marketing",
+      "targetId": "qa-prom-mkt",
+      "actor": {
+        "userId": "u-4",
+        "email": "marketing@realcosmetics.local"
+      },
+      "at": "2026-03-04T09:06:50.269Z",
+      "changes": {
+        "action": "promotion.create"
+      }
+    },
+    {
+      "id": "ops-1772361717901",
+      "type": "marketing",
+      "targetId": "spotlight-fenty",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T10:41:57.901Z",
+      "changes": {
+        "action": "update",
+        "title": "Fenty Beauty Spotlight"
+      }
+    },
+    {
+      "id": "ops-1772361703710",
+      "type": "marketing",
+      "targetId": "spotlight-fenty",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T10:41:43.710Z",
+      "changes": {
+        "action": "update",
+        "title": "Fenty Beauty Spotlight"
+      }
+    },
+    {
+      "id": "ops-1772353542128",
+      "type": "marketing",
+      "targetId": "spotlight-huda",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T08:25:42.128Z",
+      "changes": {
+        "action": "update",
+        "title": "Huda Beauty Editorial"
+      }
+    },
+    {
+      "id": "ops-1772353541280",
+      "type": "marketing",
+      "targetId": "spotlight-huda",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T08:25:41.281Z",
+      "changes": {
+        "action": "update",
+        "title": "Huda Beauty Editorial"
+      }
+    },
+    {
+      "id": "ops-1772353534556",
+      "type": "marketing",
+      "targetId": "spotlight-fenty",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T08:25:34.556Z",
+      "changes": {
+        "action": "update",
+        "title": "Fenty Beauty Spotlight"
+      }
+    },
+    {
+      "id": "ops-1772353532621",
+      "type": "marketing",
+      "targetId": "spotlight-fenty",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T08:25:32.621Z",
+      "changes": {
+        "action": "update",
+        "title": "Fenty Beauty Spotlight"
+      }
+    },
+    {
+      "id": "ops-1772353527514",
+      "type": "marketing",
+      "targetId": "spotlight-fenty",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-03-01T08:25:27.514Z",
+      "changes": {
+        "action": "update",
+        "title": "Fenty Beauty Spotlight"
+      }
+    },
+    {
+      "id": "ops-1772062938859",
+      "type": "toggle",
+      "targetId": "loyalty-redeem-checkout",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-02-25T23:42:18.859Z",
+      "changes": {
+        "previous": "disabled",
+        "next": "enabled"
+      }
+    },
+    {
+      "id": "ops-1772062934281",
+      "type": "toggle",
+      "targetId": "loyalty-redeem-checkout",
+      "actor": {
+        "userId": "u-2",
+        "email": "admin@realcosmetics.local"
+      },
+      "at": "2026-02-25T23:42:14.281Z",
+      "changes": {
+        "previous": "enabled",
+        "next": "disabled"
+      }
+    }
+  ]
+}

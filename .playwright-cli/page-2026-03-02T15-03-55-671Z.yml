@@ -1,0 +1,126 @@
+- generic [ref=e1]:
+  - alert [ref=e21]
+  - generic [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e26]:
+        - generic [ref=e27]: Free shipping on orders over 20 JDS
+        - generic [ref=e28]: • Flash deals rotate hourly. Limited inventory.
+        - generic [ref=e31] [cursor=pointer]: Shop now
+      - generic [ref=e32]:
+        - generic [ref=e36]:
+          - generic [ref=e39] [cursor=pointer]: Real Cosmetics
+          - generic [ref=e41]:
+            - img [ref=e43]
+            - textbox "Search products or categories" [ref=e46]
+          - generic [ref=e47]:
+            - button "Account" [ref=e48] [cursor=pointer]:
+              - img [ref=e51]
+            - button "Wishlist" [ref=e54] [cursor=pointer]:
+              - generic [ref=e56]:
+                - img [ref=e57]
+                - generic:
+                  - generic: "2"
+            - button "Cart" [ref=e59] [cursor=pointer]:
+              - generic [ref=e61]:
+                - img [ref=e62]
+                - generic:
+                  - generic: "5"
+            - button "EN" [ref=e66] [cursor=pointer]:
+              - img [ref=e69]
+        - generic [ref=e76]:
+          - generic [ref=e79] [cursor=pointer]: Shop
+          - generic [ref=e82] [cursor=pointer]: Luxury Brands
+          - generic [ref=e85] [cursor=pointer]: "% Flash Sale"
+          - generic [ref=e88] [cursor=pointer]: Skincare
+          - generic [ref=e91] [cursor=pointer]: Makeup
+          - generic [ref=e94] [cursor=pointer]: Haircare
+          - generic [ref=e97] [cursor=pointer]: Wellness
+    - generic [ref=e106]:
+      - generic [ref=e107]:
+        - generic [ref=e108]:
+          - generic [ref=e109]: Account
+          - generic [ref=e110]: Welcome, Customer User
+          - generic [ref=e111]: user@realcosmetics.local
+        - generic [ref=e112]:
+          - button "Open Dashboard" [ref=e113] [cursor=pointer]:
+            - generic [ref=e114]: Dashboard
+          - button "Open Orders" [ref=e115] [cursor=pointer]:
+            - generic [ref=e116]: Orders
+          - button "Open Tests" [ref=e117] [cursor=pointer]:
+            - generic [ref=e118]: Tests
+          - button "Open Addresses" [ref=e119] [cursor=pointer]:
+            - generic [ref=e120]: Addresses
+          - button "Open Loyalty" [active] [ref=e121] [cursor=pointer]:
+            - generic [ref=e122]: Loyalty
+          - button "Open Wishlist" [ref=e123] [cursor=pointer]:
+            - generic [ref=e124]: Wishlist
+          - button "Open Settings" [ref=e125] [cursor=pointer]:
+            - generic [ref=e126]: Settings
+        - button "Sign out" [ref=e128] [cursor=pointer]:
+          - generic [ref=e129]: Sign out
+      - generic [ref=e130]:
+        - generic [ref=e318]:
+          - generic [ref=e319]: Loyalty unlocks better routines
+          - generic [ref=e320]: Earn points on every checkout and redeem on essentials.
+        - generic [ref=e321]:
+          - generic [ref=e322]: Loyalty wallet
+          - generic [ref=e323]:
+            - generic [ref=e324]: "Tier: Silver"
+            - generic [ref=e325]: "Points balance: 420"
+            - generic [ref=e326]: "Redeemable value: USD 12.60"
+            - generic [ref=e327]:
+              - generic [ref=e328]:
+                - generic [ref=e329]: Silver
+                - generic [ref=e330]: 420 pts
+              - generic [ref=e333]:
+                - generic [ref=e334]: "Current: Silver"
+                - generic [ref=e335]: "Next: Gold"
+              - generic [ref=e336]: 480 points to reach Gold
+            - generic [ref=e337]: "Expiring soon: 80 points by 3/16/2026"
+            - generic [ref=e338]: "In-store barcode: LOY-U1-8842 (expires 4/1/2026)"
+            - generic [ref=e339]:
+              - generic [ref=e340]: Available redeem options
+              - generic [ref=e341]:
+                - generic [ref=e342]: 10% (120 pts)
+                - generic [ref=e343]: 25% (280 pts)
+          - generic [ref=e344]: History
+          - generic [ref=e345]:
+            - generic [ref=e346]:
+              - generic [ref=e347]: Order purchase
+              - generic [ref=e348]: 3/1/2026
+            - generic [ref=e349]: "+40"
+          - generic [ref=e350]:
+            - generic [ref=e351]:
+              - generic [ref=e352]: Points redemption
+              - generic [ref=e353]: 2/26/2026
+            - generic [ref=e354]: "-120"
+    - generic [ref=e185]:
+      - generic [ref=e188]:
+        - generic [ref=e189]: Stay in the loop
+        - generic [ref=e190]: Get launches, offers, and skincare insights.
+        - generic [ref=e191]:
+          - textbox "First name" [ref=e193]
+          - textbox "Email address" [ref=e195]
+          - generic [ref=e198] [cursor=pointer]: Subscribe
+      - generic [ref=e202]:
+        - generic [ref=e203]:
+          - generic [ref=e204]: About
+          - generic [ref=e207] [cursor=pointer]: About us
+          - generic [ref=e210] [cursor=pointer]: Contact
+        - generic [ref=e211]:
+          - generic [ref=e212]: Shop
+          - generic [ref=e215] [cursor=pointer]: All products
+          - generic [ref=e218] [cursor=pointer]: New arrivals
+        - generic [ref=e219]:
+          - generic [ref=e220]: Help
+          - generic [ref=e223] [cursor=pointer]: Shipping
+          - generic [ref=e226] [cursor=pointer]: Returns
+        - generic [ref=e227]:
+          - generic [ref=e228]: Legal
+          - generic [ref=e231] [cursor=pointer]: Privacy
+          - generic [ref=e234] [cursor=pointer]: Terms
+      - generic [ref=e236]:
+        - img [ref=e239] [cursor=pointer]
+        - img [ref=e244] [cursor=pointer]
+        - img [ref=e248] [cursor=pointer]
+      - generic [ref=e254]: (c) Real Cosmetics

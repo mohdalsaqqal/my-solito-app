@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>User Permissions Management - Real Cosmetics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#191919",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-item {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        /* Custom checkbox tick svg from component spec */
+        .custom-checkbox {
+            --checkbox-tick-svg: url('data:image/svg+xml,%3csvg viewBox=%270 0 16 16%27 fill=%27rgb(255,255,255)%27 xmlns=%27http://www.w3.org/2000/svg%27%3e%3cpath d=%27M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z%27/%3e%3c/svg%3e');
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-[260px] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col sticky top-0 h-screen">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm font-bold leading-tight">Real Cosmetics</h1>
+<p class="text-xs text-slate-500">Admin UI System</p>
+</div>
+</div>
+<nav class="flex-1 px-3 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-sm font-medium">Catalog</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">campaign</span>
+<span class="text-sm font-medium">Marketing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="text-sm font-medium">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+<span class="text-sm font-medium">Operations</span>
+</a>
+<div class="pt-4 pb-2 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Settings</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary/10 text-primary dark:text-white dark:bg-primary/30 transition-colors active-nav-item" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">User Permissions</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<button class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-[18px]">logout</span>
+                    Logout
+                </button>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col min-w-0 bg-background-light dark:bg-background-dark">
+<!-- Sticky Header -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-4 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 text-sm">
+<span class="text-slate-400">Settings</span>
+<span class="material-symbols-outlined text-[14px] text-slate-400">chevron_right</span>
+<span class="text-slate-400">Users</span>
+<span class="material-symbols-outlined text-[14px] text-slate-400">chevron_right</span>
+<span class="font-medium text-slate-900 dark:text-white">Permissions</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20" placeholder="Search roles or domains..." type="text"/>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-bold hover:bg-slate-800 transition-all flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">save</span>
+                        Save Permissions
+                    </button>
+<div class="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700 bg-cover bg-center" data-alt="User profile avatar circle" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDsDtJiMHh8nVaX9IBGGEml451gBHXojKGPht7-yrEtBTfBkzSa5iBVg0wK90P1--9ICfniCHpVgP5RE9Or5X4SkzqlXUXpKFHjo4IsgBcZrFRP8x2B9nKtF3Mp-WvClbz-Jb5CzAvXNhOnVErDcspIzCyNcOyKsWloIxddeVyF4fwMCmxE2lZz5P7bD5XOIXePA92uWPrHoIPHMf85QfXzFjHOMUZYRAQ_zrDMjxje4svkZooHjuGuNiFcxNR3RavakXLmHgjzSjY')"></div>
+</div>
+</header>
+<!-- Page Body -->
+<div class="max-w-[1120px] w-full mx-auto px-8 py-8">
+<div class="mb-8">
+<h2 class="text-3xl font-black tracking-tight mb-2">User Permissions Management</h2>
+<p class="text-slate-500 dark:text-slate-400">Manage global access levels and functional permissions across different system roles in the matrix below.</p>
+</div>
+<!-- Matrix Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50">
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800 w-[240px]">Domain</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800 text-center">Admin</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800 text-center">Marketing</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800 text-center">Catalog</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800 text-center">Support</th>
+<th class="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 dark:border-slate-800 text-center">Ops</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1: Dashboard -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">space_dashboard</span>
+<span class="font-medium text-sm">Dashboard</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+</tr>
+<!-- Row 2: Catalog -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">category</span>
+<span class="font-medium text-sm">Catalog</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+</tr>
+<!-- Row 3: Marketing -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">ads_click</span>
+<span class="font-medium text-sm">Marketing</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+</tr>
+<!-- Row 4: Orders -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">list_alt</span>
+<span class="font-medium text-sm">Orders</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+</tr>
+<!-- Row 5: Customers -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">person_search</span>
+<span class="font-medium text-sm">Customers</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+</tr>
+<!-- Row 6: Operations -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">precision_manufacturing</span>
+<span class="font-medium text-sm">Operations</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+<td class="px-6 py-5 text-center"><input checked="" class="h-5 w-5 rounded border-slate-300 dark:border-slate-600 text-primary focus:ring-primary cursor-pointer" type="checkbox"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Legend / Status Indicators -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-start gap-4">
+<div class="mt-1 w-3 h-3 rounded-full bg-primary"></div>
+<div>
+<h4 class="text-sm font-bold mb-1">Full Access</h4>
+<p class="text-xs text-slate-500">Allows both read and write operations including administrative functions.</p>
+</div>
+</div>
+<div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-start gap-4">
+<div class="mt-1 w-3 h-3 rounded-full bg-primary/40"></div>
+<div>
+<h4 class="text-sm font-bold mb-1">Restricted Access</h4>
+<p class="text-xs text-slate-500">Provides read-only access to specific domains with no edit capabilities.</p>
+</div>
+</div>
+<div class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg flex items-start gap-4">
+<div class="mt-1 w-3 h-3 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+<div>
+<h4 class="text-sm font-bold mb-1">No Access</h4>
+<p class="text-xs text-slate-500">Domain is completely hidden from the user's role and navigation.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

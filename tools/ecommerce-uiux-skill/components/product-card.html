@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Card — Component Reference</title>
+<link rel="stylesheet" href="../tokens/design-tokens.css">
+<style>
+  body {
+    background: var(--color-bg-subtle);
+    padding: 3rem;
+    font-family: var(--font-body);
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--product-card-gap);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* =====================
+     Product Card
+  ===================== */
+  .product-card {
+    background: var(--color-bg);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+    position: relative;
+  }
+
+  .product-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Image Area */
+  .product-card__image-wrap {
+    position: relative;
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    background: var(--color-bg-subtle);
+  }
+
+  .product-card__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity var(--transition-base);
+    display: block;
+  }
+
+  .product-card__image-wrap img.secondary {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+  }
+
+  .product-card:hover .product-card__image-wrap img.primary { opacity: 0; }
+  .product-card:hover .product-card__image-wrap img.secondary { opacity: 1; }
+
+  /* Badges */
+  .product-card__badges {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    z-index: 1;
+  }
+
+  /* Wishlist */
+  .product-card__wishlist {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(4px);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+    z-index: 1;
+  }
+  .product-card__wishlist:hover { background: white; transform: scale(1.1); }
+  .product-card__wishlist[aria-pressed="true"] { color: #e11d48; }
+
+  /* Quick Add — appears on hover */
+  .product-card__quick-add {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-brand-primary);
+    color: var(--color-text-inverse);
+    border: none;
+    padding: var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transform: translateY(100%);
+    transition: transform var(--transition-base);
+    letter-spacing: 0.04em;
+  }
+  .product-card:hover .product-card__quick-add { transform: translateY(0); }
+  .product-card__quick-add:hover { background: #333; }
+
+  /* Body */
+  .product-card__body {
+    padding: var(--space-4);
+  }
+
+  .product-card__brand {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: var(--space-1);
+  }
+
+  .product-card__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-2) 0;
+    line-height: var(--leading-snug);
+    /* Clamp to 2 lines */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .product-card__rating {
+    margin-bottom: var(--space-3);
+  }
+
+  .product-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  /* Color Swatches */
+  .product-card__swatches {
+    display: flex;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+  }
+
+  .swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+  }
+  .swatch:hover, .swatch--active { border-color: var(--color-brand-primary); }
+  .swatch--overflow {
+    background: var(--color-bg-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    border-radius: var(--radius-full);
+    width: 18px;
+    height: 18px;
+  }
+</style>
+</head>
+<body>
+
+<div class="demo-grid">
+
+  <!-- Standard Product Card -->
+  <article class="product-card" aria-label="Classic Linen Shirt">
+    <a href="#" style="display:block; position:relative;">
+      <div class="product-card__image-wrap">
+        <img class="primary" src="https://images.unsplash.com/photo-1618354691373-d851c5c3a990?w=500&q=80" alt="Classic Linen Shirt front view" loading="lazy">
+        <img class="secondary" src="https://images.unsplash.com/photo-1620799140408-edc6dcb6d633?w=500&q=80" alt="Classic Linen Shirt back view" loading="lazy">
+        <div class="product-card__badges">
+          <span class="badge badge--new">New</span>
+        </div>
+      </div>
+      <button class="product-card__quick-add" aria-label="Quick add Classic Linen Shirt to cart">
+        + Add to Cart
+      </button>
+    </a>
+    <button class="product-card__wishlist" aria-label="Add to wishlist" aria-pressed="false">♡</button>
+    <div class="product-card__body">
+      <p class="product-card__brand">Everlane</p>
+      <h3 class="product-card__title">The Air Linen Relaxed Shirt</h3>
+      <div class="product-card__rating">
+        <div class="star-rating" aria-label="4.5 out of 5 stars, 234 reviews">
+          <span class="star-rating__stars">★★★★½</span>
+          <span class="star-rating__count">(234)</span>
+        </div>
+      </div>
+      <div class="product-card__swatches">
+        <div class="swatch swatch--active" style="background:#f5f0e8;" title="Oat"></div>
+        <div class="swatch" style="background:#c4b5a0;" title="Sand"></div>
+        <div class="swatch" style="background:#4a6370;" title="Navy"></div>
+        <div class="swatch--overflow">+3</div>
+      </div>
+      <div class="product-card__footer">
+        <div class="price-group">
+          <span class="price--current">$88.00</span>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- Sale Product Card -->
+  <article class="product-card" aria-label="Merino Wool Sweater on sale">
+    <a href="#" style="display:block; position:relative;">
+      <div class="product-card__image-wrap">
+        <img class="primary" src="https://images.unsplash.com/photo-1599734979928-13e2b37f7f64?w=500&q=80" alt="Merino Wool Sweater" loading="lazy">
+        <div class="product-card__badges">
+          <span class="badge badge--sale">-30%</span>
+          <span class="badge badge--popular">Best Seller</span>
+        </div>
+      </div>
+      <button class="product-card__quick-add" aria-label="Quick add Merino Wool Sweater to cart">
+        + Add to Cart
+      </button>
+    </a>
+    <button class="product-card__wishlist" aria-label="Add to wishlist" aria-pressed="true" style="color:#e11d48;">♥</button>
+    <div class="product-card__body">
+      <p class="product-card__brand">COS</p>
+      <h3 class="product-card__title">Oversized Merino Wool Crewneck</h3>
+      <div class="product-card__rating">
+        <div class="star-rating" aria-label="4.8 out of 5 stars, 891 reviews">
+          <span class="star-rating__stars">★★★★★</span>
+          <span class="star-rating__count">(891)</span>
+        </div>
+      </div>
+      <div class="product-card__footer">
+        <div class="price-group">
+          <span class="price--current price--sale">$69.00</span>
+          <s class="price--original">$99.00</s>
+          <span class="price--savings">Save $30</span>
+        </div>
+      </div>
+    </div>
+  </article>
+
+  <!-- Sold Out Card -->
+  <article class="product-card" aria-label="Cashmere Scarf sold out">
+    <a href="#" style="display:block; position:relative; opacity:0.75;">
+      <div class="product-card__image-wrap">
+        <img class="primary" src="https://images.unsplash.com/photo-1601924638867-3a6de6b7a500?w=500&q=80" alt="Cashmere Scarf" loading="lazy">
+        <div class="product-card__badges">
+          <span class="badge badge--sold-out">Sold Out</span>
+        </div>
+      </div>
+    </a>
+    <button class="product-card__wishlist" aria-label="Add to wishlist" aria-pressed="false">♡</button>
+    <div class="product-card__body">
+      <p class="product-card__brand">Cuyana</p>
+      <h3 class="product-card__title">Classic Cashmere Scarf in Camel</h3>
+      <div class="product-card__rating">
+        <div class="star-rating" aria-label="4.9 out of 5 stars, 412 reviews">
+          <span class="star-rating__stars">★★★★★</span>
+          <span class="star-rating__count">(412)</span>
+        </div>
+      </div>
+      <div class="product-card__footer">
+        <div class="price-group">
+          <span class="price--current" style="color: var(--color-text-muted);">$145.00</span>
+        </div>
+        <button class="btn btn--sm btn--outline">Notify Me</button>
+      </div>
+    </div>
+  </article>
+
+</div>
+
+</body>
+</html>

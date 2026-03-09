@@ -1,0 +1,20 @@
+import { productQueryProvider } from '@real/providers'
+import { matchProviderResult } from '@real/providers/contracts'
+import { fail, ok } from '../../_lib/response'
+
+export async function GET(_request: Request, context: { params: Promise<{ slug: string }> }) {
+  const { slug } = await context.params
+
+  try {
+    const result = await productQueryProvider.getBySlug(slug)
+    return matchProviderResult(result, {
+      ok: (data) => ok(data),
+      fail: (error) => fail(error.code, error.message, 404),
+    })
+  } catch (cause) {
+    return fail('PRODUCT_QUERY_GET_UNEXPECTED', 'Unexpected error while fetching product query.', 500, {
+      scope: 'GET /api/product-queries/[slug]',
+      cause,
+    })
+  }
+}

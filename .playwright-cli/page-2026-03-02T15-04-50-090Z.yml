@@ -1,0 +1,81 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Real Admin
+        - button "Toggle sidebar" [ref=e6] [cursor=pointer]: <
+      - navigation [ref=e7]:
+        - button "Dashboard" [ref=e9] [cursor=pointer]:
+          - generic [ref=e10]: Dashboard
+        - button "Catalog +" [ref=e12] [cursor=pointer]:
+          - generic [ref=e13]: Catalog
+          - generic [ref=e14]: +
+        - generic [ref=e15]:
+          - button "Marketing -" [ref=e16] [cursor=pointer]:
+            - generic [ref=e17]: Marketing
+            - generic [ref=e18]: "-"
+          - generic [ref=e19]:
+            - link "Promotions" [ref=e20] [cursor=pointer]:
+              - /url: /admin/marketing/promotions
+            - link "CMS Releases" [ref=e21] [cursor=pointer]:
+              - /url: /admin/marketing/cms/releases
+            - link "CMS Blocks" [ref=e22] [cursor=pointer]:
+              - /url: /admin/marketing/cms/blocks
+            - link "CMS Queries" [ref=e23] [cursor=pointer]:
+              - /url: /admin/marketing/cms/queries
+        - button "Orders" [ref=e25] [cursor=pointer]:
+          - generic [ref=e26]: Orders
+        - button "Customers" [ref=e28] [cursor=pointer]:
+          - generic [ref=e29]: Customers
+        - button "Operations +" [ref=e31] [cursor=pointer]:
+          - generic [ref=e32]: Operations
+          - generic [ref=e33]: +
+      - generic [ref=e34]:
+        - generic [ref=e35]: "Environment: development"
+        - generic [ref=e36]: "User: Admin User"
+    - main [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: Admin
+          - generic [ref=e41]: /admin/marketing/promotions
+        - generic [ref=e42]:
+          - link "Dashboard" [ref=e43] [cursor=pointer]:
+            - /url: /admin/dashboard
+          - link "Logout" [ref=e44] [cursor=pointer]:
+            - /url: /auth/login
+      - generic [ref=e46]:
+        - generic [ref=e48]:
+          - heading "Marketing / Promotions" [level=1] [ref=e49]
+          - paragraph [ref=e50]: Single reward rules. Highest-priority promotion applies.
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - strong [ref=e54]: Promotion editor
+            - button "Save draft" [disabled] [ref=e55]
+          - generic [ref=e56]:
+            - 'textbox "Basics: promotion id" [ref=e57]'
+            - textbox "Window start (ISO)" [ref=e58]: 2026-03-02T14:04:50.042Z
+            - textbox "Window end (ISO)" [ref=e59]: 2026-03-03T15:04:50.042Z
+            - textbox "Priority" [ref=e60]: "10"
+            - textbox "Conditions JSON" [ref=e61]: "[{\"type\":\"min_cart_total\",\"amount\":50}]"
+            - generic [ref=e62]:
+              - 'button "Reward: percent_off" [ref=e63] [cursor=pointer]'
+              - 'button "Reward: fixed_amount_off" [ref=e64] [cursor=pointer]'
+              - 'button "Reward: free_shipping" [ref=e65] [cursor=pointer]'
+            - textbox "Reward value" [ref=e66]: "10"
+          - generic [ref=e67]:
+            - paragraph [ref=e68]: Validation Summary
+            - list [ref=e69]:
+              - listitem [ref=e70]: Promotion id is required.
+        - generic [ref=e72]:
+          - strong [ref=e73]: Promotions table
+          - generic [ref=e74]:
+            - generic [ref=e75]:
+              - paragraph [ref=e76]: promo-auto-10
+              - paragraph [ref=e77]: priority 10 • 2026-03-02T08:17:24.213Z -> 2026-03-03T09:17:24.213Z
+            - generic [ref=e78]:
+              - paragraph [ref=e79]: promo-fs
+              - paragraph [ref=e80]: priority 8 • 2026-03-02T08:17:24.213Z -> 2026-03-03T09:17:24.213Z
+            - generic [ref=e81]:
+              - paragraph [ref=e82]: promo-coupon-5
+              - paragraph [ref=e83]: priority 20 • 2026-03-02T08:17:24.213Z -> 2026-03-03T09:17:24.213Z
+  - alert [ref=e84]

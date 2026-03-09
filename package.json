@@ -1,0 +1,55 @@
+{
+  "name": "solito-blank",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@react-native-reusables/cli": "^0.6.3",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "eslint": "^8.21.0",
+    "i18next-parser": "^9.3.0",
+    "tailwindcss": "^4.1.13",
+    "turbo": "^2.4.4",
+    "typescript": "^5.2.2",
+    "uniwind": "^1.3.2"
+  },
+  "scripts": {
+    "native": "cd apps/expo && yarn start",
+    "web": "cd apps/next && yarn dev:stable",
+    "web:prod": "cd apps/next && yarn build && yarn start",
+    "web:dev": "cd apps/next && yarn dev:stable",
+    "web:dev:raw": "cd apps/next && yarn dev --webpack",
+    "guard:checks": "bash scripts/guard-checks.sh",
+    "i18n:extract": "i18next --config tools/i18n/i18next-parser.config.cjs",
+    "i18n:crowdin:push": "node tools/i18n/crowdin-push.mjs",
+    "i18n:crowdin:mt": "node tools/i18n/crowdin-mt.mjs",
+    "i18n:crowdin:pull": "node tools/i18n/crowdin-pull.mjs",
+    "i18n:types": "node tools/i18n/generate-key-types.mjs",
+    "i18n:check": "node tools/i18n/check-i18n.mjs",
+    "i18n:guard:hardcoded": "node tools/i18n/hardcoded-strings-check.mjs",
+    "i18n:guard:baseline": "node tools/i18n/update-hardcoded-baseline.mjs",
+    "inspector:sync": "node -e \"const fs=require('fs');fs.mkdirSync('apps/next/public/dev',{recursive:true});fs.copyFileSync('tools/inspector/ect-inspector.js','apps/next/public/dev/ect-inspector.js');console.log('synced public inspector');\"",
+    "inspector:sync-extension": "node -e \"const fs=require('fs');fs.mkdirSync('tools/inspector/extension',{recursive:true});fs.copyFileSync('tools/inspector/ect-inspector.js','tools/inspector/extension/ect-inspector.js');console.log('synced extension inspector');\"",
+    "inspector:sync-all": "yarn inspector:sync && yarn inspector:sync-extension"
+  },
+  "packageManager": "yarn@4.7.0",
+  "eslintConfig": {
+    "extends": "next",
+    "settings": {
+      "next": {
+        "rootDir": "apps/next/"
+      }
+    },
+    "root": true
+  },
+  "prettier": {
+    "semi": false,
+    "useTabs": false,
+    "tabWidth": 2,
+    "singleQuote": true
+  }
+}

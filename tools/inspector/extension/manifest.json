@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "ECT Inspector Toggle",
+  "description": "Toggle ECT Inspector on the current page.",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "Toggle ECT Inspector"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["activeTab", "scripting"]
+}

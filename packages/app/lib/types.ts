@@ -1,0 +1,882 @@
+export type Product = {
+  id: string
+  name: string
+  description?: string
+  price: number
+  currency: string
+  image?: string
+  rating?: number
+  reviews?: number
+  isNew?: boolean
+  isLimited?: boolean
+  stock?: number
+  brand?: string
+  category?: string
+  manualRelatedIds?: string[]
+  crossSellIds?: string[]
+  completeSetIds?: string[]
+}
+
+export type Cart = {
+  items: Array<{ productId: string; quantity: number }>
+  updatedAt: string
+}
+
+export type LocalizedString = {
+  en: string
+  ar: string
+}
+
+export type ProductFilter = {
+  brand?: string[]
+  category?: string[]
+  ids?: string[]
+  onSale?: boolean
+  sort?: 'newest' | 'bestseller' | 'price_asc' | 'price_desc'
+  limit?: number
+}
+
+export type ProductQuery = {
+  slug: string
+  filters: ProductFilter
+  active: boolean
+  title?: LocalizedString
+}
+
+export type TranslationNamespaceStatus = {
+  namespace: string
+  totalKeys: number
+  missingKeys: number
+}
+
+export type TranslationLocaleStatus = {
+  locale: 'en' | 'ar'
+  totalKeys: number
+  missingKeys: number
+  namespaces: TranslationNamespaceStatus[]
+}
+
+export type TranslationStatus = {
+  provider: 'crowdin'
+  connected: boolean
+  checkedAt: string
+  locales: TranslationLocaleStatus[]
+}
+
+export type TranslationPrefillResult = {
+  provider: 'crowdin'
+  runAt: string
+  sourceLocale: 'en' | 'ar'
+  targetLocale: 'en' | 'ar'
+  filledKeys: number
+  missingBefore: number
+  missingAfter: number
+  dryRun: boolean
+}
+
+export type ReleaseEnvironment = 'staging' | 'production'
+export type ReleaseStatus = 'draft' | 'published'
+export type ReleaseBlockType = 'hero' | 'product_slider' | 'brand_promo' | 'promo_strip'
+
+export type AdminReleaseRecord = {
+  id: string
+  environment: ReleaseEnvironment
+  status: ReleaseStatus
+  createdAt: string
+  updatedAt: string
+}
+
+export type AdminReleaseBlockRecord = {
+  id: string
+  releaseId: string
+  position: number
+  type: ReleaseBlockType
+  payloadJson: unknown
+}
+
+export type PromotionCondition =
+  | { type: 'min_cart_total'; amount: number }
+  | { type: 'brand_in'; brands: string[] }
+  | { type: 'coupon_required'; code?: string }
+
+export type PromotionReward =
+  | { type: 'percent_off'; value: number }
+  | { type: 'fixed_amount_off'; value: number }
+  | { type: 'free_shipping'; value: true }
+
+export type Promotion = {
+  id: string
+  code?: string
+  name: LocalizedString
+  isActive: boolean
+  startAt: string
+  endAt: string
+  priority: number
+  conditions: PromotionCondition[]
+  rewards: PromotionReward[]
+}
+
+export type AppliedPromotion = {
+  id: string
+  code?: string
+  name: string
+  rewardType: 'percent_off' | 'fixed_amount_off' | 'free_shipping'
+  discountAmount: number
+  shippingDiscountAmount: number
+}
+
+export type QuoteTotals = {
+  baseSubtotal: number
+  subtotal: number
+  discountTotal: number
+  discount: number
+  shipping: number
+  finalTotal: number
+  total: number
+  currency: string
+  appliedPromotion?: AppliedPromotion
+}
+
+export type CheckoutQuoteInput = {
+  items?: Array<{
+    productId: string
+    quantity: number
+  }>
+  fulfillment: {
+    mode: 'delivery' | 'pickup'
+    branchId?: string
+  }
+  couponCode?: string
+}
+
+export type CheckoutQuoteResponse = {
+  quoteId: string
+  expiresAt: string
+  totals: QuoteTotals
+}
+
+export type LogoSizeKey = 'sm' | 'md' | 'lg'
+
+export type MarketingCampaignZone =
+  | 'home_hero_primary'
+  | 'home_flash_sale'
+  | 'home_inline_banner'
+  | 'shop_banner'
+  | 'shop_flash_sale'
+
+export type MarketingCampaign = {
+  id: string
+  enabled?: boolean
+  zone?: MarketingCampaignZone
+  title: LocalizedString
+  subtitle?: LocalizedString
+  ctaLabel?: LocalizedString
+  href?: string
+  imageUrl?: string
+  timerEndsAt?: string
+  urgencyBadge?: LocalizedString
+  showTimer?: boolean
+  showUrgency?: boolean
+}
+
+export type CMSHome = {
+  heroSlides: Array<{
+    id: string
+    title: string
+    subtitle?: string
+    ctaLabel?: string
+  }>
+  shell?: {
+    topBar?: {
+      message: LocalizedString
+      secondaryMessage?: LocalizedString
+      ctaLabel?: LocalizedString
+      ctaHref?: string
+    }
+    branding?: {
+      logo: {
+        uri: string
+        alt: LocalizedString
+      }
+      logoSize?: LogoSizeKey
+    }
+    navigation?: {
+      categories?: Array<{
+        id: string
+        label: LocalizedString
+        href: string
+        group?: string
+        description?: LocalizedString
+      }>
+    }
+    footer?: {
+      newsletterTitle?: LocalizedString
+      newsletterSubtitle?: LocalizedString
+      legalNotice?: LocalizedString
+      socialLabels?: Array<{
+        id: string
+        label: LocalizedString
+      }>
+    }
+    search?: {
+      panelTitles?: {
+        trendingSearches?: LocalizedString
+        popularBrands?: LocalizedString
+        recentSearches?: LocalizedString
+        suggestions?: LocalizedString
+        products?: LocalizedString
+      }
+      panelMessages?: {
+        loadingSuggestions?: LocalizedString
+        unavailableSuggestions?: LocalizedString
+        noMatchingSuggestions?: LocalizedString
+        noProductSuggestions?: LocalizedString
+        noPopularBrands?: LocalizedString
+        noRecentSearches?: LocalizedString
+      }
+      clearRecentLabel?: LocalizedString
+    }
+  }
+  marketing?: {
+    rails?: Array<{
+      id: string
+      enabled?: boolean
+      title: LocalizedString
+      query?: {
+        source?: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
+        limit?: number
+        sortBy?: 'price_desc' | 'price_asc' | 'name_asc' | 'name_desc'
+        productIds?: string[]
+        brandNames?: string[]
+      }
+    }>
+    completeSet?: {
+      enabled?: boolean
+      title: LocalizedString
+      subtitle?: LocalizedString
+      ctaLabel?: LocalizedString
+      ctaHref?: string
+      query?: {
+        source?: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
+        limit?: number
+        sortBy?: 'price_desc' | 'price_asc' | 'name_asc' | 'name_desc'
+        productIds?: string[]
+        brandNames?: string[]
+      }
+    }
+    featuredSlot?: {
+      enabled?: boolean
+      title: LocalizedString
+      subtitle?: LocalizedString
+      ctaLabel?: LocalizedString
+      href?: string
+      imageUrl?: string
+    }
+    brandSections?: Array<{
+      id: string
+      enabled?: boolean
+      bannerTitle: LocalizedString
+      bannerSubtitle?: LocalizedString
+      bannerCtaLabel?: LocalizedString
+      bannerHref?: string
+      bannerImageUrl?: string
+      railTitle: LocalizedString
+      query?: {
+        source?: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
+        limit?: number
+        sortBy?: 'price_desc' | 'price_asc' | 'name_asc' | 'name_desc'
+        productIds?: string[]
+        brandNames?: string[]
+      }
+    }>
+    brandSpotlights?: Array<{
+      id: string
+      enabled?: boolean
+      bannerTitle: LocalizedString
+      bannerSubtitle?: LocalizedString
+      bannerCtaLabel?: LocalizedString
+      bannerHref?: string
+      bannerImageUrl?: string
+      railTitle: LocalizedString
+      query?: {
+        source?: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
+        limit?: number
+        sortBy?: 'price_desc' | 'price_asc' | 'name_asc' | 'name_desc'
+        productIds?: string[]
+        brandNames?: string[]
+      }
+    }>
+    ticker?: {
+      enabled?: boolean
+      speedMs?: number
+      items?: Array<{
+        id: string
+        message: LocalizedString
+        href?: string
+      }>
+    }
+    hero?: {
+      autoplay?: boolean
+      autoplayMs?: number
+      cards?: Array<{
+        id: string
+        title: string
+        subtitle?: string
+        ctaLabel?: string
+        href?: string
+        imageUrl?: string
+        badgeLabel?: LocalizedString
+      }>
+    }
+    campaigns?: MarketingCampaign[]
+    campaignZoneOverrides?: {
+      home?: {
+        heroPrimaryCampaignId?: string
+        flashSaleCampaignId?: string
+        inlineBannerCampaignId?: string
+      }
+      shop?: {
+        bannerCampaignId?: string
+        flashSaleCampaignId?: string
+      }
+      productCard?: {
+        urgencyEnabled?: boolean
+        urgencyLabel?: LocalizedString
+        discountBadgeEnabled?: boolean
+        lowStockThreshold?: number
+        lowStockLabel?: LocalizedString
+      }
+    }
+    brands?: Array<{
+      id: string
+      name: string
+      href?: string
+      logoUrl?: string
+    }>
+    topBrandsTitle?: LocalizedString
+  }
+  identity?: {
+    customer?: {
+      shopBanner?: {
+        title: LocalizedString
+        subtitle?: LocalizedString
+        ctaLabel?: LocalizedString
+      }
+      shopCatalog?: {
+        loadingLabel?: LocalizedString
+        loadErrorTitle?: LocalizedString
+        retryLabel?: LocalizedString
+        productsSuffix?: LocalizedString
+        filtersButtonLabel?: LocalizedString
+        filterPanelTitle?: LocalizedString
+        filterCategoryTitle?: LocalizedString
+        filterBrandTitle?: LocalizedString
+        filterPriceTitle?: LocalizedString
+        filterSpecialTitle?: LocalizedString
+        saleOnlyLabel?: LocalizedString
+        bundleOnlyLabel?: LocalizedString
+        clearAllLabel?: LocalizedString
+        clearFiltersLabel?: LocalizedString
+        noProductsMessage?: LocalizedString
+        closeLabel?: LocalizedString
+        sortLabels?: {
+          bestSelling?: LocalizedString
+          newest?: LocalizedString
+          priceAsc?: LocalizedString
+          priceDesc?: LocalizedString
+        }
+        chipPrefixes?: {
+          category?: LocalizedString
+          brand?: LocalizedString
+          price?: LocalizedString
+        }
+        priceBucketLabels?: {
+          all?: LocalizedString
+          under25?: LocalizedString
+          between25And50?: LocalizedString
+          between50And100?: LocalizedString
+          over100?: LocalizedString
+        }
+      }
+      accountPromo?: {
+        title: LocalizedString
+        subtitle?: LocalizedString
+      }
+      productDetails?: {
+        tabs?: {
+          description?: LocalizedString
+          howToUse?: LocalizedString
+          ingredients?: LocalizedString
+        }
+        labels?: {
+          inStock?: LocalizedString
+          outOfStock?: LocalizedString
+          quantity?: LocalizedString
+          noSelectableOptions?: LocalizedString
+          deliveryAssurance?: LocalizedString
+          selectedSubtotal?: LocalizedString
+          reviewsTitle?: LocalizedString
+          loading?: LocalizedString
+          noReviews?: LocalizedString
+          reviewsLoadError?: LocalizedString
+          addToCart?: LocalizedString
+          addShort?: LocalizedString
+          adding?: LocalizedString
+          notifyMe?: LocalizedString
+          completeSetOutOfStock?: LocalizedString
+          submitError?: LocalizedString
+        }
+        defaults?: {
+          description?: LocalizedString
+          howToUse?: LocalizedString
+          ingredients?: LocalizedString
+        }
+        deliveryHighlights?: Array<LocalizedString>
+        stockMessages?: {
+          limitedStock?: LocalizedString
+          readyDispatch?: LocalizedString
+          outOfStock?: LocalizedString
+        }
+        crossSellByProduct?: Array<{
+          productId: string
+          relatedProductIds: string[]
+        }>
+      }
+      checkoutNotice?: LocalizedString
+      checkout?: {
+        paymentMethods?: {
+          codEnabled?: boolean
+          cardOnDeliveryEnabled?: boolean
+          onlineCardEnabled?: boolean
+        }
+        fulfillment?: {
+          deliveryEnabled?: boolean
+          branchPickupEnabled?: boolean
+        }
+        branches?: Array<{
+          id: string
+          name: LocalizedString
+          city?: LocalizedString
+          area?: LocalizedString
+          building?: LocalizedString
+          stockCount: number
+          distanceKm?: number
+          payAtBranchEnabled?: boolean
+          payNowEnabled?: boolean
+        }>
+      }
+      loyalty?: {
+        pointToCurrency?: number
+        earnRatePerCurrency?: number
+        tiers?: Array<{
+          id: string
+          name: string
+          minPoints: number
+        }>
+        tierThresholds?: {
+          gold?: number
+          loyal?: number
+        }
+        redeemOptions?: Array<{
+          percent: number
+          pointsCost: number
+        }>
+      }
+    }
+    pharmacist?: {
+      dashboardTitle?: LocalizedString
+      panelLabels?: {
+        search: LocalizedString
+        consultation: LocalizedString
+        recommendations: LocalizedString
+      }
+      notice?: LocalizedString
+    }
+    admin?: {
+      dashboardTitle?: LocalizedString
+      kpiLabels?: Array<{
+        id: string
+        label: LocalizedString
+      }>
+      notice?: LocalizedString
+      controlToggles?: Array<{
+        id: string
+        label: LocalizedString
+        description?: LocalizedString
+        enabled: boolean
+        surface: 'all' | 'web' | 'mobile'
+      }>
+      rolePreview?: Array<{
+        id: string
+        name: string
+        email: string
+        role: AuthRole
+        status: 'active' | 'invited' | 'disabled'
+        lastActiveAt?: string
+        permissions?: AdminPermissionSet
+      }>
+    }
+  }
+}
+
+export type ApiResponse<T> =
+  | {
+      success: true
+      data: T
+    }
+  | {
+      success: false
+      error: {
+        code: string
+        message: string
+      }
+    }
+
+export type SearchSuggestion = {
+  id: string
+  label: string
+  type: 'product' | 'category' | 'brand'
+  href: string
+  imageUrl?: string
+  brandName?: string
+  productName?: string
+  price?: number
+  compareAtPrice?: number
+  discountLabel?: string
+}
+
+export type SearchResult = {
+  suggestions: SearchSuggestion[]
+  trendingSearches: string[]
+  popularBrands: string[]
+}
+
+export type OrderStatus = 'placed' | 'shipped' | 'delivered' | 'cancelled'
+
+export type OrderSummary = {
+  id: string
+  ownerUserId?: string
+  status: OrderStatus
+  total: number
+  currency: string
+  createdAt: string
+  pricing?: {
+    subtotal: number
+    delivery: number
+    discount: number
+  }
+  fulfillment?: {
+    mode: 'delivery' | 'pickup'
+    paymentMethod: 'cod' | 'card_on_delivery' | 'online_card' | 'pay_at_branch'
+    addressLine?: string
+    branchName?: string
+  }
+  items?: Array<{
+    productId: string
+    brand?: string
+    name: string
+    quantity: number
+    price: number
+    currency: string
+    imageUrl?: string
+  }>
+}
+
+export type CheckoutPlaceOrderInput = {
+  items?: Array<{
+    productId: string
+    quantity: number
+  }>
+  contact: {
+    fullName: string
+    phone: string
+  }
+  address?: {
+    city: string
+    area: string
+    building: string
+    floor?: string
+    apartment?: string
+    notes?: string
+  }
+  addressBook?: {
+    saveAsNew?: boolean
+    label?: string
+  }
+  loyalty?: {
+    redeemPercent?: number
+  }
+  fulfillment: {
+    mode: 'delivery' | 'pickup'
+    branchId?: string
+  }
+  payment: {
+    method: 'cod' | 'card_on_delivery' | 'online_card' | 'pay_at_branch'
+  }
+  pricingQuoteId: string
+  couponCode?: string
+}
+
+export type AuthRole =
+  | 'customer'
+  | 'pharmacist'
+  | 'admin'
+  | 'marketing'
+  | 'catalog'
+  | 'support'
+  | 'ops'
+
+export type AuthSession = {
+  userId: string
+  email: string
+  name: string
+  role: AuthRole
+}
+
+export type AuthAck = {
+  accepted: boolean
+}
+
+export type AdminPermissionSet = {
+  canManageCmsToggles: boolean
+  canManageUsers: boolean
+  canRunCacheOps: boolean
+}
+
+export type AdminCacheAction =
+  | 'revalidate_home_shop'
+  | 'revalidate_all_public'
+  | 'revalidate_account_surfaces'
+  | 'revalidate_admin_surfaces'
+  | 'full_stack_flush'
+
+export type AdminCacheResult = {
+  action: AdminCacheAction
+  executedAt: string
+  executedBy: {
+    userId: string
+    email: string
+    role: AuthRole
+  }
+  revalidatedPaths: string[]
+  revalidatedTags: string[]
+  cdn: {
+    enabled: boolean
+    attempted: boolean
+    success: boolean
+    statusCode?: number
+    message?: string
+  }
+  cooldownSeconds: number
+}
+
+export type AdminCacheAuditEntry = AdminCacheResult & {
+  id: string
+}
+
+export type AdminControlToggleUpdate = {
+  id: string
+  enabled: boolean
+  updatedAt: string
+  updatedBy: {
+    userId: string
+    email: string
+  }
+}
+
+export type HomeBrandSpotlightConfig = NonNullable<
+  NonNullable<CMSHome['marketing']>['brandSpotlights']
+>[number]
+
+export type AdminBrandSpotlightRecord = HomeBrandSpotlightConfig & {
+  updatedAt: string | null
+  updatedBy: {
+    userId: string
+    email: string
+  } | null
+}
+
+export type AdminUserControlRecord = {
+  id: string
+  name: string
+  email: string
+  role: AuthRole
+  status: 'active' | 'invited' | 'disabled'
+  lastActiveAt?: string
+  permissions?: AdminPermissionSet
+}
+
+export type AdminOpsAuditEntry = {
+  id: string
+  type: 'toggle' | 'user' | 'marketing' | 'i18n'
+  targetId: string
+  actor: {
+    userId: string
+    email: string
+  }
+  at: string
+  changes: Record<string, string>
+}
+
+export type Review = {
+  id: string
+  productId: string
+  rating: number
+  title: string
+  body: string
+  author: string
+  createdAt: string
+}
+
+export type AccountOverview = {
+  user: {
+    userId: string
+    name: string
+    email: string
+    role: AuthRole
+  }
+  loyaltySummary: {
+    tier: string
+    points: number
+    redeemableValue: number
+    currency: string
+  } | null
+  lastOrder: OrderSummary | null
+}
+
+export type LoyaltyRedeemOption = {
+  percent: number
+  pointsCost: number
+}
+
+export type LoyaltyBarcode = {
+  code: string
+  expiresAt: string
+}
+
+export type LoyaltyWallet = {
+  tier: string
+  points: number
+  redeemableValue: number
+  currency: string
+  expiringSoonPoints: number
+  expiringSoonAt: string | null
+  redeemOptions: LoyaltyRedeemOption[]
+  barcode: LoyaltyBarcode
+  tierProgress: {
+    currentTierId: string
+    currentTierName: string
+    nextTierId: string | null
+    nextTierName: string | null
+    currentPoints: number
+    nextTierThreshold: number | null
+    pointsToNextTier: number
+    progressPercent: number
+  }
+}
+
+export type AccountAddress = {
+  id: string
+  label: string
+  city: string
+  area: string
+  building: string
+  floor?: string
+  apartment?: string
+  isDefault?: boolean
+}
+
+export type LoyaltyHistoryEntry = {
+  id: string
+  title: string
+  pointsDelta: number
+  createdAt: string
+}
+
+export type WishlistItem = {
+  id: string
+  brand?: string
+  name: string
+  price: number
+  currency: string
+  imageUrl?: string
+}
+
+export type AccountTestRecord = {
+  id: string
+  title: string
+  createdAt: string
+  status?: 'completed' | 'follow_up'
+  recommendedCount: number
+  purchasedCount: number
+}
+
+export type AccountTestRecommendedProduct = {
+  productId: string
+  brand?: string
+  name: string
+  price: number
+  currency: string
+  imageUrl?: string
+  inStock?: boolean
+}
+
+export type AccountTestDetail = {
+  id: string
+  title: string
+  createdAt: string
+  status: 'completed' | 'follow_up'
+  pharmacistName: string
+  branchName: string
+  summary: string
+  notes?: string
+  metrics: Array<{
+    id: string
+    label: string
+    value: string
+  }>
+  recommendedProducts: AccountTestRecommendedProduct[]
+}
+
+export type AccountQr = {
+  qrCode: string
+}
+
+export type PharmacistCustomerSummary = {
+  userId: string
+  name: string
+  email: string
+  phone?: string
+  qrCode: string
+  testCount: number
+  lastTestAt?: string
+}
+
+export type PharmacistCustomerProfile = {
+  customer: PharmacistCustomerSummary
+  tests: AccountTestRecord[]
+}
+
+export type PharmacistConsultationMetricInput = {
+  id: string
+  label: string
+  value: string
+}
+
+export type PharmacistConsultationInput = {
+  customerId: string
+  title: string
+  summary: string
+  notes?: string
+  metrics: PharmacistConsultationMetricInput[]
+  recommendedProductIds: string[]
+}
+
+export type PharmacistConsultationDraft = {
+  customer: PharmacistCustomerSummary
+  title: string
+  summary: string
+  notes?: string
+  metrics: PharmacistConsultationMetricInput[]
+  recommendedProducts: AccountTestRecommendedProduct[]
+}

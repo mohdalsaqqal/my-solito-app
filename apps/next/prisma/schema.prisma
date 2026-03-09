@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  slug      String    @unique
+  nameEn    String
+  nameAr    String
+  parentId  String?
+  image     String?
+  isActive  Boolean   @default(true)
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  parent    Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryTree")
+
+  @@index([parentId])
+  @@index([sortOrder])
+}
+
+model Brand {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  nameEn        String
+  nameAr        String
+  logo          String?
+  descriptionEn String?
+  descriptionAr String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProductQuery {
+  slug       String   @id
+  filtersJson Json
+  active     Boolean  @default(true)
+  titleEn    String
+  titleAr    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+enum ReleaseEnvironment {
+  staging
+  production
+}
+
+enum ReleaseStatus {
+  draft
+  published
+}
+
+enum ReleaseBlockType {
+  hero
+  product_slider
+  brand_promo
+  promo_strip
+}
+
+model Release {
+  id          String             @id @default(cuid())
+  environment ReleaseEnvironment
+  status      ReleaseStatus      @default(draft)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  blocks      ReleaseBlock[]
+
+  @@index([environment, status])
+}
+
+model ReleaseBlock {
+  id          String           @id @default(cuid())
+  releaseId   String
+  position    Int
+  type        ReleaseBlockType
+  payloadJson Json
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  release     Release          @relation(fields: [releaseId], references: [id], onDelete: Cascade)
+
+  @@index([releaseId, position])
+}
+
+model Promotion {
+  id             String   @id @default(cuid())
+  code           String?  @unique
+  nameEn         String
+  nameAr         String
+  isActive       Boolean  @default(true)
+  startAt        DateTime
+  endAt          DateTime
+  priority       Int      @default(0)
+  conditionsJson Json
+  rewardsJson    Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive, startAt, endAt])
+  @@index([priority])
+  @@index([code])
+}
+
+model PricingQuote {
+  id        String   @id @default(cuid())
+  userId    String?
+  cartHash  String
+  quoteJson Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([cartHash])
+  @@index([userId])
+  @@index([expiresAt])
+}

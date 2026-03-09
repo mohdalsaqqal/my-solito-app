@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#__next {
+  width: 100%;
+  /* To smooth any scrolling behavior */
+  -webkit-overflow-scrolling: touch;
+  margin: 0px;
+  padding: 0px;
+  /* Allows content to fill the viewport and go beyond the bottom */
+  min-height: 100%;
+}
+#__next {
+  flex-shrink: 0;
+  flex-basis: auto;
+  flex-direction: column;
+  flex-grow: 1;
+  display: flex;
+  flex: 1;
+}
+html {
+  scroll-behavior: smooth;
+  /* Prevent text size change on device rotation */
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+body {
+  display: flex;
+  /* Allows you to scroll below the viewport; default value is visible */
+  overflow-y: auto;
+  overscroll-behavior-y: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -ms-overflow-style: auto;
+  font-family: var(--font-cairo), -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Remove legacy scrollbar arrow buttons while keeping the scrollbar track/thumb. */
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}

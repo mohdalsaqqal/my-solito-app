@@ -1,0 +1,109 @@
+import { ReactNode } from 'react'
+import { borderWidth, colors, radius, spacing } from '@real/tokens'
+import { ViewStyle } from 'react-native'
+import { Button as ReusableButton } from '../reusables/button'
+import { Text } from '../primitives/Text'
+
+type ButtonProps = {
+  children?: ReactNode
+  variant?: 'solid' | 'outline' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  onPress?: () => void
+}
+
+type ButtonVariant = NonNullable<ButtonProps['variant']>
+type ButtonSize = NonNullable<ButtonProps['size']>
+
+const buttonSizeStyles: Record<
+  ButtonSize,
+  {
+    minHeight: number
+    paddingHorizontal: number
+  }
+> = {
+  sm: {
+    minHeight: spacing['32'],
+    paddingHorizontal: spacing.sm,
+  },
+  md: {
+    minHeight: spacing['40'],
+    paddingHorizontal: spacing.md,
+  },
+  lg: {
+    minHeight: spacing['48'],
+    paddingHorizontal: spacing.lg,
+  },
+}
+
+const buttonContainerStyles: Record<ButtonVariant, ViewStyle> = {
+  solid: {
+    backgroundColor: colors.brandPrimary,
+    borderColor: colors.brandPrimary,
+    borderWidth: borderWidth.none,
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderColor: colors.brandPrimary,
+    borderWidth: borderWidth.thin,
+  },
+  ghost: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    borderWidth: borderWidth.none,
+  },
+}
+
+const buttonTextTone: Record<ButtonVariant, 'inverse' | 'primary'> = {
+  solid: 'inverse',
+  outline: 'primary',
+  ghost: 'primary',
+}
+
+const reusableVariantMap: Record<ButtonVariant, 'default' | 'outline' | 'ghost'> = {
+  solid: 'default',
+  outline: 'outline',
+  ghost: 'ghost',
+}
+
+const reusableSizeMap: Record<ButtonSize, 'sm' | 'default' | 'lg'> = {
+  sm: 'sm',
+  md: 'default',
+  lg: 'lg',
+}
+
+export function Button({
+  children,
+  variant = 'solid',
+  size = 'md',
+  disabled,
+  onPress,
+}: ButtonProps) {
+  const sizeStyle = buttonSizeStyles[size]
+  const variantStyle = buttonContainerStyles[variant]
+
+  return (
+    <ReusableButton
+      disabled={disabled}
+      onPress={onPress}
+      variant={reusableVariantMap[variant]}
+      size={reusableSizeMap[size]}
+      style={{
+        minHeight: sizeStyle.minHeight,
+        paddingHorizontal: sizeStyle.paddingHorizontal,
+        borderRadius: radius.md,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...variantStyle,
+      }}
+    >
+      <Text
+        tone={buttonTextTone[variant]}
+        variant='label'
+        style={{ textTransform: 'uppercase' }}
+      >
+        {children}
+      </Text>
+    </ReusableButton>
+  )
+}

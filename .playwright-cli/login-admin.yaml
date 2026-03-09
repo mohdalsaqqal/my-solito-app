@@ -1,0 +1,13 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e8]:
+    - generic [ref=e9]: Sign In
+    - generic [ref=e10]: Continue to your account and orders.
+    - generic [ref=e11]:
+      - textbox "Email or username" [ref=e12]
+      - textbox "Password" [ref=e13]
+    - button "Sign In" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15]: Sign In
+    - generic [ref=e16]:
+      - generic [ref=e18] [cursor=pointer]: Forgot password?
+      - generic [ref=e20] [cursor=pointer]: Create account
+  - alert [ref=e21]

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Operations Cache Management - Real Cosmetics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#000000", "background-light": "#f7f7f7", "background-dark": "#191919"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="w-[260px] fixed h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Real Cosmetics circular logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFKpdXfCkDfPucuB_xAH84sXtqKEhQJCh6SNJzrTIlo-rtJxwQ4cky9HuSD0dYmSIUQbnHZuSXJFiI0zC4SjM5dfMBC7fkmqCwiUa99mZucUj4Xiv46e46eYMDiqEyN9ir0OcjEALceFLdj-AxAb36bj-gphA4eTiwwU60rwwSKZFdbXD0Si0OPW-KZgbfrt73ZFo0BSslCm2py2JJKlK_W7CVxIJ6NrwVFGvkzz9boRRwc7i4sPkoOxWefGV-jtL6KlqbFiHvexs"/>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm font-bold tracking-tight">Real Cosmetics</h1>
+<p class="text-xs text-slate-500">Admin Panel</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">grid_view</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg" href="#">
+<span class="material-symbols-outlined">database</span>
+<span class="text-sm font-medium">Operations</span>
+</a>
+<div class="ml-9 flex flex-col gap-1 mt-1 border-l border-slate-100 dark:border-slate-800 pl-4">
+<a class="text-sm py-1.5 text-primary font-medium" href="#">Cache</a>
+<a class="text-sm py-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white" href="#">Backups</a>
+<a class="text-sm py-1.5 text-slate-500 hover:text-slate-900 dark:hover:text-white" href="#">Logs</a>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Products</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm font-medium">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2">
+<div class="size-8 rounded-full bg-slate-200" data-alt="User avatar thumbnail">
+<img class="rounded-full" data-alt="Profile picture for admin" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqPyMAEMRdvC7GyI3eV3WrTfvR9CFYoeJq103LLUdvRkHvIIJ7kpkd2RoxtgJH-wY90z1t-Ngu83332P85pnmLWG2B1rtipx45roG2bx2cyn3Af9Rb_mfeWu3GMrAoN-hTHJnNKUypTa9_A2boGAFtzU_NrF3ppfRZar3NV3rlSOWvYw349gGeW4F89l0O0evoOtQ8nZiBKetCoeId-IxNJha6CZ7S2Das5R49cpppnXSeLfS15Vtj0DfTP08hgQvxxzkWwhfoCeU"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-semibold truncate">Alex Rivera</p>
+<p class="text-[10px] text-slate-500">System Architect</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-sm">logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[260px] flex-1 flex flex-col">
+<!-- Sticky AdminHeader -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-3 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<nav class="flex items-center text-sm font-medium text-slate-500 space-x-2">
+<span>Operations</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100">Cache</span>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="pl-9 pr-4 py-1.5 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary" placeholder="Search operations..." type="text"/>
+</div>
+<button class="relative p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+</div>
+</header>
+<div class="p-8 space-y-8">
+<!-- Page Header -->
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<h2 class="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">Cache Management</h2>
+<p class="text-slate-500">Global application layer cache control and CDN invalidation.</p>
+</div>
+<div class="flex items-center gap-4 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">timer</span>
+<span class="text-sm font-bold text-slate-900 dark:text-slate-100">02:59</span>
+</div>
+<div class="h-4 w-px bg-slate-200 dark:border-slate-800"></div>
+<span class="text-[10px] uppercase font-bold tracking-wider text-slate-400">Cooldown Active</span>
+</div>
+</div>
+<!-- Flush Cache Panel -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+<div class="p-6 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div>
+<h3 class="text-base font-bold">Quick Purge</h3>
+<p class="text-xs text-slate-500">Initiate a manual cache purge for production</p>
+</div>
+</div>
+<div class="flex gap-2">
+<div class="relative group">
+<button class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm font-semibold rounded-lg transition-colors">
+                                        Actions
+                                        <span class="material-symbols-outlined text-sm">expand_more</span>
+</button>
+</div>
+<button class="px-6 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm">
+                                    Flush Cache
+                                </button>
+</div>
+</div>
+<div class="p-6 grid grid-cols-3 gap-4">
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+<p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Total Keys</p>
+<p class="text-xl font-black tracking-tight">1.2M</p>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+<p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Hit Rate</p>
+<p class="text-xl font-black tracking-tight text-green-600">94.2%</p>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
+<p class="text-[10px] uppercase font-bold text-slate-400 mb-1">Last Flush</p>
+<p class="text-xl font-black tracking-tight">14m ago</p>
+</div>
+</div>
+</div>
+<div class="bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg p-6 flex flex-col justify-between">
+<div class="space-y-2">
+<h4 class="text-sm font-bold text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">info</span>
+                                Active Policy
+                            </h4>
+<p class="text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                                The current revalidation strategy is set to <span class="font-bold">Stale-While-Revalidate</span>. 
+                                Changes made here will affect the global CDN edge nodes immediately.
+                            </p>
+</div>
+<button class="w-full mt-4 py-2 text-xs font-bold text-primary border border-primary/30 rounded-lg hover:bg-primary/10 transition-colors">
+                            View Strategy Docs
+                        </button>
+</div>
+</div>
+<!-- Detailed View Section -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<div class="flex gap-6">
+<button class="text-sm font-bold text-slate-900 dark:text-slate-100 border-b-2 border-primary pb-1">Revalidated Paths</button>
+<button class="text-sm font-medium text-slate-400 hover:text-slate-600 pb-1">Cache Tags</button>
+</div>
+<button class="text-xs font-bold text-slate-500 flex items-center gap-1 hover:text-slate-900">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                            Filter List
+                        </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50">
+<th class="px-6 py-3 text-[10px] uppercase font-bold text-slate-400">Path</th>
+<th class="px-6 py-3 text-[10px] uppercase font-bold text-slate-400">Cache Tags</th>
+<th class="px-6 py-3 text-[10px] uppercase font-bold text-slate-400">Frequency</th>
+<th class="px-6 py-3 text-[10px] uppercase font-bold text-slate-400">Last Purged</th>
+<th class="px-6 py-3 text-[10px] uppercase font-bold text-slate-400 text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">/products/[slug]</td>
+<td class="px-6 py-4">
+<div class="flex gap-1">
+<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500">catalog</span>
+<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500">stock</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs font-medium">12s revalidation</td>
+<td class="px-6 py-4 text-xs text-slate-500">2 min ago</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors">refresh</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">/api/v2/prices/*</td>
+<td class="px-6 py-4">
+<div class="flex gap-1">
+<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500">pricing</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs font-medium">On-demand</td>
+<td class="px-6 py-4 text-xs text-slate-500">14h ago</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors">refresh</button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">/collections/*</td>
+<td class="px-6 py-4">
+<div class="flex gap-1">
+<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500">navigation</span>
+<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-500">ui</span>
+</div>
+</td>
+<td class="px-6 py-4 text-xs font-medium">60s revalidation</td>
+<td class="px-6 py-4 text-xs text-slate-500">Never</td>
+<td class="px-6 py-4 text-right">
+<button class="material-symbols-outlined text-slate-400 hover:text-primary transition-colors">refresh</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Confirmation Modal (Destructive Action Overlay) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+<div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 space-y-4">
+<div class="flex items-center gap-3 text-red-600">
+<span class="material-symbols-outlined text-2xl">warning</span>
+<h3 class="text-lg font-black">Flush Global Cache?</h3>
+</div>
+<p class="text-sm text-slate-500 leading-relaxed">
+                    This action is destructive and will force every client to fetch new data. Server load may spike significantly across all regions.
+                </p>
+<div class="space-y-2">
+<p class="text-[10px] font-black uppercase text-slate-400 tracking-wider">Type 'FLUSH' to confirm</p>
+<input class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold tracking-widest focus:ring-primary focus:border-primary" placeholder="FLUSH" type="text"/>
+</div>
+<div class="flex gap-3 pt-4">
+<button class="flex-1 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+<button class="flex-1 py-3 text-sm font-bold bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors shadow-lg shadow-red-600/20">
+                        Confirm Flush
+                    </button>
+</div>
+</div>
+<div class="bg-slate-50 dark:bg-slate-800/50 p-4 border-t border-slate-100 dark:border-slate-800">
+<p class="text-[10px] text-center text-slate-400 font-medium">Warning: This action cannot be undone once propagated to edge nodes.</p>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,30 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./apps/next" },
+    { "path": "./apps/expo" }
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@real/app": ["./packages/app/index.ts"],
+      "@real/app/*": ["./packages/app/*"],
+      "@real/ui": ["./packages/ui/index.ts"],
+      "@real/ui/*": ["./packages/ui/*"],
+      "@real/tokens": ["./packages/tokens/index.ts"],
+      "@real/tokens/*": ["./packages/tokens/*"],
+      "@real/providers": ["./packages/providers/index.ts"],
+      "@real/providers/*": ["./packages/providers/*"],
+      "@real/adapters": ["./packages/adapters/index.ts"],
+      "@real/adapters/*": ["./packages/adapters/*"]
+    },
+    "strict": true,
+    "strictNullChecks": true,
+    "noUncheckedIndexedAccess": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": false
+  }
+}
