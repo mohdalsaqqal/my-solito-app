@@ -113,7 +113,11 @@ export function StarRating({
           return (
             <Text
               key={i}
-              style={{ fontSize: size, color: resolvedColor, lineHeight: size + 2 }}
+              style={{
+                fontSize: size,
+                color: resolvedColor,
+                lineHeight: size + 2,
+              }}
               accessible={false}
             >
               {char}
