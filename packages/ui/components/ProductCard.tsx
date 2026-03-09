@@ -448,7 +448,12 @@ export function ProductCard({
               <Touchable
                 onPress={handleToggleWishlist}
                 accessibilityRole='button'
-                accessibilityLabel={`Add ${item.name} to wishlist`}
+                accessibilityLabel={
+                  localWishlisted
+                    ? `Remove ${item.name} from wishlist`
+                    : `Add ${item.name} to wishlist`
+                }
+                accessibilityState={{ checked: localWishlisted }}
               >
                 <Box
                   p='xxs'
