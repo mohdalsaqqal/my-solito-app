@@ -44,6 +44,52 @@ const DEFAULT_SWATCH_COLORS = [
   colors.textPrimary,
 ]
 
+function ProductCardSkeleton({ width }: { width: number }) {
+  const shimmer = {
+    backgroundColor: colors.backgroundSecondary,
+    borderRadius: radius.xs,
+  } as const
+
+  return (
+    <Card
+      variant='flat'
+      radiusKey='md'
+      style={{
+        width,
+        gap: 0,
+        padding: 0,
+        backgroundColor: colors.surface,
+        borderWidth: borderWidth.thin,
+        borderColor: colors.border,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Image placeholder */}
+      <Box style={{ width: '100%', aspectRatio: 1, backgroundColor: colors.backgroundSecondary }} />
+
+      {/* Content */}
+      <Box style={{ gap: spacing.sm, padding: spacing.sm, paddingBottom: spacing.md }}>
+        <Box style={{ ...shimmer, height: 10, width: '40%' }} />
+        <Box style={{ ...shimmer, height: 13, width: '85%' }} />
+        <Box style={{ ...shimmer, height: 13, width: '65%' }} />
+        <Box style={{ ...shimmer, height: 10, width: '28%', marginTop: spacing.xs }} />
+        <Box style={{ ...shimmer, height: 18, width: '42%', marginTop: spacing.xs }} />
+      </Box>
+
+      {/* CTA button placeholder */}
+      <Box
+        style={{
+          ...shimmer,
+          height: spacing['48'],
+          marginHorizontal: spacing.sm,
+          marginBottom: spacing.sm,
+          borderRadius: radius.xs,
+        }}
+      />
+    </Card>
+  )
+}
+
 export function ProductCard({
   item,
   variant = 'default',
@@ -215,13 +261,7 @@ export function ProductCard({
   }
 
   if (state === 'loading') {
-    return (
-      <Card
-        tone='subtle'
-        radiusKey='xs'
-        style={{ width, minHeight: spacing.xxl * 5 }}
-      />
-    )
+    return <ProductCardSkeleton width={width} />
   }
 
   if (state === 'error') {
