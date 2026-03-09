@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Image, Platform } from 'react-native'
 import {
   borderWidth,
@@ -11,6 +11,7 @@ import {
 import { Box, Text, Touchable } from '../primitives'
 import { Card } from './Card'
 import { Icon } from './Icon'
+import { StarRating } from './StarRating'
 import { HomeProductItem } from './home/types'
 
 type ProductCardVariant = 'default' | 'bundle' | 'flash'
@@ -35,6 +36,13 @@ type ProductCardProps = {
 
 const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
 const DEFAULT_CURRENCY = 'USD'
+const DEFAULT_SWATCH_COLORS = [
+  colors.brandPrimary,
+  colors.info,
+  colors.warning,
+  colors.success,
+  colors.textPrimary,
+]
 
 export function ProductCard({
   item,
@@ -55,34 +63,11 @@ export function ProductCard({
   const resolvedContentPadding = spacing[contentPadding]
 
   const [isHovering, setIsHovering] = useState(false)
+  const [showVariantPicker, setShowVariantPicker] = useState(false)
+  const [addState, setAddState] = useState<'idle' | 'loading' | 'success'>('idle')
+  const [localWishlisted, setLocalWishlisted] = useState(isWishlisted)
   const hideHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handlePointerEnter = () => {
-    if (Platform.OS !== 'web') return
-    if (hideHoverTimeoutRef.current) {
-      clearTimeout(hideHoverTimeoutRef.current)
-      hideHoverTimeoutRef.current = null
-    }
-    setIsHovering(true)
-  }
-
-  const handlePointerLeave = () => {
-    if (Platform.OS !== 'web') return
-    if (hideHoverTimeoutRef.current) {
-      clearTimeout(hideHoverTimeoutRef.current)
-    }
-    hideHoverTimeoutRef.current = setTimeout(() => {
-      setIsHovering(false)
-    }, motionDuration.microInteraction / 2)
-  }
-
-  useEffect(() => {
-    return () => {
-      if (hideHoverTimeoutRef.current) {
-        clearTimeout(hideHoverTimeoutRef.current)
-      }
-    }
-  }, [])
+  const resetAddTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const parsePercent = (value?: string) => {
     if (!value) return null
@@ -92,6 +77,56 @@ export function ProductCard({
     if (Number.isNaN(percent) || percent <= 0 || percent >= 90) return null
     return percent
   }
+
+  const inferredOutOfStock =
+    Boolean(item?.badge && /out of stock|sold out/i.test(item.badge)) ||
+    Boolean(item?.name && /out of stock|sold out/i.test(item.name))
+  const outFromInventory = typeof item?.stock === 'number' ? item.stock <= 0 : false
+  const disabled = state === 'disabled' || outOfStock || inferredOutOfStock || outFromInventory
+  const isWeb = Platform.OS === 'web'
+  const hovered = isWeb ? isHovering : false
+
+  const resolvedSwatches = useMemo(() => {
+    if (!item) return []
+    if (item.swatches && item.swatches.length > 0) {
+      return item.swatches
+    }
+    if (!item.requiresVariantSelection) {
+      return []
+    }
+    return DEFAULT_SWATCH_COLORS.map((hex, index) => ({
+      id: `${item.id}-shade-${index + 1}`,
+      hex,
+      label: `Shade ${index + 1}`,
+      imageUrl: undefined,
+    }))
+  }, [item])
+  const hasSelectableVariants = Boolean(item?.requiresVariantSelection) || resolvedSwatches.length > 0
+  const [selectedSwatchId, setSelectedSwatchId] = useState<string | null>(
+    resolvedSwatches[0]?.id ?? null
+  )
+
+  useEffect(() => {
+    setLocalWishlisted(isWishlisted)
+  }, [isWishlisted])
+
+  useEffect(() => {
+    setSelectedSwatchId(resolvedSwatches[0]?.id ?? null)
+  }, [resolvedSwatches])
+
+  useEffect(() => {
+    return () => {
+      if (hideHoverTimeoutRef.current) {
+        clearTimeout(hideHoverTimeoutRef.current)
+      }
+      if (resetAddTimeoutRef.current) {
+        clearTimeout(resetAddTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  const selectedSwatch = resolvedSwatches.find((swatch) => swatch.id === selectedSwatchId)
+  const imageUri = selectedSwatch?.imageUrl || item?.imageUrl || FALLBACK_IMAGE
 
   const resolveCompareAtPrice = () => {
     if (item?.compareAtPrice) {
@@ -114,11 +149,76 @@ export function ProductCard({
       maximumFractionDigits: 2,
     }).format(value)
 
+  const handlePointerEnter = () => {
+    if (Platform.OS !== 'web') return
+    if (hideHoverTimeoutRef.current) {
+      clearTimeout(hideHoverTimeoutRef.current)
+      hideHoverTimeoutRef.current = null
+    }
+    setIsHovering(true)
+  }
+
+  const handlePointerLeave = () => {
+    if (Platform.OS !== 'web') return
+    if (hideHoverTimeoutRef.current) {
+      clearTimeout(hideHoverTimeoutRef.current)
+    }
+    hideHoverTimeoutRef.current = setTimeout(() => {
+      setIsHovering(false)
+    }, motionDuration.microInteraction / 2)
+  }
+
+  const runAddToCart = () => {
+    if (!item || addState === 'loading' || disabled) return
+    setAddState('loading')
+    if (resetAddTimeoutRef.current) {
+      clearTimeout(resetAddTimeoutRef.current)
+    }
+    setTimeout(() => {
+      try {
+        if (onAddToCart) {
+          onAddToCart(item)
+        } else {
+          onPress?.(item)
+        }
+      } finally {
+        setAddState('success')
+        resetAddTimeoutRef.current = setTimeout(() => {
+          setAddState('idle')
+        }, motionDuration.slow)
+      }
+    }, motionDuration.fast)
+  }
+
+  const handleAddToCart = () => {
+    if (!item) return
+    if (hasSelectableVariants && !selectedSwatchId) {
+      setShowVariantPicker(true)
+      return
+    }
+    if (hasSelectableVariants && !showVariantPicker) {
+      setShowVariantPicker(true)
+      return
+    }
+    setShowVariantPicker(false)
+    runAddToCart()
+  }
+
+  const handleToggleWishlist = () => {
+    if (!item) return
+    setLocalWishlisted((prev) => !prev)
+    if (onToggleWishlist) {
+      onToggleWishlist(item)
+      return
+    }
+    onPress?.(item)
+  }
+
   if (state === 'loading') {
     return (
       <Card
-        tone="subtle"
-        radiusKey="xs"
+        tone='subtle'
+        radiusKey='xs'
         style={{ width, minHeight: spacing.xxl * 5 }}
       />
     )
@@ -126,8 +226,8 @@ export function ProductCard({
 
   if (state === 'error') {
     return (
-      <Card tone="subtle" radiusKey="xs" style={{ width }}>
-        <Text tone="danger" variant="bodySm">
+      <Card tone='subtle' radiusKey='xs' style={{ width }}>
+        <Text tone='danger' variant='bodySm'>
           Unable to load product.
         </Text>
       </Card>
@@ -136,8 +236,8 @@ export function ProductCard({
 
   if (state === 'empty' || !item) {
     return (
-      <Card tone="subtle" radiusKey="xs" style={{ width }}>
-        <Text tone="muted" variant="bodySm">
+      <Card tone='subtle' radiusKey='xs' style={{ width }}>
+        <Text tone='muted' variant='bodySm'>
           No product available.
         </Text>
       </Card>
@@ -145,12 +245,6 @@ export function ProductCard({
   }
 
   const isBundle = variant === 'bundle'
-  const inferredOutOfStock =
-    Boolean(item.badge && /out of stock|sold out/i.test(item.badge)) ||
-    /out of stock|sold out/i.test(item.name)
-  const disabled = state === 'disabled' || outOfStock || inferredOutOfStock
-  const isWeb = Platform.OS === 'web'
-  const hovered = isWeb ? isHovering : false
   const compareAtPrice = resolveCompareAtPrice()
   const hasDiscount = Boolean(compareAtPrice && compareAtPrice > item.price)
   const discountPercent =
@@ -161,11 +255,11 @@ export function ProductCard({
         )
       : null
   const badgeLabel =
-    disabled && (outOfStock || inferredOutOfStock)
+    disabled
       ? 'Out of stock'
       : hasDiscount && discountPercent
-        ? `-${discountPercent}%`
-        : item.badge || (isBundle ? 'NEW' : undefined)
+      ? `-${discountPercent}%`
+      : item.badge || (isBundle ? 'NEW' : undefined)
   const isNewProduct = Boolean(item.isNew || item.badge?.toLowerCase().includes('new'))
   const isLimitedProduct = Boolean(item.isLimited || item.badge?.toLowerCase().includes('limited'))
   const ratingValue = typeof item.rating === 'number' ? Math.max(0, Math.min(5, item.rating)) : null
@@ -174,6 +268,14 @@ export function ProductCard({
     urgencyLabel ??
     item.urgencyLabel ??
     (hasDiscount ? 'Selling fast' : isBundle ? 'Limited stock' : undefined)
+  const addButtonLabel =
+    addState === 'loading'
+      ? 'Adding...'
+      : addState === 'success'
+      ? 'Added'
+      : hasSelectableVariants
+      ? 'Select options'
+      : 'Add to cart'
 
   return (
     <Touchable
@@ -184,8 +286,8 @@ export function ProductCard({
       onPointerLeave={isWeb ? handlePointerLeave : undefined}
     >
       <Card
-        variant="flat"
-        radiusKey="md"
+        variant='flat'
+        radiusKey='md'
         style={
           {
             width,
@@ -210,15 +312,12 @@ export function ProductCard({
           }}
         >
           <Image
-            source={{ uri: item.imageUrl || FALLBACK_IMAGE }}
+            source={{ uri: imageUri }}
             style={
               {
                 width: '100%',
-                // Reduce card height by ~15% while preserving width.
-                aspectRatio: (4 / 5) / 0.85,
-                backgroundColor: isBundle
-                  ? colors.surface
-                  : colors.backgroundSecondary,
+                aspectRatio: 1,
+                backgroundColor: isBundle ? colors.surface : colors.backgroundSecondary,
                 opacity: disabled ? 0.55 : 1,
                 transform: hovered ? [{ scale: 1.02 }] : [{ scale: 1 }],
                 transitionProperty: 'transform',
@@ -245,28 +344,15 @@ export function ProductCard({
               }
             />
           ) : null}
-          {disabled ? (
-            <Box
-              style={{
-                position: 'absolute',
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 0,
-                backgroundColor: colors.black,
-                opacity: 0.08,
-              }}
-            />
-          ) : null}
 
           {isNewProduct || badgeLabel || isLimitedProduct ? (
             <Box
               style={{
                 position: 'absolute',
-                top: spacing['16'],
-                end: spacing['16'],
+                top: spacing['12'],
+                start: spacing['12'],
                 gap: spacing['8'],
-                alignItems: 'flex-end',
+                alignItems: 'flex-start',
               }}
             >
               {isNewProduct ? (
@@ -279,12 +365,7 @@ export function ProductCard({
                     paddingVertical: spacing.xs,
                   }}
                 >
-                  <Text
-                    variant="label"
-                    weight="700"
-                    tone="inverse"
-                    style={{ textTransform: 'uppercase' }}
-                  >
+                  <Text variant='label' weight='700' tone='inverse' style={{ textTransform: 'uppercase' }}>
                     New
                   </Text>
                 </Box>
@@ -295,13 +376,13 @@ export function ProductCard({
                     borderWidth: hasDiscount ? borderWidth.thick : borderWidth.thin,
                     borderColor: hasDiscount ? colors.primary : colors.border,
                     backgroundColor: hasDiscount ? colors.primary : colors.surface,
-                    paddingHorizontal: hasDiscount ? spacing.sm : spacing['16'],
+                    paddingHorizontal: hasDiscount ? spacing.sm : spacing['12'],
                     paddingVertical: hasDiscount ? spacing.sm : spacing.xs,
                   }}
                 >
                   <Text
-                    variant="label"
-                    weight="700"
+                    variant='label'
+                    weight='700'
                     tone={hasDiscount ? 'inverse' : 'default'}
                     style={{ textTransform: 'uppercase' }}
                   >
@@ -319,12 +400,7 @@ export function ProductCard({
                     paddingVertical: spacing.xs,
                   }}
                 >
-                  <Text
-                    variant="label"
-                    weight="700"
-                    tone="inverse"
-                    style={{ textTransform: 'uppercase' }}
-                  >
+                  <Text variant='label' weight='700' tone='inverse' style={{ textTransform: 'uppercase' }}>
                     Limited
                   </Text>
                 </Box>
@@ -334,68 +410,29 @@ export function ProductCard({
 
           {!disabled ? (
             <Box
-              style={
-                {
-                  position: 'absolute',
-                  top: spacing['16'],
-                  start: spacing.xs,
-                  flexDirection: 'column',
-                  gap: spacing['8'],
-                  opacity: isWeb ? (hovered ? 1 : 0) : 1,
-                  transform: isWeb
-                    ? hovered
-                      ? [{ translateY: 0 }]
-                      : [{ translateY: spacing['8'] }]
-                    : [{ translateY: 0 }],
-                  transitionProperty: 'opacity, transform',
-                  transitionDuration: `${hoverFadeDuration}ms`,
-                  transitionTimingFunction: motionEasing.standard,
-                } as any
-              }
+              style={{
+                position: 'absolute',
+                top: spacing['12'],
+                end: spacing['12'],
+              }}
             >
-              {isWeb && hovered ? (
-                <Touchable
-                  onPress={() =>
-                    onQuickView ? onQuickView(item) : onPress?.(item)
-                  }
-                  accessibilityRole="button"
-                  accessibilityLabel={`Quick view ${item.name}`}
-                >
-                  <Box
-                    p="xxs"
-                    bg="black"
-                    style={{
-                      borderWidth: borderWidth.thin,
-                      borderColor: colors.black,
-                    }}
-                  >
-                    <Icon
-                      name="quickView"
-                      size={spacing['16']}
-                      color={colors.white}
-                    />
-                  </Box>
-                </Touchable>
-              ) : null}
               <Touchable
-                onPress={() =>
-                  onToggleWishlist ? onToggleWishlist(item) : onPress?.(item)
-                }
-                accessibilityRole="button"
+                onPress={handleToggleWishlist}
+                accessibilityRole='button'
                 accessibilityLabel={`Add ${item.name} to wishlist`}
               >
                 <Box
-                  p="xxs"
-                  bg="black"
+                  p='xxs'
+                  bg='black'
                   style={{
                     borderWidth: borderWidth.thin,
                     borderColor: colors.black,
                   }}
                 >
                   <Icon
-                    name="wishlist"
+                    name='wishlist'
                     size={spacing['16']}
-                    color={isWishlisted ? colors.primary : colors.white}
+                    color={localWishlisted ? colors.primary : colors.white}
                   />
                 </Box>
               </Touchable>
@@ -413,9 +450,7 @@ export function ProductCard({
                   end: spacing['16'],
                   gap: spacing['16'],
                   opacity: hovered ? 1 : 0,
-                  transform: hovered
-                    ? [{ translateY: 0 }]
-                    : [{ translateY: spacing['8'] }],
+                  transform: hovered ? [{ translateY: 0 }] : [{ translateY: spacing['8'] }],
                   transitionProperty: 'opacity, transform',
                   transitionDuration: `${hoverFadeDuration}ms`,
                   transitionTimingFunction: motionEasing.standard,
@@ -424,9 +459,7 @@ export function ProductCard({
             >
               <Touchable
                 disabled={!hovered}
-                onPress={() =>
-                  onQuickView ? onQuickView(item) : onPress?.(item)
-                }
+                onPress={() => (onQuickView ? onQuickView(item) : onPress?.(item))}
                 style={{
                   minHeight: spacing['48'],
                   paddingHorizontal: spacing.md,
@@ -440,16 +473,14 @@ export function ProductCard({
                   gap: spacing.xs,
                 }}
               >
-                <Icon name="quickView" size={spacing['16']} color={colors.textPrimary} />
-                <Text variant="bodySm" tone="default">
+                <Icon name='quickView' size={spacing['16']} color={colors.textPrimary} />
+                <Text variant='bodySm' tone='default'>
                   Quick view
                 </Text>
               </Touchable>
               <Touchable
-                disabled={!hovered}
-                onPress={() =>
-                  onAddToCart ? onAddToCart(item) : onPress?.(item)
-                }
+                disabled={!hovered || addState === 'loading'}
+                onPress={handleAddToCart}
                 style={{
                   minHeight: spacing['48'],
                   paddingHorizontal: spacing.md,
@@ -462,13 +493,73 @@ export function ProductCard({
                 }}
               >
                 <Text
-                  variant="caption"
-                  tone="inverse"
-                  weight="700"
+                  variant='caption'
+                  tone='inverse'
+                  weight='700'
                   style={{ textTransform: 'uppercase' }}
                 >
-                  Add to cart
+                  {addButtonLabel}
                 </Text>
+              </Touchable>
+            </Box>
+          ) : null}
+
+          {showVariantPicker && !disabled ? (
+            <Box
+              style={{
+                position: 'absolute',
+                left: spacing['12'],
+                right: spacing['12'],
+                bottom: spacing['12'],
+                borderWidth: borderWidth.thin,
+                borderColor: colors.border,
+                backgroundColor: colors.surface,
+                gap: spacing['8'],
+                padding: spacing['12'],
+              }}
+            >
+              <Text variant='label' tone='default' style={{ textTransform: 'uppercase' }}>
+                Select Shade
+              </Text>
+              <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
+                {resolvedSwatches.map((swatch) => {
+                  const selected = selectedSwatchId === swatch.id
+                  return (
+                    <Touchable
+                      key={swatch.id}
+                      onPress={() => setSelectedSwatchId(swatch.id)}
+                      accessibilityRole='button'
+                      accessibilityLabel={swatch.label ?? swatch.id}
+                    >
+                      <Box
+                        style={{
+                          width: spacing['16'] + spacing.xs,
+                          height: spacing['16'] + spacing.xs,
+                          borderRadius: radius.full,
+                          backgroundColor: swatch.hex,
+                          borderWidth: selected ? borderWidth.thick : borderWidth.thin,
+                          borderColor: selected ? colors.textPrimary : colors.border,
+                        }}
+                      />
+                    </Touchable>
+                  )
+                })}
+              </Box>
+              <Touchable onPress={handleAddToCart} style={{ alignSelf: 'flex-start' }}>
+                <Box
+                  style={{
+                    minHeight: spacing['40'],
+                    paddingHorizontal: spacing['12'],
+                    borderWidth: borderWidth.thin,
+                    borderColor: colors.black,
+                    backgroundColor: colors.black,
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text variant='label' tone='inverse' weight='700' style={{ textTransform: 'uppercase' }}>
+                    Confirm
+                  </Text>
+                </Box>
               </Touchable>
             </Box>
           ) : null}
@@ -486,66 +577,67 @@ export function ProductCard({
         >
           <Box style={{ gap: spacing.xs, minHeight: spacing['64'] }}>
             <Text
-              variant="label"
-              tone="muted"
-              weight="700"
+              variant='label'
+              tone='muted'
+              weight='700'
               numberOfLines={1}
               style={{ textTransform: 'uppercase' }}
             >
               {item.brand}
             </Text>
-            <Text variant="bodySm" tone="muted" numberOfLines={2}>
+            <Text variant='bodySm' tone='muted' numberOfLines={2}>
               {item.name}
             </Text>
+            {resolvedSwatches.length > 0 ? (
+              <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing['4'] }}>
+                {resolvedSwatches.slice(0, 4).map((swatch) => (
+                  <Box
+                    key={swatch.id}
+                    style={{
+                      width: spacing['12'],
+                      height: spacing['12'],
+                      borderRadius: radius.full,
+                      backgroundColor: swatch.hex,
+                      borderWidth: borderWidth.thin,
+                      borderColor: colors.border,
+                    }}
+                  />
+                ))}
+                {resolvedSwatches.length > 4 ? (
+                  <Text variant='caption' tone='muted'>
+                    +{resolvedSwatches.length - 4}
+                  </Text>
+                ) : null}
+              </Box>
+            ) : null}
           </Box>
 
           {ratingValue !== null ? (
-            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-              <Text variant="caption" tone="default">
-                {'★'.repeat(Math.floor(ratingValue))}
-                {'☆'.repeat(Math.max(0, 5 - Math.floor(ratingValue)))}
-              </Text>
-              {reviewCount !== null ? (
-                <Text variant="caption" tone="muted">
-                  {reviewCount}
-                </Text>
-              ) : null}
-            </Box>
+            <StarRating value={ratingValue} reviewCount={reviewCount} size={12} />
           ) : null}
 
           <Box style={{ gap: spacing.sm, minHeight: spacing['32'] }}>
-            <Box
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: spacing['8'],
-              }}
-            >
-              <Text variant="price" size="3xl" tone="danger" weight="700">
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+              <Text variant='price' size='3xl' tone='default' weight='700'>
                 {formatCurrency(item.price)}
               </Text>
-              {compareAtPrice ? (
-                <Text
-                  variant="caption"
-                  tone="muted"
-                  style={{ textDecorationLine: 'line-through' }}
-                >
+              {compareAtPrice && hasDiscount ? (
+                <Text variant='caption' tone='danger' style={{ textDecorationLine: 'line-through' }}>
+                  {formatCurrency(compareAtPrice)}
+                </Text>
+              ) : compareAtPrice ? (
+                <Text variant='caption' tone='muted' style={{ textDecorationLine: 'line-through' }}>
                   {formatCurrency(compareAtPrice)}
                 </Text>
               ) : null}
             </Box>
             {resolvedUrgencyLabel ? (
-              <Text
-                variant="label"
-                tone="danger"
-                style={{ textTransform: 'uppercase' }}
-              >
+              <Text variant='label' tone='danger' style={{ textTransform: 'uppercase' }}>
                 {resolvedUrgencyLabel}
               </Text>
             ) : null}
-
-            {disabled && (outOfStock || inferredOutOfStock) ? (
-              <Text variant="caption" tone="danger">
+            {disabled ? (
+              <Text variant='caption' tone='danger'>
                 Out of stock
               </Text>
             ) : null}
@@ -554,7 +646,8 @@ export function ProductCard({
 
         {!disabled && !isWeb ? (
           <Touchable
-            onPress={() => (onAddToCart ? onAddToCart(item) : onPress?.(item))}
+            onPress={handleAddToCart}
+            disabled={addState === 'loading'}
             style={
               {
                 minHeight: spacing['48'],
@@ -571,13 +664,8 @@ export function ProductCard({
               } as any
             }
           >
-            <Text
-              variant="caption"
-              tone="inverse"
-              weight="700"
-              style={{ textTransform: 'uppercase' }}
-            >
-              Add to cart
+            <Text variant='caption' tone='inverse' weight='700' style={{ textTransform: 'uppercase' }}>
+              {addButtonLabel}
             </Text>
           </Touchable>
         ) : null}
