@@ -629,8 +629,8 @@ export function ProductCard({
                   <Box
                     key={swatch.id}
                     style={{
-                      width: spacing['12'],
-                      height: spacing['12'],
+                      width: 14,
+                      height: 14,
                       borderRadius: radius.full,
                       backgroundColor: swatch.hex,
                       borderWidth: borderWidth.thin,
@@ -686,6 +686,8 @@ export function ProductCard({
             style={{
               minHeight: spacing['48'],
               paddingHorizontal: spacing['16'],
+              marginHorizontal: spacing.sm,
+              marginBottom: spacing.sm,
               backgroundColor: variant === 'flash' ? colors.primary : colors.black,
               borderWidth: borderWidth.thin,
               borderColor: variant === 'flash' ? colors.primary : colors.black,
