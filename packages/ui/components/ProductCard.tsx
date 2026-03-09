@@ -337,7 +337,7 @@ export function ProductCard({
         className="transition-[box-shadow,transform] duration-[400ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
         style={{
           width,
-          gap: spacing.md,
+          gap: spacing.sm,
           padding: 0,
           backgroundColor: colors.surface,
           borderWidth: borderWidth.thin,
@@ -603,15 +603,14 @@ export function ProductCard({
 
         <Box
           style={{
-            minHeight: spacing['96'],
             justifyContent: 'space-between',
             gap: spacing.sm,
-            paddingTop: spacing.xs,
-            paddingHorizontal: resolvedContentPadding,
-            paddingBottom: resolvedContentPadding,
+            paddingTop: spacing.sm,
+            paddingHorizontal: spacing['12'],
+            paddingBottom: spacing['12'],
           }}
         >
-          <Box style={{ gap: spacing.xs, minHeight: spacing['64'] }}>
+          <Box style={{ gap: spacing.xs }}>
             <Text
               variant='label'
               tone='muted'
@@ -652,7 +651,7 @@ export function ProductCard({
             <StarRating value={ratingValue} reviewCount={reviewCount} size={11} />
           ) : null}
 
-          <Box style={{ gap: spacing.sm, minHeight: spacing['32'] }}>
+          <Box style={{ gap: spacing.xs }}>
             <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
               <Text variant='price' tone='default' weight='700'>
                 {formatCurrency(item.price)}
