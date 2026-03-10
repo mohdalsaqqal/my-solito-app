@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
-import { borderWidth, colors, radius, spacing } from '@real/tokens'
-import { ViewStyle } from 'react-native'
+import { ActivityIndicator, ViewStyle } from 'react-native'
+import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
 import { Button as ReusableButton } from '../reusables/button'
 import { Text } from '../primitives/Text'
 
@@ -9,6 +9,7 @@ type ButtonProps = {
   variant?: 'solid' | 'outline' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
+  loading?: boolean
   onPress?: () => void
 }
 
@@ -72,19 +73,27 @@ const reusableSizeMap: Record<ButtonSize, 'sm' | 'default' | 'lg'> = {
   lg: 'lg',
 }
 
+const spinnerColor: Record<ButtonVariant, string> = {
+  solid: colors.white,
+  outline: colors.brandPrimary,
+  ghost: colors.brandPrimary,
+}
+
 export function Button({
   children,
   variant = 'solid',
   size = 'md',
   disabled,
+  loading,
   onPress,
 }: ButtonProps) {
   const sizeStyle = buttonSizeStyles[size]
   const variantStyle = buttonContainerStyles[variant]
+  const isDisabled = disabled || loading
 
   return (
     <ReusableButton
-      disabled={disabled}
+      disabled={isDisabled}
       onPress={onPress}
       variant={reusableVariantMap[variant]}
       size={reusableSizeMap[size]}
@@ -94,16 +103,24 @@ export function Button({
         borderRadius: radius.md,
         alignItems: 'center',
         justifyContent: 'center',
+        opacity: isDisabled ? opacity.disabled : 1,
         ...variantStyle,
       }}
     >
-      <Text
-        tone={buttonTextTone[variant]}
-        variant='label'
-        style={{ textTransform: 'uppercase' }}
-      >
-        {children}
-      </Text>
+      {loading ? (
+        <ActivityIndicator
+          accessibilityLabel="Loading"
+          color={spinnerColor[variant]}
+        />
+      ) : (
+        <Text
+          tone={buttonTextTone[variant]}
+          variant='label'
+          style={{ textTransform: 'uppercase' }}
+        >
+          {children}
+        </Text>
+      )}
     </ReusableButton>
   )
 }
