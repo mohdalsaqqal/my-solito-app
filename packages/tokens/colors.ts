@@ -5,8 +5,8 @@ export const colors = {
   surface: 'hsl(0 0% 100%)',
   surfaceMuted: 'hsl(0 0% 97%)',
 
-  // Ink family — prestige dark backgrounds (The Atelier)
-  inkBlack: 'hsl(20 10% 8%)',      // ink section background
+  // Ink family — prestige dark surfaces + on-ink text (The Atelier)
+  inkBlack: 'hsl(20 10% 8%)',      // ink section background — same value as 'black'/'text'; explicit semantic name for ink sections
   inkDeep: 'hsl(20 8% 13%)',       // card backgrounds inside ink sections
   inkMid: 'hsl(20 8% 20%)',        // dividers / borders inside ink sections
   inkFrost: 'hsl(30 8% 95%)',      // light text ON ink (warm off-white, not harsh)
@@ -59,7 +59,7 @@ export const colors = {
 
   // Utility
   white: 'hsl(0 0% 100%)',
-  black: 'hsl(20 10% 8%)',
+  black: 'hsl(20 10% 8%)',         // see also: inkBlack (semantic alias for ink-section use)
 
   // Semantic intent aliases — explicit intent at call sites
   salePrice: 'hsl(358 74% 50%)',      // = brandPrimary — for PriceTag sale price
