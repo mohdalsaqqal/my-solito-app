@@ -28,10 +28,10 @@ export function Section({ children, tone = 'default', bleed = 'none', y = 'stand
     return (
       <View
         style={{
-          marginLeft: -gutterX,
-          marginRight: -gutterX,
-          paddingLeft: gutterX,
-          paddingRight: gutterX,
+          marginStart: -gutterX,
+          marginEnd: -gutterX,
+          paddingStart: gutterX,
+          paddingEnd: gutterX,
           paddingTop: padY,
           paddingBottom: padY,
           backgroundColor: resolveTone(tone),

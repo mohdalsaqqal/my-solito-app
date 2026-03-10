@@ -39,8 +39,8 @@ export function Container({
         width: '100%',
         maxWidth: centered ? maxWidthByVariant[variant] : undefined,
         alignSelf: centered ? 'center' : 'stretch',
-        paddingLeft: gutterBySize[gutter],
-        paddingRight: gutterBySize[gutter],
+        paddingStart: gutterBySize[gutter],
+        paddingEnd: gutterBySize[gutter],
       }}
     >
       {children}
