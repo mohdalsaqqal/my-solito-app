@@ -1,14 +1,15 @@
 import { ReactNode } from 'react'
 import { View, ViewProps } from 'react-native'
-import { borderWidth, colors, radius, spacing } from '@real/tokens'
+import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
 import { Text } from '../primitives/Text'
 
 type BadgeProps = ViewProps & {
   children?: ReactNode
   tone?: 'neutral' | 'accent' | 'outline'
+  disabled?: boolean
 }
 
-export function Badge({ children, tone = 'neutral', style, ...props }: BadgeProps) {
+export function Badge({ children, tone = 'neutral', disabled, style, ...props }: BadgeProps) {
   const backgroundColor =
     tone === 'accent' ? colors.brandPrimary : tone === 'outline' ? 'transparent' : colors.backgroundSecondary
   const borderColor = tone === 'outline' ? colors.border : tone === 'accent' ? colors.brandPrimary : 'transparent'
@@ -16,9 +17,10 @@ export function Badge({ children, tone = 'neutral', style, ...props }: BadgeProp
 
   return (
     <View
+      accessibilityState={{ disabled }}
       style={[
         {
-          minHeight: 24,
+          minHeight: spacing['24'],
           paddingHorizontal: spacing.sm,
           borderRadius: radius.full,
           alignItems: 'center',
@@ -27,6 +29,7 @@ export function Badge({ children, tone = 'neutral', style, ...props }: BadgeProp
           borderWidth: borderWidth.thin,
           borderColor,
           alignSelf: 'flex-start',
+          opacity: disabled ? opacity.disabled : 1,
         },
         style,
       ]}
