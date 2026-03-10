@@ -34,6 +34,10 @@ export const typography = {
   bodyLg: 18,
   body: 16,
   hero: 48,
+  // Campaign tiers — The Atelier mixed-weight contrast system
+  campaign: 72,      // full-width hero headlines (home hero, campaign anchors)
+  headline: 56,      // section-level ink-anchor headings
+  subheadline: 18,   // offer descriptor line above/below campaign number
   price: 20,
   caption: 12,
   nav: 13,
@@ -50,6 +54,7 @@ export const fontFamilies = {
 } as const
 
 export const fontWeights = {
+  ultra: '100',      // ultra-thin descriptor text in campaign contrast pairs
   regular: '400',
   medium: '500',
   semibold: '600',
@@ -74,4 +79,6 @@ export const letterSpacing = {
   capsWide: 2,
   headline: -0.3,
   subHeaderCaps: 1.2,
+  campaignHeading: -0.48,  // ≈ -0.03em at 16px — tight editorial for campaign headlines
+  labelPill: 1.92,         // ≈ 0.12em at 16px — wide prestige caps for badge/label pills
 } as const
