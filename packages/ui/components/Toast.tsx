@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, ReactNode } from 'react'
+import { createContext, useCallback, useContext, useRef, useState, ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
 import { AnimatePresence, MotiView } from 'moti'
 import { borderWidth, colors, motionDuration, radius, spacing, zIndex } from '@real/tokens'
@@ -68,16 +68,20 @@ function ToastItemView({ item, onDismiss }: { item: ToastItem; onDismiss: () => 
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
+  const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const show = useCallback((message: string, tone: ToastTone = 'info') => {
     const id = Math.random().toString(36).slice(2)
     setToasts((prev) => [...prev, { id, message, tone }])
-    setTimeout(() => {
+    timers.current[id] = setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
+      delete timers.current[id]
     }, 4000)
   }, [])
 
   const dismiss = useCallback((id: string) => {
+    clearTimeout(timers.current[id])
+    delete timers.current[id]
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 

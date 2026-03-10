@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { Pressable, View, ViewStyle } from 'react-native'
-import { borderWidth, colors, radius, spacing } from '@real/tokens'
+import { borderWidth, colors, radius, spacing, statusTone } from '@real/tokens'
 import { Text } from '../primitives/Text'
 
 type AlertTone = 'success' | 'warning' | 'error' | 'info'
@@ -13,12 +13,12 @@ type AlertProps = {
   style?: ViewStyle
 }
 
-// Subtle backgrounds — derived from status.ts subtle values (HSL strings, not hex)
+// Derive from tokens — single source of truth (§1.1)
 const subtleBg: Record<AlertTone, string> = {
-  success: 'hsl(144 45% 94%)',
-  warning: 'hsl(40 100% 95%)',
-  error:   'hsl(355 70% 95%)',
-  info:    'hsl(214 78% 95%)',
+  success: statusTone.success.subtle,
+  warning: statusTone.warning.subtle,
+  error:   statusTone.error.subtle,
+  info:    statusTone.info.subtle,
 }
 
 const accentColor: Record<AlertTone, string> = {

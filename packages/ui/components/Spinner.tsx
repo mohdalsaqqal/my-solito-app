@@ -13,13 +13,21 @@ type SpinnerProps = {
 const spinnerColor: Record<SpinnerTone, string> = {
   primary: colors.brandPrimary,
   inverse: colors.white,
-  muted: colors.textMuted,
+  muted:   colors.textMuted,
 }
 
-const spinnerSize: Record<SpinnerSize, 'small' | 'large'> = {
+// Map to native ActivityIndicator sizes
+const nativeSize: Record<SpinnerSize, 'small' | 'large'> = {
   sm: 'small',
   md: 'small',
   lg: 'large',
+}
+
+// Constrain the container so sm/md are visually distinct
+const containerSize: Record<SpinnerSize, number> = {
+  sm: spacing['24'],  // 24px container
+  md: spacing['32'],  // 32px container
+  lg: spacing['48'],  // 48px container
 }
 
 export function Spinner({ tone = 'primary', size = 'md', style }: SpinnerProps) {
@@ -27,16 +35,17 @@ export function Spinner({ tone = 'primary', size = 'md', style }: SpinnerProps) 
     <View
       style={[
         {
+          width: containerSize[size],
+          height: containerSize[size],
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing.sm,
         },
         style,
       ]}
       accessibilityRole="progressbar"
       accessibilityLabel="Loading"
     >
-      <ActivityIndicator color={spinnerColor[tone]} size={spinnerSize[size]} />
+      <ActivityIndicator color={spinnerColor[tone]} size={nativeSize[size]} />
     </View>
   )
 }
