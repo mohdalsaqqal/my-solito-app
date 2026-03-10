@@ -4,6 +4,8 @@ import { Cairo } from 'next/font/google'
 import { resolveDirection } from '@real/app/lib/rtl-manager'
 import { resolvePageLocale } from './_lib/locale'
 import { initI18n } from '@real/app/lib/i18n'
+import { ChunkErrorRecovery } from './_components/ChunkErrorRecovery'
+import { Providers } from './_components/Providers'
 
 const cairo = Cairo({
   subsets: ['latin', 'arabic'],
@@ -29,7 +31,10 @@ export default async function RootLayout({
   return (
     <html lang={locale} dir={direction} className={cairo.variable}>
       <body>
-        <StylesProvider>{children}</StylesProvider>
+        <ChunkErrorRecovery />
+        <Providers>
+          <StylesProvider>{children}</StylesProvider>
+        </Providers>
       </body>
     </html>
   )
