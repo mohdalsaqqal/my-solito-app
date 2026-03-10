@@ -1,9 +1,20 @@
 export const colors = {
   // Base surfaces — warm-tinted neutrals (hue 30°, 5-8% saturation)
-  background: 'hsl(30 8% 99%)',
-  backgroundSecondary: 'hsl(30 6% 97%)',
-  surface: 'hsl(30 8% 99%)',
-  surfaceMuted: 'hsl(30 6% 97%)',
+  background: 'hsl(0 0% 100%)',
+  backgroundSecondary: 'hsl(0 0% 97%)',
+  surface: 'hsl(0 0% 100%)',
+  surfaceMuted: 'hsl(0 0% 97%)',
+
+  // Ink family — prestige dark backgrounds (The Atelier)
+  inkBlack: 'hsl(20 10% 8%)',      // ink section background
+  inkDeep: 'hsl(20 8% 13%)',       // card backgrounds inside ink sections
+  inkMid: 'hsl(20 8% 20%)',        // dividers / borders inside ink sections
+  inkFrost: 'hsl(30 8% 95%)',      // light text ON ink (warm off-white, not harsh)
+
+  // Gold family — luxury / loyalty accent (The Atelier)
+  goldPrimary: 'hsl(39 95% 43%)',  // gold text, loyalty badge fills, featured labels
+  goldLight: 'hsl(42 100% 75%)',   // hover / active state of gold elements
+  goldSubtle: 'hsl(42 60% 92%)',   // subtle gold tint on white backgrounds
 
   // Text — warm-tinted neutrals
   text: 'hsl(20 10% 8%)',
@@ -49,4 +60,9 @@ export const colors = {
   // Utility
   white: 'hsl(0 0% 100%)',
   black: 'hsl(20 10% 8%)',
+
+  // Semantic intent aliases — explicit intent at call sites
+  salePrice: 'hsl(358 74% 50%)',      // = brandPrimary — for PriceTag sale price
+  ctaBackground: 'hsl(358 74% 50%)',  // = brandPrimary — for add-to-cart buttons
+  urgencyBadge: 'hsl(358 74% 50%)',   // = brandPrimary — for flash-sale badges
 } as const
