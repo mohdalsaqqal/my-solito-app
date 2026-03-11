@@ -1,12 +1,21 @@
 import { StylesProvider } from './styles-provider'
 import './globals.css'
-import { Cairo } from 'next/font/google'
+import { Cairo, Poppins } from 'next/font/google'
 import { resolveDirection } from '@real/app/lib/rtl-manager'
 import { resolvePageLocale } from './_lib/locale'
 import { initI18n } from '@real/app/lib/i18n'
 import { ChunkErrorRecovery } from './_components/ChunkErrorRecovery'
 import { Providers } from './_components/Providers'
 
+// Figma primary font — Poppins (weights used across the type scale)
+const poppins = Poppins({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-poppins',
+  weight: ['100', '400', '500', '600', '700', '900'],
+})
+
+// Arabic / RTL support — Cairo
 const cairo = Cairo({
   subsets: ['latin', 'arabic'],
   display: 'swap',
@@ -29,7 +38,7 @@ export default async function RootLayout({
   await initI18n(locale)
 
   return (
-    <html lang={locale} dir={direction} className={cairo.variable}>
+    <html lang={locale} dir={direction} className={`${poppins.variable} ${cairo.variable}`}>
       <body>
         <ChunkErrorRecovery />
         <Providers>

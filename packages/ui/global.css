@@ -6,43 +6,57 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 @theme {
-  /* ── Colors — from packages/tokens/colors.ts ── */
+  /* ── Colors — from packages/tokens/colors.ts (Figma pixel-perfect) ── */
   --color-background:           hsl(0 0% 100%);
-  --color-background-secondary: hsl(0 0% 97%);
-  --color-foreground:           hsl(20 10% 8%);
-  --color-foreground-muted:     hsl(20 8% 35%);
-  --color-border:               hsl(30 10% 88%);
+  --color-background-secondary: hsl(0 0% 96%);
+  --color-foreground:           hsl(0 0% 12%);
+  --color-foreground-muted:     hsl(0 0% 36%);
+  --color-border:               hsl(0 0% 81%);
   --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(0 0% 97%);
-  --color-muted-foreground:     hsl(20 8% 35%);
+  --color-muted:                hsl(0 0% 96%);
+  --color-muted-foreground:     hsl(0 0% 45%);
 
-  /* Brand — colors.brandPrimary = hsl(358 74% 50%) */
+  /* Brand — colors.brandPrimary = hsl(358 74% 50%) — REAL Cosmetics crimson */
   --color-primary:              hsl(358 74% 50%);
   --color-primary-hover:        hsl(358 74% 44%);
   --color-primary-pressed:      hsl(358 74% 38%);
-  --color-primary-subtle:       hsl(30 6% 97%);
+  --color-primary-subtle:       hsl(0 0% 96%);
   --color-primary-foreground:   hsl(0 0% 100%);
 
-  /* Ink family — The Atelier prestige dark surfaces */
-  --color-ink-black:  hsl(20 10% 8%);
-  --color-ink-deep:   hsl(20 8% 13%);
-  --color-ink-mid:    hsl(20 8% 20%);
-  --color-ink-frost:  hsl(30 8% 95%);
+  /* Ink family — Figma Primary (cool pure darks) */
+  --color-ink-black:  hsl(0 0% 12%);
+  --color-ink-deep:   hsl(0 0% 16%);
+  --color-ink-mid:    hsl(0 0% 22%);
+  --color-ink-frost:  hsl(0 0% 94%);
 
-  /* Gold family — loyalty / exclusive accent */
-  --color-gold:         hsl(39 95% 43%);
-  --color-gold-light:   hsl(42 100% 75%);
-  --color-gold-subtle:  hsl(42 60% 92%);
+  /* Gold family — Figma Attention gold */
+  --color-gold:         hsl(47 100% 49%);
+  --color-gold-light:   hsl(47 100% 65%);
+  --color-gold-subtle:  hsl(47 100% 92%);
 
-  /* Status — from packages/tokens/status.ts */
-  --color-success:              hsl(162 100% 39%);
-  --color-success-subtle:       hsl(144 45% 94%);
-  --color-warning:              hsl(39 95% 43%);
-  --color-warning-subtle:       hsl(40 100% 95%);
-  --color-destructive:          hsl(358 100% 42%);
-  --color-destructive-subtle:   hsl(355 70% 95%);
-  --color-info:                 hsl(210 90% 40%);
-  --color-info-subtle:          hsl(214 78% 95%);
+  /* Figma grayscale — cool pure gray (no warm tint) */
+  --color-gray-0:   hsl(0 0% 100%);
+  --color-gray-5:   hsl(0 0% 85%);
+  --color-gray-10:  hsl(0 0% 81%);
+  --color-gray-20:  hsl(0 0% 72%);
+  --color-gray-30:  hsl(0 0% 63%);
+  --color-gray-40:  hsl(0 0% 54%);
+  --color-gray-50:  hsl(0 0% 45%);
+  --color-gray-60:  hsl(0 0% 36%);
+  --color-gray-70:  hsl(0 0% 27%);
+  --color-gray-80:  hsl(0 0% 18%);
+  --color-gray-90:  hsl(0 0% 9%);
+  --color-gray-100: hsl(0 0% 0%);
+
+  /* Status — Figma pixel-perfect */
+  --color-success:              hsl(153 95% 39%);
+  --color-success-subtle:       hsl(153 95% 94%);
+  --color-warning:              hsl(48 100% 50%);
+  --color-warning-subtle:       hsl(48 100% 94%);
+  --color-destructive:          hsl(0 100% 61%);
+  --color-destructive-subtle:   hsl(0 100% 95%);
+  --color-info:                 hsl(224 100% 52%);
+  --color-info-subtle:          hsl(224 100% 95%);
 
   /* ── Radius — from packages/tokens/radius.ts — sharp by default per §25.3 ── */
   --radius-none: 0px;
@@ -73,11 +87,26 @@
   --spacing-24:   96px;
   --spacing-32:   128px;
 
-  /* ── Typography — from packages/tokens/typography.ts ── */
-  --font-sans:    "Inter", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-heading: "Space Grotesk", "Inter", -apple-system, system-ui, sans-serif;
-  --font-mono:    Menlo, monospace;
+  /* ── Typography — Figma pixel-perfect: Poppins primary, Montserrat secondary ── */
+  --font-sans:      var(--font-poppins, "Poppins"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-heading:   var(--font-poppins, "Poppins"), "Montserrat", -apple-system, system-ui, sans-serif;
+  --font-secondary: "Montserrat", var(--font-poppins, "Poppins"), -apple-system, system-ui, sans-serif;
+  --font-mono:      Menlo, monospace;
 
+  /* Figma type scale — H1 96 → Overline 10 */
+  --text-h1:       6rem;       /* 96px  */
+  --text-h2:       3.75rem;    /* 60px  */
+  --text-h3:       3rem;       /* 48px  */
+  --text-h4:       2.125rem;   /* 34px  */
+  --text-h5:       1.625rem;   /* 26px  */
+  --text-h6:       1.25rem;    /* 20px  */
+  --text-body1:    1rem;       /* 16px  */
+  --text-body2:    0.875rem;   /* 14px  */
+  --text-caption:  0.75rem;    /* 12px  */
+  --text-overline: 0.625rem;   /* 10px  */
+  --text-button:   1rem;       /* 16px  */
+
+  /* Legacy aliases */
   --text-xs:   0.75rem;
   --text-sm:   0.875rem;
   --text-base: 1rem;
@@ -88,20 +117,44 @@
   --text-4xl:  2.25rem;
 
   /* Campaign typography — The Atelier mixed-weight contrast system */
-  --text-campaign:    4.5rem;    /* 72px */
-  --text-headline:    3.5rem;    /* 56px */
-  --text-subheadline: 1.125rem;  /* 18px */
+  --text-campaign:    6rem;       /* 96px — Figma H1 */
+  --text-headline:    3.75rem;    /* 60px — Figma H2 */
+  --text-subheadline: 1.125rem;   /* 18px */
 
-  /* Letter-spacing — campaign and label-pill */
-  --tracking-campaign: -0.03em;
+  /* Figma line heights */
+  --leading-h1:      6.5rem;    /* 104px */
+  --leading-h2:      4.25rem;   /* 68px  */
+  --leading-h3:      3.25rem;   /* 52px  */
+  --leading-h4:      2.5rem;    /* 40px  */
+  --leading-h5:      2rem;      /* 32px  */
+  --leading-h6:      1.5rem;    /* 24px  */
+  --leading-body1:   1.5rem;    /* 24px  */
+  --leading-body2:   1.25rem;   /* 20px  */
+  --leading-caption: 1rem;      /* 16px  */
+
+  /* Figma letter spacing */
+  --tracking-h1:       -0.015em;  /* -1.44px at 96px */
+  --tracking-h2:       -0.005em;  /* -0.3px at 60px  */
+  --tracking-campaign: -0.015em;
   --tracking-label:     0.12em;
+  --tracking-overline:  0.16em;   /* wide caps */
 
-  /* ── Elevation — from packages/tokens/elevation.ts ── */
-  --shadow-xs: 0 0 0 1px hsla(355 12% 8% / 0.04), 0 2px 4px   hsla(355 12% 8% / 0.06);
-  --shadow-sm: 0 0 0 1px hsla(355 12% 8% / 0.05), 0 4px 10px  hsla(355 12% 8% / 0.08);
-  --shadow-md: 0 0 0 1px hsla(355 12% 8% / 0.06), 0 8px 18px  hsla(355 12% 8% / 0.10);
-  --shadow-lg: 0 0 0 1px hsla(355 12% 8% / 0.07), 0 12px 28px hsla(355 12% 8% / 0.12);
-  --shadow-xl: 0 0 0 1px hsla(355 12% 8% / 0.08), 0 20px 40px hsla(355 12% 8% / 0.14);
+  /* ── Elevation — Figma 3-layer shadow system ── */
+  --shadow-e01: 0 1px 1px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.12), 0 2px 1px rgba(0,0,0,0.14);
+  --shadow-e02: 0 2px 2px rgba(0,0,0,0.20), 0 1px 5px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.14);
+  --shadow-e03: 0 3px 3px rgba(0,0,0,0.20), 0 2px 7px rgba(0,0,0,0.12), 0 4px 2px rgba(0,0,0,0.14);
+  --shadow-e04: 0 4px 4px rgba(0,0,0,0.20), 0 2px 10px rgba(0,0,0,0.12), 0 5px 3px rgba(0,0,0,0.14);
+  --shadow-e06: 0 4px 5px rgba(0,0,0,0.20), 0 3px 12px rgba(0,0,0,0.12), 0 6px 8px rgba(0,0,0,0.14);
+  --shadow-e08: 0 5px 5px rgba(0,0,0,0.20), 0 3px 14px rgba(0,0,0,0.12), 0 8px 10px rgba(0,0,0,0.14);
+  --shadow-e12: 0 7px 8px rgba(0,0,0,0.20), 0 5px 22px rgba(0,0,0,0.12), 0 12px 17px rgba(0,0,0,0.14);
+  --shadow-e16: 0 9px 11px rgba(0,0,0,0.20), 0 6px 30px rgba(0,0,0,0.12), 0 16px 24px rgba(0,0,0,0.14);
+  --shadow-e24: 0 11px 15px rgba(0,0,0,0.20), 0 9px 46px rgba(0,0,0,0.12), 0 24px 38px rgba(0,0,0,0.14);
+  /* Semantic aliases */
+  --shadow-xs: 0 1px 1px rgba(0,0,0,0.20), 0 1px 3px rgba(0,0,0,0.12), 0 2px 1px rgba(0,0,0,0.14);
+  --shadow-sm: 0 2px 2px rgba(0,0,0,0.20), 0 1px 5px rgba(0,0,0,0.12), 0 3px 1px rgba(0,0,0,0.14);
+  --shadow-md: 0 4px 5px rgba(0,0,0,0.20), 0 3px 12px rgba(0,0,0,0.12), 0 6px 8px rgba(0,0,0,0.14);
+  --shadow-lg: 0 7px 8px rgba(0,0,0,0.20), 0 5px 22px rgba(0,0,0,0.12), 0 12px 17px rgba(0,0,0,0.14);
+  --shadow-xl: 0 11px 15px rgba(0,0,0,0.20), 0 9px 46px rgba(0,0,0,0.12), 0 24px 38px rgba(0,0,0,0.14);
 
   /* ── Motion — from packages/tokens/motion.ts — §24 tokenized durations ── */
   --duration-micro:   300ms;
@@ -122,21 +175,21 @@
   --z-search:   1200;
 }
 
-/* ── Dark mode — §23.2 warm-tinted neutrals ── */
+/* ── Dark mode — cool pure grays matching Figma ink family ── */
 @variant dark {
   :root {
-    --color-background:           hsl(20 10% 7%);
-    --color-background-secondary: hsl(20 8% 10%);
-    --color-foreground:           hsl(30 8% 95%);
-    --color-foreground-muted:     hsl(20 6% 60%);
-    --color-border:               hsl(20 8% 20%);
-    --color-card:                 hsl(20 8% 9%);
-    --color-muted:                hsl(20 8% 13%);
-    --color-muted-foreground:     hsl(20 6% 60%);
+    --color-background:           hsl(0 0% 9%);
+    --color-background-secondary: hsl(0 0% 12%);
+    --color-foreground:           hsl(0 0% 94%);
+    --color-foreground-muted:     hsl(0 0% 63%);
+    --color-border:               hsl(0 0% 22%);
+    --color-card:                 hsl(0 0% 12%);
+    --color-muted:                hsl(0 0% 16%);
+    --color-muted-foreground:     hsl(0 0% 54%);
     --color-primary-subtle:       hsl(358 30% 15%);
-    --color-success-subtle:       hsl(144 30% 12%);
-    --color-warning-subtle:       hsl(40 40% 12%);
-    --color-destructive-subtle:   hsl(355 40% 12%);
-    --color-info-subtle:          hsl(214 40% 12%);
+    --color-success-subtle:       hsl(153 40% 12%);
+    --color-warning-subtle:       hsl(48 40% 12%);
+    --color-destructive-subtle:   hsl(0 40% 12%);
+    --color-info-subtle:          hsl(224 40% 12%);
   }
 }
