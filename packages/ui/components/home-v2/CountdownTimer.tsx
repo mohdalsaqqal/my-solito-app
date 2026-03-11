@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { colors, fontWeights, radius, spacing, typography } from '@real/tokens'
+import { colors, fontWeights, letterSpacing, radius, spacing, typography } from '@real/tokens'
 import { MotiView } from 'moti'
 import { Box, Text } from '../../primitives'
 
@@ -36,7 +36,7 @@ function DigitPair({ value, label }: { value: string; label: string }) {
             fontWeight: fontWeights.black,
             color: colors.goldPrimary,
             lineHeight: typography.headline * 1.1,
-            letterSpacing: -1,
+            letterSpacing: letterSpacing.campaignHeading,
           }}
         >
           {value}
@@ -47,7 +47,7 @@ function DigitPair({ value, label }: { value: string; label: string }) {
           fontSize: typography.caption,
           fontWeight: fontWeights.ultra,
           color: colors.inkFrost,
-          letterSpacing: 1.5,
+          letterSpacing: letterSpacing.subHeaderCaps,
           textTransform: 'uppercase',
         }}
       >
