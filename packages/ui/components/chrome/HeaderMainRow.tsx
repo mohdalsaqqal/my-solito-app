@@ -1,4 +1,4 @@
-import { borderWidth, colors, layout, letterSpacing, motionDuration, radius, shadows, spacing } from '@real/tokens'
+import { borderWidth, colors, layout, letterSpacing, motionDuration, radius, shadows, spacing, typography } from '@real/tokens'
 import { Box, Container, Input, Text, Touchable } from '../../primitives'
 import { Icon } from '../Icon'
 
@@ -62,18 +62,20 @@ function Action({
                 minWidth: emphasized ? spacing['40'] : spacing['32'],
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: radius.md,
-                backgroundColor: active || emphasized ? colors.brandPrimarySubtle : colors.surface,
+                borderRadius: emphasized ? radius.full : radius.md,
+                backgroundColor: emphasized
+                  ? colors.brandPrimary
+                  : active ? colors.inkDeep : 'transparent',
                 transitionProperty: 'background-color,transform',
                 transitionDuration: `${motionDuration.microInteraction}ms`,
                 transform: [{ translateY: active ? -1 : 0 }],
-                ...shadows.xs,
+                ...(emphasized ? {} : shadows.xs),
               }}
             >
               <Icon
                 name={iconName}
                 size={spacing['24']}
-                color={active ? colors.brandPrimary : colors.textPrimary}
+                color={emphasized ? colors.textInverted : (active ? colors.goldPrimary : colors.inkFrost)}
               />
               {iconName !== 'account' && typeof count === 'number' && count > 0 ? (
                 <Box
@@ -136,74 +138,85 @@ export function HeaderMainRow({
   mobile = false,
   state = 'default',
 }: HeaderMainRowProps) {
+  const searchInputHeight = Math.round(spacing['40'] * 0.7 * 1.15 * 1.15 * 1.15)
+
   if (state === 'empty') {
     return null
   }
 
   if (state === 'loading') {
     return (
-      <Container>
-        <Box style={{ minHeight: layout.header.mainRowHeight, justifyContent: 'center' }}>
-          <Text tone='muted' variant='caption'>
-            Loading header...
-          </Text>
-        </Box>
-      </Container>
+      <Box style={{ backgroundColor: colors.inkBlack }}>
+        <Container>
+          <Box style={{ minHeight: layout.header.mainRowHeight, justifyContent: 'center' }}>
+            <Text tone='muted' variant='caption'>
+              Loading header...
+            </Text>
+          </Box>
+        </Container>
+      </Box>
     )
   }
 
   if (state === 'error') {
     return (
-      <Container>
-        <Box style={{ minHeight: layout.header.mainRowHeight, justifyContent: 'center' }}>
-          <Text tone='danger' variant='caption'>
-            Header unavailable.
-          </Text>
-        </Box>
-      </Container>
+      <Box style={{ backgroundColor: colors.inkBlack }}>
+        <Container>
+          <Box style={{ minHeight: layout.header.mainRowHeight, justifyContent: 'center' }}>
+            <Text tone='danger' variant='caption'>
+              Header unavailable.
+            </Text>
+          </Box>
+        </Container>
+      </Box>
     )
   }
 
   if (mobile) {
     return (
-      <Container>
-        <Box style={{ minHeight: layout.header.mainRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing['16'] }}>
-          <Touchable onPress={state === 'disabled' ? undefined : onPressLogo} style={{ flex: 1 }}>
-            <Text variant='title' numberOfLines={1} style={{ flex: 1 }}>
-              {logoText}
-            </Text>
-          </Touchable>
-          <Box style={{ flex: 1.8 }}>
-            <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
-              <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
-                <Icon name='search' color={colors.textSecondary} />
+      <Box style={{ backgroundColor: colors.inkBlack }}>
+        <Container>
+          <Box style={{ minHeight: layout.header.mainRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing['16'] }}>
+            <Touchable onPress={state === 'disabled' ? undefined : onPressLogo} style={{ flex: 1 }}>
+              <Text variant='title' tone='inkFrost' numberOfLines={1} style={{ flex: 1 }}>
+                {logoText}
+              </Text>
+            </Touchable>
+            <Box style={{ flex: 1.8 }}>
+              <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
+                <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
+                  <Icon name='search' color={colors.inkFrost} />
+                </Box>
+                <Input
+                  value={searchValue}
+                  onChangeText={onSearchChange}
+                  onFocus={onSearchFocus}
+                  onBlur={onSearchBlur}
+                  onSubmitEditing={onSearchSubmit}
+                  readOnly={state === 'disabled'}
+                  radiusKey='full'
+                  placeholder={searchPlaceholder}
+                  style={{
+                    paddingStart: spacing['32'],
+                    paddingEnd: spacing['16'],
+                    paddingVertical: spacing['2'],
+                    fontSize: typography.bodySm,
+                    minHeight: searchInputHeight,
+                    height: searchInputHeight,
+                    borderColor: colors.inkMid,
+                    backgroundColor: colors.inkDeep,
+                  }}
+                />
               </Box>
-              <Input
-                value={searchValue}
-                onChangeText={onSearchChange}
-                onFocus={onSearchFocus}
-                onBlur={onSearchBlur}
-                onSubmitEditing={onSearchSubmit}
-                readOnly={state === 'disabled'}
-                radiusKey='full'
-                placeholder={searchPlaceholder}
-                style={{
-                  paddingStart: spacing['32'],
-                  paddingEnd: spacing['16'],
-                  minHeight: spacing['40'],
-                  borderColor: colors.border,
-                  backgroundColor: colors.surfaceMuted,
-                }}
-              />
             </Box>
           </Box>
-        </Box>
-      </Container>
+        </Container>
+      </Box>
     )
   }
 
   return (
-    <Box>
+    <Box style={{ backgroundColor: colors.inkBlack }}>
       <Container>
         <Box
           style={{
@@ -223,7 +236,7 @@ export function HeaderMainRow({
             }}
           >
             <Touchable onPress={state === 'disabled' ? undefined : onPressLogo}>
-              <Text variant='h2' weight='700' numberOfLines={1} style={{ letterSpacing: letterSpacing.wide }}>
+              <Text variant='h2' tone='inkFrost' weight='700' numberOfLines={1} style={{ letterSpacing: letterSpacing.wide }}>
                 {logoText}
               </Text>
             </Touchable>
@@ -238,7 +251,7 @@ export function HeaderMainRow({
           >
             <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
               <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
-                <Icon name='search' color={colors.textSecondary} />
+                <Icon name='search' color={colors.inkFrost} />
               </Box>
               <Input
                 value={searchValue}
@@ -252,10 +265,13 @@ export function HeaderMainRow({
                 style={{
                   paddingStart: spacing['32'],
                   paddingEnd: spacing['16'],
-                  minHeight: spacing['40'],
-                  borderColor: colors.border,
+                  paddingVertical: spacing['2'],
+                  fontSize: typography.bodySm,
+                  minHeight: searchInputHeight,
+                  height: searchInputHeight,
+                  borderColor: colors.inkMid,
                   borderWidth: borderWidth.thin,
-                  backgroundColor: colors.surface,
+                  backgroundColor: colors.inkDeep,
                 }}
               />
             </Box>
@@ -299,7 +315,7 @@ export function HeaderMainRow({
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: radius.md,
-                      backgroundColor: hovered || focused ? colors.brandPrimarySubtle : colors.surface,
+                      backgroundColor: hovered || focused ? colors.inkDeep : 'transparent',
                       transitionProperty: 'background-color,transform',
                       transitionDuration: `${motionDuration.microInteraction}ms`,
                       transform: [{ translateY: hovered || focused ? -1 : 0 }],
@@ -309,7 +325,7 @@ export function HeaderMainRow({
                     <Icon
                       name='language'
                       size={spacing['24']}
-                      color={hovered || focused ? colors.brandPrimary : colors.textPrimary}
+                      color={hovered || focused ? colors.goldPrimary : colors.inkFrost}
                     />
                   </Box>
                   <Box

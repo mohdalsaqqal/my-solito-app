@@ -24,7 +24,7 @@ type TextVariant =
 
 type UiTextProps = TextProps & {
   children?: ReactNode
-  tone?: 'default' | 'muted' | 'primary' | 'inverse' | 'danger' | 'success' | 'warning' | 'info'
+  tone?: 'default' | 'muted' | 'primary' | 'inverse' | 'danger' | 'success' | 'warning' | 'info' | 'inkFrost'
   variant?: TextVariant
   size?: keyof typeof typography | number
   weight?: TextStyle['fontWeight']
@@ -160,6 +160,8 @@ function toneColor(tone: NonNullable<UiTextProps['tone']>) {
       return colors.warning
     case 'info':
       return colors.info
+    case 'inkFrost':
+      return colors.inkFrost
     default:
       return colors.textPrimary
   }
