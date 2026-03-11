@@ -77,8 +77,8 @@ export const letterSpacing = {
   wide: 0.3,
   caps: 1,
   capsWide: 2,
-  headline: -0.3,
+  headlineTier: -0.3,      // paired with typography.headlineTier (32px) — section headings
   subHeaderCaps: 1.2,
-  campaignHeading: -0.48,  // ≈ -0.03em at 16px — tight editorial for campaign headlines
-  labelPill: 1.92,         // ≈ 0.12em at 16px — wide prestige caps for badge/label pills
+  campaignHeading: -0.48,  // ≈ -0.007em at 72px (campaign size) — tight editorial for large headline text
+  labelPill: 1.92,         // ≈ 0.16em at 12px (label size) — wide prestige caps for badge/label pills
 } as const
