@@ -58,7 +58,6 @@ export function FlashSaleBand({
             fontWeight: fontWeights.black,
             color: colors.textInverted,
             letterSpacing: letterSpacing.campaignHeading,
-            lineHeight: typography.headline * 1.05,
           }}
         >
           {offerText}
@@ -94,19 +93,17 @@ export function FlashSaleBand({
             paddingHorizontal: spacing['24'],
           }}
         >
-          {() => (
-            <Text
-              style={{
-                fontSize: typography.label,
-                fontWeight: fontWeights.semibold,
-                color: colors.inkFrost,
-                letterSpacing: letterSpacing.caps,
-                textTransform: 'uppercase',
-              }}
-            >
-              {ctaLabel}
-            </Text>
-          )}
+          <Text
+            style={{
+              fontSize: typography.label,
+              fontWeight: fontWeights.semibold,
+              color: colors.inkFrost,
+              letterSpacing: letterSpacing.caps,
+              textTransform: 'uppercase',
+            }}
+          >
+            {ctaLabel}
+          </Text>
         </Touchable>
       ) : null}
     </Box>
