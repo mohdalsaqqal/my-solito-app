@@ -184,7 +184,7 @@ export function HomeV2Sections({
 
       {/* Flash sale band — crimson urgency section with countdown */}
       {flashSale ? (
-        <RevealOnScroll delayMs={motionDuration.stagger * 2}>
+        <RevealOnScroll delayMs={motionDuration.stagger * 3}>
           <FlashSaleBand
             offerText={flashSale.offerText}
             preLabel={flashSale.preLabel}
