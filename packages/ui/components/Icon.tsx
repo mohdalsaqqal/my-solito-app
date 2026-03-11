@@ -16,7 +16,7 @@ import {
   User,
   YoutubeLogo,
 } from 'phosphor-react'
-import { colors, spacing } from '@real/tokens'
+import { colors, iconSizes } from '@real/tokens'
 
 export type IconWeight = 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
 
@@ -72,7 +72,7 @@ type IconProps = {
 
 export function Icon({
   name,
-  size = spacing['16'],
+  size = iconSizes.md,   // Figma standard icon: 24px
   color = colors.textPrimary,
   weight = 'light',
 }: IconProps) {

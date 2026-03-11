@@ -164,6 +164,28 @@
   --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-exit:    cubic-bezier(0.7, 0, 0.84, 0);
 
+  /* ── Layout Grid — Figma System Layout Grid ── */
+  /* Mobile:        2 cols / 16px gutter / 16px margin                  */
+  /* Desktop-1280: 12 cols / 32px gutter / 112px margin → 1056px content */
+  /* Desktop-1920: 12 cols / 30px gutter / 240px margin → 1440px content */
+  --grid-columns-mobile:       2;
+  --grid-gutter-mobile:        16px;
+  --grid-margin-mobile:        16px;
+  --grid-columns-desktop:      12;
+  --grid-gutter-desktop-1280:  32px;
+  --grid-margin-desktop-1280:  112px;
+  --grid-content-desktop-1280: 1056px;
+  --grid-gutter-desktop-1920:  30px;
+  --grid-margin-desktop-1920:  240px;
+  --grid-content-desktop-1920: 1440px;
+
+  /* ── Icon sizes — Figma ICONS section (24px base grid) ── */
+  --icon-xs: 16px;
+  --icon-sm: 20px;
+  --icon-md: 24px;
+  --icon-lg: 32px;
+  --icon-xl: 48px;
+
   /* ── Z-index — from packages/tokens/layers.ts ── */
   --z-base:     0;
   --z-raised:   10;
