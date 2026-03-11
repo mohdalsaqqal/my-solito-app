@@ -7,13 +7,13 @@
 
 @theme {
   /* ── Colors — from packages/tokens/colors.ts ── */
-  --color-background:           hsl(30 8% 99%);
-  --color-background-secondary: hsl(30 6% 97%);
+  --color-background:           hsl(0 0% 100%);
+  --color-background-secondary: hsl(0 0% 97%);
   --color-foreground:           hsl(20 10% 8%);
   --color-foreground-muted:     hsl(20 8% 35%);
   --color-border:               hsl(30 10% 88%);
-  --color-card:                 hsl(30 8% 99%);
-  --color-muted:                hsl(30 6% 97%);
+  --color-card:                 hsl(0 0% 100%);
+  --color-muted:                hsl(0 0% 97%);
   --color-muted-foreground:     hsl(20 8% 35%);
 
   /* Brand — colors.brandPrimary = hsl(358 74% 50%) */
@@ -22,6 +22,17 @@
   --color-primary-pressed:      hsl(358 74% 38%);
   --color-primary-subtle:       hsl(30 6% 97%);
   --color-primary-foreground:   hsl(0 0% 100%);
+
+  /* Ink family — The Atelier prestige dark surfaces */
+  --color-ink-black:  hsl(20 10% 8%);
+  --color-ink-deep:   hsl(20 8% 13%);
+  --color-ink-mid:    hsl(20 8% 20%);
+  --color-ink-frost:  hsl(30 8% 95%);
+
+  /* Gold family — loyalty / exclusive accent */
+  --color-gold:         hsl(39 95% 43%);
+  --color-gold-light:   hsl(42 100% 75%);
+  --color-gold-subtle:  hsl(42 60% 92%);
 
   /* Status — from packages/tokens/status.ts */
   --color-success:              hsl(162 100% 39%);
@@ -75,6 +86,15 @@
   --text-2xl:  1.5rem;
   --text-3xl:  1.875rem;
   --text-4xl:  2.25rem;
+
+  /* Campaign typography — The Atelier mixed-weight contrast system */
+  --text-campaign:    4.5rem;    /* 72px */
+  --text-headline:    3.5rem;    /* 56px */
+  --text-subheadline: 1.125rem;  /* 18px */
+
+  /* Letter-spacing — campaign and label-pill */
+  --tracking-campaign: -0.03em;
+  --tracking-label:     0.12em;
 
   /* ── Elevation — from packages/tokens/elevation.ts ── */
   --shadow-xs: 0 0 0 1px hsla(355 12% 8% / 0.04), 0 2px 4px   hsla(355 12% 8% / 0.06);
