@@ -43,7 +43,7 @@ export function CampaignHeroBlock({
     return (
       <Box
         style={{
-          backgroundColor: colors.inkDeep,
+          backgroundColor: colors.inkBlack,
           height: blockHeight,
           alignItems: contentAlign,
           justifyContent: 'flex-end',
@@ -188,6 +188,7 @@ export function CampaignHeroBlock({
         {/* Main headline */}
         <Text
           style={{
+            // Use headline (56px) for longer text, campaign (72px) for short punchy headlines
             fontSize: headline.length > 20 ? typography.headline : typography.campaign,
             fontWeight: fontWeights.black,
             color: colors.textInverted,
@@ -230,7 +231,6 @@ export function CampaignHeroBlock({
               marginTop: spacing['8'],
               borderWidth: borderWidth.thin,
               borderColor: colors.brandPrimary,
-              opacity: disabled ? 0.5 : 1,
             }}
           >
             <Text
