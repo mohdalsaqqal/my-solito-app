@@ -48,6 +48,19 @@ import {
   syncNativeRtlDirection,
 } from '@real/app/lib/rtl-manager'
 import { getCurrentLocale, initI18n, setCurrentLocale } from '@real/app/lib/i18n/client'
+import { useFonts } from 'expo-font'
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_900Black,
+} from '@expo-google-fonts/poppins'
+import {
+  Cairo_400Regular,
+  Cairo_600SemiBold,
+  Cairo_700Bold,
+} from '@expo-google-fonts/cairo'
 
 const LOCALE_STORAGE_KEY = 'rc_locale'
 const initialLocale = getCurrentLocale()
@@ -75,6 +88,16 @@ type AccountTab = 'dashboard' | 'orders' | 'tests' | 'addresses' | 'loyalty' | '
 
 export default function HomeRoute() {
   const insets = useSafeAreaInsets()
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_900Black,
+    Cairo_400Regular,
+    Cairo_600SemiBold,
+    Cairo_700Bold,
+  })
   const [products, setProducts] = useState<Product[]>([])
   const [brands, setBrands] = useState<
     Array<{
@@ -837,6 +860,10 @@ export default function HomeRoute() {
         }}
       />
     )
+  }
+
+  if (!fontsLoaded) {
+    return null
   }
 
   return (

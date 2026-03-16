@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@expo-google-fonts/cairo": "^0.2.3",
+    "@expo-google-fonts/poppins": "^0.2.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@real/app": "*",
     "expo": "^54.0.16",
