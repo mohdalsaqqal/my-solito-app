@@ -7,10 +7,10 @@ import {
   CheckoutQuoteResponse,
   LoyaltyWallet,
 } from '@real/app/lib/types'
-import { borderWidth, breakpoints, colors, radius, spacing } from '@real/tokens'
+import { borderWidth, breakpoints, colors, componentTokens, radius, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Divider, Input, Text } from '@real/ui/primitives'
-import { Button, Card } from '@real/ui/components'
+import { Button, Card, PaymentBadges } from '@real/ui/components'
 import { passThroughPricingService } from '@real/app/lib/pricing'
 
 type CheckoutItem = {
@@ -78,6 +78,7 @@ type CheckoutPaymentMethod = 'cod' | 'card_on_delivery' | 'online_card' | 'pay_a
 type AddressLabel = 'Home' | 'Work' | 'Other'
 
 const DEFAULT_NOTICE = 'Shipping timelines are estimated and confirmed after payment.'
+const COUPON_STORAGE_KEY = 'rc_checkout_coupon_code'
 
 export function CheckoutScreen({
   items,
@@ -98,6 +99,44 @@ export function CheckoutScreen({
   const isNative = Platform.OS !== 'web'
   const isDesktop = !isNative && (width >= breakpoints.desktopMin || width === 0)
   const isCompact = width > 0 && width < breakpoints.tabletMin
+  const checkoutTokens = componentTokens.storefrontCommerce.checkout
+  const loadErrorTitle = 'Unable to load checkout'
+  const emptyTitle = 'Your cart is empty'
+  const emptyMessage = 'Add products before checkout.'
+  const checkoutTitle = 'Checkout'
+  const contactTitle = 'Contact'
+  const fullNameLabel = 'Full name'
+  const fullNamePlaceholder = 'Your full name'
+  const phoneLabel = 'Phone'
+  const phonePlaceholder = 'Phone number'
+  const fulfillmentTitle = 'Fulfillment'
+  const noStockedBranchesLabel = 'No stocked branches are available right now.'
+  const selectedBranchOutLabel = 'Selected branch is no longer in stock.'
+  const deliveryAddressTitle = 'Delivery address'
+  const savedAddressesLabel = 'Saved addresses'
+  const cityLabel = 'City'
+  const areaLabel = 'Area'
+  const cityPlaceholder = 'City'
+  const areaPlaceholder = 'Area'
+  const buildingLabel = 'Building'
+  const buildingPlaceholder = 'Building and street'
+  const floorLabel = 'Floor (optional)'
+  const floorPlaceholder = 'Floor'
+  const apartmentLabel = 'Apartment (optional)'
+  const apartmentPlaceholder = 'Apartment'
+  const deliveryNotesLabel = 'Delivery notes (optional)'
+  const deliveryNotesPlaceholder = 'Any instructions for delivery'
+  const addressBookLabel = 'Address book'
+  const paymentTitle = 'Payment'
+  const noPaymentMethodsLabel = 'No payment methods are currently available for this fulfillment mode.'
+  const promotionTitle = 'Promotion code'
+  const couponLabel = 'Coupon code (optional)'
+  const couponPlaceholder = 'Enter coupon code'
+  const refreshingQuoteLabel = 'Refreshing quote...'
+  const loyaltyTitle = 'Loyalty redemption'
+  const orderSummaryTitle = 'Order summary'
+  const quoteRequiredLabel = 'Checkout quote is required. Refresh quote before placing order.'
+  const totalLabel = 'Total'
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -206,17 +245,39 @@ export function CheckoutScreen({
   const promotionDiscount = quote?.totals.discountTotal ?? 0
   const totalBeforeLoyalty = quote?.totals.finalTotal ?? Math.max(0, subtotal + shipping - promotionDiscount)
   const total = Math.max(0, totalBeforeLoyalty - estimatedLoyaltyDiscount)
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }),
+    [currency],
+  )
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value)
+  const formatCurrency = (value: number) => currencyFormatter.format(value)
 
   const hasValidQuote = Boolean(quote?.quoteId && quote?.expiresAt && quoteError == null)
   const canPressPlaceOrder = items.length > 0 && !submitting && !quoteLoading && hasValidQuote
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return
+    const saved = window.localStorage.getItem(COUPON_STORAGE_KEY)
+    if (saved && saved.trim().length > 0) {
+      setCouponCode(saved)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return
+    const value = couponCode.trim()
+    if (value.length > 0) {
+      window.localStorage.setItem(COUPON_STORAGE_KEY, value)
+      return
+    }
+    window.localStorage.removeItem(COUPON_STORAGE_KEY)
+  }, [couponCode])
 
   useEffect(() => {
     if (!onRequestQuote || items.length === 0) {
@@ -382,7 +443,7 @@ export function CheckoutScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
-              <Text variant='h2'>Unable to load checkout</Text>
+              <Text variant='h2'>{loadErrorTitle}</Text>
               <Text tone='muted'>{error}</Text>
               <Box style={isCompact ? undefined : { width: spacing.xxl * 4 }}>
                 <Button variant='outline' onPress={onRetry}>
@@ -402,8 +463,8 @@ export function CheckoutScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
-              <Text variant='h2'>Your cart is empty</Text>
-              <Text tone='muted'>Add products before checkout.</Text>
+              <Text variant='h2'>{emptyTitle}</Text>
+              <Text tone='muted'>{emptyMessage}</Text>
             </Box>
           </Section>
         </PageScaffold.Body>
@@ -423,16 +484,42 @@ export function CheckoutScreen({
         paddingBottom: !isDesktop ? spacing['96'] : 0,
       }}
     >
-      <Text variant='h2'>Checkout</Text>
+      <Text variant='h2'>{checkoutTitle}</Text>
+      <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: checkoutTokens.paymentBadgeGap }}>
+        {[
+          { id: 'step-contact', label: '1. Contact' },
+          { id: 'step-fulfillment', label: `2. ${fulfillmentMode === 'pickup' ? 'Pickup' : 'Delivery'}` },
+          { id: 'step-payment', label: '3. Payment' },
+          { id: 'step-review', label: '4. Review' },
+        ].map((step, index) => (
+          <Box
+            key={step.id}
+            style={{
+              minHeight: checkoutTokens.stepChipMinHeight,
+              borderRadius: radius.full,
+              borderWidth: borderWidth.thin,
+              borderColor: index === 3 ? colors.textPrimary : colors.stroke,
+              backgroundColor: index === 3 ? colors.textPrimary : colors.surface,
+              paddingHorizontal: checkoutTokens.stepChipPaddingX,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Text variant='caption' weight='700' tone={index === 3 ? 'inverse' : 'muted'}>
+              {step.label}
+            </Text>
+          </Box>
+        ))}
+      </Box>
 
       <Box
         style={{
           flexDirection: isDesktop ? 'row' : 'column',
           alignItems: 'flex-start',
-          gap: spacing['24'],
+          gap: checkoutTokens.contentGap,
         }}
       >
-        <Box style={{ flex: 1, width: '100%' as const, minWidth: isDesktop ? spacing.xxl * 6 : undefined, gap: spacing['16'] }}>
+        <Box style={{ flex: 1, width: '100%' as const, minWidth: isDesktop ? spacing.xxl * 6 : undefined, gap: checkoutTokens.blockGap }}>
           <Card
             variant='raised'
             style={{
@@ -442,24 +529,24 @@ export function CheckoutScreen({
               backgroundColor: colors.brandPrimarySubtle,
             }}
           >
-            <Text variant='title'>Contact</Text>
+            <Text variant='title'>{contactTitle}</Text>
             <CheckoutInput
-              label='Full name'
+              label={fullNameLabel}
               value={fullName}
               onChange={setFullName}
-              placeholder='Your full name'
+              placeholder={fullNamePlaceholder}
             />
             <CheckoutInput
-              label='Phone'
+              label={phoneLabel}
               value={phone}
               onChange={setPhone}
-              placeholder='Phone number'
+              placeholder={phonePlaceholder}
             />
           </Card>
 
           {(deliveryEnabled || pickupEnabled) ? (
             <Card variant='raised' style={{ gap: spacing['16'] }}>
-              <Text variant='title'>Fulfillment</Text>
+              <Text variant='title'>{fulfillmentTitle}</Text>
               <Box style={{ flexDirection: 'row', gap: spacing['8'], flexWrap: 'wrap' }}>
                 {deliveryEnabled ? (
                   <PaymentChip
@@ -480,7 +567,7 @@ export function CheckoutScreen({
               {fulfillmentMode === 'pickup' ? (
                 <Box style={{ gap: spacing['12'] }}>
                   {stockedBranches.length === 0 ? (
-                    <Text tone='danger'>No stocked branches are available right now.</Text>
+                    <Text tone='danger'>{noStockedBranchesLabel}</Text>
                   ) : (
                     stockedBranches.map((branch) => (
                       <Button
@@ -495,7 +582,7 @@ export function CheckoutScreen({
 
                   {!selectedBranchInStock && suggestedBranch ? (
                     <Card tone='subtle' variant='flat' style={{ gap: spacing['8'] }}>
-                      <Text tone='danger'>Selected branch is no longer in stock.</Text>
+                      <Text tone='danger'>{selectedBranchOutLabel}</Text>
                       <Button variant='outline' onPress={() => setSelectedBranchId(suggestedBranch.id)}>
                         {`Switch to ${suggestedBranch.name}`}
                       </Button>
@@ -514,10 +601,10 @@ export function CheckoutScreen({
 
           {fulfillmentMode === 'delivery' ? (
             <Card variant='raised' style={{ gap: spacing['16'] }}>
-              <Text variant='title'>Delivery address</Text>
+              <Text variant='title'>{deliveryAddressTitle}</Text>
               {savedAddresses.length > 0 ? (
                 <Box style={{ gap: spacing['8'] }}>
-                  <Text variant='caption' tone='muted'>Saved addresses</Text>
+                  <Text variant='caption' tone='muted'>{savedAddressesLabel}</Text>
                   <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
                     {savedAddresses.map((address) => (
                       <Button
@@ -547,43 +634,43 @@ export function CheckoutScreen({
 
               <Box style={{ flexDirection: isCompact ? 'column' : 'row', gap: spacing['16'], flexWrap: 'wrap' }}>
                 <Box style={{ flex: 1, minWidth: isCompact ? undefined : spacing.xxl * 3 }}>
-                  <CheckoutInput label='City' value={city} onChange={setCity} placeholder='City' />
+                  <CheckoutInput label={cityLabel} value={city} onChange={setCity} placeholder={cityPlaceholder} />
                 </Box>
                 <Box style={{ flex: 1, minWidth: isCompact ? undefined : spacing.xxl * 3 }}>
-                  <CheckoutInput label='Area' value={area} onChange={setArea} placeholder='Area' />
+                  <CheckoutInput label={areaLabel} value={area} onChange={setArea} placeholder={areaPlaceholder} />
                 </Box>
               </Box>
 
               <CheckoutInput
-                label='Building'
+                label={buildingLabel}
                 value={building}
                 onChange={setBuilding}
-                placeholder='Building and street'
+                placeholder={buildingPlaceholder}
               />
 
               <Box style={{ flexDirection: isCompact ? 'column' : 'row', gap: spacing['16'], flexWrap: 'wrap' }}>
                 <Box style={{ flex: 1, minWidth: isCompact ? undefined : spacing.xxl * 3 }}>
-                  <CheckoutInput label='Floor (optional)' value={floor} onChange={setFloor} placeholder='Floor' />
+                  <CheckoutInput label={floorLabel} value={floor} onChange={setFloor} placeholder={floorPlaceholder} />
                 </Box>
                 <Box style={{ flex: 1, minWidth: isCompact ? undefined : spacing.xxl * 3 }}>
                   <CheckoutInput
-                    label='Apartment (optional)'
+                    label={apartmentLabel}
                     value={apartment}
                     onChange={setApartment}
-                    placeholder='Apartment'
+                    placeholder={apartmentPlaceholder}
                   />
                 </Box>
               </Box>
 
               <CheckoutInput
-                label='Delivery notes (optional)'
+                label={deliveryNotesLabel}
                 value={notes}
                 onChange={setNotes}
-                placeholder='Any instructions for delivery'
+                placeholder={deliveryNotesPlaceholder}
               />
 
               <Box style={{ gap: spacing['8'] }}>
-                <Text variant='caption' tone='muted'>Address book</Text>
+                <Text variant='caption' tone='muted'>{addressBookLabel}</Text>
                 <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
                   {(['Home', 'Work', 'Other'] as AddressLabel[]).map((label) => (
                     <Button
@@ -616,10 +703,10 @@ export function CheckoutScreen({
             </Card>
           ) : null}
 
-          <Card variant='raised' style={{ gap: spacing['16'] }}>
-            <Text variant='title'>Payment</Text>
+          <Card variant='raised' style={{ gap: checkoutTokens.blockGap }}>
+            <Text variant='title'>{paymentTitle}</Text>
             {availablePaymentMethods.length === 0 ? (
-              <Text tone='danger'>No payment methods are currently available for this fulfillment mode.</Text>
+              <Text tone='danger'>{noPaymentMethodsLabel}</Text>
             ) : (
               <Box style={{ flexDirection: 'row', gap: spacing['8'], flexWrap: 'wrap' }}>
                 {availablePaymentMethods.map((method) => (
@@ -632,23 +719,31 @@ export function CheckoutScreen({
                 ))}
               </Box>
             )}
+            <PaymentBadges />
           </Card>
 
-          <Card variant='raised' style={{ gap: spacing['16'] }}>
-            <Text variant='title'>Promotion code</Text>
+          <Card variant='raised' style={{ gap: checkoutTokens.blockGap }}>
+            <Text variant='title'>{promotionTitle}</Text>
             <CheckoutInput
-              label='Coupon code (optional)'
+              label={couponLabel}
               value={couponCode}
               onChange={setCouponCode}
-              placeholder='Enter coupon code'
+              placeholder={couponPlaceholder}
             />
-            {quoteLoading ? <Text variant='caption' tone='muted'>Refreshing quote...</Text> : null}
+            {couponCode.trim().length > 0 ? (
+              <Box style={{ alignItems: 'flex-start' }}>
+                <Button size='sm' variant='outline' onPress={() => setCouponCode('')}>
+                  Remove coupon
+                </Button>
+              </Box>
+            ) : null}
+            {quoteLoading ? <Text variant='caption' tone='muted'>{refreshingQuoteLabel}</Text> : null}
             {quoteError ? <Text variant='caption' tone='danger'>{quoteError}</Text> : null}
           </Card>
 
           {loyaltyWallet ? (
-            <Card variant='raised' style={{ gap: spacing['16'] }}>
-              <Text variant='title'>Loyalty redemption</Text>
+            <Card variant='raised' style={{ gap: checkoutTokens.blockGap }}>
+              <Text variant='title'>{loyaltyTitle}</Text>
               <Text variant='caption' tone='muted'>
                 {`Points: ${loyaltyWallet.points} • Redeemable: ${formatCurrency(loyaltyWallet.redeemableValue)}`}
               </Text>
@@ -680,55 +775,81 @@ export function CheckoutScreen({
           ) : null}
         </Box>
 
-        <Box style={{ width: isDesktop ? spacing.xxl * 7 : '100%', maxWidth: '100%' as const, gap: spacing['16'] }}>
+        <Box
+          style={
+            isDesktop
+              ? ({
+                  width: spacing.xxl * 7,
+                  maxWidth: '100%',
+                  gap: checkoutTokens.blockGap,
+                  position: Platform.OS === 'web' ? ('sticky' as const) : undefined,
+                  top: Platform.OS === 'web' ? checkoutTokens.stickyPanelTop : undefined,
+                } as any)
+              : { width: '100%' as const, maxWidth: '100%' as const, gap: checkoutTokens.blockGap }
+          }
+        >
           <Card
             variant='raised'
             style={{
-              gap: spacing['16'],
+              gap: checkoutTokens.summaryGap,
               borderWidth: borderWidth.thin,
-              borderColor: colors.primary,
+              borderColor: colors.stroke,
+              padding: checkoutTokens.summaryPanelPadding,
             }}
           >
-            <Text variant='title'>Order summary</Text>
-            <Box style={{ gap: spacing['12'] }}>
+            <Text variant='title'>{orderSummaryTitle}</Text>
+            <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
               {items.map((item) => (
                 <Box
                   key={item.id}
-                  style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+                  style={{ position: 'relative', width: spacing['64'], height: spacing['64'] }}
                 >
-                  <Box style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing['12'], paddingEnd: spacing['16'] }}>
-                    {item.imageUrl ? (
-                      <Image
-                        source={{ uri: item.imageUrl }}
-                        style={{
-                          width: spacing['48'],
-                          height: spacing['48'],
-                          borderRadius: radius.xs,
-                          borderWidth: borderWidth.thin,
-                          borderColor: colors.border,
-                          backgroundColor: colors.backgroundSecondary,
-                        }}
-                      />
-                    ) : (
-                      <Box
-                        style={{
-                          width: spacing['48'],
-                          height: spacing['48'],
-                          borderRadius: radius.xs,
-                          borderWidth: borderWidth.thin,
-                          borderColor: colors.border,
-                          backgroundColor: colors.backgroundSecondary,
-                        }}
-                      />
-                    )}
-                    <Box style={{ flex: 1 }}>
-                      <Text variant='bodySm' numberOfLines={1}>{item.name}</Text>
-                      <Text variant='caption' tone='muted'>Qty {item.quantity}</Text>
+                  {item.imageUrl ? (
+                    <Image
+                      source={{ uri: item.imageUrl }}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: radius.sm,
+                        borderWidth: borderWidth.thin,
+                        borderColor: colors.border,
+                        backgroundColor: colors.backgroundSecondary,
+                      }}
+                    />
+                  ) : (
+                    <Box
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        borderRadius: radius.sm,
+                        borderWidth: borderWidth.thin,
+                        borderColor: colors.border,
+                        backgroundColor: colors.backgroundSecondary,
+                      }}
+                    />
+                  )}
+                  {item.quantity > 1 ? (
+                    <Box
+                      style={{
+                        position: 'absolute',
+                        top: -spacing['4'],
+                        right: -spacing['4'],
+                        backgroundColor: colors.brandCrimson,
+                        borderRadius: radius.full,
+                        minWidth: 18,
+                        height: 18,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        paddingHorizontal: 4,
+                        borderWidth: 1,
+                        borderColor: colors.surface,
+                      }}
+                    >
+                      <Text variant='meta' size={9} tone='inverse' weight='700'>
+                        {item.quantity}
+                      </Text>
                     </Box>
-                  </Box>
-                  <Text variant='price' tone='danger'>
-                    {formatCurrency(passThroughPricingService.getProductPrice(item, { quantity: item.quantity }).subtotal ?? 0)}
-                  </Text>
+                  ) : null}
                 </Box>
               ))}
             </Box>
@@ -744,6 +865,7 @@ export function CheckoutScreen({
               ) : null}
               <SummaryRow label='Total' value={formatCurrency(total)} emphasis />
             </Box>
+            <PaymentBadges />
             {quote?.totals.appliedPromotion ? (
               <Text variant='caption' tone='muted'>
                 Applied: {quote.totals.appliedPromotion.name}
@@ -758,7 +880,7 @@ export function CheckoutScreen({
 
           {submitError ? <Text variant='caption' tone='danger'>{submitError}</Text> : null}
           {!hasValidQuote && !quoteLoading ? (
-            <Text variant='caption' tone='danger'>Checkout quote is required. Refresh quote before placing order.</Text>
+            <Text variant='caption' tone='danger'>{quoteRequiredLabel}</Text>
           ) : null}
 
           {isDesktop ? (
@@ -782,7 +904,7 @@ export function CheckoutScreen({
                   borderColor: colors.border,
                   backgroundColor: colors.surface,
                   paddingHorizontal: spacing.pageX,
-                  paddingVertical: spacing['8'],
+                  paddingVertical: checkoutTokens.mobileActionPaddingY,
                 }
               : {
                   marginTop: spacing['16'],
@@ -791,13 +913,13 @@ export function CheckoutScreen({
                   backgroundColor: colors.surface,
                   borderRadius: radius.sm,
                   paddingHorizontal: spacing['12'],
-                  paddingVertical: spacing['12'],
+                  paddingVertical: checkoutTokens.mobileActionPaddingY,
                 }),
           }}
         >
           <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['16'] }}>
             <Box style={{ gap: spacing.xxs }}>
-              <Text variant='caption' tone='muted'>Total</Text>
+              <Text variant='caption' tone='muted'>{totalLabel}</Text>
               <Text variant='h2' tone='danger'>{formatCurrency(total)}</Text>
             </Box>
             <Box style={isCompact ? { flex: 1 } : { minWidth: spacing.xxl * 4 }}>
