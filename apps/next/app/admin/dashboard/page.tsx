@@ -43,6 +43,9 @@ type TopItemStat = {
   revenue: number
 }
 
+type Period = '7d' | '30d' | '3m' | '12m'
+type ChartMode = 'revenue' | 'orders' | 'both'
+
 function formatCurrency(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -106,6 +109,66 @@ function buildYearSeries(orders: OrderSummary[], year: number): SeriesPoint[] {
     revenue: row.revenue,
     orders: row.orders,
   }))
+}
+
+function buildPeriodSeries(orders: OrderSummary[], period: Period): SeriesPoint[] {
+  const now = new Date()
+
+  if (period === '7d') {
+    const points: SeriesPoint[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now)
+      d.setDate(d.getDate() - i)
+      const key = d.toISOString().slice(0, 10)
+      const label = `${d.getMonth() + 1}/${d.getDate()}`
+      const dayOrders = orders.filter((o) => o.createdAt.slice(0, 10) === key)
+      points.push({
+        label,
+        revenue: dayOrders.reduce((s, o) => s + Number(o.total || 0), 0),
+        orders: dayOrders.length,
+      })
+    }
+    return points
+  }
+
+  if (period === '30d') {
+    const points: SeriesPoint[] = []
+    for (let i = 5; i >= 0; i--) {
+      const endD = new Date(now)
+      endD.setDate(endD.getDate() - i * 5)
+      const startD = new Date(endD)
+      startD.setDate(startD.getDate() - 4)
+      const label = `${startD.getMonth() + 1}/${startD.getDate()}`
+      const bucketOrders = orders.filter((o) => {
+        const t = new Date(o.createdAt).getTime()
+        return t >= startD.getTime() && t <= endD.getTime()
+      })
+      points.push({
+        label,
+        revenue: bucketOrders.reduce((s, o) => s + Number(o.total || 0), 0),
+        orders: bucketOrders.length,
+      })
+    }
+    return points
+  }
+
+  if (period === '3m') {
+    const points: SeriesPoint[] = []
+    for (let i = 2; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const label = d.toLocaleString('default', { month: 'short' })
+      const monthOrders = orders.filter((o) => o.createdAt.startsWith(key))
+      points.push({
+        label,
+        revenue: monthOrders.reduce((s, o) => s + Number(o.total || 0), 0),
+        orders: monthOrders.length,
+      })
+    }
+    return points
+  }
+
+  return buildLast12MonthsSeries(orders)
 }
 
 const KPI_ACCENT: Record<string, string> = {
@@ -320,89 +383,176 @@ function AuditItem({
   )
 }
 
-function AnalyticsChart({ series }: { series: SeriesPoint[] }) {
-  const width = 920
-  const height = 240
-  const padX = 36
-  const padY = 20
+function AnalyticsChart({
+  series,
+  showSeries,
+}: {
+  series: SeriesPoint[]
+  showSeries: ChartMode
+}) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+  const width = 900
+  const height = 220
+  const padX = 48
+  const padY = 16
+  const padBottom = 28
   const chartW = width - padX * 2
-  const chartH = height - padY * 2
-  const maxRevenue = Math.max(...series.map((row) => row.revenue), 1)
-  const maxOrders = Math.max(...series.map((row) => row.orders), 1)
+  const chartH = height - padY - padBottom
+  const maxRevenue = Math.max(...series.map((r) => r.revenue), 1)
+  const maxOrders = Math.max(...series.map((r) => r.orders), 1)
   const step = series.length > 1 ? chartW / (series.length - 1) : chartW
-  const barWidth = Math.max(10, Math.min(28, step * 0.45))
+  const barWidth = Math.max(8, Math.min(24, step * 0.5))
 
   const linePoints = series
-    .map((row, index) => {
-      const x = padX + step * index
+    .map((row, i) => {
+      const x = padX + step * i
       const y = padY + chartH - (row.orders / maxOrders) * chartH
       return `${x},${y}`
     })
     .join(' ')
 
   return (
-    <div
-      style={{
-        border: `1px solid ${colors.border}`,
-        borderRadius: radius.xl,
-        backgroundColor: colors.surface,
-        overflow: 'hidden',
-      }}
-    >
-      <svg viewBox={`0 0 ${width} ${height}`} width='100%' role='img' aria-label='Revenue and orders chart'>
-        <rect x='0' y='0' width={width} height={height} fill={colors.surface} />
-        {[0, 1, 2, 3].map((tick) => {
-          const y = padY + (chartH / 3) * tick
-          return (
-            <line
-              key={`grid-${tick}`}
-              x1={padX}
-              x2={width - padX}
-              y1={y}
-              y2={y}
-              stroke={colors.border}
-              strokeDasharray='4 4'
-            />
-          )
-        })}
+    <div>
+      <div style={{ position: 'relative', overflow: 'visible' }}>
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          width='100%'
+          role='img'
+          aria-label='Revenue and orders chart'
+          style={{ display: 'block', overflow: 'visible' }}
+        >
+          <rect x='0' y='0' width={width} height={height} fill={colors.surface} />
+          {[0, 1, 2, 3].map((tick) => {
+            const y = padY + (chartH / 3) * tick
+            return (
+              <g key={`grid-${tick}`}>
+                <line x1={padX} x2={width - padX} y1={y} y2={y} stroke={colors.border} strokeDasharray='4 4' />
+                {(showSeries === 'revenue' || showSeries === 'both') && (
+                  <text x={padX - 6} y={y + 4} textAnchor='end' fill={colors.textSecondary} fontSize={10}>
+                    {formatCurrency(maxRevenue - (maxRevenue / 3) * tick)}
+                  </text>
+                )}
+                {(showSeries === 'orders' || showSeries === 'both') && (
+                  <text x={width - padX + 6} y={y + 4} textAnchor='start' fill={colors.info} fontSize={10}>
+                    {String(Math.round(maxOrders - (maxOrders / 3) * tick))}
+                  </text>
+                )}
+              </g>
+            )
+          })}
 
-        {series.map((row, index) => {
-          const x = padX + step * index
-          const barHeight = (row.revenue / maxRevenue) * chartH
-          const y = padY + chartH - barHeight
-          return (
-            <g key={`bar-${row.label}-${index}`}>
-              <rect
-                x={x - barWidth / 2}
-                y={y}
-                width={barWidth}
-                height={Math.max(barHeight, 2)}
-                rx={radius.xs}
-                fill={colors.brandPrimary}
-                opacity={0.8}
+          {(showSeries === 'revenue' || showSeries === 'both') &&
+            series.map((row, i) => {
+              const x = padX + step * i
+              const barH = (row.revenue / maxRevenue) * chartH
+              const y = padY + chartH - barH
+              const isHovered = hoveredIndex === i
+              return (
+                <rect
+                  key={`bar-${i}`}
+                  x={x - barWidth / 2}
+                  y={y}
+                  width={barWidth}
+                  height={Math.max(barH, 2)}
+                  rx={3}
+                  fill={colors.brandPrimary}
+                  opacity={isHovered ? 1 : 0.65}
+                />
+              )
+            })}
+
+          {(showSeries === 'orders' || showSeries === 'both') && (
+            <>
+              <polyline
+                points={linePoints}
+                fill='none'
+                stroke={colors.info}
+                strokeWidth='2.5'
+                strokeLinecap='round'
+                strokeLinejoin='round'
               />
-              <text
-                x={x}
-                y={height - 6}
-                textAnchor='middle'
-                fill={colors.textSecondary}
-                fontSize={typography.xs}
-              >
-                {row.label}
-              </text>
-            </g>
-          )
-        })}
+              {series.map((row, i) => {
+                const x = padX + step * i
+                const y = padY + chartH - (row.orders / maxOrders) * chartH
+                return (
+                  <circle
+                    key={`dot-${i}`}
+                    cx={x}
+                    cy={y}
+                    r={hoveredIndex === i ? 5 : 3}
+                    fill={colors.surface}
+                    stroke={colors.info}
+                    strokeWidth='2'
+                  />
+                )
+              })}
+            </>
+          )}
 
-        <polyline
-          points={linePoints}
-          fill='none'
-          stroke={colors.info}
-          strokeWidth='3'
-          strokeLinecap='round'
-          strokeLinejoin='round'
-        />
-      </svg>
+          {series.map((row, i) => {
+            const x = padX + step * i
+            return (
+              <g key={`hit-${i}`}>
+                <rect
+                  x={Math.max(0, x - step / 2)}
+                  y={0}
+                  width={step}
+                  height={height - padBottom + 8}
+                  fill='transparent'
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                  style={{ cursor: 'crosshair' }}
+                />
+                <text x={x} y={height - 8} textAnchor='middle' fill={colors.textSecondary} fontSize={10}>
+                  {row.label}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+
+        {hoveredIndex !== null && series[hoveredIndex] && (
+          <div
+            style={{
+              position: 'absolute',
+              top: 16,
+              left: `calc(${((padX + step * hoveredIndex) / 900) * 100}% + 8px)`,
+              backgroundColor: colors.textPrimary,
+              color: colors.textInverted,
+              borderRadius: radius.md,
+              padding: `${spacing['4']}px ${spacing['8']}px`,
+              fontSize: typography.xs,
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              zIndex: 10,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
+            }}
+          >
+            <div style={{ fontWeight: Number(fontWeights.semibold) }}>{series[hoveredIndex]!.label}</div>
+            {(showSeries === 'revenue' || showSeries === 'both') && (
+              <div>{formatCurrency(series[hoveredIndex]!.revenue)}</div>
+            )}
+            {(showSeries === 'orders' || showSeries === 'both') && (
+              <div style={{ color: colors.info }}>{series[hoveredIndex]!.orders} orders</div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', gap: spacing['16'], marginTop: spacing['12'] }}>
+        {(showSeries === 'revenue' || showSeries === 'both') && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
+            <span style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.brandPrimary, display: 'inline-block' }} />
+            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>Revenue</span>
+          </div>
+        )}
+        {(showSeries === 'orders' || showSeries === 'both') && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: colors.info, display: 'inline-block' }} />
+            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>Orders</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -417,6 +567,8 @@ export default function AdminDashboardPage() {
   const [endDate, setEndDate] = useState('')
   const [orderSearch, setOrderSearch] = useState('')
   const [showTable, setShowTable] = useState(true)
+  const [period, setPeriod] = useState<Period>('30d')
+  const [chartMode, setChartMode] = useState<ChartMode>('both')
 
   useEffect(() => {
     void apiClient.orders
@@ -524,6 +676,8 @@ export default function AdminDashboardPage() {
     if (selectedYear === 'all') return buildLast12MonthsSeries(safeFilteredOrders)
     return buildYearSeries(safeFilteredOrders, Number(selectedYear))
   }, [safeFilteredOrders, selectedYear])
+
+  const periodSeries = useMemo(() => buildPeriodSeries(safeFilteredOrders, period), [safeFilteredOrders, period])
 
   const resetFilters = () => {
     setSelectedYear('all')
@@ -655,7 +809,7 @@ export default function AdminDashboardPage() {
         <Panel>
           <div
             style={{
-              marginBottom: spacing['12'],
+              marginBottom: spacing['16'],
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -663,15 +817,98 @@ export default function AdminDashboardPage() {
               flexWrap: 'wrap',
             }}
           >
-            <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
-              Revenue & Order Trends
+            <h3
+              style={{
+                margin: 0,
+                color: colors.textPrimary,
+                fontSize: typography.base,
+                fontWeight: Number(fontWeights.semibold),
+              }}
+            >
+              Revenue & Orders
             </h3>
-            <span style={{ color: colors.textSecondary, fontSize: typography.sm, display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-              <CalendarDays size={14} />
-              {selectedYear === 'all' ? 'Last 12 months' : `Monthly trend for ${selectedYear}`}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
+              {/* Period tabs */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: spacing['4'],
+                  backgroundColor: colors.surfaceMuted,
+                  borderRadius: radius.full,
+                  padding: spacing['4'],
+                }}
+              >
+                {(['7d', '30d', '3m', '12m'] as const).map((p) => (
+                  <button
+                    key={p}
+                    type='button'
+                    onClick={() => setPeriod(p)}
+                    style={{
+                      border: 0,
+                      borderRadius: radius.full,
+                      padding: `${spacing['4']}px ${spacing['12']}px`,
+                      fontSize: typography.xs,
+                      fontWeight: Number(fontWeights.medium),
+                      cursor: 'pointer',
+                      backgroundColor: period === p ? colors.surface : 'transparent',
+                      color: period === p ? colors.textPrimary : colors.textSecondary,
+                      boxShadow: period === p ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 160ms ease',
+                    }}
+                  >
+                    {p === '7d' ? '7D' : p === '30d' ? '30D' : p === '3m' ? '3M' : '12M'}
+                  </button>
+                ))}
+              </div>
+              {/* Series toggle */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: spacing['4'],
+                  backgroundColor: colors.surfaceMuted,
+                  borderRadius: radius.full,
+                  padding: spacing['4'],
+                }}
+              >
+                {(['both', 'revenue', 'orders'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type='button'
+                    onClick={() => setChartMode(s)}
+                    style={{
+                      border: 0,
+                      borderRadius: radius.full,
+                      padding: `${spacing['4']}px ${spacing['12']}px`,
+                      fontSize: typography.xs,
+                      fontWeight: Number(fontWeights.medium),
+                      cursor: 'pointer',
+                      backgroundColor: chartMode === s ? colors.surface : 'transparent',
+                      color: chartMode === s ? colors.textPrimary : colors.textSecondary,
+                      boxShadow: chartMode === s ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                      transition: 'all 160ms ease',
+                      textTransform: 'capitalize',
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-          <AnalyticsChart series={chartSeries} />
+          {safeFilteredOrders.length === 0 ? (
+            <div
+              style={{
+                padding: `${spacing['32']}px 0`,
+                textAlign: 'center',
+                color: colors.textSecondary,
+                fontSize: typography.sm,
+              }}
+            >
+              No orders in this period
+            </div>
+          ) : (
+            <AnalyticsChart series={periodSeries} showSeries={chartMode} />
+          )}
         </Panel>
       </Section>
 
