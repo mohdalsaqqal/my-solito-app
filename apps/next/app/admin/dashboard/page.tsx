@@ -7,11 +7,12 @@ import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
-  CalendarDays,
+  CheckCircle,
   Package,
+  RefreshCw,
   ShoppingBag,
-  SlidersHorizontal,
   Users,
+  Zap,
 } from 'lucide-react'
 import { apiClient } from '../../apiClient'
 import { AdminOpsAuditEntry, OrderSummary } from '@real/app/lib/types'
@@ -557,6 +558,51 @@ function AnalyticsChart({
   )
 }
 
+function AlertBanner({ pending, health }: { pending: number; health: number }) {
+  const alerts: { label: string; severity: 'high' | 'medium' }[] = []
+  if (pending > 10) alerts.push({ label: `${pending} pending orders need attention`, severity: 'high' })
+  if (health < 90) alerts.push({ label: `System health is at ${health.toFixed(1)}%`, severity: 'medium' })
+
+  if (alerts.length === 0) return null
+
+  return (
+    <div
+      style={{
+        marginBottom: spacing['16'],
+        borderRadius: radius.xl,
+        border: `1px solid ${colors.warning}44`,
+        backgroundColor: `${colors.warning}10`,
+        padding: `${spacing['12']}px ${spacing['16']}px`,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: spacing['12'],
+      }}
+    >
+      <AlertTriangle size={18} color={colors.warning} style={{ flexShrink: 0, marginTop: 1 }} />
+      <div style={{ display: 'grid', gap: spacing['4'] }}>
+        {alerts.map((a) => (
+          <p key={a.label} style={{ margin: 0, fontSize: typography.sm, color: colors.textPrimary }}>
+            <span
+              style={{
+                display: 'inline-block',
+                marginInlineEnd: spacing['8'],
+                fontSize: typography.xs,
+                fontWeight: Number(fontWeights.semibold),
+                color: a.severity === 'high' ? colors.danger : colors.warning,
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}
+            >
+              {a.severity}
+            </span>
+            {a.label}
+          </p>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<OrderSummary[]>([])
   const [audit, setAudit] = useState<AdminOpsAuditEntry[]>([])
@@ -569,6 +615,25 @@ export default function AdminDashboardPage() {
   const [showTable, setShowTable] = useState(true)
   const [period, setPeriod] = useState<Period>('30d')
   const [chartMode, setChartMode] = useState<ChartMode>('both')
+  const [isFlushing, setIsFlushing] = useState(false)
+  const [flushDone, setFlushDone] = useState(false)
+
+  const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+
+  const handleFlushCache = async () => {
+    setIsFlushing(true)
+    try {
+      await apiClient.admin.runCacheAction({ action: 'revalidate_home_shop', confirmation: 'confirm' })
+      setFlushDone(true)
+      setTimeout(() => setFlushDone(false), 3000)
+    } catch {
+      // ignore
+    } finally {
+      setIsFlushing(false)
+    }
+  }
 
   useEffect(() => {
     void apiClient.orders
@@ -690,11 +755,12 @@ export default function AdminDashboardPage() {
     <PageContainer>
       <PageHeader
         title='Dashboard'
-        subtitle='Comprehensive revenue and order analytics with yearly and date-range drilldowns.'
+        subtitle={`${greeting} · ${todayLabel}`}
       />
 
       {loading ? <p style={{ margin: 0, color: colors.textSecondary }}>Loading dashboard...</p> : null}
       {error ? <p style={{ margin: `${spacing['8']}px 0 0`, color: colors.danger }}>{error}</p> : null}
+      {!loading && <AlertBanner pending={summary.pending} health={summary.health} />}
 
       <Section>
         <Panel density='dense'>
@@ -741,7 +807,6 @@ export default function AdminDashboardPage() {
             <div style={{ display: 'flex', gap: spacing['8'], flexWrap: 'wrap' }}>
               <Button tone='secondary' onClick={resetFilters}>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-                  <SlidersHorizontal size={14} />
                   Reset
                 </span>
               </Button>
@@ -915,139 +980,252 @@ export default function AdminDashboardPage() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
           gap: spacing['24'],
+          marginBottom: spacing['24'],
         }}
       >
-        <div style={{ display: 'grid', gap: spacing['24'] }}>
-          <Section>
-            <Panel>
-              <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>Top Items</h3>
-                <Link href='/admin/catalog/products' style={inlineLinkStyle}>
-                  View All
-                </Link>
-              </div>
-              {topItems.length === 0 ? (
-                <EmptyState title='No item sales in this filter' description='Adjust year/date filters to inspect sales data.' />
-              ) : (
-                topItems.map((item) => (
-                  <TopItem key={item.id} name={item.name} sales={item.sales} revenue={item.revenue} />
-                ))
-              )}
-            </Panel>
-          </Section>
-
-          <Section>
-            <Panel>
-              <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>Recent Audit Log</h3>
-                <Link href='/admin/operations/audit' style={inlineLinkStyle}>
-                  View All
-                </Link>
-              </div>
-              {audit.length === 0 ? (
-                <EmptyState title='No audit events yet' description='Events appear when admin actions are performed.' />
-              ) : (
-                audit.slice(0, 5).map((entry) => (
-                  <AuditItem
-                    key={entry.id}
-                    user={entry.actor.email}
-                    action={entry.type}
-                    target={entry.targetId}
-                    time={new Date(entry.at).toLocaleString()}
-                  />
-                ))
-              )}
-            </Panel>
-          </Section>
-        </div>
-
-        <div>
-          <Section>
-            <Panel>
-              <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', gap: spacing['8'] }}>
-                <AlertTriangle size={20} color={colors.warning} />
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>System Alerts</h3>
-              </div>
-              <AlertItem
-                title='High Cache Miss Rate'
-                description='Cache miss rate exceeded 15% in the observed window.'
-                severity='medium'
-              />
-              <AlertItem
-                title='Pending Orders Growth'
-                description={`Pending orders in current filters: ${summary.pending}.`}
-                severity={summary.pending > 12 ? 'high' : 'medium'}
-              />
-              <AlertItem
-                title='Delivery Throughput'
-                description={`Delivered orders in current filters: ${summary.delivered}.`}
-                severity='medium'
-              />
-            </Panel>
-          </Section>
-        </div>
-      </div>
-
-      {showTable ? (
-        <Section>
+        {/* LEFT COLUMN */}
+        <div style={{ display: 'grid', gap: spacing['24'], alignContent: 'start' }}>
+          {/* Top Products */}
           <Panel>
-            <div
-              style={{
-                marginBottom: spacing['16'],
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: spacing['8'],
-                flexWrap: 'wrap',
-              }}
-            >
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
-                  Full Analytics Table
-                </h3>
-              <span style={{ color: colors.textSecondary, fontSize: typography.sm }}>
-                {safeFilteredOrders.length.toLocaleString()} matching orders
-              </span>
+            <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
+                Top Products
+              </h3>
+              <Link href='/admin/catalog/products' style={inlineLinkStyle}>View all →</Link>
             </div>
-
-            {safeFilteredOrders.length === 0 ? (
-              <EmptyState title='No matching analytics rows' description='Adjust filter conditions to see historical data.' />
+            {topItems.length === 0 ? (
+              <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.sm }}>No sales yet</p>
             ) : (
-              <TableShell>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {['Order ID', 'Date', 'Status', 'Items', 'Revenue', 'Fulfillment', 'Payment'].map((head) => (
-                        <th key={head} style={tableHeadStyle} scope='col'>
-                          {head}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...safeFilteredOrders]
-                      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                      .map((order) => (
-                        <tr key={order.id}>
-                          <td style={tableCellStyle}>
-                            <span style={{ color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>{order.id}</span>
-                          </td>
-                          <td style={tableCellStyle}>{new Date(order.createdAt).toLocaleDateString()}</td>
-                          <td style={tableCellStyle}>{order.status}</td>
-                          <td style={tableCellStyle}>{(order.items ?? []).reduce((acc, item) => acc + item.quantity, 0)}</td>
-                          <td style={tableCellStyle}>{formatCurrency(order.total, order.currency)}</td>
-                          <td style={tableCellStyle}>{order.fulfillment?.mode ?? 'delivery'}</td>
-                          <td style={tableCellStyle}>{order.fulfillment?.paymentMethod ?? 'cod'}</td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </TableShell>
+              topItems.map((item, index) => {
+                const rankColor = index === 0 ? colors.brandPrimary : index === 1 ? colors.warning : colors.textSecondary
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      borderBottom: `1px solid ${colors.border}`,
+                      paddingBlock: spacing['8'],
+                      gap: spacing['12'],
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'] }}>
+                      <span
+                        style={{
+                          width: spacing['24'],
+                          height: spacing['24'],
+                          borderRadius: radius.full,
+                          backgroundColor: index < 3 ? rankColor + '18' : colors.surfaceMuted,
+                          color: index < 3 ? rankColor : colors.textSecondary,
+                          display: 'grid',
+                          placeItems: 'center',
+                          fontSize: typography.xs,
+                          fontWeight: Number(fontWeights.bold),
+                          flexShrink: 0,
+                        }}
+                      >
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p style={{ margin: 0, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textPrimary }}>
+                          {item.name}
+                        </p>
+                        <p style={{ margin: 0, fontSize: typography.xs, color: colors.textSecondary }}>
+                          {item.sales.toLocaleString()} units
+                        </p>
+                      </div>
+                    </div>
+                    <span style={{ fontSize: typography.sm, fontWeight: Number(fontWeights.semibold), color: colors.textPrimary, flexShrink: 0 }}>
+                      {formatCurrency(item.revenue)}
+                    </span>
+                  </div>
+                )
+              })
             )}
           </Panel>
-        </Section>
-      ) : null}
+
+          {/* Recent Audit Log */}
+          <Panel>
+            <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
+                Recent Activity
+              </h3>
+              <Link href='/admin/operations/audit' style={inlineLinkStyle}>View all →</Link>
+            </div>
+            {audit.length === 0 ? (
+              <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.sm }}>No recent activity</p>
+            ) : (
+              audit.slice(0, 5).map((entry) => {
+                const diffMs = Date.now() - new Date(entry.at).getTime()
+                const diffMins = Math.floor(diffMs / 60000)
+                const relTime = diffMins < 60
+                  ? `${diffMins}m ago`
+                  : diffMins < 1440
+                  ? `${Math.floor(diffMins / 60)}h ago`
+                  : `${Math.floor(diffMins / 1440)}d ago`
+                return (
+                  <div
+                    key={entry.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing['12'],
+                      borderBottom: `1px solid ${colors.border}`,
+                      paddingBlock: spacing['8'],
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: spacing['32'],
+                        height: spacing['32'],
+                        borderRadius: radius.full,
+                        backgroundColor: colors.brandPrimarySubtle,
+                        color: colors.brandPrimary,
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: typography.xs,
+                        fontWeight: Number(fontWeights.bold),
+                        flexShrink: 0,
+                      }}
+                    >
+                      {entry.actor.email.charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: typography.sm, color: colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ fontWeight: Number(fontWeights.medium) }}>{entry.actor.email.split('@')[0]}</span>
+                        {' · '}
+                        <span style={{ color: colors.textSecondary }}>{entry.type}</span>
+                      </p>
+                    </div>
+                    <span style={{ fontSize: typography.xs, color: colors.textSecondary, flexShrink: 0 }}>{relTime}</span>
+                  </div>
+                )
+              })
+            )}
+          </Panel>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div style={{ display: 'grid', gap: spacing['24'], alignContent: 'start' }}>
+          {/* Quick Actions */}
+          <Panel>
+            <h3 style={{ margin: `0 0 ${spacing['16']}px`, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
+              Quick Actions
+            </h3>
+            <div style={{ display: 'grid', gap: spacing['8'] }}>
+              {([
+                { label: 'New Promotion', icon: Zap, href: '/admin/marketing/promotions' },
+                { label: 'Manage Banners', icon: Package, href: '/admin/marketing/cms/offer-banners' },
+                { label: 'View Orders', icon: ShoppingBag, href: '/admin/orders' },
+              ] as Array<{ label: string; icon: React.ComponentType<{ size?: number; color?: string }>; href: string }>).map(({ label, href, icon: ActionIcon }) => (
+                <Link key={label} href={href} style={{ textDecoration: 'none' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: spacing['12'],
+                      padding: `${spacing['8']}px ${spacing['12']}px`,
+                      borderRadius: radius.xl,
+                      border: `1px solid ${colors.border}`,
+                      backgroundColor: colors.surface,
+                      color: colors.textPrimary,
+                      fontSize: typography.sm,
+                      fontWeight: Number(fontWeights.medium),
+                      cursor: 'pointer',
+                      transition: 'background-color 140ms ease, border-color 140ms ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      const el = e.currentTarget as HTMLDivElement
+                      el.style.backgroundColor = colors.brandPrimarySubtle
+                      el.style.borderColor = colors.brandPrimary + '44'
+                    }}
+                    onMouseLeave={(e) => {
+                      const el = e.currentTarget as HTMLDivElement
+                      el.style.backgroundColor = colors.surface
+                      el.style.borderColor = colors.border
+                    }}
+                  >
+                    <ActionIcon size={16} color={colors.brandPrimary} />
+                    {label}
+                  </div>
+                </Link>
+              ))}
+              <button
+                type='button'
+                onClick={() => void handleFlushCache()}
+                disabled={isFlushing}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing['12'],
+                  padding: `${spacing['8']}px ${spacing['12']}px`,
+                  borderRadius: radius.xl,
+                  border: `1px solid ${flushDone ? colors.success + '44' : colors.border}`,
+                  backgroundColor: flushDone ? colors.success + '10' : colors.surface,
+                  color: flushDone ? colors.success : colors.textPrimary,
+                  fontSize: typography.sm,
+                  fontWeight: Number(fontWeights.medium),
+                  cursor: isFlushing ? 'not-allowed' : 'pointer',
+                  opacity: isFlushing ? 0.7 : 1,
+                  transition: 'all 140ms ease',
+                  width: '100%',
+                  textAlign: 'start',
+                }}
+              >
+                <RefreshCw size={16} color={flushDone ? colors.success : colors.brandPrimary} />
+                {flushDone ? 'Cache flushed ✓' : isFlushing ? 'Flushing...' : 'Flush Cache'}
+              </button>
+            </div>
+          </Panel>
+
+          {/* System Status */}
+          <Panel>
+            <h3 style={{ margin: `0 0 ${spacing['16']}px`, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
+              System Status
+            </h3>
+            {summary.pending <= 10 && summary.health >= 90 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], color: colors.success, fontSize: typography.sm }}>
+                <CheckCircle size={16} color={colors.success} />
+                All systems healthy
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gap: spacing['8'] }}>
+                {summary.pending > 10 && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing['8'], paddingBlock: spacing['8'], borderBottom: `1px solid ${colors.border}` }}>
+                    <AlertTriangle size={16} color={colors.danger} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textPrimary }}>
+                        {summary.pending} pending orders
+                      </p>
+                      <p style={{ margin: `${spacing['4']}px 0 0`, fontSize: typography.xs, color: colors.textSecondary }}>
+                        High volume of unprocessed orders
+                      </p>
+                    </div>
+                    <span style={{ fontSize: typography.xs, fontWeight: Number(fontWeights.semibold), color: colors.danger, flexShrink: 0 }}>HIGH</span>
+                  </div>
+                )}
+                {summary.health < 90 && (
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing['8'], paddingBlock: spacing['8'] }}>
+                    <AlertTriangle size={16} color={colors.warning} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textPrimary }}>
+                        Health at {summary.health.toFixed(1)}%
+                      </p>
+                      <p style={{ margin: `${spacing['4']}px 0 0`, fontSize: typography.xs, color: colors.textSecondary }}>
+                        Below 90% threshold
+                      </p>
+                    </div>
+                    <span style={{ fontSize: typography.xs, fontWeight: Number(fontWeights.semibold), color: colors.warning, flexShrink: 0 }}>MED</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </Panel>
+        </div>
+      </div>
     </PageContainer>
   )
 }
