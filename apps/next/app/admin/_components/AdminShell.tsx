@@ -9,6 +9,7 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
+  Image as ImageIcon,
   Languages,
   LayoutDashboard,
   LogOut,
@@ -99,16 +100,89 @@ const navItems: NavItem[] = [
             href: '/admin/marketing/cms/queries',
             icon: FileText,
           },
+          {
+            id: 'marketing-cms-offer-banners',
+            domain: 'marketing',
+            title: 'Offer Banners',
+            href: '/admin/marketing/cms/offer-banners',
+            icon: ImageIcon,
+          },
         ],
       },
     ],
   },
   {
-    id: 'orders',
-    domain: 'orders',
-    title: 'Orders',
-    href: '/admin/orders',
+    id: 'sales',
+    domain: 'sales',
+    title: 'Sales',
+    icon: ShoppingBag,
+    items: [
+      {
+        id: 'sales-orders',
+        domain: 'sales',
+        title: 'Orders',
+        href: '/admin/sales/orders',
+        icon: Package,
+      },
+    ],
+  },
+  {
+    id: 'inventory',
+    domain: 'inventory',
+    title: 'Inventory',
     icon: Package,
+    items: [
+      {
+        id: 'inventory-stock',
+        domain: 'inventory',
+        title: 'Stock',
+        href: '/admin/inventory/stock',
+        icon: Package,
+      },
+      {
+        id: 'inventory-warehouses',
+        domain: 'inventory',
+        title: 'Warehouses',
+        href: '/admin/inventory/warehouses',
+        icon: Server,
+      },
+      {
+        id: 'inventory-low',
+        domain: 'inventory',
+        title: 'Low Inventory',
+        href: '/admin/inventory/low-inventory',
+        icon: Bell,
+      },
+    ],
+  },
+  {
+    id: 'marketplace',
+    domain: 'marketplace',
+    title: 'Marketplace',
+    icon: Store,
+    items: [
+      {
+        id: 'marketplace-vendors',
+        domain: 'marketplace',
+        title: 'Vendors',
+        href: '/admin/marketplace/vendors',
+        icon: Users,
+      },
+      {
+        id: 'marketplace-vendor-products',
+        domain: 'marketplace',
+        title: 'Vendor Products',
+        href: '/admin/marketplace/vendor-products',
+        icon: Package,
+      },
+      {
+        id: 'marketplace-vendor-approval',
+        domain: 'marketplace',
+        title: 'Vendor Approval',
+        href: '/admin/marketplace/vendor-approval',
+        icon: Activity,
+      },
+    ],
   },
   {
     id: 'customers',
@@ -123,6 +197,7 @@ const navItems: NavItem[] = [
     title: 'Operations',
     icon: Server,
     items: [
+      { id: 'operations-jobs', domain: 'operations', title: 'Jobs', href: '/admin/operations/jobs', icon: Activity },
       { id: 'operations-cache', domain: 'operations', title: 'Cache', href: '/admin/operations/cache', icon: Server },
       { id: 'operations-audit', domain: 'operations', title: 'Audit', href: '/admin/operations/audit', icon: Activity },
       {
@@ -133,6 +208,13 @@ const navItems: NavItem[] = [
         icon: Languages,
       },
     ],
+  },
+  {
+    id: 'settings',
+    domain: 'settings',
+    title: 'Settings',
+    href: '/admin/settings',
+    icon: User,
   },
 ]
 
@@ -147,8 +229,11 @@ function hasActiveRoute(item: NavItem, pathname: string): boolean {
 
 function formatBreadcrumb(pathname: string) {
   const segments = pathname.split('/').filter(Boolean)
-  if (segments.length <= 1) return '/admin/dashboard'
-  return `/${segments.join('/')}`
+  if (segments.length === 0) return [{ label: 'admin', href: '/admin/dashboard' }]
+  return segments.map((segment, index) => ({
+    label: segment.replace(/-/g, ' '),
+    href: `/${segments.slice(0, index + 1).join('/')}`,
+  }))
 }
 
 export function AdminShell({ children }: PropsWithChildren) {
@@ -231,7 +316,7 @@ export function AdminShell({ children }: PropsWithChildren) {
   const desktopOffset = isCompactViewport ? 0 : sidebarWidth
   const mobileDrawerWidth = `min(calc(100vw - ${spacing['24']}px), ${layout.admin.sidebarExpanded + spacing['24']}px)`
   const sidebarIsVisible = isCompactViewport ? isMobileDrawerOpen : true
-  const breadcrumbSegments = formatBreadcrumb(pathname).split('/').filter(Boolean)
+  const breadcrumbSegments = formatBreadcrumb(pathname)
   const visibleBreadcrumbSegments = isNarrowViewport
     ? breadcrumbSegments.slice(-1)
     : breadcrumbSegments
@@ -243,6 +328,7 @@ export function AdminShell({ children }: PropsWithChildren) {
       : runtimeEnv === 'staging'
       ? colors.warning
       : colors.textSecondary
+  const searchPlaceholder = 'Search...'
 
   const handleLogout = async () => {
     try {
@@ -323,26 +409,21 @@ export function AdminShell({ children }: PropsWithChildren) {
                   style={{
                     width: spacing['32'],
                     height: spacing['32'],
-                    borderRadius: radius.lg,
-                    backgroundColor: colors.textPrimary,
+                    borderRadius: radius.md,
+                    backgroundColor: colors.brandPrimary,
                     color: colors.textInverted,
                     display: 'grid',
                     placeItems: 'center',
-                    fontSize: typography.sm,
-                    fontWeight: Number(fontWeights.semibold),
+                    fontSize: typography.xs,
+                    fontWeight: Number(fontWeights.bold),
+                    flexShrink: 0,
                   }}
                 >
                   R
                 </div>
-                <span
-                  style={{
-                    fontSize: typography.lg,
-                    fontWeight: Number(fontWeights.semibold),
-                    color: colors.textPrimary,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Real Cosmetics
+                <span style={{ whiteSpace: 'nowrap' }}>
+                  <span style={{ fontSize: typography.base, fontWeight: Number(fontWeights.bold), color: colors.textPrimary }}>REAL</span>
+                  <span style={{ fontSize: typography.base, fontWeight: 300, color: colors.textSecondary }}> Cosmetics</span>
                 </span>
               </div>
             ) : (
@@ -350,13 +431,13 @@ export function AdminShell({ children }: PropsWithChildren) {
                 style={{
                   width: spacing['32'],
                   height: spacing['32'],
-                  borderRadius: radius.lg,
-                  backgroundColor: colors.textPrimary,
+                  borderRadius: radius.md,
+                  backgroundColor: colors.brandPrimary,
                   color: colors.textInverted,
                   display: 'grid',
                   placeItems: 'center',
-                  fontSize: typography.sm,
-                  fontWeight: Number(fontWeights.semibold),
+                  fontSize: typography.xs,
+                  fontWeight: Number(fontWeights.bold),
                 }}
               >
                 R
@@ -393,19 +474,30 @@ export function AdminShell({ children }: PropsWithChildren) {
         >
           <nav style={{ display: 'grid', gap: spacing['4'] }}>
             {visibleItems.map((item) => (
-              <SidebarItem
-                key={item.id}
-                item={item}
-                isSidebarOpen={isCompactViewport ? true : isSidebarOpen}
-                pathname={pathname}
-                openGroups={openGroups}
-                setOpenGroups={(next) => {
-                  setOpenGroups(next)
-                  if (typeof window !== 'undefined') {
-                    window.localStorage.setItem(SIDEBAR_GROUP_KEY, JSON.stringify(next))
-                  }
-                }}
-              />
+              <div key={item.id}>
+                <SidebarItem
+                  item={item}
+                  isSidebarOpen={isCompactViewport ? true : isSidebarOpen}
+                  pathname={pathname}
+                  openGroups={openGroups}
+                  setOpenGroups={(next) => {
+                    setOpenGroups(next)
+                    if (typeof window !== 'undefined') {
+                      window.localStorage.setItem(SIDEBAR_GROUP_KEY, JSON.stringify(next))
+                    }
+                  }}
+                />
+                {(item.id === 'dashboard' || item.id === 'customers') && (isSidebarOpen || isCompactViewport) ? (
+                  <div
+                    style={{
+                      height: 1,
+                      backgroundColor: colors.border,
+                      marginBlock: spacing['8'],
+                      marginInline: spacing['4'],
+                    }}
+                  />
+                ) : null}
+              </div>
             ))}
           </nav>
         </div>
@@ -495,6 +587,23 @@ export function AdminShell({ children }: PropsWithChildren) {
                   >
                     {userEmail}
                   </span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: spacing['4'],
+                      fontSize: typography.xs,
+                      fontWeight: Number(fontWeights.semibold),
+                      color: colors.brandPrimary,
+                      backgroundColor: colors.brandPrimarySubtle,
+                      borderRadius: radius.full,
+                      padding: `2px ${spacing['8']}px`,
+                      textTransform: 'capitalize',
+                      letterSpacing: '0.03em',
+                      width: 'fit-content',
+                    }}
+                  >
+                    {role}
+                  </span>
                 </div>
                 <button
                   type='button'
@@ -576,22 +685,41 @@ export function AdminShell({ children }: PropsWithChildren) {
                 }}
               >
                 {visibleBreadcrumbSegments.map((segment, index, arr) => (
-                    <li key={`${segment}-${index}`} style={{ display: 'flex', alignItems: 'center' }}>
+                    <li key={`${segment.href}-${index}`} style={{ display: 'flex', alignItems: 'center' }}>
                       {index > 0 ? <span style={{ marginInline: spacing['8'], color: colors.textSecondary }}>/</span> : null}
-                      <span
-                        style={{
-                          fontSize: typography.sm,
-                          fontWeight: Number(fontWeights.medium),
-                          color: index === arr.length - 1 ? colors.textPrimary : colors.textSecondary,
-                          textTransform: 'capitalize',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          maxWidth: isNarrowViewport ? '52vw' : undefined,
-                        }}
-                      >
-                        {segment.replace(/-/g, ' ')}
-                      </span>
+                      {index === arr.length - 1 ? (
+                        <span
+                          style={{
+                            fontSize: typography.sm,
+                            fontWeight: Number(fontWeights.medium),
+                            color: colors.textPrimary,
+                            textTransform: 'capitalize',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: isNarrowViewport ? '52vw' : undefined,
+                          }}
+                        >
+                          {segment.label}
+                        </span>
+                      ) : (
+                        <Link
+                          href={segment.href}
+                          style={{
+                            fontSize: typography.sm,
+                            fontWeight: Number(fontWeights.medium),
+                            color: colors.textSecondary,
+                            textTransform: 'capitalize',
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: isNarrowViewport ? '52vw' : undefined,
+                            textDecoration: 'none',
+                          }}
+                        >
+                          {segment.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
               </ol>
@@ -600,7 +728,7 @@ export function AdminShell({ children }: PropsWithChildren) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'] }}>
             {!isCompactViewport ? (
-              <div style={{ position: 'relative', width: 256 }}>
+              <div style={{ position: 'relative', width: 320 }}>
                 <Search
                   size={16}
                   color={colors.textSecondary}
@@ -608,20 +736,35 @@ export function AdminShell({ children }: PropsWithChildren) {
                 />
                 <input
                   type='search'
-                  placeholder='Search...'
+                  placeholder={searchPlaceholder}
                   style={{
                     width: '100%',
                     height: spacing['40'],
-                    borderRadius: radius.md,
+                    borderRadius: radius.full,
                     border: `1px solid ${colors.border}`,
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.surfaceMuted,
                     color: colors.textPrimary,
                     fontSize: typography.sm,
                     outline: 'none',
                     paddingInlineStart: spacing['32'] + spacing['8'],
-                    paddingInlineEnd: spacing['12'],
+                    paddingInlineEnd: spacing['40'],
                   }}
                 />
+                <span
+                  style={{
+                    position: 'absolute',
+                    insetInlineEnd: spacing['12'],
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    fontSize: typography.xs,
+                    color: colors.textSecondary,
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap',
+                    opacity: 0.7,
+                  }}
+                >
+                  ⌘K
+                </span>
               </div>
             ) : (
               <button
@@ -662,17 +805,17 @@ export function AdminShell({ children }: PropsWithChildren) {
                 aria-expanded={isUserMenuOpen}
                 onClick={() => setIsUserMenuOpen((current) => !current)}
                 style={{
-                  width: spacing['32'],
-                  height: spacing['32'],
+                  width: 36,
+                  height: 36,
                   borderRadius: radius.full,
-                  border: `1px solid ${colors.border}`,
-                  backgroundColor: colors.surfaceMuted,
+                  border: `1px solid ${colors.brandPrimary}44`,
+                  backgroundColor: colors.brandPrimary,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: colors.textSecondary,
+                  color: colors.textInverted,
                   fontSize: typography.xs,
-                  fontWeight: Number(fontWeights.medium),
+                  fontWeight: Number(fontWeights.semibold),
                   cursor: 'pointer',
                 }}
               >
