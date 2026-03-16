@@ -22,7 +22,7 @@ import { Box, Drawer, Text, Touchable } from '@real/ui'
 import {
   Layout,
   defaultBrandItems,
-  defaultCategories,
+  defaultCategories as defaultShellCategories,
   defaultFooterLinks,
   defaultSalesItems,
   defaultShellContent,
@@ -35,7 +35,7 @@ import { AuthLoginScreen } from '@real/app/screens/AuthLoginScreen'
 import { AuthRegisterScreen } from '@real/app/screens/AuthRegisterScreen'
 import { CartScreen } from '@real/app/screens/CartScreen'
 import { CheckoutScreen } from '@real/app/screens/CheckoutScreen'
-import { HomeScreen } from '@real/app/screens/HomeScreen'
+import { HomeV2Screen } from '@real/app/screens/HomeV2Screen'
 import { OrderDetailScreen } from '@real/app/screens/OrderDetailScreen'
 import { OrdersScreen } from '@real/app/screens/OrdersScreen'
 import { ProductScreen } from '@real/app/screens/ProductScreen'
@@ -76,6 +76,27 @@ type AccountTab = 'dashboard' | 'orders' | 'tests' | 'addresses' | 'loyalty' | '
 export default function HomeRoute() {
   const insets = useSafeAreaInsets()
   const [products, setProducts] = useState<Product[]>([])
+  const [brands, setBrands] = useState<
+    Array<{
+      id: string
+      slug: string
+      name: { en: string; ar: string }
+      logo?: string
+      description?: { en: string; ar: string }
+      isActive: boolean
+    }>
+  >([])
+  const [categories, setCategories] = useState<
+    Array<{
+      id: string
+      slug: string
+      name: { en: string; ar: string }
+      parentId?: string
+      image?: string
+      isActive: boolean
+      sortOrder: number
+    }>
+  >([])
   const [cart, setCart] = useState<Cart | null>(null)
   const [cmsHome, setCmsHome] = useState<CMSHome | null>(null)
   const [session, setSession] = useState<AuthSession | null>(null)
@@ -177,18 +198,34 @@ export default function HomeRoute() {
     setLoading(true)
     setError(null)
     try {
-      const [productsResult, cartResult, cmsResult, sessionResult] = await Promise.all([
+      const [productsResult, cartResult, cmsResult, categoriesResult, brandsResult, sessionResult] = await Promise.allSettled([
         apiClient.products.list(),
         apiClient.cart.get(),
         apiClient.cms.home(),
+        apiClient.catalog.categories(),
+        apiClient.catalog.brands(),
         apiClient.auth.session().catch(() => null),
       ])
-      setProducts(productsResult)
-      setCart(cartResult)
-      setCmsHome(cmsResult)
-      setSession(sessionResult)
-      if (!sessionResult) {
+
+      if (productsResult.status === 'fulfilled') setProducts(productsResult.value)
+      if (cartResult.status === 'fulfilled') setCart(cartResult.value)
+      if (cmsResult.status === 'fulfilled') setCmsHome(cmsResult.value)
+      if (categoriesResult.status === 'fulfilled') setCategories(categoriesResult.value)
+      if (brandsResult.status === 'fulfilled') setBrands(brandsResult.value)
+
+      const nextSession =
+        sessionResult.status === 'fulfilled'
+          ? sessionResult.value
+          : null
+      setSession(nextSession)
+      if (!nextSession) {
         resetAccountState()
+      }
+
+      const criticalFailure = [productsResult, cmsResult].find((result) => result.status === 'rejected')
+      if (criticalFailure && criticalFailure.status === 'rejected') {
+        const reason = criticalFailure.reason
+        setError(reason instanceof Error ? reason.message : 'Unable to fetch homepage data.')
       }
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to fetch products.')
@@ -289,6 +326,21 @@ export default function HomeRoute() {
     [cartLines]
   )
 
+  const shellCategories = useMemo(() => {
+    if (categories.length === 0) {
+      return defaultShellCategories
+    }
+
+    return categories
+      .filter((category) => category.isActive)
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((category) => ({
+        id: category.id,
+        label: category.name[localeState],
+        href: `/shop?category=${encodeURIComponent(category.slug)}`,
+      }))
+  }, [categories, localeState])
+
   const activeOrder = useMemo(
     () => orders.find((order) => order.id === activeOrderId) ?? null,
     [activeOrderId, orders]
@@ -387,10 +439,10 @@ export default function HomeRoute() {
           products={products}
           loading={loading}
           error={error}
-          bannerTitle={localeState === 'ar' ? '???? ??????' : 'Limited Time Sales'}
+          bannerTitle={localeState === 'ar' ? 'عروض محدودة' : 'Limited Time Sales'}
           bannerSubtitle={
             localeState === 'ar'
-              ? '?????? ?????? ??????? ????? ??????.'
+              ? 'منتجات مميزة بأسعار لفترة محدودة.'
               : 'Selected premium products at limited-time prices.'
           }
           onReload={loadProducts}
@@ -765,10 +817,12 @@ export default function HomeRoute() {
     }
 
     return (
-      <HomeScreen
-        products={products}
+      <HomeV2Screen
+        locale={localeState}
         cmsHome={cmsHome}
-        categories={defaultCategories}
+        products={products}
+        brands={brands}
+        categories={categories}
         loading={loading}
         error={error}
         onReload={loadProducts}
@@ -804,7 +858,7 @@ export default function HomeRoute() {
         accountCount={session ? 1 : 0}
         cartItems={cartLines}
         cartSubtotal={cartSubtotal}
-        categories={defaultCategories}
+        categories={shellCategories}
         salesItems={defaultSalesItems}
         brandItems={defaultBrandItems}
         footerLinks={defaultFooterLinks}
