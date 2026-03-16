@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Platform, View } from 'react-native'
-import { borderWidth, colors, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
+import { Image, Platform, ScrollView, View } from 'react-native'
+import { borderWidth, colors, elevation, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
 import { Box, Divider, Text, Touchable } from '../../primitives'
 import { Button } from '../Button'
 import { Card } from '../Card'
+import { Icon } from '../Icon'
 
 export type CartDrawerItem = {
   id: string
@@ -11,6 +12,8 @@ export type CartDrawerItem = {
   quantity: number
   price: number
   currency: string
+  imageUrl?: string
+  brand?: string
 }
 
 type CartDrawerProps = {
@@ -26,6 +29,8 @@ type CartDrawerProps = {
   onViewCart: () => void
   onCheckout: () => void
 }
+
+const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
 
 export function CartDrawer({
   open,
@@ -146,8 +151,8 @@ export function CartDrawer({
   const currency = items[0]?.currency ?? 'USD'
 
   return (
-        <Box
-          style={{
+    <Box
+      style={{
         position: 'fixed',
         top: 0,
         right: 0,
@@ -165,8 +170,10 @@ export function CartDrawer({
           bottom: 0,
           left: 0,
           backgroundColor: colors.black,
-          opacity: 0.25,
-        }}
+          opacity: 0.4,
+          transitionProperty: 'opacity',
+          transitionDuration: `${motionDuration.pageReveal}ms`,
+        } as any}
       />
 
       <View
@@ -182,141 +189,247 @@ export function CartDrawer({
           top: 0,
           right: 0,
           bottom: 0,
-          width: spacing.xxl * 8,
+          width: spacing.xxl * 9,
           maxWidth: '92%' as any,
           backgroundColor: colors.surface,
           borderLeftWidth: borderWidth.thin,
           borderColor: colors.border,
-          padding: spacing['16'],
-          gap: spacing['16'],
-          transitionProperty: 'transform, opacity',
-          transitionDuration: `${motionDuration.pageReveal}ms`,
-          transitionTimingFunction: motionEasing.standard,
+          flexDirection: 'column',
+          ...(Platform.OS === 'web'
+            ? {
+                boxShadow: elevation.drawerPanel,
+              }
+            : {}),
         } as any}
       >
-        <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text variant='h2'>Cart</Text>
+        {/* Header */}
+        <Box
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            paddingHorizontal: spacing['16'],
+            paddingVertical: spacing['16'],
+            borderBottomWidth: borderWidth.thin,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.surface,
+          }}
+        >
+          <Text variant='title' size={18} weight='700'>
+            Your Cart {items.length > 0 ? `(${items.length})` : ''}
+          </Text>
           <Touchable
             nativeID='cart-drawer-close'
             accessibilityRole='button'
             onPress={onClose}
             style={{
-              minHeight: spacing['48'],
-              paddingHorizontal: spacing['16'],
+              width: spacing['32'],
+              height: spacing['32'],
+              borderRadius: radius.full,
+              backgroundColor: colors.backgroundSecondary,
+              alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Text variant='label'>Close</Text>
+            {({ hovered }) => (
+              <Box style={{ opacity: hovered ? 1 : 0.7 }}>
+                <Icon name='close' size={16} />
+              </Box>
+            )}
           </Touchable>
         </Box>
 
-        {loading ? (
-          <Box style={{ gap: spacing['16'] }}>
-            <Card tone='subtle' style={{ minHeight: spacing.xxl }} />
-            <Card tone='subtle' style={{ minHeight: spacing.xxl }} />
-            <Card tone='subtle' style={{ minHeight: spacing.xxl }} />
-          </Box>
-        ) : error ? (
-          <Box style={{ gap: spacing['16'] }}>
-            <Text tone='danger'>Unable to load cart.</Text>
-            <Text tone='muted' variant='bodySm'>{error}</Text>
-          </Box>
-        ) : items.length === 0 ? (
-          <Box style={{ gap: spacing['16'] }}>
-            <Text tone='muted'>Your cart is empty.</Text>
-            <Box style={{ width: spacing.xxl * 3 }}>
+        {/* Scrollable Content */}
+        <ScrollView
+          style={{ flex: 1, backgroundColor: colors.backgroundPrimary }}
+          contentContainerStyle={{ padding: spacing['16'], paddingBottom: spacing['48'] }}
+        >
+          {loading ? (
+            <Box style={{ gap: spacing['16'] }}>
+              <Card tone='subtle' radiusKey='md' style={{ minHeight: spacing.xxl * 2 }} />
+              <Card tone='subtle' radiusKey='md' style={{ minHeight: spacing.xxl * 2 }} />
+            </Box>
+          ) : error ? (
+            <Box style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: spacing.sm }}>
+              <Icon name='info' size={32} color={colors.textSecondary} />
+              <Text tone='danger' weight='600'>Unable to load cart.</Text>
+              <Text tone='muted' variant='bodySm'>{error}</Text>
+            </Box>
+          ) : items.length === 0 ? (
+            <Box style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 300, gap: spacing.lg }}>
+              <Icon name='cart' size={48} color={colors.border} />
+              <Text tone='muted' variant='title' weight='600'>Your cart is empty.</Text>
               <Button
-                variant='outline'
+                variant='solid'
                 onPress={() => {
                   onViewCart()
                   onClose()
                 }}
               >
-                Continue shopping
+                Start Shopping
               </Button>
             </Box>
-          </Box>
-        ) : (
-          <Box style={{ flex: 1, gap: spacing['16'], overflow: 'auto', overscrollBehavior: 'contain' } as any}>
-            {items.map((item) => (
-              <Box key={item.id} style={{ gap: spacing['8'], paddingBottom: spacing['16'] }}>
-                <Text variant='bodySm' numberOfLines={2}>{item.name}</Text>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text tone='muted' variant='caption'>
-                    {formatCurrency(item.price, item.currency)}
-                  </Text>
-                  <Text variant='label'>
-                    {formatCurrency(item.price * item.quantity, item.currency)}
-                  </Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      disabled={pendingById[item.id]}
-                      onPress={() => runMutation(item, 'updating', onDecrease)}
-                    >
-                      -
-                    </Button>
-                    <Text variant='label'>{item.quantity}</Text>
-                    <Button
-                      size='sm'
-                      variant='outline'
-                      disabled={pendingById[item.id]}
-                      onPress={() => runMutation(item, 'updating', onIncrease)}
-                    >
-                      +
-                    </Button>
-                  </Box>
-                  <Button
-                    size='sm'
-                    variant='ghost'
-                    disabled={pendingById[item.id]}
-                    onPress={() => runMutation(item, 'removing', onRemove)}
+          ) : (
+            <Box style={{ gap: spacing['16'] }}>
+              {items.map((item) => (
+                <Box key={item.id} style={{ flexDirection: 'row', gap: spacing['12'] }}>
+                  {/* Thumbnail */}
+                  <Box
+                    style={{
+                      width: 52,
+                      height: 68,
+                      borderRadius: radius.sm,
+                      backgroundColor: colors.backgroundSecondary,
+                      borderWidth: borderWidth.thin,
+                      borderColor: colors.border,
+                      overflow: 'hidden',
+                    }}
                   >
-                    Remove
-                  </Button>
+                    <Image
+                      source={{ uri: item.imageUrl || FALLBACK_IMAGE }}
+                      alt={item.name}
+                      style={{ width: '100%', height: '100%' }}
+                      resizeMode='cover'
+                    />
+                  </Box>
+
+                  {/* Details */}
+                  <Box style={{ flex: 1, justifyContent: 'space-between' }}>
+                    <Box style={{ gap: spacing['2'] }}>
+                      {item.brand ? (
+                        <Text variant='meta' size={10} tone='muted' weight='600' style={{ textTransform: 'uppercase' }}>
+                          {item.brand}
+                        </Text>
+                      ) : null}
+                      <Text variant='bodySm' weight='400' numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                    </Box>
+
+                    {/* Quantity & Price Row */}
+                    <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: spacing.xs }}>
+                      
+                      {/* Pill Quantity Selector */}
+                      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+                        <Box
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            borderWidth: borderWidth.thin,
+                            borderColor: colors.border,
+                            borderRadius: radius.full,
+                            backgroundColor: colors.surface,
+                            height: 28,
+                          }}
+                        >
+                          <Touchable
+                            onPress={() => runMutation(item, 'updating', onDecrease)}
+                            disabled={pendingById[item.id]}
+                            style={{ width: 28, height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Text variant='bodySm' tone='muted' weight='500'>-</Text>
+                          </Touchable>
+                          <Box style={{ minWidth: 20, alignItems: 'center', justifyContent: 'center' }}>
+                            <Text variant='meta' weight='500'>{item.quantity}</Text>
+                          </Box>
+                          <Touchable
+                            onPress={() => runMutation(item, 'updating', onIncrease)}
+                            disabled={pendingById[item.id]}
+                            style={{ width: 28, height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                          >
+                            <Text variant='bodySm' tone='muted' weight='500'>+</Text>
+                          </Touchable>
+                        </Box>
+
+                        <Touchable
+                          onPress={() => runMutation(item, 'removing', onRemove)}
+                          disabled={pendingById[item.id]}
+                          accessibilityLabel='Delete item from cart'
+                        >
+                          {({ hovered }) => (
+                            <Box
+                              style={{
+                                width: spacing['32'],
+                                height: spacing['32'],
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <Icon
+                                name='delete'
+                                size={16}
+                                color={hovered ? colors.error : colors.textSecondary}
+                              />
+                            </Box>
+                          )}
+                        </Touchable>
+                      </Box>
+
+                      <Box style={{ alignItems: 'flex-end' }}>
+                        {pendingById[item.id] ? (
+                          <Text variant='meta' size={10} tone='muted' style={{ marginBottom: 2 }}>
+                            {actionById[item.id] === 'removing' ? 'Removing...' : 'Updating...'}
+                          </Text>
+                        ) : null}
+                        <Text variant='bodySm' weight='600'>
+                          {formatCurrency(item.price * item.quantity, item.currency)}
+                        </Text>
+                      </Box>
+                    </Box>
+                  </Box>
                 </Box>
-                {pendingById[item.id] ? (
-                  <Text variant='caption' tone='muted'>
-                    {actionById[item.id] === 'removing' ? 'Removing...' : 'Updating...'}
-                  </Text>
-                ) : null}
-                <Divider />
+              ))}
+            </Box>
+          )}
+        </ScrollView>
+
+        {/* Sticky Footer */}
+        {items.length > 0 && !loading && !error && (
+          <Box
+            style={{
+              padding: spacing['16'],
+              backgroundColor: colors.surface,
+              borderTopWidth: borderWidth.thin,
+              borderTopColor: colors.border,
+              ...(Platform.OS === 'web'
+                ? {
+                    boxShadow: elevation.drawerFooter,
+                  }
+                : {}),
+            }}
+          >
+            <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing['12'] }}>
+              <Text variant='bodySm' tone='muted'>Estimated Total</Text>
+              <Text variant='title' weight='700'>{formatCurrency(subtotal, currency)}</Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
+              <Box style={{ flex: 1 }}>
+                <Button
+                  variant='ghost'
+                  onPress={() => {
+                    onViewCart()
+                    onClose()
+                  }}
+                  style={{ width: '100%', minHeight: 44 }}
+                >
+                  View Full Cart
+                </Button>
               </Box>
-            ))}
+              <Box style={{ flex: 1.5 }}>
+                <Button
+                  variant='solid'
+                  onPress={() => {
+                    onCheckout()
+                    onClose()
+                  }}
+                  style={{ width: '100%', minHeight: 44, paddingHorizontal: 0 }}
+                >
+                  Proceed to Checkout
+                </Button>
+              </Box>
+            </Box>
           </Box>
         )}
-
-        <Divider />
-        <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text variant='title'>Subtotal ({totalQuantity})</Text>
-          <Text variant='h2'>{formatCurrency(subtotal, currency)}</Text>
-        </Box>
-        <Box style={{ flexDirection: 'row', gap: spacing['16'] }}>
-          <Box style={{ flex: 1 }}>
-            <Button
-              variant='outline'
-              onPress={() => {
-                onViewCart()
-                onClose()
-              }}
-            >
-              View cart
-            </Button>
-          </Box>
-          <Box style={{ flex: 1 }}>
-            <Button
-              onPress={() => {
-                onCheckout()
-                onClose()
-              }}
-            >
-              Checkout
-            </Button>
-          </Box>
-        </Box>
       </View>
     </Box>
   )
