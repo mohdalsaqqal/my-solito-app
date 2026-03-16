@@ -1,6 +1,6 @@
 # AGENTS VERSION
-- Version: `v1.3`
-- Last updated: `2026-03-02`
+- Version: `v1.4`
+- Last updated: `2026-03-07`
 - This file is the execution policy for architecture, UI/UX, and delivery discipline.
 
 ## Rule Priorities
@@ -75,6 +75,25 @@ Primary goals:
 - Replaceable adapters
 - Isolated modules
 - Clean dependency direction
+
+## AI Workflow Integration (P0)
+
+This repository includes an AI workflow system located in `.codex/`.
+
+For non-trivial tasks (feature implementation, architecture changes, UI
+composition, debugging), AI agents SHOULD consult the `.codex/router.js`
+workflow system to determine the correct workflow and prompt template.
+
+The router system selects:
+
+- task classification
+- prompt template
+- scope hints
+- guard requirements
+- pause-trigger enforcement
+
+AGENTS.md remains the source of truth for architecture rules.
+The `.codex` system manages task routing and execution workflow.
 
 ## 1) Foundational Non-Negotiables (`P0`)
 - Tokens over hardcoded values.
@@ -307,6 +326,10 @@ apps/next/proxy.ts
 ```
 
 Expo must not expose admin/pharmacist routes.
+
+Note: `/pharmacist` and `/pharmasset` routes are intentionally absent from Expo.
+These are specialist workflows for the pharmacist role, which is web-only by design.
+No Expo equivalent is planned. This is not a parity gap.
 
 ## 9) Styling Enforcement (`P0`)
 - UniWind allowed only in `packages/ui/**`.
@@ -558,6 +581,7 @@ Before merge:
 - Affected UI blocks validated in LTR and RTL.
 - New/changed components cover required states (`loading`, `empty`, `error`, `disabled`, and `out-of-stock` when relevant).
 
+
 ## 23) Premium Visual Codex (`P1`)
 Priority rule:
 - This section is `P1` guidance for premium commerce presentation.
@@ -672,3 +696,91 @@ Priority rule:
 - Use `cubic-bezier(0.16, 1, 0.3, 1)` for premium transitions.
 - Secondary metadata/actions should be reveal-on-demand.
 - Magnetic pointer affordance is allowed only for key web CTAs and only when performance/accessibility remain intact.
+
+## 26) Canonical Commerce UI Patterns (`P0`)
+Purpose:
+- Define mandatory composition patterns for core commerce surfaces.
+- Prevent ad-hoc layout invention and primitive duplication.
+
+Pattern rules (all patterns):
+- Use existing `@real/ui` primitives before creating new ones.
+- Include required states: `loading`, `empty`, `error`, `disabled`, plus `out-of-stock` when product purchase is involved.
+- Keep data flow in canonical chain: `UI -> apiClient -> BFF -> provider registry -> adapters`.
+- No hardcoded layout invention when a canonical pattern exists.
+
+### 26.1 ProductCard
+- Structure: media (fixed ratio) -> badges/meta -> title -> price -> stock/availability -> primary action.
+- Required states: loading skeleton, empty fallback, error fallback, disabled action, out-of-stock.
+- Composition rules: do not embed API calls; do not duplicate price/stock logic outside shared composition.
+- Reuse expectation: same card contract across rails, PLP, related, campaign blocks.
+
+### 26.2 PLP / Shop Grid
+- Structure: page scaffold -> filter/sort controls -> product grid -> pagination/infinite trigger.
+- Required states: loading grid, empty result state, error retry state.
+- Composition rules: filtering/sorting must route through provider-backed APIs, not local ad-hoc data mutations.
+- Reuse expectation: reuse ProductCard and shared filter primitives.
+
+### 26.3 PDP / Product Page
+- Structure: gallery/media -> summary (title/price/availability) -> variant/quantity/actions -> details tabs/sections -> related modules.
+- Required states: loading content, unavailable product, error fetch state.
+- Composition rules: keep purchasable actions and stock states explicit; no duplicated cart mutation logic.
+- Reuse expectation: reuse shared quantity, price, stock and action primitives.
+
+### 26.4 Cart Drawer / Cart Page
+- Structure: line items list -> editable quantities -> applied discounts/promotions -> totals -> checkout CTA.
+- Required states: loading cart, empty cart, error with recovery, disabled checkout.
+- Composition rules: totals and promotion math must come from pricing flow, not UI recomputation.
+- Reuse expectation: same line-item and summary primitives across drawer/page.
+
+### 26.5 Checkout Layout
+- Structure: contact -> fulfillment -> payment -> order summary -> place order action.
+- Required states: loading quote, invalid quote, explicit checkout errors, disabled submit while invalid.
+- Composition rules: quote validation is mandatory before place order; do not bypass server pricing authority.
+- Reuse expectation: shared form/state primitives and order summary components.
+
+### 26.6 Account Dashboard
+- Structure: account shell -> overview KPIs -> orders/tests/addresses/wishlist sections.
+- Required states: loading section skeletons, empty section states, recoverable fetch errors.
+- Composition rules: section composition is modular; no monolithic page-specific primitives.
+- Reuse expectation: shared cards, tables, state components across account/admin where applicable.
+
+Reference:
+- Detailed human and AI composition guidance lives in `docs/COMMERCE_PATTERNS.md`.
+
+## 27) Component Registry Guidance (`P0`)
+- Before adding a new primitive/component, check `packages/ui` and `docs/UI_COMPONENT_INVENTORY.md`.
+- Prefer extending existing component contracts over creating near-duplicate primitives.
+- New primitives must include required states and token/RTL compliance.
+- If a registry document exists, reference it; do not duplicate full registry inventories in AGENTS.
+
+## 28) Domain Ownership Guidance (Future-State) (`P1`)
+Guidance only (non-breaking, no forced refactor in this phase):
+- `catalog`: product/category/brand/query surfaces
+- `commerce`: cart/checkout/orders/pricing
+- `customer`: account/auth/profile/addresses/tests/wishlist
+- `marketing`: cms blocks/promotions/campaign content
+- `operations`: admin ops/audit/cache/i18n operations
+
+Rules:
+- Treat as evolutionary ownership guidance for future organization inside `packages/app`.
+- Do not perform destructive folder migrations without explicit approval.
+
+## 29) AI Task Workflow (`P0`)
+Expected flow for non-trivial AI execution:
+1. Classify domain and print required Domain/Skills header.
+2. Select workflow/prompt mode.
+3. Plan before implementation when task is non-trivial.
+4. Implement minimal scoped changes aligned to architecture.
+5. Run verification, including `yarn guard:checks`.
+6. Review against architecture, RTL, token, and state requirements.
+7. Stop and request guidance on any pause trigger.
+
+## 30) AI File Placement Rules (`P0`)
+- Reusable UI primitives/components -> `packages/ui`
+- Feature/domain logic and shared commerce logic -> `packages/app`
+- Provider contracts -> `packages/providers/contracts`
+- Adapter implementations -> `packages/adapters`
+- Human-readable architecture/composition docs -> `docs/`
+- Codex workflow/router/prompt files -> `.codex/`
+
+Do not place workflow orchestration files in core runtime packages.
