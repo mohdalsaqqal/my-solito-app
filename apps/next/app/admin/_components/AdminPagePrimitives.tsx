@@ -94,7 +94,7 @@ export function PageHeader({
 }
 
 export function Section({ children }: PropsWithChildren) {
-  return <section style={{ marginBottom: spacing['32'] }}>{children}</section>
+  return <section style={{ marginBottom: spacing['24'] }}>{children}</section>
 }
 
 export function Panel({
@@ -329,6 +329,94 @@ export function EmptyState({
       <p style={{ margin: 0, color: colors.textPrimary, fontWeight: Number(fontWeights.semibold) }}>{title}</p>
       <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.sm }}>{description}</p>
       {action}
+    </div>
+  )
+}
+
+export function EditorShell({
+  title,
+  subtitle,
+  actions,
+  children,
+}: PropsWithChildren<{
+  title: string
+  subtitle?: string
+  actions?: ReactNode
+}>) {
+  return (
+    <Panel>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing['12'],
+          flexWrap: 'wrap',
+          marginBottom: spacing['16'],
+        }}
+      >
+        <div style={{ display: 'grid', gap: spacing['4'] }}>
+          <h2
+            style={{
+              margin: 0,
+              color: colors.textPrimary,
+              fontSize: typography.lg,
+              fontWeight: Number(fontWeights.semibold),
+            }}
+          >
+            {title}
+          </h2>
+          {subtitle ? (
+            <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.sm }}>
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+        {actions ? <div style={{ display: 'flex', gap: spacing['8'], flexWrap: 'wrap' }}>{actions}</div> : null}
+      </div>
+      <div style={{ display: 'grid', gap: spacing['16'] }}>{children}</div>
+    </Panel>
+  )
+}
+
+export function InfoGrid({
+  rows,
+}: {
+  rows: Array<{ label: string; value: ReactNode }>
+}) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: spacing['12'],
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+      }}
+    >
+      {rows.map((row) => (
+        <div
+          key={row.label}
+          style={{
+            border: `1px solid ${colors.border}`,
+            borderRadius: cardRadius,
+            padding: spacing['12'],
+            backgroundColor: colors.surfaceMuted,
+            display: 'grid',
+            gap: spacing['4'],
+          }}
+        >
+          <span
+            style={{
+              color: colors.textSecondary,
+              fontSize: typography.xs,
+              textTransform: 'uppercase',
+              letterSpacing: '0.06em',
+            }}
+          >
+            {row.label}
+          </span>
+          <div style={{ color: colors.textPrimary, fontSize: typography.sm }}>{row.value}</div>
+        </div>
+      ))}
     </div>
   )
 }

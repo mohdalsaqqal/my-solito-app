@@ -18,15 +18,10 @@ import { apiClient } from '../../apiClient'
 import { AdminOpsAuditEntry, OrderSummary } from '@real/app/lib/types'
 import { colors, fontWeights, radius, spacing, typography } from '@real/tokens'
 import {
-  Button,
-  EmptyState,
   PageContainer,
   PageHeader,
   Panel,
   Section,
-  SelectInput,
-  TableShell,
-  TextInput,
 } from '../_components/AdminPagePrimitives'
 
 type Trend = 'up' | 'down'
@@ -89,28 +84,6 @@ function buildLast12MonthsSeries(orders: OrderSummary[]): SeriesPoint[] {
   })
 }
 
-function buildYearSeries(orders: OrderSummary[], year: number): SeriesPoint[] {
-  const monthMap = new Map<number, { revenue: number; orders: number }>()
-  for (let month = 1; month <= 12; month += 1) {
-    monthMap.set(month, { revenue: 0, orders: 0 })
-  }
-
-  for (const order of orders) {
-    const createdAt = new Date(order.createdAt)
-    if (createdAt.getFullYear() !== year) continue
-    const month = createdAt.getMonth() + 1
-    const current = monthMap.get(month)
-    if (!current) continue
-    current.revenue += Number(order.total || 0)
-    current.orders += 1
-  }
-
-  return Array.from(monthMap.entries()).map(([month, row]) => ({
-    label: String(month).padStart(2, '0'),
-    revenue: row.revenue,
-    orders: row.orders,
-  }))
-}
 
 function buildPeriodSeries(orders: OrderSummary[], period: Period): SeriesPoint[] {
   const now = new Date()
@@ -293,92 +266,6 @@ function AlertItem({
         <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.xs }}>
           {description}
         </p>
-      </div>
-    </div>
-  )
-}
-
-function TopItem({ name, sales, revenue }: { name: string; sales: number; revenue: number }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: `1px solid ${colors.border}`,
-        paddingBlock: spacing['12'],
-        gap: spacing['12'],
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'] }}>
-        <div
-          style={{
-            width: spacing['40'],
-            height: spacing['40'],
-            borderRadius: radius.md,
-            backgroundColor: colors.surfaceMuted,
-            display: 'grid',
-            placeItems: 'center',
-          }}
-        >
-          <Package size={20} color={colors.textSecondary} />
-        </div>
-        <div>
-          <p style={{ margin: 0, color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.medium) }}>{name}</p>
-          <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.xs }}>{sales.toLocaleString()} sales</p>
-        </div>
-      </div>
-      <p style={{ margin: 0, color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.medium) }}>
-        {formatCurrency(revenue)}
-      </p>
-    </div>
-  )
-}
-
-function AuditItem({
-  user,
-  action,
-  target,
-  time,
-}: {
-  user: string
-  action: string
-  target: string
-  time: string
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        borderBottom: `1px solid ${colors.border}`,
-        paddingBlock: spacing['12'],
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'] }}>
-        <div
-          style={{
-            width: spacing['32'],
-            height: spacing['32'],
-            borderRadius: radius.full,
-            backgroundColor: colors.surfaceMuted,
-            color: colors.textSecondary,
-            display: 'grid',
-            placeItems: 'center',
-            fontSize: typography.xs,
-            fontWeight: Number(fontWeights.medium),
-          }}
-        >
-          {user.charAt(0).toUpperCase()}
-        </div>
-        <div>
-          <p style={{ margin: 0, color: colors.textPrimary, fontSize: typography.sm }}>
-            <span style={{ fontWeight: Number(fontWeights.medium) }}>{user}</span>{' '}
-            <span style={{ color: colors.textSecondary }}>{action}</span> {target}
-          </p>
-          <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.xs }}>{time}</p>
-        </div>
       </div>
     </div>
   )
@@ -608,11 +495,6 @@ export default function AdminDashboardPage() {
   const [audit, setAudit] = useState<AdminOpsAuditEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedYear, setSelectedYear] = useState('all')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [orderSearch, setOrderSearch] = useState('')
-  const [showTable, setShowTable] = useState(true)
   const [period, setPeriod] = useState<Period>('30d')
   const [chartMode, setChartMode] = useState<ChartMode>('both')
   const [isFlushing, setIsFlushing] = useState(false)
@@ -650,52 +532,7 @@ export default function AdminDashboardPage() {
       .catch(() => setAudit([]))
   }, [])
 
-  const availableYears = useMemo(() => {
-    const years = new Set<number>()
-    for (const order of orders) {
-      years.add(new Date(order.createdAt).getFullYear())
-    }
-    return Array.from(years).sort((a, b) => b - a)
-  }, [orders])
-
-  const filteredOrders = useMemo(() => {
-    const needle = orderSearch.trim().toLowerCase()
-    const start = startDate ? new Date(`${startDate}T00:00:00`).getTime() : null
-    const end = endDate ? new Date(`${endDate}T23:59:59`).getTime() : null
-
-    return orders.filter((order) => {
-      const createdAt = new Date(order.createdAt)
-      const createdAtMs = createdAt.getTime()
-      if (selectedYear !== 'all' && createdAt.getFullYear() !== Number(selectedYear)) return false
-      if (start && createdAtMs < start) return false
-      if (end && createdAtMs > end) return false
-      if (!needle) return true
-
-      const haystack = [
-        order.id,
-        order.status,
-        order.fulfillment?.mode,
-        order.fulfillment?.paymentMethod,
-        ...(order.items?.map((item) => item.name) ?? []),
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-
-      return haystack.includes(needle)
-    })
-  }, [orders, orderSearch, selectedYear, startDate, endDate])
-
-  const dateRangeError = useMemo(() => {
-    if (!startDate || !endDate) return null
-    const start = new Date(`${startDate}T00:00:00`).getTime()
-    const end = new Date(`${endDate}T23:59:59`).getTime()
-    if (!Number.isFinite(start) || !Number.isFinite(end)) return 'Invalid date range.'
-    if (start > end) return 'Start date must be before or equal to end date.'
-    return null
-  }, [endDate, startDate])
-
-  const safeFilteredOrders = dateRangeError ? [] : filteredOrders
+  const safeFilteredOrders = orders
 
   const currency = safeFilteredOrders[0]?.currency ?? 'USD'
 
@@ -708,7 +545,7 @@ export default function AdminDashboardPage() {
     return { revenue, pending, delivered, users, health }
   }, [safeFilteredOrders])
 
-  const previousBaseline = Math.max(1, orders.length > 0 ? orders.length : filteredOrders.length || 1)
+  const previousBaseline = Math.max(1, orders.length)
   const revenueChange = ((summary.revenue - previousBaseline * 40) / (previousBaseline * 40)) * 100
   const usersChange = ((summary.users - previousBaseline * 0.4) / Math.max(1, previousBaseline * 0.4)) * 100
   const pendingChange = ((summary.pending - previousBaseline * 0.2) / Math.max(1, previousBaseline * 0.2)) * 100
@@ -737,19 +574,7 @@ export default function AdminDashboardPage() {
     return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5)
   }, [safeFilteredOrders])
 
-  const chartSeries = useMemo(() => {
-    if (selectedYear === 'all') return buildLast12MonthsSeries(safeFilteredOrders)
-    return buildYearSeries(safeFilteredOrders, Number(selectedYear))
-  }, [safeFilteredOrders, selectedYear])
-
   const periodSeries = useMemo(() => buildPeriodSeries(safeFilteredOrders, period), [safeFilteredOrders, period])
-
-  const resetFilters = () => {
-    setSelectedYear('all')
-    setStartDate('')
-    setEndDate('')
-    setOrderSearch('')
-  }
 
   return (
     <PageContainer>
@@ -761,67 +586,6 @@ export default function AdminDashboardPage() {
       {loading ? <p style={{ margin: 0, color: colors.textSecondary }}>Loading dashboard...</p> : null}
       {error ? <p style={{ margin: `${spacing['8']}px 0 0`, color: colors.danger }}>{error}</p> : null}
       {!loading && <AlertBanner pending={summary.pending} health={summary.health} />}
-
-      <Section>
-        <Panel density='dense'>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
-              gap: spacing['12'],
-              alignItems: 'end',
-            }}
-          >
-            <div style={{ display: 'grid', gap: spacing['4'] }}>
-              <span style={filterLabelStyle}>Year</span>
-              <SelectInput value={selectedYear} onChange={(event) => setSelectedYear(event.target.value)}>
-                <option value='all'>All years</option>
-                {availableYears.map((year) => (
-                  <option key={year} value={String(year)}>
-                    {year}
-                  </option>
-                ))}
-              </SelectInput>
-            </div>
-
-            <div style={{ display: 'grid', gap: spacing['4'] }}>
-              <span style={filterLabelStyle}>Start date</span>
-              <TextInput type='date' value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-            </div>
-
-            <div style={{ display: 'grid', gap: spacing['4'] }}>
-              <span style={filterLabelStyle}>End date</span>
-              <TextInput type='date' value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-            </div>
-
-            <div style={{ display: 'grid', gap: spacing['4'] }}>
-              <span style={filterLabelStyle}>Search orders/items</span>
-              <TextInput
-                type='search'
-                value={orderSearch}
-                placeholder='Order ID, status, payment, item...'
-                onChange={(event) => setOrderSearch(event.target.value)}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: spacing['8'], flexWrap: 'wrap' }}>
-              <Button tone='secondary' onClick={resetFilters}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-                  Reset
-                </span>
-              </Button>
-              <Button tone='ghost' onClick={() => setShowTable((current) => !current)}>
-                {showTable ? 'Hide Table' : 'Show Table'}
-              </Button>
-            </div>
-          </div>
-          {dateRangeError ? (
-            <p style={{ margin: `${spacing['12']}px 0 0`, color: colors.danger, fontSize: typography.sm }}>
-              {dateRangeError}
-            </p>
-          ) : null}
-        </Panel>
-      </Section>
 
       <Section>
         <div
@@ -1230,12 +994,6 @@ export default function AdminDashboardPage() {
   )
 }
 
-const filterLabelStyle = {
-  color: colors.textSecondary,
-  fontSize: typography.xs,
-  fontWeight: Number(fontWeights.medium),
-} as const
-
 const inlineLinkStyle = {
   color: colors.brandPrimary,
   fontSize: typography.sm,
@@ -1243,23 +1001,4 @@ const inlineLinkStyle = {
   textDecoration: 'none',
 } as const
 
-const tableHeadStyle = {
-  height: spacing['48'],
-  paddingInline: spacing['12'],
-  textAlign: 'start',
-  color: colors.textSecondary,
-  fontSize: typography.xs,
-  fontWeight: Number(fontWeights.medium),
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  borderBottom: `1px solid ${colors.border}`,
-  backgroundColor: colors.surfaceMuted,
-} as const
-
-const tableCellStyle = {
-  padding: spacing['12'],
-  borderBottom: `1px solid ${colors.border}`,
-  color: colors.textPrimary,
-  fontSize: typography.sm,
-} as const
 
