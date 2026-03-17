@@ -429,7 +429,7 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
                     setCursorHistory([])
                   }}
                 >
-                  {allFields.map((field) => (
+                  {allFields.filter((field) => field.sortable).map((field) => (
                     <option key={field.key} value={field.key}>
                       {field.label}
                     </option>

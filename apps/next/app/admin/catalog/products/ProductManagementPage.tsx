@@ -24,7 +24,7 @@ import {
   TextInput,
 } from '../../_components/AdminPagePrimitives'
 
-const defaultColumns = ['image', 'title', 'brand', 'category', 'price', 'inventory', 'status', 'sku', 'vendor', 'updatedAt']
+const defaultColumns = ['title', 'image', 'brand', 'category', 'price', 'inventory', 'status', 'sku', 'vendor', 'updatedAt']
 
 const emptyDraft: ProductUpsertInput = {
   title: '',
