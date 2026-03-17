@@ -1,44 +1,443 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, CheckCircle2, Plus, Save, Search } from 'lucide-react'
-import { Promotion } from '@real/app/lib/types'
+import { Plus, Edit2, Trash2, Power, X, Tag } from 'lucide-react'
+import type { Promotion, PromotionCondition, PromotionReward } from '@real/app/lib/types'
 import { apiClient } from '../../../apiClient'
 import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
-import { Button, EmptyState, PageContainer, PageHeader, Panel, Section, StatusPill, TableShell } from '../../_components/AdminPagePrimitives'
+import {
+  Button,
+  Field,
+  PageContainer,
+  PageHeader,
+  Section,
+  SelectInput,
+  StatusPill,
+  TextInput,
+} from '../../_components/AdminPagePrimitives'
 
-function isValidIso(value: string) {
-  const stamp = Date.parse(value)
-  return Number.isFinite(stamp)
+const cardRadius = radius.xl + 4
+const iconBtnStyle = {
+  border: 0,
+  background: 'transparent',
+  cursor: 'pointer',
+  padding: spacing['4'],
+  borderRadius: radius.md,
+  display: 'flex',
+  alignItems: 'center',
+} as const
+
+// ─── Condition Builder ───────────────────────────────────────────────────────
+
+type ConditionRow =
+  | { type: 'min_cart_total'; amount: string }
+  | { type: 'brand_in'; brands: string }
+  | { type: 'coupon_required'; code: string }
+
+function conditionRowToPayload(row: ConditionRow): PromotionCondition {
+  if (row.type === 'min_cart_total') return { type: 'min_cart_total', amount: Number(row.amount) }
+  if (row.type === 'brand_in')
+    return {
+      type: 'brand_in',
+      brands: row.brands
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean),
+    }
+  return { type: 'coupon_required', code: row.code || undefined }
 }
 
-function prettyDate(value: string) {
-  try {
-    return new Date(value).toLocaleDateString()
-  } catch {
-    return value
+function conditionPayloadToRow(c: PromotionCondition): ConditionRow {
+  if (c.type === 'min_cart_total') return { type: 'min_cart_total', amount: String(c.amount) }
+  if (c.type === 'brand_in') return { type: 'brand_in', brands: c.brands.join(', ') }
+  return {
+    type: 'coupon_required',
+    code: (c as { type: 'coupon_required'; code?: string }).code ?? '',
   }
 }
 
+function ConditionBuilder({
+  rows,
+  onChange,
+}: {
+  rows: ConditionRow[]
+  onChange: (rows: ConditionRow[]) => void
+}) {
+  const addRow = () => onChange([...rows, { type: 'min_cart_total', amount: '50' }])
+  const removeRow = (i: number) => onChange(rows.filter((_, idx) => idx !== i))
+  const updateRow = (i: number, row: ConditionRow) =>
+    onChange(rows.map((r, idx) => (idx === i ? row : r)))
+
+  return (
+    <div style={{ display: 'grid', gap: spacing['8'] }}>
+      {rows.map((row, i) => (
+        <div key={i} style={{ display: 'flex', gap: spacing['8'], alignItems: 'flex-end' }}>
+          <div style={{ flex: '0 0 180px' }}>
+            <SelectInput
+              value={row.type}
+              onChange={(e) => {
+                const t = e.target.value as ConditionRow['type']
+                if (t === 'min_cart_total') updateRow(i, { type: t, amount: '50' })
+                else if (t === 'brand_in') updateRow(i, { type: t, brands: '' })
+                else updateRow(i, { type: t, code: '' })
+              }}
+            >
+              <option value='min_cart_total'>Min cart total</option>
+              <option value='brand_in'>Brand in</option>
+              <option value='coupon_required'>Coupon required</option>
+            </SelectInput>
+          </div>
+          <div style={{ flex: 1 }}>
+            {row.type === 'min_cart_total' && (
+              <TextInput
+                type='number'
+                placeholder='Amount'
+                value={row.amount}
+                onChange={(e) => updateRow(i, { ...row, amount: e.target.value })}
+              />
+            )}
+            {row.type === 'brand_in' && (
+              <TextInput
+                placeholder='brand1, brand2'
+                value={row.brands}
+                onChange={(e) => updateRow(i, { ...row, brands: e.target.value })}
+              />
+            )}
+            {row.type === 'coupon_required' && (
+              <TextInput
+                placeholder='Coupon code (optional)'
+                value={row.code}
+                onChange={(e) => updateRow(i, { ...row, code: e.target.value })}
+              />
+            )}
+          </div>
+          <button type='button' onClick={() => removeRow(i)} style={iconBtnStyle} title='Remove condition' aria-label='Remove condition'>
+            <X size={14} color={colors.danger} />
+          </button>
+        </div>
+      ))}
+      <button
+        type='button'
+        onClick={addRow}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: spacing['4'],
+          border: 0,
+          background: 'none',
+          cursor: 'pointer',
+          color: colors.brandPrimary,
+          fontSize: typography.sm,
+          padding: 0,
+        }}
+      >
+        <Plus size={14} /> Add condition
+      </button>
+    </div>
+  )
+}
+
+// ─── Form state helpers ──────────────────────────────────────────────────────
+
+type FormState = {
+  id: string
+  code: string
+  nameEn: string
+  startAt: string
+  endAt: string
+  priority: string
+  isActive: boolean
+  rewardType: 'percent_off' | 'fixed_amount_off' | 'free_shipping'
+  rewardValue: string
+  conditions: ConditionRow[]
+}
+
+function blankForm(): FormState {
+  const today = new Date().toISOString().slice(0, 10)
+  const twoWeeks = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10)
+  return {
+    id: '',
+    code: '',
+    nameEn: '',
+    startAt: today,
+    endAt: twoWeeks,
+    priority: '1',
+    isActive: true,
+    rewardType: 'percent_off',
+    rewardValue: '10',
+    conditions: [{ type: 'min_cart_total', amount: '50' }],
+  }
+}
+
+function promotionToForm(p: Promotion): FormState {
+  const reward = p.rewards[0]
+  return {
+    id: p.id,
+    code: p.code ?? '',
+    nameEn: p.name.en,
+    startAt: p.startAt.slice(0, 10),
+    endAt: p.endAt.slice(0, 10),
+    priority: String(p.priority),
+    isActive: p.isActive,
+    rewardType: reward?.type ?? 'percent_off',
+    rewardValue: reward && reward.type !== 'free_shipping' ? String(reward.value) : '0',
+    conditions: p.conditions.map(conditionPayloadToRow),
+  }
+}
+
+// ─── Slide-over ──────────────────────────────────────────────────────────────
+
+function PromotionSlideOver({
+  promotion,
+  onClose,
+  onSave,
+}: {
+  promotion: Promotion | null
+  onClose: () => void
+  onSave: (form: FormState) => Promise<void>
+}) {
+  const isEdit = Boolean(promotion)
+  const [form, setForm] = useState<FormState>(promotion ? promotionToForm(promotion) : blankForm())
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
+    setForm((prev) => ({ ...prev, [k]: v }))
+
+  const validate = (): string | null => {
+    if (!isEdit && !form.id.trim()) return 'Promotion ID is required'
+    if (!form.startAt || !form.endAt) return 'Start and end dates are required'
+    if (new Date(form.startAt) >= new Date(form.endAt)) return 'End date must be after start date'
+    if (form.rewardType === 'percent_off') {
+      const v = Number(form.rewardValue)
+      if (!Number.isFinite(v) || v <= 0 || v > 100) return 'Percentage must be 1–100'
+    }
+    if (form.rewardType === 'fixed_amount_off') {
+      const v = Number(form.rewardValue)
+      if (!Number.isFinite(v) || v <= 0) return 'Fixed amount must be > 0'
+    }
+    return null
+  }
+
+  const handleSave = async () => {
+    const err = validate()
+    if (err) {
+      setError(err)
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      await onSave(form)
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <>
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.3)',
+          zIndex: 40,
+        }}
+      />
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          width: 520,
+          maxWidth: '100vw',
+          height: '100vh',
+          backgroundColor: colors.surface,
+          borderLeft: `1px solid ${colors.border}`,
+          zIndex: 50,
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '-8px 0 32px rgba(0,0,0,0.12)',
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: `${spacing['16']}px ${spacing['24']}px`,
+            borderBottom: `1px solid ${colors.border}`,
+          }}
+        >
+          <h2
+            style={{
+              margin: 0,
+              fontSize: typography.lg,
+              fontWeight: Number(fontWeights.semibold),
+              color: colors.textPrimary,
+            }}
+          >
+            {isEdit ? 'Edit Promotion' : 'New Promotion'}
+          </h2>
+          <button
+            type='button'
+            aria-label='Close'
+            onClick={onClose}
+            style={{
+              border: 0,
+              background: 'transparent',
+              cursor: 'pointer',
+              color: colors.textSecondary,
+              padding: spacing['4'],
+            }}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: `${spacing['24']}px` }}>
+          <div style={{ display: 'grid', gap: spacing['16'] }}>
+            {!isEdit && (
+              <Field label='Promotion ID' hint='Unique identifier — cannot be changed after creation'>
+                <TextInput
+                  value={form.id}
+                  onChange={(e) => set('id', e.target.value)}
+                  placeholder='e.g. SUMMER_SALE_2026'
+                />
+              </Field>
+            )}
+            <Field label='Display Name'>
+              <TextInput
+                value={form.nameEn}
+                onChange={(e) => set('nameEn', e.target.value)}
+                placeholder='e.g. Summer Sale 10% Off'
+              />
+            </Field>
+            <Field label='Coupon Code' hint='Leave blank if no code required'>
+              <TextInput
+                value={form.code}
+                onChange={(e) => set('code', e.target.value.toUpperCase())}
+                placeholder='e.g. SAVE10'
+              />
+            </Field>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['12'] }}>
+              <Field label='Start Date'>
+                <TextInput
+                  type='date'
+                  value={form.startAt}
+                  onChange={(e) => set('startAt', e.target.value)}
+                />
+              </Field>
+              <Field label='End Date'>
+                <TextInput
+                  type='date'
+                  value={form.endAt}
+                  onChange={(e) => set('endAt', e.target.value)}
+                />
+              </Field>
+            </div>
+            <Field label='Reward Type'>
+              <SelectInput
+                value={form.rewardType}
+                onChange={(e) => set('rewardType', e.target.value as FormState['rewardType'])}
+              >
+                <option value='percent_off'>Percent Off (%)</option>
+                <option value='fixed_amount_off'>Fixed Amount Off</option>
+                <option value='free_shipping'>Free Shipping</option>
+              </SelectInput>
+            </Field>
+            {form.rewardType !== 'free_shipping' && (
+              <Field label={form.rewardType === 'percent_off' ? 'Discount (%)' : 'Discount Amount'}>
+                <TextInput
+                  type='number'
+                  value={form.rewardValue}
+                  onChange={(e) => set('rewardValue', e.target.value)}
+                />
+              </Field>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['12'] }}>
+              <Field label='Priority' hint='Higher = applied first'>
+                <TextInput
+                  type='number'
+                  value={form.priority}
+                  onChange={(e) => set('priority', e.target.value)}
+                />
+              </Field>
+              <Field label='Status'>
+                <SelectInput
+                  value={form.isActive ? 'active' : 'inactive'}
+                  onChange={(e) => set('isActive', e.target.value === 'active')}
+                >
+                  <option value='active'>Active</option>
+                  <option value='inactive'>Inactive</option>
+                </SelectInput>
+              </Field>
+            </div>
+            <Field
+              label='Conditions'
+              hint='All conditions must be met for the promotion to apply'
+            >
+              <ConditionBuilder
+                rows={form.conditions}
+                onChange={(c) => set('conditions', c)}
+              />
+            </Field>
+            {error && (
+              <p style={{ margin: 0, color: colors.danger, fontSize: typography.sm }}>{error}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div
+          style={{
+            padding: `${spacing['16']}px ${spacing['24']}px`,
+            borderTop: `1px solid ${colors.border}`,
+            display: 'flex',
+            gap: spacing['8'],
+            justifyContent: 'flex-end',
+          }}
+        >
+          <Button tone='ghost' onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            tone='primary'
+            onClick={() => {
+              void handleSave()
+            }}
+            disabled={saving}
+          >
+            {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Promotion'}
+          </Button>
+        </div>
+      </div>
+    </>
+  )
+}
+
+// ─── Page ────────────────────────────────────────────────────────────────────
+
 export default function AdminMarketingPromotionsPage() {
   const [rows, setRows] = useState<Promotion[]>([])
-  const [searchTerm, setSearchTerm] = useState('')
-  const [id, setId] = useState('')
-  const [code, setCode] = useState('')
-  const [startAt, setStartAt] = useState(new Date().toISOString())
-  const [endAt, setEndAt] = useState(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString())
-  const [priority, setPriority] = useState('1')
-  const [rewardType, setRewardType] = useState<'percent_off' | 'fixed_amount_off' | 'free_shipping'>('percent_off')
-  const [rewardValue, setRewardValue] = useState('10')
-  const [conditionsJson, setConditionsJson] = useState('[{"type":"min_cart_total","amount":50}]')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  // undefined = slide-over closed; null = new; Promotion = edit
+  const [slideOver, setSlideOver] = useState<Promotion | null | undefined>(undefined)
   const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
     try {
       const data = await apiClient.admin.listPromotions()
       setRows(data)
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to load promotions.')
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to load')
     }
   }
 
@@ -46,284 +445,360 @@ export default function AdminMarketingPromotionsPage() {
     void load()
   }, [])
 
-  const validationIssues = useMemo(() => {
-    const issues: string[] = []
-    if (!id.trim()) issues.push('Promotion id is required')
-    if (!isValidIso(startAt)) issues.push('Start date must be valid ISO')
-    if (!isValidIso(endAt)) issues.push('End date must be valid ISO')
-    if (new Date(startAt).getTime() >= new Date(endAt).getTime()) issues.push('End date must be after start date')
-    if (rewardType === 'percent_off') {
-      const value = Number(rewardValue)
-      if (!Number.isFinite(value) || value <= 0 || value > 100) issues.push('Percentage must be 0 < value <= 100')
-    }
-    if (rewardType === 'fixed_amount_off') {
-      const value = Number(rewardValue)
-      if (!Number.isFinite(value) || value <= 0) issues.push('Fixed amount must be > 0')
-    }
-    try {
-      JSON.parse(conditionsJson)
-    } catch {
-      issues.push('Conditions JSON is invalid')
-    }
-    return issues
-  }, [conditionsJson, endAt, id, rewardType, rewardValue, startAt])
+  const buildReward = (form: FormState): PromotionReward => {
+    if (form.rewardType === 'free_shipping') return { type: 'free_shipping', value: true }
+    if (form.rewardType === 'percent_off') return { type: 'percent_off', value: Number(form.rewardValue) }
+    return { type: 'fixed_amount_off', value: Number(form.rewardValue) }
+  }
 
-  const filtered = useMemo(() => {
-    const needle = searchTerm.trim().toLowerCase()
-    if (!needle) return rows
-    return rows.filter((item) => `${item.id} ${item.code ?? ''} ${item.name.en}`.toLowerCase().includes(needle))
-  }, [rows, searchTerm])
+  const handleSave = async (form: FormState) => {
+    if (slideOver && slideOver.id) {
+      // Edit path
+      const updated = await apiClient.admin.updatePromotion(slideOver.id, {
+        code: form.code || undefined,
+        name: { en: form.nameEn, ar: slideOver.name.ar },
+        startAt: new Date(form.startAt).toISOString(),
+        endAt: new Date(form.endAt).toISOString(),
+        priority: Number(form.priority),
+        isActive: form.isActive,
+        rewards: [buildReward(form)],
+        conditions: form.conditions.map(conditionRowToPayload),
+      })
+      setRows((prev) => prev.map((r) => (r.id === slideOver.id ? updated : r)))
+    } else {
+      // Create path
+      const created = await apiClient.admin.createPromotion({
+        id: form.id.trim(),
+        code: form.code || undefined,
+        name: { en: form.nameEn, ar: form.nameEn },
+        startAt: new Date(form.startAt).toISOString(),
+        endAt: new Date(form.endAt).toISOString(),
+        priority: Number(form.priority),
+        isActive: form.isActive,
+        rewards: [buildReward(form)],
+        conditions: form.conditions.map(conditionRowToPayload),
+      })
+      setRows((prev) => [...prev, created])
+    }
+  }
+
+  const handleDelete = async (p: Promotion) => {
+    if (!confirm(`Delete promotion "${p.id}"?`)) return
+    await apiClient.admin.deletePromotion(p.id)
+    setRows((prev) => prev.filter((r) => r.id !== p.id))
+  }
+
+  const handleToggle = async (p: Promotion) => {
+    const updated = await apiClient.admin.updatePromotion(p.id, { isActive: !p.isActive })
+    setRows((prev) => prev.map((r) => (r.id === p.id ? updated : r)))
+  }
+
+  const filtered = useMemo(
+    () =>
+      rows.filter((p) => {
+        const matchSearch =
+          !search ||
+          p.id.toLowerCase().includes(search.toLowerCase()) ||
+          (p.code ?? '').toLowerCase().includes(search.toLowerCase()) ||
+          p.name.en.toLowerCase().includes(search.toLowerCase())
+        const matchStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'active' && p.isActive) ||
+          (statusFilter === 'inactive' && !p.isActive)
+        return matchSearch && matchStatus
+      }),
+    [rows, search, statusFilter],
+  )
+
+  const pillTab = (label: string, value: typeof statusFilter) => (
+    <button
+      type='button'
+      key={value}
+      onClick={() => setStatusFilter(value)}
+      style={{
+        border: 0,
+        cursor: 'pointer',
+        borderRadius: radius.full,
+        padding: `6px ${spacing['16']}px`,
+        fontSize: typography.sm,
+        fontWeight: Number(fontWeights.medium),
+        backgroundColor: statusFilter === value ? colors.brandPrimary : 'transparent',
+        color: statusFilter === value ? '#fff' : colors.textSecondary,
+        transition: 'background 0.15s',
+      }}
+    >
+      {label}
+    </button>
+  )
 
   return (
-    <PageContainer dense>
-      <PageHeader title='Promotions' />
-      {error ? <p style={{ marginTop: 0, color: colors.danger }}>{error}</p> : null}
+    <PageContainer>
+      <PageHeader
+        title='Promotions'
+        subtitle='Create and manage discount promotions, coupon codes, and reward rules.'
+        actions={
+          <Button tone='primary' onClick={() => setSlideOver(null)}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
+              <Plus size={14} /> New Promotion
+            </span>
+          </Button>
+        }
+      />
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
-          gap: spacing['24'],
-        }}
-      >
-        <Section>
-          <Panel>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: spacing['12'], marginBottom: spacing['16'] }}>
-              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
-                Promotion Editor
-              </h3>
-              <Button
-                tone='primary'
-                disabled={validationIssues.length > 0}
-                onClick={async () => {
-                  try {
-                    const parsedConditions = JSON.parse(conditionsJson)
-                    const rewardValueNumber = Number(rewardValue)
-                    await apiClient.admin.createPromotion({
-                      id: id.trim(),
-                      code: code.trim() || undefined,
-                      name: { en: id.trim() || 'promotion', ar: id.trim() || 'promotion' },
-                      isActive: true,
-                      startAt,
-                      endAt,
-                      priority: Number(priority) || 1,
-                      conditions: parsedConditions,
-                      rewards:
-                        rewardType === 'free_shipping'
-                          ? [{ type: 'free_shipping', value: true }]
-                          : [{ type: rewardType, value: rewardValueNumber }],
-                    })
-                    setId('')
-                    setCode('')
-                    await load()
-                  } catch (cause) {
-                    setError(cause instanceof Error ? cause.message : 'Unable to create promotion.')
-                  }
-                }}
-              >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
-                  <Save size={14} color={colors.textInverted} />
-                  Save Promotion
-                </span>
-              </Button>
-            </div>
+      {error && <p style={{ color: colors.danger, fontSize: typography.sm }}>{error}</p>}
 
-            <div style={{ display: 'grid', gap: spacing['12'] }}>
-              <label style={{ display: 'grid', gap: spacing['4'] }}>
-                <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>Promotion ID</span>
-                <input value={id} onChange={(e) => setId(e.target.value)} style={inputStyle} placeholder='promo-summer' />
-              </label>
-              <label style={{ display: 'grid', gap: spacing['4'] }}>
-                <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>Coupon Code</span>
-                <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} style={inputStyle} placeholder='SUMMER20' />
-              </label>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
-                  gap: spacing['12'],
-                }}
-              >
-                <label style={{ display: 'grid', gap: spacing['4'] }}>
-                  <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>Start (ISO)</span>
-                  <input value={startAt} onChange={(e) => setStartAt(e.target.value)} style={inputStyle} />
-                </label>
-                <label style={{ display: 'grid', gap: spacing['4'] }}>
-                  <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>End (ISO)</span>
-                  <input value={endAt} onChange={(e) => setEndAt(e.target.value)} style={inputStyle} />
-                </label>
-              </div>
-              <label style={{ display: 'grid', gap: spacing['4'] }}>
-                <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>Priority</span>
-                <input value={priority} onChange={(e) => setPriority(e.target.value)} style={inputStyle} />
-              </label>
-
-              <div style={{ border: `1px solid ${colors.border}`, borderRadius: radius.xl + 2, padding: spacing['12'], backgroundColor: colors.surfaceMuted }}>
-                <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium), textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Reward
-                </p>
-                <div style={{ marginTop: spacing['8'], display: 'flex', gap: spacing['8'], flexWrap: 'wrap' }}>
-                  {(['percent_off', 'fixed_amount_off', 'free_shipping'] as const).map((type) => (
-                    <Button key={type} tone={rewardType === type ? 'primary' : 'secondary'} onClick={() => setRewardType(type)}>
-                      {type}
-                    </Button>
-                  ))}
-                </div>
-                {rewardType !== 'free_shipping' ? (
-                  <input
-                    value={rewardValue}
-                    onChange={(e) => setRewardValue(e.target.value)}
-                    style={{ ...inputStyle, marginTop: spacing['8'] }}
-                    placeholder='10'
-                  />
-                ) : null}
-              </div>
-
-              <label style={{ display: 'grid', gap: spacing['4'] }}>
-                <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>Conditions JSON</span>
-                <textarea
-                  value={conditionsJson}
-                  onChange={(e) => setConditionsJson(e.target.value)}
-                  rows={5}
-                  style={{
-                    ...inputStyle,
-                    minHeight: 120,
-                    fontFamily: 'monospace',
-                    fontSize: typography.xs,
-                    paddingBlock: spacing['8'],
-                  }}
-                />
-              </label>
-            </div>
-          </Panel>
-        </Section>
-
-        <Section>
-          <div style={{ display: 'grid', gap: spacing['24'] }}>
-            <Panel density='dense'>
-              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
-                Validation Summary
-              </h3>
-              <div style={{ marginTop: spacing['12'], display: 'grid', gap: spacing['8'] }}>
-                {validationIssues.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], color: colors.success, fontSize: typography.sm }}>
-                    <CheckCircle2 size={16} />
-                    Ready to save. Only one highest-priority promotion applies.
-                  </div>
-                ) : (
-                  validationIssues.map((issue) => (
-                    <div key={issue} style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], color: colors.danger, fontSize: typography.sm }}>
-                      <AlertCircle size={16} />
-                      {issue}
-                    </div>
-                  ))
-                )}
-              </div>
-            </Panel>
-
-            <Panel density='dense'>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: spacing['12'], marginBottom: spacing['12'] }}>
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
-                  Promotions
-                </h3>
-                <Button tone='primary'>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
-                    <Plus size={14} color={colors.textInverted} />
-                    Create
-                  </span>
-                </Button>
-              </div>
-
-              <div style={{ position: 'relative', marginBottom: spacing['12'] }}>
-                <Search size={16} color={colors.textSecondary} style={{ position: 'absolute', insetInlineStart: 12, top: 12 }} />
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder='Search promotions...'
-                  style={{ ...inputStyle, paddingInlineStart: spacing['32'] + spacing['8'] }}
-                />
-              </div>
-
-              {filtered.length === 0 ? (
-                <EmptyState title='No promotions found' description='Create a promotion to start applying quote discounts.' />
-              ) : (
-                <TableShell>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr>
-                        {['Name', 'Code', 'Type', 'Value', 'Window', 'Status'].map((head) => (
-                          <th
-                            key={head}
-                            scope='col'
-                            style={{
-                              height: spacing['48'],
-                              paddingInline: spacing['12'],
-                              textAlign: 'start',
-                              verticalAlign: 'middle',
-                              color: colors.textSecondary,
-                              fontSize: typography.xs,
-                              fontWeight: Number(fontWeights.medium),
-                              letterSpacing: '0.06em',
-                              textTransform: 'uppercase',
-                              borderBottom: `1px solid ${colors.border}`,
-                              backgroundColor: colors.surfaceMuted,
-                            }}
-                          >
-                            {head}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filtered.map((promo) => {
-                        const reward = promo.rewards[0]
-                        return (
-                          <tr key={promo.id}>
-                            <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>
-                              {promo.name.en}
-                            </td>
-                            <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                              <code style={{ fontSize: typography.xs, color: colors.textPrimary, backgroundColor: colors.surfaceMuted, padding: `${spacing['2']}px ${spacing['4']}px`, borderRadius: radius.md }}>
-                                {promo.code ?? '-'}
-                              </code>
-                            </td>
-                            <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textSecondary }}>
-                              {reward.type}
-                            </td>
-                            <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textSecondary }}>
-                              {'value' in reward ? String(reward.value) : '-'}
-                            </td>
-                            <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textSecondary, fontSize: typography.xs }}>
-                              {prettyDate(promo.startAt)} - {prettyDate(promo.endAt)}
-                            </td>
-                            <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                              <StatusPill tone={promo.isActive ? 'success' : 'warning'}>
-                                {promo.isActive ? 'Active' : 'Inactive'}
-                              </StatusPill>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </TableShell>
-              )}
-            </Panel>
+      {/* Filters row */}
+      <Section>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: spacing['16'],
+            flexWrap: 'wrap',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              gap: spacing['4'],
+              backgroundColor: colors.surfaceMuted,
+              borderRadius: radius.full,
+              padding: '4px',
+            }}
+          >
+            {pillTab('All', 'all')}
+            {pillTab('Active', 'active')}
+            {pillTab('Inactive', 'inactive')}
           </div>
-        </Section>
-      </div>
+          <TextInput
+            type='search'
+            placeholder='Search by ID, code, name...'
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{ maxWidth: 280 }}
+          />
+        </div>
+      </Section>
+
+      {/* Table */}
+      <Section>
+        {filtered.length === 0 ? (
+          <div
+            style={{
+              padding: spacing['48'],
+              textAlign: 'center',
+              border: `1px solid ${colors.border}`,
+              borderRadius: cardRadius,
+            }}
+          >
+            <Tag size={32} color={colors.textSecondary} style={{ marginBottom: spacing['12'] }} />
+            <p
+              style={{
+                margin: '0 0 4px',
+                fontSize: typography.base,
+                fontWeight: Number(fontWeights.semibold),
+                color: colors.textPrimary,
+              }}
+            >
+              {search || statusFilter !== 'all' ? 'No promotions match' : 'No promotions yet'}
+            </p>
+            <p style={{ margin: 0, fontSize: typography.sm, color: colors.textSecondary }}>
+              {search || statusFilter !== 'all'
+                ? 'Try adjusting your filters.'
+                : 'Create your first promotion to get started.'}
+            </p>
+          </div>
+        ) : (
+          <div
+            style={{
+              border: `1px solid ${colors.border}`,
+              borderRadius: cardRadius,
+              overflow: 'hidden',
+              backgroundColor: colors.surface,
+            }}
+          >
+            {/* Table header */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 120px 140px 200px 80px 80px 100px',
+                backgroundColor: colors.surfaceMuted,
+                borderBottom: `1px solid ${colors.border}`,
+              }}
+            >
+              {['Promotion', 'Code', 'Reward', 'Window', 'Priority', 'Status', ''].map((h) => (
+                <div
+                  key={h}
+                  style={{
+                    padding: `${spacing['8']}px ${spacing['12']}px`,
+                    fontSize: typography.xs,
+                    fontWeight: Number(fontWeights.semibold),
+                    color: colors.textSecondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {h}
+                </div>
+              ))}
+            </div>
+
+            {/* Table rows */}
+            {filtered.map((p) => {
+              const reward = p.rewards[0]
+              const rewardLabel =
+                reward?.type === 'percent_off'
+                  ? `${reward.value}% off`
+                  : reward?.type === 'fixed_amount_off'
+                    ? `-${reward.value}`
+                    : 'Free shipping'
+              return (
+                <div
+                  key={p.id}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 120px 140px 200px 80px 80px 100px',
+                    borderBottom: `1px solid ${colors.border}`,
+                    alignItems: 'center',
+                  }}
+                >
+                  {/* Promotion name/id */}
+                  <div style={{ padding: `${spacing['12']}px` }}>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: typography.sm,
+                        fontWeight: Number(fontWeights.medium),
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      {p.id}
+                    </p>
+                    {p.name.en && (
+                      <p
+                        style={{
+                          margin: '2px 0 0',
+                          fontSize: typography.xs,
+                          color: colors.textSecondary,
+                        }}
+                      >
+                        {p.name.en}
+                      </p>
+                    )}
+                  </div>
+                  {/* Code */}
+                  <div style={{ padding: `${spacing['12']}px` }}>
+                    {p.code ? (
+                      <span
+                        style={{
+                          fontSize: typography.xs,
+                          fontFamily: 'monospace',
+                          backgroundColor: colors.surfaceMuted,
+                          borderRadius: radius.md,
+                          padding: `2px ${spacing['8']}px`,
+                          color: colors.textPrimary,
+                        }}
+                      >
+                        {p.code}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>
+                        —
+                      </span>
+                    )}
+                  </div>
+                  {/* Reward */}
+                  <div
+                    style={{
+                      padding: `${spacing['12']}px`,
+                      fontSize: typography.sm,
+                      color: colors.textPrimary,
+                    }}
+                  >
+                    {rewardLabel}
+                  </div>
+                  {/* Window */}
+                  <div
+                    style={{
+                      padding: `${spacing['12']}px`,
+                      fontSize: typography.xs,
+                      color: colors.textSecondary,
+                    }}
+                  >
+                    {new Date(p.startAt).toLocaleDateString()} –{' '}
+                    {new Date(p.endAt).toLocaleDateString()}
+                  </div>
+                  {/* Priority */}
+                  <div
+                    style={{
+                      padding: `${spacing['12']}px`,
+                      fontSize: typography.sm,
+                      color: colors.textSecondary,
+                      textAlign: 'center',
+                    }}
+                  >
+                    {p.priority}
+                  </div>
+                  {/* Status */}
+                  <div style={{ padding: `${spacing['12']}px` }}>
+                    <StatusPill tone={p.isActive ? 'success' : 'neutral'}>
+                      {p.isActive ? 'Active' : 'Inactive'}
+                    </StatusPill>
+                  </div>
+                  {/* Actions */}
+                  <div
+                    style={{
+                      padding: `${spacing['8']}px`,
+                      display: 'flex',
+                      gap: spacing['4'],
+                      justifyContent: 'flex-end',
+                    }}
+                  >
+                    <button
+                      type='button'
+                      onClick={() => setSlideOver(p)}
+                      style={iconBtnStyle}
+                      title='Edit'
+                    >
+                      <Edit2 size={14} color={colors.textSecondary} />
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        void handleToggle(p)
+                      }}
+                      style={iconBtnStyle}
+                      title={p.isActive ? 'Deactivate' : 'Activate'}
+                    >
+                      <Power size={14} color={p.isActive ? colors.success : colors.textSecondary} />
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() => {
+                        void handleDelete(p)
+                      }}
+                      style={iconBtnStyle}
+                      title='Delete'
+                    >
+                      <Trash2 size={14} color={colors.danger} />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Section>
+
+      {/* Slide-over */}
+      {slideOver !== undefined && (
+        <PromotionSlideOver
+          promotion={slideOver}
+          onClose={() => setSlideOver(undefined)}
+          onSave={handleSave}
+        />
+      )}
     </PageContainer>
   )
 }
-
-const inputStyle = {
-  width: '100%',
-  minHeight: spacing['40'],
-  borderRadius: radius.xl,
-  border: `1px solid ${colors.border}`,
-  backgroundColor: colors.surface,
-  color: colors.textPrimary,
-  fontSize: typography.sm,
-  paddingInline: spacing['12'],
-  outline: 'none',
-} as const
