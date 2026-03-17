@@ -1,5 +1,5 @@
-import { requireAdminDomainSession } from '../../../../../_lib/request-auth'
-import { fail, ok } from '../../../../../_lib/response'
+import { requireAdminDomainSession } from '../../../../_lib/request-auth'
+import { fail, ok } from '../../../../_lib/response'
 
 export async function POST(request: Request) {
   try {

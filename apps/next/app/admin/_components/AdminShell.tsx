@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
       { id: 'catalog-products', domain: 'catalog', title: 'Products', href: '/admin/catalog/products', icon: Package },
       { id: 'catalog-categories', domain: 'catalog', title: 'Categories', href: '/admin/catalog/categories', icon: Tags },
       { id: 'catalog-brands', domain: 'catalog', title: 'Brands', href: '/admin/catalog/brands', icon: Store },
-      { id: 'catalog-queries', domain: 'catalog', title: 'Queries', href: '/admin/catalog/queries', icon: Search },
+      { id: 'catalog-queries', domain: 'catalog', title: 'Collections', href: '/admin/catalog/queries', icon: Search },
     ],
   },
   {

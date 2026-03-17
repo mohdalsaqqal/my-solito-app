@@ -1,22 +1,23 @@
-import { requireAdminDomainSession } from '../../../../../_lib/request-auth'
-import { fail, ok } from '../../../../../_lib/response'
+import { requireAdminDomainSession } from '../../../../_lib/request-auth'
+import { fail, ok } from '../../../../_lib/response'
 import {
   readAdminCatalogState,
   writeAdminCatalogState,
   slugify,
   AdminBrandRecord,
-} from '../../../../../_lib/admin-catalog-store'
+} from '../../../../_lib/admin-catalog-store'
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
+    const { id } = await params
     const state = await readAdminCatalogState()
-    const index = state.brands.findIndex((b) => b.id === params.id)
+    const index = state.brands.findIndex((b: AdminBrandRecord) => b.id === id)
     if (index === -1) return fail('ADMIN_BRAND_NOT_FOUND', 'Brand not found', 404)
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as Partial<AdminBrandRecord>
@@ -34,36 +35,39 @@ export async function PATCH(
     await writeAdminCatalogState(state)
     return ok({ brand: updated })
   } catch (cause) {
+    const { id } = await params.catch(() => ({ id: 'unknown' }))
     return fail(
       'ADMIN_BRAND_UPDATE_UNEXPECTED',
       'Unexpected error while updating brand.',
       500,
-      { scope: `PATCH /api/admin/catalog/brands/${params.id}`, cause }
+      { scope: `PATCH /api/admin/catalog/brands/${id}`, cause }
     )
   }
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
+    const { id } = await params
     const state = await readAdminCatalogState()
-    const index = state.brands.findIndex((b) => b.id === params.id)
+    const index = state.brands.findIndex((b: AdminBrandRecord) => b.id === id)
     if (index === -1) return fail('ADMIN_BRAND_NOT_FOUND', 'Brand not found', 404)
 
     state.brands.splice(index, 1)
     await writeAdminCatalogState(state)
     return ok({ deleted: true })
   } catch (cause) {
+    const { id } = await params.catch(() => ({ id: 'unknown' }))
     return fail(
       'ADMIN_BRAND_DELETE_UNEXPECTED',
       'Unexpected error while deleting brand.',
       500,
-      { scope: `DELETE /api/admin/catalog/brands/${params.id}`, cause }
+      { scope: `DELETE /api/admin/catalog/brands/${id}`, cause }
     )
   }
 }

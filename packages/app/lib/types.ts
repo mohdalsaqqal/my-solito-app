@@ -611,6 +611,16 @@ export type CMSHome = {
         brandNames?: string[]
       }
     }>
+    offerBanners?: Array<{
+      id: string
+      enabled?: boolean
+      title: LocalizedString
+      subtitle?: LocalizedString
+      ctaLabel?: LocalizedString
+      href?: string
+      imageUrl?: string
+      badgeLabel?: LocalizedString
+    }>
     ticker?: {
       enabled?: boolean
       speedMs?: number
