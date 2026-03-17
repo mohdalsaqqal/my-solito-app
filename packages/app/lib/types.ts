@@ -1240,6 +1240,13 @@ export type PharmacistConsultationDraft = {
   recommendedProducts: AccountTestRecommendedProduct[]
 }
 
+export type AdminCatalogColumn = {
+  id: string
+  label: string
+  path: string           // matches sourceColumns entry, e.g. "source.vendor_sku"
+  mode: 'custom' | 'source'
+}
+
 export type AdminCategoryRecord = {
   id: string
   nameEn: string

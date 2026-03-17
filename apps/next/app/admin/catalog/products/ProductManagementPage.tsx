@@ -1,9 +1,10 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Filter } from 'lucide-react'
 import {
+  AdminCatalogColumn,
   AdminJobRecord,
   AdminListInput,
   ProductDetail,
@@ -100,6 +101,30 @@ export function ProductManagementPage({
   const [refreshKey, setRefreshKey] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [savedColumns, setSavedColumns] = useState<AdminCatalogColumn[]>([])
+  const [savingColumns, setSavingColumns] = useState(false)
+
+  useEffect(() => {
+    void apiClient.admin.listProductColumns().then((res) => setSavedColumns(res.columns)).catch(() => {})
+  }, [])
+
+  const isColumnSaved = (path: string) => savedColumns.some((c) => c.path === path)
+
+  const toggleSourceColumn = async (path: string) => {
+    const label = path.replace(/^(source|custom)\./, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    const next = isColumnSaved(path)
+      ? savedColumns.filter((c) => c.path !== path)
+      : [...savedColumns, { id: `col_${path.replace(/\W/g, '_')}`, label, path, mode: 'source' as const }]
+    setSavingColumns(true)
+    try {
+      const res = await apiClient.admin.updateProductColumns(next)
+      setSavedColumns(res.columns)
+    } catch {
+      // revert optimistic update on error — no-op, state unchanged
+    } finally {
+      setSavingColumns(false)
+    }
+  }
 
   const loadProduct = async (id: string) => {
     setLoadingDetail(true)
@@ -293,14 +318,85 @@ export function ProductManagementPage({
               <TextAreaInput value={draft.description ?? ''} onChange={(event) => setDraft((prev) => ({ ...prev, description: event.target.value }))} />
             </Field>
             {detail?.sourceColumns?.length ? (
-              <InfoGrid
-                rows={detail.sourceColumns.map((column) => ({
-                  label: column,
-                  value: column.startsWith('custom.')
-                    ? String(detail.customFields?.[column.slice('custom.'.length)] ?? '-')
-                    : 'Available',
-                }))}
-              />
+              <div
+                style={{
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radius.xl,
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Header */}
+                <div
+                  style={{
+                    padding: `${spacing['12']}px ${spacing['16']}px`,
+                    borderBottom: `1px solid ${colors.border}`,
+                    backgroundColor: colors.surfaceMuted,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: spacing['8'],
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: typography.sm, fontWeight: Number(fontWeights.semibold), color: colors.textPrimary }}>
+                      Source Fields
+                    </div>
+                    <div style={{ fontSize: typography.xs, color: colors.textSecondary, marginTop: 2 }}>
+                      Fields available from the source system. Toggle to add as editable in this panel.
+                    </div>
+                  </div>
+                  {savingColumns && (
+                    <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>Saving…</span>
+                  )}
+                </div>
+                {/* Column list */}
+                <div style={{ padding: spacing['12'] }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                      gap: spacing['8'],
+                    }}
+                  >
+                    {detail.sourceColumns.map((col) => {
+                      const active = isColumnSaved(col)
+                      const label = col.replace(/^(source|custom)\./, '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+                      const prefix = col.startsWith('source.') ? 'ERP' : col.startsWith('custom.') ? 'Custom' : 'Core'
+                      const prefixColor = col.startsWith('source.') ? colors.warning : col.startsWith('custom.') ? colors.brandPrimary : colors.textSecondary
+                      return (
+                        <label
+                          key={col}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: spacing['8'],
+                            padding: `${spacing['8']}px ${spacing['12']}px`,
+                            borderRadius: radius.lg,
+                            border: `1px solid ${active ? colors.brandPrimary : colors.border}`,
+                            backgroundColor: active ? `${colors.brandPrimary}12` : colors.surface,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={active}
+                            onChange={() => void toggleSourceColumn(col)}
+                            style={{ flexShrink: 0 }}
+                          />
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ display: 'block', fontSize: typography.sm, color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>
+                              {label}
+                            </span>
+                            <span style={{ display: 'block', fontSize: typography.xs, color: prefixColor }}>
+                              {prefix} · {col}
+                            </span>
+                          </span>
+                        </label>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
             ) : null}
           </>
         )}

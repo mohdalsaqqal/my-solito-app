@@ -1,6 +1,7 @@
 import { endpoints } from './endpoints'
 import {
   ApiResponse,
+  AdminCatalogColumn,
   AdminCacheAction,
   AdminCacheAuditEntry,
   AdminCacheResult,
@@ -774,6 +775,16 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         request<{ deleted: boolean }>(endpoints.adminBrandAdmin(id), { method: 'DELETE' }),
       syncBrands: () =>
         request<{ synced: { created: number; updated: number } }>(endpoints.adminBrandsAdminSync, { method: 'POST' }),
+
+      // Catalog: Product source-column mappings
+      listProductColumns: () =>
+        request<{ columns: AdminCatalogColumn[] }>(endpoints.adminCatalogProductColumns),
+      updateProductColumns: (columns: AdminCatalogColumn[]) =>
+        request<{ columns: AdminCatalogColumn[] }>(endpoints.adminCatalogProductColumns, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ columns }),
+        }),
     },
     pharmacist: {
       searchCustomers: (query: string) =>
