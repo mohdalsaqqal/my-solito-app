@@ -1,7 +1,9 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { AlertCircle, CheckCircle2, GripVertical, Image as ImageIcon, Plus, Save, Trash2, Type } from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+import { AlertCircle, AlignLeft, CheckCircle2, GripVertical, Image as ImageIcon, LayoutList, Plus, Save, Star, Trash2, Type } from 'lucide-react'
+import { parseHomeBlock } from '@real/app/lib/cms/blocks'
 import { AdminReleaseBlockRecord, AdminReleaseRecord } from '@real/app/lib/types'
 import { apiClient } from '../../../../apiClient'
 import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
@@ -16,22 +18,35 @@ const blockTypeOptions: Array<{ value: BlockType; label: string }> = [
   { value: 'promo_strip', label: 'Promo Strip' },
 ]
 
-function isPayloadValid(value: string) {
+const BLOCK_TYPE_LABELS: Record<string, string> = {
+  hero: 'Hero Banner',
+  product_slider: 'Product Slider',
+  brand_promo: 'Brand Promo',
+  promo_strip: 'Promo Strip',
+}
+
+function getPayloadError(value: string, expectedType?: BlockType) {
   try {
-    JSON.parse(value)
-    return true
+    const parsed = parseHomeBlock(JSON.parse(value))
+    if (!parsed) return 'Payload JSON does not match block schema.'
+    if (expectedType && parsed.type !== expectedType) return 'Payload type does not match selected block type.'
+    return null
   } catch {
-    return false
+    return 'Payload JSON is invalid.'
   }
 }
 
 function blockIcon(type: BlockType) {
   if (type === 'hero') return ImageIcon
-  if (type === 'promo_strip') return Type
+  if (type === 'product_slider') return LayoutList
+  if (type === 'brand_promo') return Star
+  if (type === 'promo_strip') return AlignLeft
   return Type
 }
 
 export default function AdminCmsBlocksPage() {
+  const searchParams = useSearchParams()
+  const requestedReleaseId = searchParams.get('releaseId')?.trim() ?? ''
   const [releases, setReleases] = useState<AdminReleaseRecord[]>([])
   const [releaseId, setReleaseId] = useState('')
   const [blocks, setBlocks] = useState<AdminReleaseBlockRecord[]>([])
@@ -40,6 +55,8 @@ export default function AdminCmsBlocksPage() {
   const [position, setPosition] = useState('1')
   const [type, setType] = useState<BlockType>('hero')
   const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const orderedBlocks = useMemo(
@@ -48,13 +65,15 @@ export default function AdminCmsBlocksPage() {
   )
 
   const selected = useMemo(() => blocks.find((item) => item.id === selectedBlockId) ?? null, [blocks, selectedBlockId])
+  const payloadError = useMemo(() => getPayloadError(payloadText, type), [payloadText, type])
 
   const loadReleases = async () => {
     try {
       const releaseRows = await apiClient.admin.listReleases()
       setReleases(releaseRows)
       if (!releaseId && releaseRows.length > 0) {
-        setReleaseId(releaseRows[0].id)
+        const preferred = releaseRows.find((row) => row.id === requestedReleaseId)
+        setReleaseId(preferred?.id ?? releaseRows[0].id)
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to load releases.')
@@ -76,7 +95,7 @@ export default function AdminCmsBlocksPage() {
 
   useEffect(() => {
     void loadReleases()
-  }, [])
+  }, [requestedReleaseId])
 
   useEffect(() => {
     if (!releaseId) return
@@ -125,12 +144,39 @@ export default function AdminCmsBlocksPage() {
         title='CMS Blocks'
         actions={
           <div style={{ display: 'flex', gap: spacing['8'] }}>
-            <Button tone='secondary'>Preview</Button>
-            <Button tone='primary'>Publish Changes</Button>
+            <Button
+              tone='secondary'
+              onClick={() => {
+                window.open('/', '_blank', 'noopener,noreferrer')
+              }}
+            >
+              Preview
+            </Button>
+            <Button
+              tone='primary'
+              disabled={!releaseId || publishing}
+              onClick={async () => {
+                if (!releaseId || publishing) return
+                setPublishing(true)
+                setError(null)
+                setMessage(null)
+                try {
+                  await apiClient.admin.publishRelease(releaseId)
+                  setMessage(`Release ${releaseId} published successfully.`)
+                } catch (cause) {
+                  setError(cause instanceof Error ? cause.message : 'Unable to publish release.')
+                } finally {
+                  setPublishing(false)
+                }
+              }}
+            >
+              {publishing ? 'Publishing...' : 'Publish Changes'}
+            </Button>
           </div>
         }
       />
       {error ? <p style={{ marginTop: 0, color: colors.danger }}>{error}</p> : null}
+      {message ? <p style={{ marginTop: 0, color: colors.success }}>{message}</p> : null}
 
       <div
         style={{
@@ -195,13 +241,23 @@ export default function AdminCmsBlocksPage() {
             </Button>
           </div>
 
+          <div style={{ marginBottom: spacing['12'] }}>
+            <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.semibold) }}>
+              Blocks ({blocks.length})
+            </span>
+          </div>
+
           {blocks.length === 0 ? (
-            <EmptyState title='No blocks yet' description='Add a block to begin composing this release.' />
+            <div style={{ padding: spacing['48'], textAlign: 'center', color: colors.textSecondary }}>
+              <LayoutList size={32} style={{ marginBottom: spacing['12'] }} />
+              <p style={{ margin: '0 0 4px', fontSize: typography.base, fontWeight: Number(fontWeights.semibold), color: colors.textPrimary }}>No blocks yet</p>
+              <p style={{ margin: 0, fontSize: typography.sm }}>Add your first block to start composing the home page.</p>
+            </div>
           ) : (
             <div style={{ display: 'grid', gap: spacing['8'], maxHeight: 540, overflowY: 'auto' }}>
               {orderedBlocks.map((block) => {
                 const Icon = blockIcon(block.type as BlockType)
-                const valid = isPayloadValid(JSON.stringify(block.payloadJson))
+                const valid = !getPayloadError(JSON.stringify(block.payloadJson), block.type as BlockType)
                 const active = selectedBlockId === block.id
                 return (
                   <button
@@ -251,12 +307,32 @@ export default function AdminCmsBlocksPage() {
                       <Icon size={14} color={colors.textSecondary} />
                     </span>
                     <span style={{ display: 'grid', gap: spacing['2'], flex: 1, minWidth: 0 }}>
-                      <span style={{ color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {block.type}
+                      <span style={{ display: 'flex', alignItems: 'center', gap: spacing['8'] }}>
+                        <span style={{ color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0 }}>
+                          {BLOCK_TYPE_LABELS[block.type] ?? block.type}
+                        </span>
+                        <span style={{ fontSize: typography.xs, fontWeight: Number(fontWeights.semibold), color: colors.textSecondary, backgroundColor: colors.surfaceMuted, borderRadius: radius.full, padding: '2px 8px', minWidth: 24, textAlign: 'center', flexShrink: 0 }}>
+                          {block.position}
+                        </span>
                       </span>
-                      <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
-                        Position {block.position}
-                      </span>
+                      {(() => {
+                        try {
+                          const payload = block.payloadJson as Record<string, unknown> | null
+                          const preview = (
+                            (payload?.title as Record<string, string> | undefined)?.en ??
+                            (payload?.text as Record<string, string> | undefined)?.en ??
+                            ''
+                          )
+                          const trimmed = preview.length > 40 ? preview.slice(0, 40) + '…' : preview
+                          return trimmed ? (
+                            <span style={{ color: colors.textSecondary, fontSize: typography.xs, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {trimmed}
+                            </span>
+                          ) : null
+                        } catch {
+                          return null
+                        }
+                      })()}
                     </span>
                     {valid ? (
                       <CheckCircle2 size={14} color={colors.success} />
@@ -313,9 +389,10 @@ export default function AdminCmsBlocksPage() {
                   </Button>
                   <Button
                     tone='primary'
-                    disabled={!isPayloadValid(payloadText)}
+                    disabled={Boolean(payloadError)}
                     onClick={async () => {
                       try {
+                        if (payloadError) return
                         await apiClient.admin.updateReleaseBlock(selected.id, {
                           type,
                           position: Number(position) || 1,
@@ -381,7 +458,7 @@ export default function AdminCmsBlocksPage() {
                   />
                 </label>
 
-                {!isPayloadValid(payloadText) ? (
+                {payloadError ? (
                   <div
                     style={{
                       display: 'flex',
@@ -396,7 +473,7 @@ export default function AdminCmsBlocksPage() {
                     }}
                   >
                     <AlertCircle size={14} />
-                    Payload JSON is invalid. Fix it before saving.
+                    {payloadError}
                   </div>
                 ) : null}
               </div>
@@ -419,3 +496,4 @@ const inputStyle = {
   paddingInline: spacing['12'],
   outline: 'none',
 } as const
+
