@@ -84,23 +84,23 @@ export default function AdminCmsReleasesPage() {
     return rows.filter((item) => `${item.id} ${item.environment} ${item.status}`.toLowerCase().includes(needle))
   }, [query, rows])
 
+  const createRelease = async () => {
+    try {
+      setError(null)
+      await apiClient.admin.createRelease({ environment, status: 'draft' })
+      await load()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to create release.')
+    }
+  }
+
   return (
     <PageContainer>
       <PageHeader
         title='CMS Releases'
-        subtitle='Manage content releases and scheduled updates.'
+        subtitle='Manage content releases for staging and production environments.'
         actions={
-          <Button
-            tone='primary'
-            onClick={async () => {
-              try {
-                await apiClient.admin.createRelease({ environment, status: 'draft' })
-                await load()
-              } catch (cause) {
-                setError(cause instanceof Error ? cause.message : 'Unable to create release.')
-              }
-            }}
-          >
+          <Button tone='primary' onClick={() => void createRelease()}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
               <Plus size={14} color={colors.textInverted} />
               New Release
@@ -145,13 +145,39 @@ export default function AdminCmsReleasesPage() {
               />
             </div>
 
-            <div style={{ display: 'inline-flex', gap: spacing['8'] }}>
-              <Button tone={environment === 'staging' ? 'primary' : 'secondary'} onClick={() => setEnvironment('staging')}>
-                Staging
-              </Button>
-              <Button tone={environment === 'production' ? 'primary' : 'secondary'} onClick={() => setEnvironment('production')}>
-                Production
-              </Button>
+            <div
+              style={{
+                display: 'inline-flex',
+                backgroundColor: colors.surfaceMuted,
+                borderRadius: radius.full,
+                padding: '4px',
+                gap: 2,
+              }}
+            >
+              {(['staging', 'production'] as const).map((env) => (
+                <button
+                  key={env}
+                  type='button'
+                  onClick={() => setEnvironment(env)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: 'none',
+                    cursor: 'pointer',
+                    borderRadius: radius.full,
+                    paddingBlock: spacing['4'],
+                    paddingInline: spacing['12'],
+                    fontSize: typography.sm,
+                    fontWeight: Number(fontWeights.medium),
+                    backgroundColor: environment === env ? colors.brandPrimary : 'transparent',
+                    color: environment === env ? '#fff' : colors.textSecondary,
+                    transition: 'background-color 0.15s, color 0.15s',
+                  }}
+                >
+                  {env.charAt(0).toUpperCase() + env.slice(1)}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -160,7 +186,7 @@ export default function AdminCmsReleasesPage() {
               title='No releases found'
               description='Create your first release to manage CMS publishing flow.'
               action={
-                <Button tone='primary'>
+                <Button tone='primary' onClick={() => void createRelease()}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
                     <FileText size={14} color={colors.textInverted} />
                     Create release
@@ -173,7 +199,7 @@ export default function AdminCmsReleasesPage() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr>
-                    {['Release Name', 'Status', 'Scheduled Date', 'Last Updated', 'Actions'].map((head) => (
+                    {['Release Name', 'Environment', 'Status', 'Scheduled Date', 'Last Updated', 'Actions'].map((head) => (
                       <th
                         key={head}
                         scope='col'
@@ -200,10 +226,32 @@ export default function AdminCmsReleasesPage() {
                   {filtered.map((release) => (
                     <tr key={release.id}>
                       <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                        <div style={{ display: 'grid', gap: spacing['4'] }}>
-                          <span style={{ color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>{release.id}</span>
-                          <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>{release.environment}</span>
-                        </div>
+                        <span style={{ color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>{release.id}</span>
+                      </td>
+                      <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
+                        <span
+                          style={
+                            release.environment === 'production'
+                              ? {
+                                  backgroundColor: '#fef2f2',
+                                  color: '#dc2626',
+                                  borderRadius: radius.full,
+                                  padding: '2px 10px',
+                                  fontSize: typography.xs,
+                                  fontWeight: Number(fontWeights.medium),
+                                }
+                              : {
+                                  backgroundColor: '#eff6ff',
+                                  color: '#2563eb',
+                                  borderRadius: radius.full,
+                                  padding: '2px 10px',
+                                  fontSize: typography.xs,
+                                  fontWeight: Number(fontWeights.medium),
+                                }
+                          }
+                        >
+                          {release.environment === 'production' ? 'Production' : 'Staging'}
+                        </span>
                       </td>
                       <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
                         <StatusPill tone={release.status === 'published' ? 'success' : 'warning'}>
@@ -227,7 +275,12 @@ export default function AdminCmsReleasesPage() {
                             (validation ? validation.ok : false)
                           return (
                         <div style={{ display: 'inline-flex', gap: spacing['8'] }}>
-                          <Button tone='secondary'>
+                          <Button
+                            tone='secondary'
+                            onClick={() => {
+                              window.location.href = `/admin/marketing/cms/blocks?releaseId=${encodeURIComponent(release.id)}`
+                            }}
+                          >
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
                               <Edit2 size={14} color={colors.textSecondary} />
                               Edit
@@ -268,3 +321,4 @@ export default function AdminCmsReleasesPage() {
     </PageContainer>
   )
 }
+
