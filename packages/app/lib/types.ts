@@ -15,6 +15,311 @@ export type Product = {
   manualRelatedIds?: string[]
   crossSellIds?: string[]
   completeSetIds?: string[]
+  attributes?: Record<string, unknown>
+  sourceMeta?: {
+    system: string
+    table?: string
+    schemaVersion: string
+    externalId?: string
+    syncedAt?: string
+    mappedColumns?: string[]
+  }
+}
+
+export type AdminColumnType =
+  | 'string'
+  | 'number'
+  | 'money'
+  | 'date'
+  | 'status'
+  | 'image'
+  | 'boolean'
+  | 'badge'
+
+export type AdminColumnDefinition = {
+  key: string
+  label: string
+  type: AdminColumnType
+  sortable?: boolean
+  filterable?: boolean
+  source: 'core' | 'computed' | 'custom'
+}
+
+export type AdminFieldRegistry = {
+  coreFields: AdminColumnDefinition[]
+  computedFields: AdminColumnDefinition[]
+  customFields: AdminColumnDefinition[]
+}
+
+export type AdminPageInfo = {
+  hasNextPage: boolean
+  hasPreviousPage: boolean
+  startCursor?: string
+  endCursor?: string
+}
+
+export type AdminPagedResponse<T> = {
+  nodes: T[]
+  pageInfo: AdminPageInfo
+}
+
+export type ProductRow = {
+  id: string
+  title: string
+  brand?: string
+  category?: string
+  price?: number
+  comparePrice?: number
+  inventory?: number
+  status?: string
+  sku?: string
+  image?: string
+  vendor?: string
+  updatedAt?: string
+  customFields?: Record<string, unknown>
+}
+
+export type OrderRow = {
+  id: string
+  orderNumber: string
+  customerName?: string
+  customerEmail?: string
+  total?: number
+  currency?: string
+  paymentStatus?: string
+  fulfillmentStatus?: string
+  orderStatus?: string
+  vendor?: string
+  itemCount?: number
+  createdAt?: string
+  updatedAt?: string
+  customFields?: Record<string, unknown>
+}
+
+export type InventoryRow = {
+  id: string
+  sku?: string
+  title?: string
+  variantTitle?: string
+  warehouse?: string
+  available?: number
+  reserved?: number
+  incoming?: number
+  lowStockThreshold?: number
+  stockStatus?: string
+  vendor?: string
+  updatedAt?: string
+  customFields?: Record<string, unknown>
+}
+
+export type VendorRow = {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  status?: string
+  commissionRate?: number
+  productCount?: number
+  orderCount?: number
+  payoutStatus?: string
+  createdAt?: string
+  updatedAt?: string
+  customFields?: Record<string, unknown>
+}
+
+export type AdminSavedView = {
+  id: string
+  entity: 'products' | 'orders' | 'inventory' | 'vendors'
+  name: string
+  filters?: Record<string, unknown>
+  sort?: {
+    key: string
+    direction: 'asc' | 'desc'
+  }
+  visibleColumns: string[]
+}
+
+export type AdminJobEntity = AdminSavedView['entity'] | 'system'
+
+export type AdminJobType =
+  | 'export'
+  | 'import'
+  | 'bulk-update'
+  | 'stock-adjust'
+  | 'transfer'
+  | 'vendor-approval-batch'
+  | 'payout-run'
+
+export type AdminJobStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'cancelled'
+
+export type AdminJobRecord = {
+  id: string
+  type: AdminJobType
+  entity: AdminJobEntity
+  status: AdminJobStatus
+  createdAt: string
+  updatedAt: string
+  summary: string
+  requestedBy: {
+    userId: string
+    email: string
+  }
+  targetIds: string[]
+  input?: Record<string, unknown>
+  result?: Record<string, unknown>
+}
+
+export type AdminJobCreateInput = {
+  type: AdminJobType
+  entity: AdminJobEntity
+  summary: string
+  targetIds?: string[]
+  input?: Record<string, unknown>
+}
+
+export type AdminListInput = {
+  limit: number
+  cursor?: string
+  search?: string
+  filters?: Record<string, unknown>
+  sort?: {
+    key: string
+    direction: 'asc' | 'desc'
+  }
+  fields?: string[]
+  viewId?: string
+}
+
+export type CommerceCapabilities = {
+  products: {
+    bulkEdit: boolean
+    variantImages: boolean
+    advancedVariants: boolean
+  }
+  orders: {
+    refunds: boolean
+    exchanges: boolean
+    splitShipments: boolean
+  }
+  inventory: {
+    multiWarehouse: boolean
+    reservations: boolean
+    transfers: boolean
+  }
+  vendors: {
+    marketplace: boolean
+    approvals: boolean
+    commissions: boolean
+    payouts: boolean
+  }
+}
+
+export type ProductDetail = ProductRow & {
+  description?: string
+  currency?: string
+  sales?: number
+  variantCount?: number
+  sourceColumns?: string[]
+  createdAt?: string
+}
+
+export type ProductUpsertInput = {
+  title: string
+  brand?: string
+  category?: string
+  price?: number
+  comparePrice?: number
+  inventory?: number
+  status?: string
+  sku?: string
+  image?: string
+  vendor?: string
+  description?: string
+  currency?: string
+  sales?: number
+  variantCount?: number
+  customFields?: Record<string, unknown>
+}
+
+export type ProductActionInput = {
+  action: 'activate' | 'deactivate' | 'archive' | 'assign-category' | 'assign-vendor'
+  input?: Record<string, unknown>
+}
+
+export type OrderDetail = OrderRow & {
+  notes?: string
+  tags?: string[]
+  shippingAddress?: string
+  billingAddress?: string
+  lineItems?: Array<{
+    id: string
+    sku?: string
+    title: string
+    quantity: number
+    price: number
+  }>
+}
+
+export type OrderUpdateInput = {
+  paymentStatus?: string
+  fulfillmentStatus?: string
+  orderStatus?: string
+  vendor?: string
+  notes?: string
+  tags?: string[]
+  customFields?: Record<string, unknown>
+}
+
+export type OrderActionInput = {
+  action: 'mark-review' | 'assign-tag' | 'refund' | 'exchange' | 'split-shipment'
+  input?: Record<string, unknown>
+}
+
+export type InventoryDetail = InventoryRow & {
+  locationNotes?: string
+  lastAdjustmentAt?: string
+  transferHistory?: Array<{
+    id: string
+    fromWarehouse: string
+    toWarehouse: string
+    quantity: number
+    createdAt: string
+  }>
+}
+
+export type InventoryUpdateInput = {
+  warehouse?: string
+  lowStockThreshold?: number
+  vendor?: string
+  locationNotes?: string
+  customFields?: Record<string, unknown>
+}
+
+export type InventoryActionInput = {
+  action: 'adjust' | 'transfer' | 'assign-warehouse'
+  input?: Record<string, unknown>
+}
+
+export type VendorDetail = VendorRow & {
+  notes?: string
+  approvalStatus?: 'approved' | 'pending' | 'rejected'
+  productIds?: string[]
+}
+
+export type VendorUpdateInput = {
+  name?: string
+  email?: string
+  phone?: string
+  status?: string
+  commissionRate?: number
+  payoutStatus?: string
+  notes?: string
+  customFields?: Record<string, unknown>
+}
+
+export type VendorActionInput = {
+  action: 'approve' | 'reject' | 'change-status'
+  input?: Record<string, unknown>
 }
 
 export type Cart = {
@@ -354,6 +659,38 @@ export type CMSHome = {
       logoUrl?: string
     }>
     topBrandsTitle?: LocalizedString
+    educationBanner?: {
+      enabled?: boolean
+      title: LocalizedString
+      subtitle?: LocalizedString
+      ctaLabel?: LocalizedString
+      href?: string
+      imageUrl?: string
+    }
+    ugcGallery?: {
+      enabled?: boolean
+      title?: LocalizedString
+      items: Array<{
+        id: string
+        imageUrl: string
+        caption?: LocalizedString
+        href?: string
+        productId?: string
+      }>
+    }
+    newsletterCta?: {
+      enabled?: boolean
+      title?: LocalizedString
+      subtitle?: LocalizedString
+      ctaLabel?: LocalizedString
+      href?: string
+    }
+    personalization?: {
+      enabled?: boolean
+      mode?: 'static' | 'rule-based' | 'ai'
+      recommendedTitle?: LocalizedString
+    }
+    homeBlocks?: Array<Record<string, unknown>>
   }
   identity?: {
     customer?: {
@@ -696,6 +1033,18 @@ export type AdminBrandSpotlightRecord = HomeBrandSpotlightConfig & {
   } | null
 }
 
+export type HomeOfferBannerConfig = NonNullable<
+  NonNullable<CMSHome['marketing']>['offerBanners']
+>[number]
+
+export type AdminOfferBannerRecord = HomeOfferBannerConfig & {
+  updatedAt: string | null
+  updatedBy: {
+    userId: string
+    email: string
+  } | null
+}
+
 export type AdminUserControlRecord = {
   id: string
   name: string
@@ -879,4 +1228,36 @@ export type PharmacistConsultationDraft = {
   notes?: string
   metrics: PharmacistConsultationMetricInput[]
   recommendedProducts: AccountTestRecommendedProduct[]
+}
+
+export type AdminCategoryRecord = {
+  id: string
+  nameEn: string
+  nameAr: string
+  slug: string
+  parentId?: string
+  productCount: number
+  sortOrder: number
+  status: 'visible' | 'hidden'
+  sourceId?: string
+  image?: string
+  metaTitle?: string
+  metaDescription?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type AdminBrandRecord = {
+  id: string
+  nameEn: string
+  nameAr: string
+  slug: string
+  productCount: number
+  status: 'visible' | 'hidden'
+  sourceId?: string
+  logoUrl?: string
+  description?: string
+  websiteUrl?: string
+  createdAt: string
+  updatedAt: string
 }

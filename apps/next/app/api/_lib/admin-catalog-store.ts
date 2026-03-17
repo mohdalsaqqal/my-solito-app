@@ -1,37 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import type { AdminCategoryRecord, AdminBrandRecord } from '@real/app/lib/types'
 
-export type AdminCategoryRecord = {
-  id: string
-  nameEn: string
-  nameAr: string
-  slug: string
-  parentId?: string
-  productCount: number
-  sortOrder: number
-  status: 'visible' | 'hidden'
-  sourceId?: string
-  image?: string
-  metaTitle?: string
-  metaDescription?: string
-  createdAt: string
-  updatedAt: string
-}
-
-export type AdminBrandRecord = {
-  id: string
-  nameEn: string
-  nameAr: string
-  slug: string
-  productCount: number
-  status: 'visible' | 'hidden'
-  sourceId?: string
-  logoUrl?: string
-  description?: string
-  websiteUrl?: string
-  createdAt: string
-  updatedAt: string
-}
+export type { AdminCategoryRecord, AdminBrandRecord }
 
 type AdminCatalogState = {
   categories: AdminCategoryRecord[]

@@ -9,6 +9,7 @@ import {
   AdminReleaseBlockRecord,
   AdminReleaseRecord,
   AdminBrandSpotlightRecord,
+  AdminOfferBannerRecord,
   AdminUserControlRecord,
   AuthAck,
   AuthSession,
@@ -40,6 +41,31 @@ import {
   LocalizedString,
   CheckoutQuoteInput,
   CheckoutQuoteResponse,
+  AdminFieldRegistry,
+  AdminPagedResponse,
+  ProductRow,
+  OrderRow,
+  InventoryRow,
+  VendorRow,
+  AdminSavedView,
+  AdminListInput,
+  CommerceCapabilities,
+  ProductDetail,
+  ProductUpsertInput,
+  ProductActionInput,
+  OrderDetail,
+  OrderUpdateInput,
+  OrderActionInput,
+  InventoryDetail,
+  InventoryUpdateInput,
+  InventoryActionInput,
+  VendorDetail,
+  VendorUpdateInput,
+  VendorActionInput,
+  AdminJobRecord,
+  AdminJobCreateInput,
+  AdminCategoryRecord,
+  AdminBrandRecord,
 } from './types'
 
 export type ApiClientConfig = {
@@ -286,6 +312,154 @@ export const createApiClient = (cfg: ApiClientConfig) => {
       qr: () => request<AccountQr>(endpoints.accountQr),
     },
     admin: {
+      listProducts: (input: AdminListInput) => {
+        const params = new URLSearchParams()
+        params.set('limit', String(input.limit || 25))
+        if (input.cursor) params.set('cursor', input.cursor)
+        if (input.search) params.set('search', input.search)
+        if (input.sort?.key) params.set('sortKey', input.sort.key)
+        if (input.sort?.direction) params.set('sortDir', input.sort.direction)
+        if (input.fields?.length) params.set('fields', input.fields.join(','))
+        if (input.filters && Object.keys(input.filters).length > 0) {
+          params.set('filters', JSON.stringify(input.filters))
+        }
+        if (input.viewId) params.set('viewId', input.viewId)
+        return request<AdminPagedResponse<ProductRow>>(
+          `${endpoints.adminProducts}?${params.toString()}`
+        )
+      },
+      getProduct: (id: string) => request<ProductDetail>(endpoints.adminProduct(id)),
+      createProduct: (input: ProductUpsertInput) =>
+        request<ProductDetail>(endpoints.adminProductCreate, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      updateProduct: (id: string, input: Partial<ProductUpsertInput>) =>
+        request<ProductDetail>(endpoints.adminProduct(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      runProductAction: (id: string, input: ProductActionInput) =>
+        request<ProductDetail>(endpoints.adminProductAction(id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      listOrdersPaged: (input: AdminListInput) => {
+        const params = new URLSearchParams()
+        params.set('limit', String(input.limit || 25))
+        if (input.cursor) params.set('cursor', input.cursor)
+        if (input.search) params.set('search', input.search)
+        if (input.sort?.key) params.set('sortKey', input.sort.key)
+        if (input.sort?.direction) params.set('sortDir', input.sort.direction)
+        if (input.fields?.length) params.set('fields', input.fields.join(','))
+        if (input.filters && Object.keys(input.filters).length > 0) {
+          params.set('filters', JSON.stringify(input.filters))
+        }
+        if (input.viewId) params.set('viewId', input.viewId)
+        return request<AdminPagedResponse<OrderRow>>(`${endpoints.adminOrders}?${params.toString()}`)
+      },
+      getOrder: (id: string) => request<OrderDetail>(endpoints.adminOrder(id)),
+      updateOrder: (id: string, input: Partial<OrderUpdateInput>) =>
+        request<OrderDetail>(endpoints.adminOrder(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      runOrderAction: (id: string, input: OrderActionInput) =>
+        request<OrderDetail>(endpoints.adminOrderAction(id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      listInventory: (input: AdminListInput) => {
+        const params = new URLSearchParams()
+        params.set('limit', String(input.limit || 25))
+        if (input.cursor) params.set('cursor', input.cursor)
+        if (input.search) params.set('search', input.search)
+        if (input.sort?.key) params.set('sortKey', input.sort.key)
+        if (input.sort?.direction) params.set('sortDir', input.sort.direction)
+        if (input.fields?.length) params.set('fields', input.fields.join(','))
+        if (input.filters && Object.keys(input.filters).length > 0) {
+          params.set('filters', JSON.stringify(input.filters))
+        }
+        if (input.viewId) params.set('viewId', input.viewId)
+        return request<AdminPagedResponse<InventoryRow>>(
+          `${endpoints.adminInventory}?${params.toString()}`
+        )
+      },
+      getInventory: (id: string) => request<InventoryDetail>(endpoints.adminInventoryItem(id)),
+      updateInventory: (id: string, input: Partial<InventoryUpdateInput>) =>
+        request<InventoryDetail>(endpoints.adminInventoryItem(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      runInventoryAction: (id: string, input: InventoryActionInput) =>
+        request<InventoryDetail>(endpoints.adminInventoryAction(id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      listVendors: (input: AdminListInput) => {
+        const params = new URLSearchParams()
+        params.set('limit', String(input.limit || 25))
+        if (input.cursor) params.set('cursor', input.cursor)
+        if (input.search) params.set('search', input.search)
+        if (input.sort?.key) params.set('sortKey', input.sort.key)
+        if (input.sort?.direction) params.set('sortDir', input.sort.direction)
+        if (input.fields?.length) params.set('fields', input.fields.join(','))
+        if (input.filters && Object.keys(input.filters).length > 0) {
+          params.set('filters', JSON.stringify(input.filters))
+        }
+        if (input.viewId) params.set('viewId', input.viewId)
+        return request<AdminPagedResponse<VendorRow>>(`${endpoints.adminVendors}?${params.toString()}`)
+      },
+      getVendor: (id: string) => request<VendorDetail>(endpoints.adminVendor(id)),
+      updateVendor: (id: string, input: Partial<VendorUpdateInput>) =>
+        request<VendorDetail>(endpoints.adminVendor(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      runVendorAction: (id: string, input: VendorActionInput) =>
+        request<VendorDetail>(endpoints.adminVendorAction(id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      productFields: () => request<AdminFieldRegistry>(endpoints.adminProductFields),
+      orderFields: () => request<AdminFieldRegistry>(endpoints.adminOrderFields),
+      inventoryFields: () => request<AdminFieldRegistry>(endpoints.adminInventoryFields),
+      vendorFields: () => request<AdminFieldRegistry>(endpoints.adminVendorFields),
+      capabilities: () => request<CommerceCapabilities>(endpoints.adminCapabilities),
+      listJobs: () => request<AdminJobRecord[]>(endpoints.adminJobs),
+      getJob: (id: string) => request<AdminJobRecord>(endpoints.adminJob(id)),
+      createJob: (input: AdminJobCreateInput) =>
+        request<AdminJobRecord>(endpoints.adminJobs, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      listSavedViews: (entity?: AdminSavedView['entity']) =>
+        request<AdminSavedView[]>(
+          entity ? `${endpoints.adminSavedViews}?entity=${encodeURIComponent(entity)}` : endpoints.adminSavedViews
+        ),
+      upsertSavedView: (view: AdminSavedView) =>
+        request<AdminSavedView>(endpoints.adminSavedViews, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ view }),
+        }),
+      deleteSavedViewById: (id: string) =>
+        request<{ id: string; deleted: true }>(
+          `${endpoints.adminSavedViews}?id=${encodeURIComponent(id)}`,
+          {
+            method: 'DELETE',
+          }
+        ),
       updateOrderStatus: (id: string, status: OrderStatus) =>
         request<OrderSummary>(endpoints.adminOrderStatus(id), {
           method: 'POST',
@@ -357,6 +531,39 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         }),
       deleteBrandSpotlight: (id: string) =>
         request<{ id: string; deleted: true }>(endpoints.adminCmsBrandSpotlight(id), {
+          method: 'DELETE',
+        }),
+      listOfferBanners: () =>
+        request<AdminOfferBannerRecord[]>(endpoints.adminCmsOfferBanners),
+      createOfferBanner: (input: {
+        id?: string
+        enabled?: boolean
+        imageUrl?: string
+        href?: string
+        ctaLabel?: { en: string; ar: string }
+      }) =>
+        request<AdminOfferBannerRecord>(endpoints.adminCmsOfferBanners, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      updateOfferBanner: (
+        id: string,
+        input: {
+          enabled?: boolean
+          imageUrl?: string
+          href?: string
+          ctaLabel?: { en: string; ar: string }
+          position?: number
+        }
+      ) =>
+        request<AdminOfferBannerRecord>(endpoints.adminCmsOfferBanner(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      deleteOfferBanner: (id: string) =>
+        request<{ id: string; deleted: true }>(endpoints.adminCmsOfferBanner(id), {
           method: 'DELETE',
         }),
       listUsers: () => request<AdminUserControlRecord[]>(endpoints.adminUsers),
@@ -444,6 +651,35 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         request<{ id: string; deleted: true }>(endpoints.adminReleaseBlock(id), {
           method: 'DELETE',
         }),
+      getProductColumns: () =>
+        request<{
+          columns: Array<{
+            id: string
+            label: string
+            path: string
+            mode: 'custom' | 'source'
+          }>
+        }>(endpoints.adminCatalogProductColumns),
+      setProductColumns: (
+        columns: Array<{
+          id: string
+          label: string
+          path: string
+          mode: 'custom' | 'source'
+        }>
+      ) =>
+        request<{
+          columns: Array<{
+            id: string
+            label: string
+            path: string
+            mode: 'custom' | 'source'
+          }>
+        }>(endpoints.adminCatalogProductColumns, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ columns }),
+        }),
       listProductQueries: () => request<ProductQuery[]>(endpoints.adminProductQueries),
       createProductQuery: (input: {
         slug: string
@@ -498,6 +734,46 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         request<{ id: string; deleted: true }>(endpoints.adminPromotion(id), {
           method: 'DELETE',
         }),
+
+      // Catalog: Categories
+      listCategories: () =>
+        request<{ categories: AdminCategoryRecord[] }>(endpoints.adminCategories),
+      createCategory: (input: Partial<AdminCategoryRecord>) =>
+        request<{ category: AdminCategoryRecord }>(endpoints.adminCategories, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      updateCategory: (id: string, input: Partial<AdminCategoryRecord>) =>
+        request<{ category: AdminCategoryRecord }>(endpoints.adminCategory(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      deleteCategory: (id: string) =>
+        request<{ deleted: boolean }>(endpoints.adminCategory(id), { method: 'DELETE' }),
+      syncCategories: () =>
+        request<{ synced: { created: number; updated: number } }>(endpoints.adminCategoriesSync, { method: 'POST' }),
+
+      // Catalog: Brands (admin write)
+      listBrandsAdmin: () =>
+        request<{ brands: AdminBrandRecord[] }>(endpoints.adminBrandsAdmin),
+      createBrand: (input: Partial<AdminBrandRecord>) =>
+        request<{ brand: AdminBrandRecord }>(endpoints.adminBrandsAdmin, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      updateBrand: (id: string, input: Partial<AdminBrandRecord>) =>
+        request<{ brand: AdminBrandRecord }>(endpoints.adminBrandAdmin(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      deleteBrand: (id: string) =>
+        request<{ deleted: boolean }>(endpoints.adminBrandAdmin(id), { method: 'DELETE' }),
+      syncBrands: () =>
+        request<{ synced: { created: number; updated: number } }>(endpoints.adminBrandsAdminSync, { method: 'POST' }),
     },
     pharmacist: {
       searchCustomers: (query: string) =>
