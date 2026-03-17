@@ -94,6 +94,7 @@ export default function AdminCmsQueriesPage() {
     <PageContainer>
       <PageHeader
         title='CMS Queries'
+        subtitle='Reusable product filter sets — used by CMS blocks to populate product sliders.'
         actions={
           <Button tone='secondary' onClick={downloadCsv}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
@@ -141,23 +142,30 @@ export default function AdminCmsQueriesPage() {
               />
             </div>
 
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-              style={{
-                minHeight: spacing['40'],
-                borderRadius: radius.xl,
-                border: `1px solid ${colors.border}`,
-                backgroundColor: colors.surface,
-                color: colors.textPrimary,
-                fontSize: typography.sm,
-                paddingInline: spacing['12'],
-              }}
-            >
-              <option value='all'>All statuses</option>
-              <option value='active'>Active</option>
-              <option value='inactive'>Inactive</option>
-            </select>
+            <div style={{ display: 'flex', gap: spacing['4'], backgroundColor: colors.surfaceMuted, borderRadius: radius.full, padding: '4px' }}>
+              {(['all', 'active', 'inactive'] as const).map((val) => {
+                const label = val === 'all' ? 'All' : val === 'active' ? 'Active' : 'Inactive'
+                return (
+                  <button
+                    key={val}
+                    type='button'
+                    onClick={() => setStatusFilter(val)}
+                    style={{
+                      border: 0,
+                      cursor: 'pointer',
+                      borderRadius: radius.full,
+                      padding: '6px 16px',
+                      fontSize: typography.sm,
+                      fontWeight: Number(fontWeights.medium),
+                      backgroundColor: statusFilter === val ? colors.brandPrimary : 'transparent',
+                      color: statusFilter === val ? '#fff' : colors.textSecondary,
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {filtered.length === 0 ? (
@@ -195,21 +203,37 @@ export default function AdminCmsQueriesPage() {
                     <tr key={item.slug}>
                       <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
                         <div style={{ display: 'grid', gap: spacing['4'] }}>
-                          <span style={{ color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>{item.slug}</span>
+                          <span style={{ color: colors.textPrimary, fontWeight: Number(fontWeights.medium), fontFamily: 'monospace' }}>{item.slug}</span>
                           <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
                             {item.title?.en ?? '-'}
                           </span>
                         </div>
                       </td>
                       <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                        <StatusPill tone={item.active ? 'success' : 'warning'}>
+                        <StatusPill tone={item.active ? 'success' : 'neutral'}>
                           {item.active ? 'Active' : 'Inactive'}
                         </StatusPill>
                       </td>
                       <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                        <code style={{ color: colors.textSecondary, fontSize: typography.xs, fontFamily: 'monospace' }}>
-                          {JSON.stringify(item.filters)}
-                        </code>
+                        {(() => {
+                          try {
+                            const f = typeof item.filters === 'string' ? JSON.parse(item.filters) : item.filters
+                            const keys = Object.keys(f).filter((k) => f[k] !== undefined && f[k] !== null && (!Array.isArray(f[k]) || f[k].length > 0))
+                            return keys.length === 0
+                              ? <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>None</span>
+                              : (
+                                <div style={{ display: 'flex', gap: spacing['4'], flexWrap: 'wrap' }}>
+                                  {keys.map((k) => (
+                                    <span key={k} style={{ fontSize: typography.xs, backgroundColor: colors.surfaceMuted, borderRadius: radius.full, padding: '2px 8px', color: colors.textSecondary }}>
+                                      {k}
+                                    </span>
+                                  ))}
+                                </div>
+                              )
+                          } catch {
+                            return <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>—</span>
+                          }
+                        })()}
                       </td>
                       <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, textAlign: 'end' }}>
                         <div style={{ display: 'inline-flex', gap: spacing['4'] }}>
@@ -262,3 +286,4 @@ export default function AdminCmsQueriesPage() {
     </PageContainer>
   )
 }
+
