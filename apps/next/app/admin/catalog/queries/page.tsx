@@ -44,7 +44,7 @@ export default function AdminCatalogQueriesPage() {
       setRows(queries)
       setCategories(categoryRows as CategoryRow[])
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to load catalog queries.')
+      setError(cause instanceof Error ? cause.message : 'Unable to load collections.')
     }
   }
 
@@ -68,7 +68,7 @@ export default function AdminCatalogQueriesPage() {
   }, [jsonText, slug])
 
   const removeQuery = async (querySlug: string) => {
-    const confirmed = window.confirm(`Delete query "${querySlug}"?`)
+    const confirmed = window.confirm(`Delete collection "${querySlug}"?`)
     if (!confirmed) return
     setBusySlug(querySlug)
     setError(null)
@@ -76,7 +76,7 @@ export default function AdminCatalogQueriesPage() {
       await apiClient.admin.deleteProductQuery(querySlug)
       await load()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to delete query.')
+      setError(cause instanceof Error ? cause.message : 'Unable to delete collection.')
     } finally {
       setBusySlug(null)
     }
@@ -88,9 +88,9 @@ export default function AdminCatalogQueriesPage() {
     setPreviewMessage(null)
     try {
       const products = await apiClient.products.list(item.filters)
-      setPreviewMessage(`Preview ${item.slug}: ${products.length} matching product(s).`)
+      setPreviewMessage(`Collection "${item.slug}": ${products.length} matching product(s).`)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to preview query results.')
+      setError(cause instanceof Error ? cause.message : 'Unable to preview collection results.')
     } finally {
       setBusySlug(null)
     }
@@ -98,7 +98,7 @@ export default function AdminCatalogQueriesPage() {
 
   return (
     <PageContainer>
-      <PageHeader title='Catalog / Queries' subtitle='Reusable ProductFilter presets used by rails and CMS.' />
+      <PageHeader title='Collections' subtitle='Curated product collections — rule-based or manual product groups.' />
       {error ? <p style={{ marginTop: 0, color: colors.danger }}>{error}</p> : null}
       {previewMessage ? <p style={{ marginTop: 0, color: colors.textSecondary }}>{previewMessage}</p> : null}
 
@@ -116,7 +116,7 @@ export default function AdminCatalogQueriesPage() {
                     textTransform: 'uppercase',
                   }}
                 >
-                  Query Slug
+                  Collection Slug
                 </label>
                 <input
                   value={slug}
@@ -160,17 +160,18 @@ export default function AdminCatalogQueriesPage() {
                     type='button'
                     onClick={() => setIsBuilderMode(true)}
                     style={{
-                      border: 0,
-                      backgroundColor: isBuilderMode ? colors.surface : 'transparent',
-                      color: isBuilderMode ? colors.textPrimary : colors.textSecondary,
-                      borderRadius: radius.md,
-                      padding: `${spacing['8']}px ${spacing['12']}px`,
+                      border: 'none',
+                      backgroundColor: isBuilderMode ? colors.brandPrimary : 'transparent',
+                      color: isBuilderMode ? '#fff' : colors.textSecondary,
+                      borderRadius: 9999,
+                      padding: '6px 16px',
                       fontSize: typography.xs,
                       fontWeight: Number(fontWeights.semibold),
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: spacing['4'],
                       cursor: 'pointer',
+                      transition: 'background 0.15s',
                     }}
                   >
                     <Sliders size={14} />
@@ -180,17 +181,18 @@ export default function AdminCatalogQueriesPage() {
                     type='button'
                     onClick={() => setIsBuilderMode(false)}
                     style={{
-                      border: 0,
-                      backgroundColor: !isBuilderMode ? colors.surface : 'transparent',
-                      color: !isBuilderMode ? colors.textPrimary : colors.textSecondary,
-                      borderRadius: radius.md,
-                      padding: `${spacing['8']}px ${spacing['12']}px`,
+                      border: 'none',
+                      backgroundColor: !isBuilderMode ? colors.brandPrimary : 'transparent',
+                      color: !isBuilderMode ? '#fff' : colors.textSecondary,
+                      borderRadius: 9999,
+                      padding: '6px 16px',
                       fontSize: typography.xs,
                       fontWeight: Number(fontWeights.semibold),
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: spacing['4'],
                       cursor: 'pointer',
+                      transition: 'background 0.15s',
                     }}
                   >
                     <Code size={14} />
@@ -354,27 +356,27 @@ export default function AdminCatalogQueriesPage() {
                       setSlug('')
                       await load()
                     } catch (cause) {
-                      setError(cause instanceof Error ? cause.message : 'Unable to create query.')
+                      setError(cause instanceof Error ? cause.message : 'Unable to create collection.')
                     }
                   }}
                 >
-                  Create query
+                  Save collection
                 </Button>
               </div>
             </div>
 
             <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: spacing['24'] }}>
               <p style={{ margin: `0 0 ${spacing['12']}px`, color: colors.textSecondary, fontSize: typography.sm }}>
-                All filtering is centralized through ProductProvider.list(filters).
+                All filtering is centralized through ProductProvider.list(filters). Each collection slug is reusable by rails and CMS blocks.
               </p>
               {rows.length === 0 ? (
-                <EmptyState title='No query presets' description='Create your first query preset.' />
+                <EmptyState title='No collections yet' description='Create your first product collection using the builder above.' />
               ) : (
                 <TableShell>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr>
-                        {['Slug', 'Active', 'Filters', ''].map((head) => (
+                        {['Collection', 'Status', 'Filters', ''].map((head) => (
                           <th
                             key={head}
                             scope='col'
@@ -414,7 +416,7 @@ export default function AdminCatalogQueriesPage() {
                           <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, textAlign: 'end' }}>
                             <button
                               type='button'
-                              aria-label={`Delete query ${item.slug}`}
+                              aria-label={`Delete collection ${item.slug}`}
                               disabled={busySlug === item.slug}
                               onClick={() => void removeQuery(item.slug)}
                               style={{
@@ -432,7 +434,7 @@ export default function AdminCatalogQueriesPage() {
                             </button>
                             <button
                               type='button'
-                              aria-label={`Preview query ${item.slug}`}
+                              aria-label={`Preview collection ${item.slug}`}
                               disabled={busySlug === item.slug}
                               onClick={() => void previewQuery(item)}
                               style={{
@@ -462,3 +464,4 @@ export default function AdminCatalogQueriesPage() {
     </PageContainer>
   )
 }
+
