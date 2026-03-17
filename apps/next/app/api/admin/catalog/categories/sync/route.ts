@@ -1,11 +1,11 @@
-import { requireAdminDomainSession } from '../../../../../../_lib/request-auth'
-import { fail, ok } from '../../../../../../_lib/response'
+import { requireAdminDomainSession } from '../../../../_lib/request-auth'
+import { fail, ok } from '../../../../_lib/response'
 import {
   readAdminCatalogState,
   writeAdminCatalogState,
   slugify,
   AdminCategoryRecord,
-} from '../../../../../../_lib/admin-catalog-store'
+} from '../../../../_lib/admin-catalog-store'
 import { generatedMockProductRows } from '@real/adapters/mock/product/generated-mock-erp-data'
 
 type SourceRow = { category?: string; image?: string }
