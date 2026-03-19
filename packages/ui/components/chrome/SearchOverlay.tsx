@@ -27,6 +27,17 @@ export type SearchOverlayProps = {
   clearLabel?: string
 }
 
+// Fix 3: Hoisted to module scope — Platform.OS is a compile-time constant in Metro/Next.js
+const overlayPositionStyle = {
+  position: Platform.OS === 'web' ? ('fixed' as any) : ('absolute' as const),
+  top: 0,
+  start: 0,
+  end: 0,
+  bottom: 0,
+  zIndex: zIndex.modal,
+  backgroundColor: colors.surface,
+} as const
+
 export function SearchOverlay({
   open,
   query,
@@ -41,27 +52,22 @@ export function SearchOverlay({
   dir = 'ltr',
   clearLabel = 'Clear',
 }: SearchOverlayProps) {
-  const isWeb = Platform.OS === 'web'
-
-  const overlayPositionStyle: any = {
-    position: isWeb ? ('fixed' as any) : ('absolute' as const),
-    top: 0,
-    start: 0,
-    end: 0,
-    bottom: 0,
-    zIndex: zIndex.modal,
-    backgroundColor: colors.surface,
-  }
-
   return (
     <AnimatePresence>
       {open ? (
         <MotiView
+          key="search-overlay"
           from={{ opacity: 0, translateY: -24 }}
           animate={{ opacity: 1, translateY: 0 }}
           exit={{ opacity: 0, translateY: -24 }}
           transition={{ type: 'timing', duration: motionDuration.normal }}
           style={overlayPositionStyle}
+          // @ts-expect-error — web-only aria props
+          role="dialog"
+          // @ts-expect-error — web-only aria props
+          aria-modal={true}
+          // @ts-expect-error — web-only aria props
+          aria-label="Search"
         >
           {/* Header row: search input + close button */}
           <Box
