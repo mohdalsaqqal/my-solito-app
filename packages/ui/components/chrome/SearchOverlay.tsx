@@ -111,7 +111,7 @@ export function SearchOverlay({
               <Text
                 variant='title'
                 tone='muted'
-                style={{ lineHeight: spacing['24'], includeFontPadding: false }}
+                style={{ includeFontPadding: false }}
                 accessibilityHidden
               >
                 ×
