@@ -131,7 +131,7 @@ export function SearchOverlay({
                   {error}
                 </Text>
               </Box>
-            ) : suggestions.length === 0 ? (
+            ) : suggestions.length === 0 && query.trim().length > 0 ? (
               <Box style={{ paddingHorizontal: spacing['16'], paddingVertical: spacing['24'] }}>
                 <Text tone='muted' variant='bodySm'>
                   No results found.
@@ -153,8 +153,7 @@ export function SearchOverlay({
                     paddingHorizontal: spacing['16'],
                     borderBottomWidth: borderWidth.thin,
                     borderColor: colors.border,
-                    backgroundColor:
-                      hovered || focused ? colors.backgroundSecondary : 'transparent',
+                    ...(hovered || focused ? { backgroundColor: colors.backgroundSecondary } : {}),
                     transitionProperty: 'background-color',
                     transitionDuration: `${motionDuration.microInteraction}ms`,
                     transitionTimingFunction: motionEasing.standard,
