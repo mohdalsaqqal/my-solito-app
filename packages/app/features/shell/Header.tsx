@@ -1,5 +1,5 @@
 import { Platform, useWindowDimensions } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { borderWidth, breakpoints, colors, headerScrollShadow, layout, radius, spacing, zIndex } from '@real/tokens'
 import {
   Box,
@@ -368,6 +368,26 @@ export function Header({
     }
   }, [])
 
+  // Fix 2: reset search overlay when user scrolls back to top
+  useEffect(() => {
+    if (isAtTop && searchOverlayOpen) {
+      setSearchOverlayOpen(false)
+    }
+  }, [isAtTop, searchOverlayOpen])
+
+  // Fix 4: memoize slide-out div style (only re-creates when isAtTop changes)
+  const slideOutStyle = useMemo(
+    () => ({
+      position: 'sticky' as const,
+      top: 0,
+      transform: isAtTop ? 'translateY(0)' : 'translateY(-100%)',
+      transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+      zIndex: zIndex.sticky + 5,
+      backgroundColor: colors.surface,
+    }),
+    [isAtTop]
+  )
+
   const scrollShadow = isWeb && !isAtTop ? headerScrollShadow : 'none'
 
   const handleLogoPress = () => {
@@ -465,15 +485,7 @@ export function Header({
       <Box style={{ backgroundColor: colors.surface, direction: dir }}>
         {/* Full header — slides out on scroll (web), always visible (native) */}
         {isWeb ? (
-          <div
-            style={{
-              transform: isAtTop ? 'translateY(0)' : 'translateY(-100%)',
-              transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
-              position: 'relative' as any,
-              zIndex: zIndex.sticky + 5,
-              backgroundColor: colors.surface,
-            } as any}
-          >
+          <div style={slideOutStyle as any}>
             <HeaderMainRow
               mobile
               logoText={logoAlt}
@@ -553,8 +565,8 @@ export function Header({
           </Box>
         )}
 
-        {/* Mini search bar — fixed at top when header is scrolled away (web mobile only) */}
-        {isWeb && !isAtTop && (
+        {/* Mini search bar — always mounted on web mobile, fades in when header slides away */}
+        {isWeb && (
           <div
             style={{
               position: 'fixed' as any,
@@ -562,6 +574,9 @@ export function Header({
               left: 0,
               right: 0,
               zIndex: zIndex.sticky + 4,
+              opacity: isAtTop ? 0 : 1,
+              pointerEvents: isAtTop ? 'none' : 'auto',
+              transition: 'opacity 300ms cubic-bezier(0.16, 1, 0.3, 1)',
             } as any}
           >
             <MiniSearchBar
