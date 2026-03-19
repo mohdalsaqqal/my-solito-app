@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { Platform, Pressable, View } from 'react-native'
 import { useWindowDimensions } from 'react-native'
 import { ArrowUp } from 'phosphor-react'
-import { borderWidth, breakpoints, colors, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, breakpoints, colors, layout, radius, spacing, zIndex } from '@real/tokens'
 import { Box, Icon, Text } from '@real/ui'
 import { defaultBottomNavItems, defaultShellContent } from './defaults'
 import { Footer } from './Footer'
@@ -176,39 +176,77 @@ export function Layout({
     win?.(item.href, '_self')
   }
 
+  // ── Header height offset ─────────────────────────────────────────────────
+  // Desktop: promo bar (40) + main row (80) + nav row (40) = 160px
+  // Mobile:  main row (80) + category strip (48) = 128px (approx)
+  // On web the header is position:sticky so the browser handles the offset.
+  // On native the header is position:absolute — we pad the content area.
+  const desktopHeaderHeight =
+    layout.header.topBarHeight + layout.header.mainRowHeight + layout.header.navRowHeight
+  const mobileHeaderHeight = layout.header.mainRowHeight + spacing['48']
+  const headerHeight = isDesktop ? desktopHeaderHeight : mobileHeaderHeight
+  const contentTopOffset = Platform.OS !== 'web' ? headerHeight : 0
+
   return (
     <Box flex={1} bg='background' style={{ direction: dir }}>
-      <Header
-        locale={locale}
-        dir={dir}
-        shellContent={resolvedShell}
-        socialLinks={navigation.socialLinks}
-        campaignText={campaign?.text}
-        campaignLink={campaign?.link}
-        logoSrc={branding.logoSrc}
-        logoAlt={branding.logoAlt}
-        cartCount={cart.count}
-        wishlistCount={wishlistCount}
-        accountCount={accountCount}
-        categories={navigation.categories}
-        cartItems={cart.items}
-        cartSubtotal={cart.subtotal}
-        cartLoading={cart.loading}
-        cartError={cart.error}
-        cartFeedbackKey={cart.feedbackKey}
-        onViewCart={cart.onViewCart}
-        onCheckout={cart.onCheckout}
-        onMobileCartNavigate={cart.onMobileCartNavigate}
-        onCartIncrease={cart.onIncrease}
-        onCartDecrease={cart.onDecrease}
-        onCartRemove={cart.onRemove}
-        onSearchSubmit={onSearchSubmit}
-        onLogoPress={onPressLogo}
-        onLocaleChange={onLocaleChange}
-        onNativeAccountPress={actions?.onNativeAccountPress}
-      />
+      {/* Header — fixed/sticky at top, always above content */}
+      <Box
+        style={
+          Platform.OS === 'web'
+            ? ({
+                position: 'sticky' as any,
+                top: 0,
+                zIndex: zIndex.sticky,
+                width: '100%',
+              } as any)
+            : {
+                position: 'absolute',
+                top: 0,
+                start: 0,
+                end: 0,
+                zIndex: zIndex.sticky,
+              }
+        }
+      >
+        <Header
+          locale={locale}
+          dir={dir}
+          shellContent={resolvedShell}
+          socialLinks={navigation.socialLinks}
+          campaignText={campaign?.text}
+          campaignLink={campaign?.link}
+          logoSrc={branding.logoSrc}
+          logoAlt={branding.logoAlt}
+          cartCount={cart.count}
+          wishlistCount={wishlistCount}
+          accountCount={accountCount}
+          categories={navigation.categories}
+          cartItems={cart.items}
+          cartSubtotal={cart.subtotal}
+          cartLoading={cart.loading}
+          cartError={cart.error}
+          cartFeedbackKey={cart.feedbackKey}
+          onViewCart={cart.onViewCart}
+          onCheckout={cart.onCheckout}
+          onMobileCartNavigate={cart.onMobileCartNavigate}
+          onCartIncrease={cart.onIncrease}
+          onCartDecrease={cart.onDecrease}
+          onCartRemove={cart.onRemove}
+          onSearchSubmit={onSearchSubmit}
+          onLogoPress={onPressLogo}
+          onLocaleChange={onLocaleChange}
+          onNativeAccountPress={actions?.onNativeAccountPress}
+        />
+      </Box>
 
-      <Box flex={1} style={showMobileBottomNav ? { paddingBottom: mobileContentBottomOffset } : undefined}>
+      {/* Content — offset top on native to clear absolute header; web sticky handles it */}
+      <Box
+        flex={1}
+        style={{
+          paddingTop: contentTopOffset,
+          ...(showMobileBottomNav ? { paddingBottom: mobileContentBottomOffset } : {}),
+        }}
+      >
         {children}
       </Box>
 
@@ -258,7 +296,7 @@ export function Layout({
             bottom: 0,
             start: 0,
             end: 0,
-            zIndex: zIndex.base,
+            zIndex: zIndex.sticky,
             borderTopWidth: borderWidth.thin,
             borderColor: colors.border,
             backgroundColor: colors.surface,
