@@ -176,70 +176,54 @@ export function Layout({
     win?.(item.href, '_self')
   }
 
-  // ── Header height offset ─────────────────────────────────────────────────
-  // Desktop: promo bar (40) + main row (80) + nav row (40) = 160px
-  // Mobile:  main row (80) + category strip (48) = 128px (approx)
-  // On web the header is position:sticky so the browser handles the offset.
-  // On native the header is position:absolute — we pad the content area.
+  // ── Header height offset (native only) ──────────────────────────────────
+  // On web: Header manages its own sticky/fixed positioning internally.
+  //         Layout must NOT wrap it in any positioned container — doing so
+  //         creates a stacking context that breaks inner position:sticky children.
+  //         Content needs no top padding; the header is in normal flow on web.
+  // On native: Header is position:absolute at zIndex.sticky (set inside Header).
+  //            Content must be padded by headerHeight to clear it.
   const desktopHeaderHeight =
     layout.header.topBarHeight + layout.header.mainRowHeight + layout.header.navRowHeight
   const mobileHeaderHeight = layout.header.mainRowHeight + spacing['48']
-  const headerHeight = isDesktop ? desktopHeaderHeight : mobileHeaderHeight
-  const contentTopOffset = Platform.OS !== 'web' ? headerHeight : 0
+  const nativeHeaderHeight = isDesktop ? desktopHeaderHeight : mobileHeaderHeight
+  const contentTopOffset = Platform.OS !== 'web' ? nativeHeaderHeight : 0
 
   return (
     <Box flex={1} bg='background' style={{ direction: dir }}>
-      {/* Header — fixed/sticky at top, always above content */}
-      <Box
-        style={
-          Platform.OS === 'web'
-            ? ({
-                position: 'sticky' as any,
-                top: 0,
-                zIndex: zIndex.sticky,
-                width: '100%',
-              } as any)
-            : {
-                position: 'absolute',
-                top: 0,
-                start: 0,
-                end: 0,
-                zIndex: zIndex.sticky,
-              }
-        }
-      >
-        <Header
-          locale={locale}
-          dir={dir}
-          shellContent={resolvedShell}
-          socialLinks={navigation.socialLinks}
-          campaignText={campaign?.text}
-          campaignLink={campaign?.link}
-          logoSrc={branding.logoSrc}
-          logoAlt={branding.logoAlt}
-          cartCount={cart.count}
-          wishlistCount={wishlistCount}
-          accountCount={accountCount}
-          categories={navigation.categories}
-          cartItems={cart.items}
-          cartSubtotal={cart.subtotal}
-          cartLoading={cart.loading}
-          cartError={cart.error}
-          cartFeedbackKey={cart.feedbackKey}
-          onViewCart={cart.onViewCart}
-          onCheckout={cart.onCheckout}
-          onMobileCartNavigate={cart.onMobileCartNavigate}
-          onCartIncrease={cart.onIncrease}
-          onCartDecrease={cart.onDecrease}
-          onCartRemove={cart.onRemove}
-          onSearchSubmit={onSearchSubmit}
-          onLogoPress={onPressLogo}
-          onLocaleChange={onLocaleChange}
-          onNativeAccountPress={actions?.onNativeAccountPress}
-        />
-      </Box>
+      {/* Header — on web: normal flow, Header owns its own sticky/fixed layers.
+                  on native: position:absolute handled inside Header.tsx */}
+      <Header
+        locale={locale}
+        dir={dir}
+        shellContent={resolvedShell}
+        socialLinks={navigation.socialLinks}
+        campaignText={campaign?.text}
+        campaignLink={campaign?.link}
+        logoSrc={branding.logoSrc}
+        logoAlt={branding.logoAlt}
+        cartCount={cart.count}
+        wishlistCount={wishlistCount}
+        accountCount={accountCount}
+        categories={navigation.categories}
+        cartItems={cart.items}
+        cartSubtotal={cart.subtotal}
+        cartLoading={cart.loading}
+        cartError={cart.error}
+        cartFeedbackKey={cart.feedbackKey}
+        onViewCart={cart.onViewCart}
+        onCheckout={cart.onCheckout}
+        onMobileCartNavigate={cart.onMobileCartNavigate}
+        onCartIncrease={cart.onIncrease}
+        onCartDecrease={cart.onDecrease}
+        onCartRemove={cart.onRemove}
+        onSearchSubmit={onSearchSubmit}
+        onLogoPress={onPressLogo}
+        onLocaleChange={onLocaleChange}
+        onNativeAccountPress={actions?.onNativeAccountPress}
+      />
 
-      {/* Content — offset top on native to clear absolute header; web sticky handles it */}
+      {/* Content — padded top on native to clear absolute header */}
       <Box
         flex={1}
         style={{
