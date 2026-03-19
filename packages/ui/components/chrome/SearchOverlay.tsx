@@ -60,7 +60,7 @@ export function SearchOverlay({
           from={{ opacity: 0, translateY: -24 }}
           animate={{ opacity: 1, translateY: 0 }}
           exit={{ opacity: 0, translateY: -24 }}
-          transition={{ type: 'timing', duration: 300 }}
+          transition={{ type: 'timing', duration: motionDuration.normal }}
           style={overlayPositionStyle}
         >
           {/* Header row: search input + close button */}
