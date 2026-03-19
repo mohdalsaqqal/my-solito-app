@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { ViewStyle } from 'react-native'
 import { borderWidth, colors, iconSizes, radius, spacing } from '@real/tokens'
 import { Box } from '../../primitives/Box'
@@ -11,35 +12,39 @@ export type MiniSearchBarProps = {
   dir?: 'ltr' | 'rtl'
 }
 
+const barStyle: ViewStyle = {
+  backgroundColor: colors.surface,
+  borderBottomWidth: borderWidth.thin,
+  borderBottomColor: colors.divider,
+  paddingHorizontal: spacing.pageX,
+  paddingVertical: spacing.sm,
+}
+
+const pillBaseStyle: ViewStyle = {
+  alignItems: 'center',
+  gap: spacing.sm,
+  backgroundColor: colors.surfaceMuted,
+  borderRadius: radius.full,
+  borderWidth: borderWidth.thin,
+  borderColor: colors.border,
+  paddingHorizontal: spacing.md,
+  paddingVertical: spacing.xs,
+  minHeight: spacing['40'],
+}
+
 export function MiniSearchBar({ placeholder, onPress, dir = 'ltr' }: MiniSearchBarProps) {
   const isRtl = dir === 'rtl'
 
-  const barStyle: ViewStyle = {
-    backgroundColor: colors.surface,
-    borderBottomWidth: borderWidth.thin,
-    borderBottomColor: colors.divider,
-    paddingHorizontal: spacing.pageX,
-    paddingVertical: spacing.sm,
-  }
-
-  const pillStyle: ViewStyle = {
-    flexDirection: isRtl ? 'row-reverse' : 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    backgroundColor: colors.surfaceMuted,
-    borderRadius: radius.full,
-    borderWidth: borderWidth.thin,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    minHeight: spacing['40'],
-  }
+  const pillStyle = useMemo<ViewStyle>(
+    () => ({ ...pillBaseStyle, flexDirection: isRtl ? 'row-reverse' : 'row' }),
+    [isRtl],
+  )
 
   return (
     <Box style={barStyle}>
       <Touchable
         onPress={onPress}
-        accessibilityRole="search"
+        accessibilityRole="button"
         accessibilityLabel={placeholder}
       >
         <Box style={pillStyle}>
