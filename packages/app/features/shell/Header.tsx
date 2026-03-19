@@ -6,6 +6,8 @@ import {
   CartDrawer,
   CategoryRow,
   HeaderMainRow,
+  MiniSearchBar,
+  SearchOverlay,
   SearchPanel,
   Text,
   Touchable,
@@ -13,6 +15,7 @@ import {
 } from '@real/ui'
 import { defaultQuickActions } from './defaults'
 import { SearchSuggestion } from './searchMock'
+import { useHeaderScroll } from './useHeaderScroll'
 import { useHeaderSearch } from './useHeaderSearch'
 import { CartLine, Direction, LocaleCode, NavItem, ShellContent } from './types'
 import { SocialLink } from './types'
@@ -158,8 +161,8 @@ export function Header({
   const isDesktopViewport = width >= breakpoints.desktopMin
   // Keep first SSR/hydration pass deterministic on web to avoid mobile/desktop tree mismatch.
   const isDesktop = isDesktopViewport || (isWeb && width === 0)
-  const [isPinned, setIsPinned] = useState(true)
-  const [hasScrolled, setHasScrolled] = useState(false)
+  const { isAtTop } = useHeaderScroll()
+  const [searchOverlayOpen, setSearchOverlayOpen] = useState(false)
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
   const [showCartToast, setShowCartToast] = useState(false)
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
@@ -252,34 +255,6 @@ export function Header({
   const searchRegionId = 'header-search-region'
   const searchPanelRegionId = 'header-search-panel-region'
   const megaMenuPanelRegionId = 'header-mega-menu-panel-region'
-
-  useEffect(() => {
-    if (!isWeb || !isDesktop) {
-      setIsPinned(false)
-      return
-    }
-
-    let lastScrollY = 0
-    let ticking = false
-
-    const onScroll = () => {
-      if (!ticking) {
-        globalThis.requestAnimationFrame?.(() => {
-          const scrollY = (globalThis as { scrollY?: number }).scrollY ?? 0
-          const atTop = scrollY === 0
-          setHasScrolled(!atTop)
-          setIsPinned(atTop)
-          lastScrollY = scrollY
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-
-    onScroll()
-    globalThis.addEventListener?.('scroll', onScroll, { passive: true })
-    return () => globalThis.removeEventListener?.('scroll', onScroll)
-  }, [isDesktop, isWeb])
 
   useEffect(() => {
     if (!isWeb || !open) {
@@ -393,7 +368,7 @@ export function Header({
     }
   }, [])
 
-  const scrollShadow = isWeb && hasScrolled
+  const scrollShadow = isWeb && !isAtTop
     ? '0 2px 8px rgba(14,10,10,0.06), 0 4px 18px rgba(14,10,10,0.07)'
     : 'none'
 
@@ -489,63 +464,138 @@ export function Header({
 
   if (!isDesktop) {
     return (
-      <Box
-        style={{
-          backgroundColor: colors.surface,
-          direction: dir,
-        }}
-      >
-        <Box style={{ position: 'relative' }}>
-          <HeaderMainRow
-            mobile
-            logoText={logoAlt}
-            onPressLogo={Platform.OS === 'web' ? undefined : handleLogoPress}
-            logoHref='/'
-            searchValue={query}
-            searchPlaceholder={labels.searchProducts}
-            onSearchChange={setQuery}
-            onSearchFocus={() => setOpen(true)}
-            onSearchBlur={() => setOpen(false)}
-            onSearchSubmit={handleCommitSearch}
-            searchRegionId={searchRegionId}
-            localeLabel={locale.toUpperCase()}
-            accountLabel={labels.account}
-            wishlistLabel={labels.wishlist}
-            cartLabel={labels.cart}
-            onPressLocale={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
-            onPressAccount={handleAccountPress}
-            cartCount={cartCount}
-            accountCount={accountCount}
-            wishlistCount={wishlistCount}
-            cartPulse={showCartToast}
-            onPressCart={onMobileCartNavigate ?? onCartClick}
-          />
-          <SearchPanel
-            open={open}
+      <Box style={{ backgroundColor: colors.surface, direction: dir }}>
+        {/* Full header — slides out on scroll (web), always visible (native) */}
+        {isWeb ? (
+          <div
+            style={{
+              transform: isAtTop ? 'translateY(0)' : 'translateY(-100%)',
+              transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+              position: 'relative' as any,
+              zIndex: zIndex.sticky + 5,
+              backgroundColor: colors.surface,
+            } as any}
+          >
+            <HeaderMainRow
+              mobile
+              logoText={logoAlt}
+              onPressLogo={undefined}
+              logoHref='/'
+              searchValue={query}
+              searchPlaceholder={labels.searchProducts}
+              onSearchChange={setQuery}
+              onSearchFocus={() => setSearchOverlayOpen(true)}
+              onSearchBlur={() => undefined}
+              onSearchSubmit={handleCommitSearch}
+              searchRegionId={searchRegionId}
+              localeLabel={locale.toUpperCase()}
+              accountLabel={labels.account}
+              wishlistLabel={labels.wishlist}
+              cartLabel={labels.cart}
+              onPressLocale={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
+              onPressAccount={handleAccountPress}
+              cartCount={cartCount}
+              accountCount={accountCount}
+              wishlistCount={wishlistCount}
+              cartPulse={showCartToast}
+              onPressCart={onMobileCartNavigate ?? onCartClick}
+            />
+            <CategoryRow
+              items={categoriesWithShop}
+              activeId={activeCategoryId}
+              scopeLabel={activeCategory ? `${labels.scopePrefix}: ${activeCategory.label}` : undefined}
+              mobile
+              onSelect={handleCategorySelect}
+            />
+          </div>
+        ) : (
+          <Box style={{ position: 'relative' }}>
+            <HeaderMainRow
+              mobile
+              logoText={logoAlt}
+              onPressLogo={handleLogoPress}
+              logoHref='/'
+              searchValue={query}
+              searchPlaceholder={labels.searchProducts}
+              onSearchChange={setQuery}
+              onSearchFocus={() => setOpen(true)}
+              onSearchBlur={() => setOpen(false)}
+              onSearchSubmit={handleCommitSearch}
+              searchRegionId={searchRegionId}
+              localeLabel={locale.toUpperCase()}
+              accountLabel={labels.account}
+              wishlistLabel={labels.wishlist}
+              cartLabel={labels.cart}
+              onPressLocale={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
+              onPressAccount={handleAccountPress}
+              cartCount={cartCount}
+              accountCount={accountCount}
+              wishlistCount={wishlistCount}
+              cartPulse={showCartToast}
+              onPressCart={onMobileCartNavigate ?? onCartClick}
+            />
+            <SearchPanel
+              open={open}
+              query={query}
+              panelRegionId={searchPanelRegionId}
+              fixed
+              topOffset={mobileSearchPanelTopOffset}
+              onRequestClose={() => setOpen(false)}
+              loading={loading}
+              error={error}
+              suggestions={suggestions}
+              trendingSearches={discovery.trendingSearches}
+              popularBrands={discovery.popularBrands}
+              recents={recents}
+              onSelectSuggestion={handleSelectSuggestion}
+              onSelectRecent={selectRecent}
+              onClearRecents={clearRecents}
+              copy={searchCopy}
+            />
+          </Box>
+        )}
+
+        {/* Mini search bar — fixed at top when header is scrolled away (web mobile only) */}
+        {isWeb && !isAtTop && (
+          <div
+            style={{
+              position: 'fixed' as any,
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: zIndex.sticky + 4,
+            } as any}
+          >
+            <MiniSearchBar
+              placeholder={labels.searchProducts}
+              onPress={() => setSearchOverlayOpen(true)}
+              dir={dir}
+            />
+          </div>
+        )}
+
+        {/* Full-screen search overlay (web mobile only) */}
+        {isWeb && (
+          <SearchOverlay
+            open={searchOverlayOpen}
             query={query}
-            panelRegionId={searchPanelRegionId}
-            fixed
-            topOffset={mobileSearchPanelTopOffset}
-            onRequestClose={() => setOpen(false)}
+            placeholder={labels.searchProductsOrCategories ?? labels.searchProducts}
+            onClose={() => setSearchOverlayOpen(false)}
+            onQueryChange={setQuery}
+            onSubmit={() => {
+              setSearchOverlayOpen(false)
+              handleCommitSearch()
+            }}
+            onSelectSuggestion={(item) => {
+              setSearchOverlayOpen(false)
+              handleSelectSuggestion(item as any)
+            }}
+            suggestions={suggestions}
             loading={loading}
             error={error}
-            suggestions={suggestions}
-            trendingSearches={discovery.trendingSearches}
-            popularBrands={discovery.popularBrands}
-            recents={recents}
-            onSelectSuggestion={handleSelectSuggestion}
-            onSelectRecent={selectRecent}
-            onClearRecents={clearRecents}
-            copy={searchCopy}
+            dir={dir}
           />
-        </Box>
-        <CategoryRow
-          items={categoriesWithShop}
-          activeId={activeCategoryId}
-          scopeLabel={activeCategory ? `${labels.scopePrefix}: ${activeCategory.label}` : undefined}
-          mobile
-          onSelect={handleCategorySelect}
-        />
+        )}
       </Box>
     )
   }
@@ -556,7 +606,7 @@ export function Header({
         {/* Top promo bar — collapses on scroll */}
         <div
           style={{
-            maxHeight: isPinned ? `${layout.header.topBarHeight}px` : '0px',
+            maxHeight: isAtTop ? `${layout.header.topBarHeight}px` : '0px',
             overflow: 'hidden',
             transition: 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             direction: dir,
@@ -645,7 +695,7 @@ export function Header({
           {/* Nav/quick-actions row — collapses on scroll */}
           <div
             style={{
-              maxHeight: isPinned ? `${layout.header.navRowHeight}px` : '0px',
+              maxHeight: isAtTop ? `${layout.header.navRowHeight}px` : '0px',
               overflow: 'hidden',
               transition: 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
@@ -750,7 +800,7 @@ export function Header({
           aria-live='polite'
           style={{
             position: 'fixed',
-            top: isPinned ? layout.header.topBarHeight + spacing.sm : spacing.sm,
+            top: isAtTop ? layout.header.topBarHeight + spacing.sm : spacing.sm,
             end: spacing.pageX,
             zIndex: zIndex.searchTop + 5,
             borderWidth: borderWidth.thin,
