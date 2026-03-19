@@ -1,6 +1,6 @@
 import { Platform, useWindowDimensions } from 'react-native'
 import React, { useEffect, useRef, useState } from 'react'
-import { borderWidth, breakpoints, colors, layout, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, breakpoints, colors, headerScrollShadow, layout, radius, spacing, zIndex } from '@real/tokens'
 import {
   Box,
   CartDrawer,
@@ -368,9 +368,7 @@ export function Header({
     }
   }, [])
 
-  const scrollShadow = isWeb && !isAtTop
-    ? '0 2px 8px rgba(14,10,10,0.06), 0 4px 18px rgba(14,10,10,0.07)'
-    : 'none'
+  const scrollShadow = isWeb && !isAtTop ? headerScrollShadow : 'none'
 
   const handleLogoPress = () => {
     if (onLogoPress) {
@@ -754,7 +752,7 @@ export function Header({
                               style={{
                                 minHeight: 40,
                                 borderRadius: radius.md,
-                                backgroundColor: interactive ? colors.brandPrimarySubtle : 'transparent',
+                                ...(interactive ? { backgroundColor: colors.brandPrimarySubtle } : {}),
                                 paddingHorizontal: spacing['8'],
                                 paddingVertical: spacing['8'],
                                 flexDirection: 'row',
