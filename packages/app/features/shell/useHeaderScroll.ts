@@ -42,6 +42,10 @@ export function useHeaderScroll(): UseHeaderScrollReturn {
     setIsAtTop(y === 0)
   }, [])
 
+  // NOTE: On native, isAtTop stays true because there is no global scroll listener.
+  // To enable native scroll hide/reveal, pass the returned `onScroll` handler to
+  // the active screen's ScrollView via a context or prop-drilling pattern.
+  // This is deferred — the initial implementation only supports web scroll detection.
   if (isWeb) {
     return { isAtTop }
   }
