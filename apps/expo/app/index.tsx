@@ -863,6 +863,33 @@ export default function HomeRoute() {
     )
   }
 
+  const handleNavigateToCart = () => {
+    if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
+      setView('auth-login')
+      return
+    }
+    setView('cart')
+  }
+
+  const handleNavigateToCheckout = () => {
+    if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
+      setView('auth-login')
+      return
+    }
+    setView('checkout')
+  }
+
+  const activeBottomNavId =
+    view === 'home'
+      ? 'home'
+      : view === 'categories' || view === 'product'
+        ? 'categories'
+        : view === 'checkout' || view === 'cart'
+          ? 'cart'
+          : view === 'account'
+            ? 'account'
+            : 'more'
+
   if (!fontsLoaded) {
     return null
   }
@@ -886,27 +913,9 @@ export default function HomeRoute() {
           count: cartCount,
           items: cartLines,
           subtotal: cartSubtotal,
-          onViewCart: () => {
-            if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
-              setView('auth-login')
-              return
-            }
-            setView('cart')
-          },
-          onCheckout: () => {
-            if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
-              setView('auth-login')
-              return
-            }
-            setView('checkout')
-          },
-          onMobileCartNavigate: () => {
-            if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
-              setView('auth-login')
-              return
-            }
-            setView('cart')
-          },
+          onViewCart: handleNavigateToCart,
+          onCheckout: handleNavigateToCheckout,
+          onMobileCartNavigate: handleNavigateToCart,
         }}
         wishlistCount={2}
         accountCount={session ? 1 : 0}
@@ -917,16 +926,7 @@ export default function HomeRoute() {
           footerLinks: defaultFooterLinks,
           socialLinks: defaultSocialLinks,
           bottomNavItems: defaultBottomNavItems,
-          activeBottomNavId:
-            view === 'home'
-              ? 'home'
-              : view === 'categories' || view === 'product'
-                ? 'categories'
-                : view === 'checkout' || view === 'cart'
-                  ? 'cart'
-                  : view === 'account'
-                    ? 'account'
-                    : 'more',
+          activeBottomNavId,
           onBottomNavChange: (item) => {
             if (item.id === 'home') setView('home')
             if (item.id === 'categories') setView('categories')
@@ -951,7 +951,6 @@ export default function HomeRoute() {
         }}
         locale={{
           code: localeState,
-          dir: dir,
           onChange: (nextLocale) => {
             setLocaleState(nextLocale)
             void applyLocale(nextLocale)
