@@ -517,6 +517,7 @@ export function Header({
             cartCount={cartCount}
             accountCount={accountCount}
             wishlistCount={wishlistCount}
+            cartPulse={showCartToast}
             onPressCart={onMobileCartNavigate ?? onCartClick}
           />
           <SearchPanel
