@@ -21,6 +21,7 @@ import { spacing } from '@real/tokens'
 import { Box, Drawer, Text, Touchable } from '@real/ui'
 import {
   Layout,
+  defaultBottomNavItems,
   defaultBrandItems,
   defaultCategories as defaultShellCategories,
   defaultFooterLinks,
@@ -869,91 +870,104 @@ export default function HomeRoute() {
   return (
     <SafeAreaView edges={['top', 'left', 'right']} style={{ flex: 1 }}>
       <Layout
-        locale={localeState}
-        dir={dir}
         shellContent={cmsHome?.shell ?? defaultShellContent}
-        logoSrc={
-          cmsHome?.shell?.branding?.logo.uri ??
-          'https://dummyimage.com/260x60/ffffff/16181c.png&text=REAL+COSMETICS'
-        }
-        logoAlt='Real Cosmetics'
-        campaignText={
-          cmsHome?.shell?.topBar?.message?.[localeState] ?? 'Free delivery for orders above 99 USD'
-        }
-        cartCount={cartCount}
-        wishlistCount={2}
-        accountCount={session ? 1 : 0}
-        cartItems={cartLines}
-        cartSubtotal={cartSubtotal}
-        categories={shellCategories}
-        salesItems={defaultSalesItems}
-        brandItems={defaultBrandItems}
-        footerLinks={defaultFooterLinks}
-        socialLinks={defaultSocialLinks}
-        newsletterTitle={
-          cmsHome?.shell?.footer?.newsletterTitle?.[localeState] ?? 'Stay in the loop'
-        }
-        newsletterSubtitle={
-          cmsHome?.shell?.footer?.newsletterSubtitle?.[localeState] ??
-          'Get launches, offers, and skincare insights.'
-        }
-        activeBottomNavId={
-          view === 'home'
-            ? 'home'
-            : view === 'categories' || view === 'product'
-              ? 'categories'
-              : view === 'checkout' || view === 'cart'
-                ? 'cart'
-                : view === 'account'
-                  ? 'account'
-                  : 'more'
-        }
-        onBottomNavChange={(item) => {
-          if (item.id === 'home') setView('home')
-          if (item.id === 'categories') setView('categories')
-          if (item.id === 'cart') {
+        branding={{
+          logoSrc:
+            cmsHome?.shell?.branding?.logo.uri ??
+            'https://dummyimage.com/260x60/ffffff/16181c.png&text=REAL+COSMETICS',
+          logoAlt: 'Real Cosmetics',
+        }}
+        campaign={{
+          text:
+            cmsHome?.shell?.topBar?.message?.[localeState] ??
+            'Free delivery for orders above 99 USD',
+        }}
+        cart={{
+          count: cartCount,
+          items: cartLines,
+          subtotal: cartSubtotal,
+          onViewCart: () => {
             if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
               setView('auth-login')
-            } else {
-              setView('cart')
+              return
             }
-          }
-          if (item.id === 'deals') setView('deals')
-          if (item.id === 'account') setView(session ? 'account' : 'auth-login')
-          if (item.id === 'more') setMoreOpen(true)
+            setView('cart')
+          },
+          onCheckout: () => {
+            if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
+              setView('auth-login')
+              return
+            }
+            setView('checkout')
+          },
+          onMobileCartNavigate: () => {
+            if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
+              setView('auth-login')
+              return
+            }
+            setView('cart')
+          },
         }}
-        onViewCart={() => {
-          if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
-            setView('auth-login')
-            return
-          }
-          setView('cart')
+        wishlistCount={2}
+        accountCount={session ? 1 : 0}
+        navigation={{
+          categories: shellCategories,
+          salesItems: defaultSalesItems,
+          brandItems: defaultBrandItems,
+          footerLinks: defaultFooterLinks,
+          socialLinks: defaultSocialLinks,
+          bottomNavItems: defaultBottomNavItems,
+          activeBottomNavId:
+            view === 'home'
+              ? 'home'
+              : view === 'categories' || view === 'product'
+                ? 'categories'
+                : view === 'checkout' || view === 'cart'
+                  ? 'cart'
+                  : view === 'account'
+                    ? 'account'
+                    : 'more',
+          onBottomNavChange: (item) => {
+            if (item.id === 'home') setView('home')
+            if (item.id === 'categories') setView('categories')
+            if (item.id === 'cart') {
+              if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
+                setView('auth-login')
+              } else {
+                setView('cart')
+              }
+            }
+            if (item.id === 'deals') setView('deals')
+            if (item.id === 'account') setView(session ? 'account' : 'auth-login')
+            if (item.id === 'more') setMoreOpen(true)
+          },
         }}
-        onCheckout={() => {
-          if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
-            setView('auth-login')
-            return
-          }
-          setView('checkout')
+        newsletter={{
+          title:
+            cmsHome?.shell?.footer?.newsletterTitle?.[localeState] ?? 'Stay in the loop',
+          subtitle:
+            cmsHome?.shell?.footer?.newsletterSubtitle?.[localeState] ??
+            'Get launches, offers, and skincare insights.',
         }}
-        onMobileCartNavigate={() => {
-          if (REQUIRE_AUTH_FOR_CHECKOUT && !session) {
-            setView('auth-login')
-            return
-          }
-          setView('cart')
+        locale={{
+          code: localeState,
+          dir: dir,
+          onChange: (nextLocale) => {
+            setLocaleState(nextLocale)
+            void applyLocale(nextLocale)
+          },
         }}
-        onLocaleChange={(nextLocale) => {
-          setLocaleState(nextLocale)
-          void applyLocale(nextLocale)
+        actions={{
+          onSearchSubmit: (query) => {
+            setActiveSearchQuery(query)
+            setView('search')
+            void loadSearch(query)
+          },
         }}
-        onSearchSubmit={(query) => {
-          setActiveSearchQuery(query)
-          setView('search')
-          void loadSearch(query)
+        display={{
+          showFooter: false,
+          mobileBottomInset: insets.bottom,
         }}
-        mobileBottomInset={insets.bottom}
-        showFooter={false}
       >
         {renderScreen()}
       </Layout>
