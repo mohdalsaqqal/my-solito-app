@@ -962,6 +962,9 @@ export default function HomeRoute() {
             setView('search')
             void loadSearch(query)
           },
+          onNativeAccountPress: () => {
+            setView(session ? 'account' : 'auth-login')
+          },
         }}
         display={{
           showFooter: false,

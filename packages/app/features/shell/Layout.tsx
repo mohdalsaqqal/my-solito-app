@@ -1,6 +1,7 @@
-import { ReactNode, useMemo } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { Platform, Pressable, View } from 'react-native'
 import { useWindowDimensions } from 'react-native'
+import { ArrowUp } from 'phosphor-react'
 import { borderWidth, breakpoints, colors, radius, spacing, zIndex } from '@real/tokens'
 import { Box, Icon, Text } from '@real/ui'
 import { defaultBottomNavItems, defaultShellContent } from './defaults'
@@ -17,82 +18,96 @@ import {
   SocialLink,
 } from './types'
 
-type LayoutProps = {
-  children: ReactNode
+// ─────────────────────────────────────────────────────────────────────────────
+// Grouped Prop Types (for better organization and maintainability)
+// ─────────────────────────────────────────────────────────────────────────────
+
+type LayoutBranding = {
   logoSrc: string
   logoAlt: string
-  campaignText?: string
-  campaignLink?: string
-  cartCount: number
-  wishlistCount?: number
-  accountCount?: number
-  cartItems: CartLine[]
-  cartSubtotal: number
-  cartLoading?: boolean
-  cartError?: string | null
-  cartFeedbackKey?: number
+}
+
+type LayoutCampaign = {
+  text?: string
+  link?: string
+}
+
+type LayoutCart = {
+  count: number
+  items: CartLine[]
+  subtotal: number
+  loading?: boolean
+  error?: string | null
+  feedbackKey?: number
+  onViewCart: () => void
+  onCheckout: () => void
+  onMobileCartNavigate: () => void
+  onIncrease?: (item: CartLine) => void | Promise<void>
+  onDecrease?: (item: CartLine) => void | Promise<void>
+  onRemove?: (item: CartLine) => void | Promise<void>
+}
+
+type LayoutNavigation = {
   categories: NavItem[]
   salesItems: NavItem[]
   brandItems: NavItem[]
   footerLinks: FooterColumn[]
   socialLinks: SocialLink[]
-  newsletterTitle: string
-  newsletterSubtitle: string
-  onViewCart: () => void
-  onCheckout: () => void
-  onMobileCartNavigate: () => void
-  onCartIncrease?: (item: CartLine) => void | Promise<void>
-  onCartDecrease?: (item: CartLine) => void | Promise<void>
-  onCartRemove?: (item: CartLine) => void | Promise<void>
-  locale?: LocaleCode
-  dir?: Direction
-  shellContent?: ShellContent
   bottomNavItems?: BottomNavItem[]
   activeBottomNavId?: string
   onBottomNavChange?: (item: BottomNavItem) => void
+}
+
+type LayoutNewsletter = {
+  title: string
+  subtitle: string
+}
+
+type LayoutLocale = {
+  code: LocaleCode
+  dir?: Direction
+  onChange?: (nextLocale: LocaleCode) => void
+}
+
+type LayoutActions = {
   onSearchSubmit?: (query: string) => void
-  mobileBottomInset?: number
-  onLocaleChange?: (nextLocale: LocaleCode) => void
   onPressLogo?: () => void
+  onNativeAccountPress?: () => void
+}
+
+type LayoutDisplay = {
   showFooter?: boolean
+  mobileBottomInset?: number
+}
+
+type LayoutProps = {
+  children: ReactNode
+  branding: LayoutBranding
+  campaign?: LayoutCampaign
+  cart: LayoutCart
+  wishlistCount?: number
+  accountCount?: number
+  navigation: LayoutNavigation
+  newsletter: LayoutNewsletter
+  locale?: LayoutLocale
+  shellContent?: ShellContent
+  actions?: LayoutActions
+  display?: LayoutDisplay
 }
 
 export function Layout({
   children,
-  logoSrc,
-  logoAlt,
-  campaignText,
-  campaignLink,
-  cartCount,
+  branding,
+  campaign,
+  cart,
   wishlistCount = 0,
   accountCount = 0,
-  cartItems,
-  cartSubtotal,
-  cartLoading = false,
-  cartError = null,
-  cartFeedbackKey,
-  categories,
-  footerLinks,
-  socialLinks,
-  newsletterTitle,
-  newsletterSubtitle,
-  locale = 'en',
-  dir = 'ltr',
+  navigation,
+  newsletter,
+  locale: localeProps,
   shellContent,
-  bottomNavItems = defaultBottomNavItems,
-  activeBottomNavId,
-  onBottomNavChange,
-  onSearchSubmit,
-  mobileBottomInset = 0,
-  onLocaleChange,
-  onViewCart,
-  onCheckout,
-  onMobileCartNavigate,
-  onCartIncrease,
-  onCartDecrease,
-  onCartRemove,
-  onPressLogo,
-  showFooter = true,
+  actions,
+  display,
 }: LayoutProps) {
   const { width } = useWindowDimensions()
   const isDesktopViewport = width >= breakpoints.desktopMin
@@ -100,7 +115,41 @@ export function Layout({
   const isDesktop = isDesktopViewport || (Platform.OS === 'web' && width === 0)
   const showMobileBottomNav = !isDesktop
   const mobileNavHeight = spacing['64'] + spacing['8']
+  const mobileBottomInset = display?.mobileBottomInset ?? 0
   const mobileContentBottomOffset = showMobileBottomNav ? mobileNavHeight + mobileBottomInset : 0
+  
+  // Destructure grouped props
+  const locale = localeProps?.code ?? 'en'
+  const dir = localeProps?.dir ?? 'ltr'
+  const onLocaleChange = localeProps?.onChange
+  const onSearchSubmit = actions?.onSearchSubmit
+  const onPressLogo = actions?.onPressLogo
+  const showFooter = display?.showFooter ?? true
+  
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
+  useEffect(() => {
+    if (Platform.OS !== 'web') return
+    let ticking = false
+    const onScroll = () => {
+      if (!ticking) {
+        globalThis.requestAnimationFrame?.(() => {
+          const scrollY = (globalThis as { scrollY?: number }).scrollY ?? 0
+          setShowScrollTop(scrollY > 400)
+          ticking = false
+        })
+        ticking = true
+      }
+    }
+    globalThis.addEventListener?.('scroll', onScroll, { passive: true })
+    return () => globalThis.removeEventListener?.('scroll', onScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    if (Platform.OS !== 'web') return
+    ;(globalThis as { scrollTo?: (opts: ScrollToOptions) => void }).scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
+
   const resolvedShell = useMemo(
     () => ({
       ...defaultShellContent,
@@ -113,8 +162,8 @@ export function Layout({
   )
 
   const handleBottomNavPress = (item: BottomNavItem) => {
-    if (onBottomNavChange) {
-      onBottomNavChange(item)
+    if (navigation.onBottomNavChange) {
+      navigation.onBottomNavChange(item)
       return
     }
     if (Platform.OS !== 'web') {
@@ -133,28 +182,30 @@ export function Layout({
         locale={locale}
         dir={dir}
         shellContent={resolvedShell}
-        campaignText={campaignText}
-        campaignLink={campaignLink}
-        logoSrc={logoSrc}
-        logoAlt={logoAlt}
-        cartCount={cartCount}
+        socialLinks={navigation.socialLinks}
+        campaignText={campaign?.text}
+        campaignLink={campaign?.link}
+        logoSrc={branding.logoSrc}
+        logoAlt={branding.logoAlt}
+        cartCount={cart.count}
         wishlistCount={wishlistCount}
         accountCount={accountCount}
-        categories={categories}
-        cartItems={cartItems}
-        cartSubtotal={cartSubtotal}
-        cartLoading={cartLoading}
-        cartError={cartError}
-        cartFeedbackKey={cartFeedbackKey}
-        onViewCart={onViewCart}
-        onCheckout={onCheckout}
-        onMobileCartNavigate={onMobileCartNavigate}
-        onCartIncrease={onCartIncrease}
-        onCartDecrease={onCartDecrease}
-        onCartRemove={onCartRemove}
+        categories={navigation.categories}
+        cartItems={cart.items}
+        cartSubtotal={cart.subtotal}
+        cartLoading={cart.loading}
+        cartError={cart.error}
+        cartFeedbackKey={cart.feedbackKey}
+        onViewCart={cart.onViewCart}
+        onCheckout={cart.onCheckout}
+        onMobileCartNavigate={cart.onMobileCartNavigate}
+        onCartIncrease={cart.onIncrease}
+        onCartDecrease={cart.onDecrease}
+        onCartRemove={cart.onRemove}
         onSearchSubmit={onSearchSubmit}
         onLogoPress={onPressLogo}
         onLocaleChange={onLocaleChange}
+        onNativeAccountPress={actions?.onNativeAccountPress}
       />
 
       <Box flex={1} style={showMobileBottomNav ? { paddingBottom: mobileContentBottomOffset } : undefined}>
@@ -166,11 +217,38 @@ export function Layout({
           locale={locale}
           dir={dir}
           shellContent={resolvedShell}
-          footerLinks={footerLinks}
-          socialLinks={socialLinks}
-          newsletterTitle={newsletterTitle}
-          newsletterSubtitle={newsletterSubtitle}
+          footerLinks={navigation.footerLinks}
+          socialLinks={navigation.socialLinks}
+          newsletterTitle={newsletter.title}
+          newsletterSubtitle={newsletter.subtitle}
         />
+      ) : null}
+
+      {Platform.OS === 'web' && isDesktop && showScrollTop ? (
+        <Pressable
+          onPress={scrollToTop}
+          aria-label='Scroll to top'
+          style={({ hovered }: any) => ({
+            position: 'fixed' as any,
+            bottom: spacing['40'],
+            insetInlineEnd: spacing['40'],
+            zIndex: zIndex.sticky + 20,
+            width: 44,
+            height: 44,
+            borderRadius: radius.full,
+            backgroundColor: hovered ? colors.surfaceMuted : colors.surface,
+            borderWidth: borderWidth.thin,
+            borderColor: colors.border,
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: hovered
+              ? '0 4px 12px rgba(14,10,10,0.14), 0 6px 24px rgba(14,10,10,0.10)'
+              : '0 2px 8px rgba(14,10,10,0.10), 0 4px 18px rgba(14,10,10,0.08)',
+            transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
+          } as any)}
+        >
+          <ArrowUp size={18} color={colors.textSecondary} weight='bold' />
+        </Pressable>
       ) : null}
 
       {showMobileBottomNav ? (
@@ -190,8 +268,8 @@ export function Layout({
             paddingBottom: spacing.xs + mobileBottomInset,
           }}
         >
-          {bottomNavItems.map((item) => {
-            const active = activeBottomNavId === item.id
+          {navigation.bottomNavItems?.map((item) => {
+            const active = navigation.activeBottomNavId === item.id
             const label = locale === 'ar' ? item.label.ar : item.label.en
             return (
               <Pressable
@@ -205,7 +283,7 @@ export function Layout({
                       name={toBottomNavIconName(item.id)}
                       color={active ? colors.brandPrimary : colors.textSecondary}
                     />
-                    {item.id === 'cart' && cartCount > 0 ? (
+                    {item.id === 'cart' && cart.count > 0 ? (
                       <Box
                         style={{
                           position: 'absolute',
@@ -220,7 +298,7 @@ export function Layout({
                         }}
                       >
                         <Text variant='meta' tone='inverse' weight='700'>
-                          {cartCount > 9 ? '9+' : String(cartCount)}
+                          {cart.count > 9 ? '9+' : String(cart.count)}
                         </Text>
                       </Box>
                     ) : null}
@@ -231,7 +309,7 @@ export function Layout({
                 </Box>
               </Pressable>
             )
-          })}
+          }) ?? null}
         </View>
       ) : null}
     </Box>
