@@ -1,295 +1,171 @@
 # AGENTS VERSION
-- Version: `v1.4`
-- Last updated: `2026-03-07`
-- This file is the execution policy for architecture, UI/UX, and delivery discipline.
+- Version: `v2.0`
+- Last updated: `2026-03-21`
+- This file is the product-specific operating handbook for this premium commerce platform.
+
+## Platform Operating Model
+- This repository builds a web-first premium commerce platform.
+- `apps/next` owns the web app and the BFF.
+- `apps/expo` owns the customer mobile app only.
+- `packages/ui` owns shared primitives and reusable UI components.
+- `packages/app` owns shared screens, commerce flows, and feature logic.
+- `packages/providers` owns contracts and registry-based provider selection.
+- `packages/adapters` owns external system implementations.
+- CMS controls mutable marketing content, not core layout structure.
+- Modules extend core through explicit slots, not embedded special-case logic.
+- Canonical runtime flow is `UI -> apiClient -> BFF -> provider registry -> adapters`.
 
 ## Rule Priorities
 - `P0` Blocker: must pass before merge.
 - `P1` Preferred: enforce unless explicitly deferred.
-- Conflict rule: if `P0` and `P1` conflict, `P0` wins.
+- If `P0` and `P1` conflict, `P0` wins.
 
-## A) Task Domain Classification & Skill Stack (`P0`)
-Before execution of any task:
-1. Classify the task into exactly one domain:
-   - `🏗 Architecture / Core Logic`
-   - `💰 Pricing / Payments`
-   - `🐛 Debugging / Failure`
-   - `🎨 UI / UX / Frontend`
-   - `📱 Expo / Native`
-   - `🚀 Workflow / Scaling`
-2. Activate the corresponding skill stack for that domain.
-3. Print selected skills in the response header before implementation.
-4. If no domain can be identified, stop and request clarification. Do not proceed.
+## Use This File
+- `AGENTS.md` is the executable contract. Keep it short enough to apply during active work.
+- Companion docs hold deeper UI and composition guidance:
+  - `docs/UI_ARCHITECTURE.md`
+  - `docs/COMMERCE_PATTERNS.md`
+  - `docs/UI_COMPONENT_INVENTORY.md`
+- `.codex/` owns task routing and prompt workflow. `AGENTS.md` remains the source of truth for repo rules.
 
-### A.1 Domain-to-Skill Mapping (`P0`)
-- `🏗 Architecture / Core Logic`:
-  - `brainstorming` (for any creative/feature design)
-  - `writing-plans`
-  - `verification-before-completion`
-- `💰 Pricing / Payments`:
-  - `brainstorming`
-  - `writing-plans`
-  - `stripe-best-practices`
-  - `verification-before-completion`
-- `🐛 Debugging / Failure`:
-  - `systematic-debugging`
-  - `verification-before-completion`
-- `🎨 UI / UX / Frontend`:
-  - `brainstorming`
-  - `frontend-design`
-  - `ui-ux-pro-max`
-  - `ui-visual-validator`
-  - `web-design-guidelines`
-  - `verification-before-completion`
-- `📱 Expo / Native`:
-  - `brainstorming`
-  - `building-native-ui`
-  - `native-data-fetching`
-  - `expo-api-routes`
-  - `expo-deployment`
-  - `verification-before-completion`
-- `🚀 Workflow / Scaling`:
-  - `writing-plans`
-  - `executing-plans`
-  - `dispatching-parallel-agents`
-  - `subagent-driven-development`
-  - `using-git-worktrees`
-  - `verification-before-completion`
+## Common Commands
+- Route non-trivial tasks through `.codex/router.js`:
+  - `node .codex/router.js "<task>"`
+- Run repo guards before claiming completion:
+  - `yarn guard:checks`
+- If guard execution fails because of shell or line-ending issues, run the normalized fallback:
+  - `tmp=scripts/.guard-checks.tmp.sh && tr -d '\r' < scripts/guard-checks.sh > "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit $status`
 
-### A.2 Required Header Format (`P0`)
+## AI Execution Rules (`P0`)
+### Required Response Header
 Before implementation responses, include:
-- `Domain: <one of the six domains>`
 - `Skills: <comma-separated selected skills>`
 
-## 0) System Purpose
-We are building a web-first premium commerce platform with:
-- Next.js web + BFF
-- Expo customer app
-- RTL support (EN/AR)
-- CMS-driven content with localized fields
-- Replaceable backend integrations
-- Extension-based features
+### Workflow Integration
+- For non-trivial work, consult `.codex/router.js` before implementation.
+- Use the router output to confirm task classification, scoped folders, guard expectations, and pause triggers.
+- Do not let workflow tooling override architecture or repository rules in this file.
 
-Primary goals:
-- Core stability
-- Replaceable adapters
-- Isolated modules
-- Clean dependency direction
+### Working Discipline
+- Prefer repo-local docs and code over memory.
+- Prefer enforceable rules over vague preference.
+- Do not silently change architecture, dependency direction, or platform boundaries.
 
-## AI Workflow Integration (P0)
-
-This repository includes an AI workflow system located in `.codex/`.
-
-For non-trivial tasks (feature implementation, architecture changes, UI
-composition, debugging), AI agents SHOULD consult the `.codex/router.js`
-workflow system to determine the correct workflow and prompt template.
-
-The router system selects:
-
-- task classification
-- prompt template
-- scope hints
-- guard requirements
-- pause-trigger enforcement
-
-AGENTS.md remains the source of truth for architecture rules.
-The `.codex` system manages task routing and execution workflow.
-
-## 1) Foundational Non-Negotiables (`P0`)
+## Architecture Contract (`P0`)
+### Non-Negotiables
 - Tokens over hardcoded values.
 - Adapters over direct external calls.
 - Modules over embedded feature logic.
-- Slots over hardcoded module injection points.
-- Config/CMS over code for mutable business rules.
+- Slots over hardcoded module insertion.
+- Config and CMS over code for mutable business rules.
 
-### 1.1 Token Rules
-- All color, spacing, font, and radius values must come from tokens.
-- Never hardcode visual values in components.
-- Brand swap should be token-file swap, not component rewrite.
-
-### 1.2 Adapter Rules
-- Never call ERP/payment/auth directly from UI, hooks, core commerce, or BFF routes.
-- External calls go through provider contracts and adapter implementations.
-- New backend integration should require new adapter + registry selection, not core rewrites.
-
-### 1.3 Module Rules
-- Loyalty, pharmacist workflows, diagnostics, and admin logic are modules.
-- Core commerce must not embed module logic.
-- Modules can be disabled without core edits.
-
-### 1.4 Slot Rules
-- Module UI injection points must be explicit slots.
-- Empty slots render nothing and must not break layout.
-
-### 1.5 Config Rules
-- Loyalty points, tier thresholds, multipliers, and similar mutable business policies come from config/CMS.
-
-## 2) Canonical Data Architecture (`P0`)
+### Canonical Data Flow
 Required flow:
 
 `UI -> apiClient -> BFF -> provider registry -> adapters`
 
 Rules:
-- Do not change this chain without explicit approval.
-- No storefront framework layer in between.
-- No UI-to-provider or UI-to-adapter bypasses.
+- Do not bypass the BFF from customer UI.
+- Do not import adapters into UI, shared commerce logic, or BFF routes.
+- Do not insert a storefront framework layer between UI and the BFF chain without approval.
 
-## 3) Monorepo Structure (`P0`)
+### Monorepo Shape
 ```txt
 apps/
-  next/                 # Web app + BFF (API routes)
-  expo/                 # Mobile app (customer)
+  next/                 # web app + BFF
+  expo/                 # customer mobile app
 
 packages/
-  app/                  # Shared screens + features + core commerce
-  ui/                   # Shared primitives/components (UniWind)
-  tokens/               # Design tokens
-
-  providers/
-    contracts/          # Interfaces + result contracts
-    registry.ts         # Adapter selection
-
-  adapters/
-    erp-*/
-    payment-*/
-    auth-*/
-    mock/
+  app/                  # shared screens, features, commerce logic
+  ui/                   # shared primitives and reusable components
+  tokens/               # design tokens
+  providers/            # contracts + registry
+  adapters/             # infrastructure implementations
 ```
 
-Aliases required:
+Required aliases:
 - `@real/app`
 - `@real/ui`
 - `@real/tokens`
 - `@real/providers`
 - `@real/adapters`
 
-## 4) Layer Responsibilities (`P0`)
-### 4.1 UI (`@real/ui`)
-- Primitives/components only.
-- UniWind styling allowed.
-- No business logic.
-- No provider/adapters imports.
+### Layer Boundaries
+#### `packages/ui`
+- Primitives and reusable components only.
+- UniWind styling is allowed here.
+- No provider imports.
+- No adapter imports.
+- No business-specific data fetching.
 
-### 4.2 Core commerce (`packages/app`)
-- Domain areas: shop, product, cart, checkout, orders, account base.
-- Current implementation paths:
-```txt
-packages/app/screens
-packages/app/features
-packages/app/lib
-```
+#### `packages/app`
+- Shared commerce screens, flows, modules, and app-side logic.
 - May import from `@real/providers`.
 - Must not import from `@real/adapters`.
-- Must not call ERP directly.
+- Must not call ERP, payment, or auth systems directly.
+- `className` is forbidden here.
+- `process.env` is forbidden here.
 
-### 4.3 Modules
-- Target structure:
-```txt
-packages/app/modules/{module}
-```
-- Current module code may exist under:
-```txt
-packages/app/features/{module}
-```
-- Modules may depend on core.
-- Core must never depend on modules.
-- Modules inject via extension slots.
+#### `packages/providers`
+- Contracts and provider selection only.
+- Use `ProviderResult<T>` and matching helpers.
+- No UI code.
 
-### 4.4 Providers (`@real/providers/contracts`)
-- Contracts only, no implementation logic.
-- Use `ProviderResult<T>` envelope.
+#### `packages/adapters`
+- Infrastructure implementations only.
+- Must fully implement provider contracts.
+- Must never leak raw infrastructure errors upward.
 
-Example:
-```ts
-import { ProviderResult } from './types'
+### Provider Registry Pattern
+Core and BFF code must import from the registry, not concrete adapters.
 
-export type Product = {
-  id: string
-  name: string
-  price: number
-  currency: string
-}
-
-export interface ProductProvider {
-  list(): Promise<ProviderResult<Product[]>>
-  get(id: string): Promise<ProviderResult<Product>>
-}
-```
-
-### 4.5 Adapters (`@real/adapters/*`)
-- Implement provider contracts fully.
-- Talk to ERP/payment/auth.
-- Never imported directly by UI/core/BFF routes.
-
-## 5) Provider Registry Pattern (`P0`)
-Located at:
-```txt
-packages/providers/registry.ts
-```
-
-Example:
 ```ts
 import { mockProductAdapter } from '@real/adapters/mock/product'
-// import { odooProductAdapter } from '@real/adapters/erp-odoo/product'
 
 const useMock = process.env.USE_MOCK !== 'false'
 
 export const productProvider = useMock
   ? mockProductAdapter
-  : mockProductAdapter // replace with odooProductAdapter when available
+  : mockProductAdapter
 ```
 
-Core imports providers from registry only.
-
-## 6) BFF Rules (`P0`)
-BFF lives in:
-```txt
-apps/next/app/api/*
-```
+### BFF Contract
+BFF code lives under `apps/next/app/api/*`.
 
 Routes must:
-- Import providers (registry), not adapters.
-- Never call ERP directly.
-- Normalize all responses.
+- import providers, not adapters
+- normalize responses
+- return the public envelope only
 
-Public response envelope (mandatory):
+Public envelope:
 ```ts
 { success: true, data: T }
 { success: false, error: { code: string; message: string } }
 ```
 
-Example:
+Correct pattern:
 ```ts
 import { matchProviderResult } from '@real/providers/contracts'
 import { productProvider } from '@real/providers'
 import { fail, ok } from '../_lib/response'
 
 export async function GET() {
-  try {
-    const result = await productProvider.list()
-    return matchProviderResult(result, {
-      ok: (data) => ok(data),
-      fail: (error) => fail(error.code, error.message, 500),
-    })
-  } catch (cause) {
-    return fail('PRODUCT_LIST_UNEXPECTED', 'Unexpected error while fetching products.', 500, {
-      scope: 'GET /api/products',
-      cause,
-    })
-  }
+  const result = await productProvider.list()
+
+  return matchProviderResult(result, {
+    ok: (data) => ok(data),
+    fail: (error) => fail(error.code, error.message, 500),
+  })
 }
 ```
 
-Expo must call BFF endpoints only.
+### Extension Slots
+Use explicit slot registration. No runtime plugin engine. No dynamic scanning.
 
-## 7) Extension Slot Pattern (`P0`)
-Slots path:
-```txt
-packages/app/platform/extensions/slots.ts
-```
-If missing, create exactly at this path.
+Canonical slot path:
+`packages/app/platform/extensions/slots.ts`
 
-Example:
+Correct pattern:
 ```ts
 import { ComponentType } from 'react'
 
@@ -297,69 +173,22 @@ export type CheckoutExtension = ComponentType
 export const checkoutExtensions: CheckoutExtension[] = []
 ```
 
-Registration:
-```ts
-import { checkoutExtensions } from '../platform/extensions/slots'
-import { LoyaltyRedeemPanel } from './LoyaltyRedeemPanel'
+### Role Exposure
+- `customer`: web + Expo
+- `pharmacist`: web only
+- `admin`: web only
 
-checkoutExtensions.push(LoyaltyRedeemPanel)
-```
+Rules:
+- Expo must not expose admin or pharmacist routes.
+- `/pharmacist` and `/pharmasset` are intentionally web-only.
 
-Render:
-```tsx
-{checkoutExtensions.map((Ext, i) => (
-  <Ext key={i} />
-))}
-```
-
-No runtime plugin engine. No dynamic scanning.
-
-## 8) Role Exposure (`P0`)
-Roles:
-- customer: web + expo
-- pharmacist: web only (`/pharmasset`)
-- admin: web only (`/admin`)
-
-Middleware path:
-```txt
-apps/next/proxy.ts
-```
-
-Expo must not expose admin/pharmacist routes.
-
-Note: `/pharmacist` and `/pharmasset` routes are intentionally absent from Expo.
-These are specialist workflows for the pharmacist role, which is web-only by design.
-No Expo equivalent is planned. This is not a parity gap.
-
-## 9) Styling Enforcement (`P0`)
-- UniWind allowed only in `packages/ui/**`.
-- `className` forbidden in `packages/app/**`.
-- Tokens are single source of truth.
-
-Component state policy:
-- Every new UI component must define: `loading`, `empty`, `error`, `disabled`.
-- Add `out-of-stock` when component represents purchasable product state.
-
-Type/spacing policy:
-- Spacing and type scale must come from tokens only.
-- No hardcoded spacing values, font sizes, line heights, font weights, colors, radius values.
-
-## 10) Platform File Rules (`P0`)
-- Default shared file: `.ts/.tsx` (web-first).
-- Prefer `.native.tsx` for native differences.
-- Use `.web.tsx` only when unavoidable.
-
-Pause policy:
-- Pause before creating `.web.tsx`.
-- For `.native.tsx`, pause only when necessity is unclear.
-
-## 11) Environment Rules (`P0`)
+### Environment Contract
 Naming:
-- `NEXT_PUBLIC_*` web client-safe
-- `EXPO_PUBLIC_*` mobile client-safe
-- `*_SECRET` server-only
-- `*_URL` endpoint
-- `USE_*` feature toggles
+- `NEXT_PUBLIC_*`: web client-safe
+- `EXPO_PUBLIC_*`: mobile client-safe
+- `*_SECRET`: server-only
+- `*_URL`: endpoint
+- `USE_*`: feature toggle
 
 Required env vars:
 - `USE_MOCK`
@@ -371,100 +200,45 @@ Required env vars:
 - `EXPO_PUBLIC_API_BASE_URL`
 
 Rules:
-- No hardcoded URLs/secrets.
-- All env vars must exist in `.env.example`.
-- `process.env` forbidden in `packages/app` and `packages/ui`.
+- No hardcoded secrets or service URLs.
+- All env vars must appear in `.env.example`.
+- `process.env` is forbidden in `packages/ui` and `packages/app`.
 
-## 12) Adapter Error Contract (`P0`)
-Adapters must not throw raw infrastructure errors.
+### File Placement
+- reusable UI primitives and components -> `packages/ui`
+- shared commerce logic and screens -> `packages/app`
+- provider contracts -> `packages/providers/contracts`
+- adapter implementations -> `packages/adapters`
+- human-readable architecture and composition docs -> `docs/`
+- workflow and router files -> `.codex/`
 
-Return shape:
-```ts
-{
-  ok: false,
-  error: {
-    code: string,
-    message: string
-  }
-}
-```
+## Commerce UI Contracts (`P0`)
+### Core Principle
+Core commerce surfaces are fixed contracts, not ad-hoc layouts. Reuse the canonical pattern before inventing a new one.
 
-BFF normalizes to public `{ success, data/error }` envelope.
+### Required Component States
+Every new UI component must define:
+- `loading`
+- `empty`
+- `error`
+- `disabled`
 
-## 13) Test Placement (`P0`)
-Tests are colocated with source by default.
+Add `out-of-stock` when the component represents purchasable product state.
 
-Example:
-```txt
-ProductScreen.tsx
-ProductScreen.test.tsx
-```
+### Canonical Surface Contracts
+These patterns are mandatory for composition. Full detail lives in `docs/COMMERCE_PATTERNS.md`.
 
-Adapter tests:
-```txt
-packages/adapters/{adapter}/__tests__/
-```
+- `ProductCard`: media -> badges/meta -> title -> price -> stock/urgency -> primary CTA
+- `PLP / Shop Grid`: scaffold -> filters/sort -> grid -> pagination or load-more
+- `PDP`: gallery -> summary -> variant/quantity/actions -> details -> related modules
+- `Cart Drawer / Cart Page`: line items -> edits -> discounts -> totals -> checkout CTA
+- `Checkout`: contact -> fulfillment -> payment -> order summary -> place order
+- `Account Dashboard`: shell -> overview -> modular sections
 
-Forbidden:
-- `__tests__` in `packages/app`
-- `__tests__` in `packages/ui`
-- root-level generic tests folder
-
-## 14) UI Ambiguity Rule (`P0`)
-Pause and ask when:
-- Component pattern is not in `packages/ui`
-- Spacing/color need values not covered by tokens
-- A new layout region is introduced
-
-UI must follow:
-```txt
-docs/UI_ARCHITECTURE.md
-```
-
-## 15) Pause Triggers (`P0`)
-Stop and request guidance for:
-- New top-level folder
-- Provider interface changes
-- Introducing `.web.tsx`
-- Runtime plugin systems
-- Cross-module dependency changes
-- New external integration
-- Dependency direction changes
-
-No silent architecture changes.
-
-## 16) Architectural Principle (`P0`)
-Core should not need changes when:
-- ERP changes
-- Payment gateway changes
-- Loyalty logic changes
-- Feature module is removed
-
-Adapters absorb infrastructure changes.
-Modules absorb feature changes.
-
-## 17) RTL Enforcement (`P0`)
-All UI must be RTL-compatible.
-
-Rules:
-- Use logical start/end spacing.
-- Avoid hardcoded `left/right` and side-specific spacing values.
-- Mirror directional icons where needed.
-- Carousel direction must follow document direction.
-
-Implementation:
-- Next root layout sets `dir` from locale.
-- Expo uses `I18nManager` when Arabic is active.
-
-Validation:
-- Every new UI block must be checked in both LTR and RTL.
-- If RTL behavior is uncertain, pause and ask.
-
-## 18) CMS-Driven UI Rules (`P0`)
+### CMS and Config Ownership
 CMS controls content for:
 - hero slides
 - promotional banners
-- section visibility
 - campaign messaging
 - loyalty marketing blocks
 - newsletter copy
@@ -472,315 +246,105 @@ CMS controls content for:
 
 Rules:
 - CMS controls content, not layout structure.
-- Core layout is code-owned.
-- Marketing-driven UI must support CMS injection.
+- Core layout remains code-owned.
+- Mutable business policies belong in config or CMS, not component code.
 
-Example:
-```tsx
-<HomeHero slides={cms.hero} />
-```
+## UI System Rules
+### Tokens and Styling (`P0`)
+- All color, spacing, type, radius, border, and motion values must come from tokens.
+- Never hardcode visual values in shared components.
+- Tokens are the single source of truth for visual primitives.
+- UniWind is allowed only in `packages/ui/**`.
+- Unsupported shared/native pseudo-classes remain forbidden: `visited:`, `before:`, `after:`.
 
-Forbidden:
-- Hardcoded hero/marketing copy in component code.
+### Platform Files (`P0`)
+- Default shared file: `.ts` or `.tsx`
+- Prefer `.native.tsx` for native differences
+- Use `.web.tsx` only when unavoidable
 
-## 19) Solito v5 Rules (`P0`/`P1`)
-Core (`P0`):
-- URL is source of truth for navigation.
-- Web and native do not directly share navigation state.
+Pause before adding `.web.tsx`.
+
+### RTL (`P0`)
+- All new UI must work in both LTR and RTL.
+- Use logical start/end alignment and spacing.
+- Avoid hardcoded `left/right`.
+- Mirror directional icons where needed.
+- Check new UI in both LTR and RTL before claiming completion.
+
+### Solito v5 (`P0` / `P1`)
+Core:
+- URL is the source of truth for navigation.
 - Use `solito/navigation` for App Router paths.
-- If using Pages Router area, use `solito/router` only there; do not mix APIs in same feature path.
-- Do not use deprecated `viewProps`/`textProps`.
+- If a Pages Router area exists, keep `solito/router` isolated there.
+- Do not use deprecated `viewProps` or `textProps`.
 
-Web-first guidance (`P1`):
-- Prefer Next.js DOM primitives in web-only routes/layouts/shells.
-- Use RN primitives mainly for shared cross-platform components.
-- Do not force RN Web for purely web-only UI blocks.
+Guidance:
+- Prefer Next DOM primitives in web-only shells and routes.
+- Use RN primitives mainly for shared cross-platform surfaces.
+- Split web-heavy shared components only when necessary.
 
-Migration guidance (`P1`):
-- If a shared component becomes web-heavy, split into shared base + minimal platform override.
-- Default to shared `.tsx` with optional `.native.tsx` fallback.
-- `.web.tsx` only when unavoidable.
+### Motion (`P0` / `P1`)
+Core:
+- If shared animation must work on web and native, use `moti`.
+- Do not add `import 'react-native-reanimated'` side-effect imports in Next entry or layout files.
+- Motion must not hide loading, error, or interaction feedback.
 
-## 20) UniWind Rules (`P0`/`P1`)
-Core (`P0`):
-- UniWind is styling baseline for shared UI.
-- Use platform selectors (`ios:`, `android:`, `web:`) where appropriate.
-- Avoid unsupported native pseudo-class patterns (`visited:`, `before:`, `after:` in shared/native surfaces).
+Guidance:
+- Motion should be subtle, fast, and purposeful.
+- Prefer opacity and small transforms over dramatic movement.
+- Use tokenized timing and easing where possible.
 
-Implementation guidance (`P1`):
-- Prefer `className` utilities first.
-- Use `withUniwind` only for third-party components lacking `className`.
-- Use `useCSSVariable` sparingly.
-- Keep static theming in `global.css` via `@theme` / `@variant`.
-- Use `updateCSSVariables` only for true runtime theme updates.
+### Design Direction (`P1`)
+This storefront favors a compact, flat-leaning, high-density marketplace posture:
+- compact spacing rhythm
+- low-shadow surfaces
+- card-first composition
+- one clear primary commerce action per block
+- expressive hierarchy without bloated chrome
 
-### 20.1 Motion Rules (Moti) (`P0`/`P1`)
-Core (`P0`):
-- If animation must work across web + native shared components, use `moti` as the default motion layer.
-- Do not add `import 'react-native-reanimated'` side-effect imports in Next.js app entry/layout files.
-- Do not add motion that hides loading, error, or interaction feedback.
+Expanded rules live in `docs/UI_ARCHITECTURE.md`.
 
-Implementation guidance (`P1`):
-- Use subtle, meaningful motion only (state transitions, mount/unmount, focus shifts).
-- Prefer `AnimatePresence` + `exit` patterns for mount/unmount transitions.
-- Keep motion durations/easing consistent and tokenized where possible.
-- Avoid platform branching for animation APIs unless strictly required.
-- Motion should not reduce readability or perceived performance in RTL/LTR layouts.
+## Pause Triggers (`P0`)
+Stop and ask before:
+- creating a new top-level folder
+- changing provider interfaces
+- changing dependency direction
+- introducing `.web.tsx`
+- adding a runtime plugin system
+- adding a new external integration
+- introducing a new layout region not covered by current UI patterns
+- using colors or spacing not represented by tokens
+- making RTL behavior guesses you cannot verify
 
-## 21) Guard Scans (`P0`)
-Run command:
-```sh
-yarn guard:checks
-```
+## Verification (`P0`)
+### Guard Checks
+Agents must run `yarn guard:checks` for every non-trivial change.
 
-Canonical checks:
-```sh
-# 1) No direct adapter imports in UI/app layers (except BFF routes)
-rg -n "from '@real/adapters" packages/app packages/ui apps/expo apps/next/app --glob '!apps/next/app/api/**' && exit 1
+If the command fails because of shell, runtime, or line-ending issues, use the normalized fallback command listed earlier in this file.
 
-# 2) No provider imports in packages/ui
-rg -n "from '@real/providers" packages/ui && exit 1
+Canonical guard expectations:
+- no direct adapter imports in UI or shared app layers
+- no provider imports in `packages/ui`
+- no raw hex colors in shared packages
+- no adapter imports in BFF routes
+- no deprecated Solito props
+- no `solito/router` usage in App Router paths
+- no unsupported pseudo-classes in shared/native surfaces
+- no `className` in `packages/app`
+- no `process.env` in shared packages
+- no forbidden `__tests__` folders in `packages/app` or `packages/ui`
+- no reanimated side-effect import in Next entries and layouts
 
-# 3) No raw hex colors in shared packages
-rg -n "#[0-9a-fA-F]{3,8}" packages/app packages/ui && exit 1
-
-# 4) No direct adapter imports in BFF routes
-rg -n "from '@real/adapters" apps/next/app/api && exit 1
-
-# 5) No deprecated Solito props
-rg -n "viewProps=|textProps=" packages apps && exit 1
-
-# 6) No solito/router usage in App Router paths
-rg -n "from ['\\\"]solito/router['\\\"]" apps/next/app packages/app && exit 1
-
-# 7) No unsupported pseudo-classes in shared/native code
-rg -n "visited:|before:|after:" packages/app packages/ui apps/expo && exit 1
-
-# 8) No className in packages/app
-rg -n "className=" packages/app && exit 1
-
-# 9) No process.env in shared packages
-rg -n "process.env" packages/app packages/ui && exit 1
-
-# 10) No forbidden tests folders
-rg -n "__tests__" packages/app packages/ui && exit 1
-
-# 11) No reanimated side-effect import in Next app entries/layouts
-rg -n "import ['\\\"]react-native-reanimated['\\\"]" apps/next --glob 'app/**' --glob 'pages/**' --glob 'src/**' && exit 1
-```
-
-False-positive policy:
-1. Keep the guard category.
-2. Narrow the regex scope or add precise excludes.
-3. Document rationale in AGENTS.md or CI config notes.
-
-## 22) Merge Definition of Done (`P0`)
+### Definition of Done
 Before merge:
-- `P0` rules remain satisfied.
-- `yarn guard:checks` passes.
-- Affected UI blocks validated in LTR and RTL.
-- New/changed components cover required states (`loading`, `empty`, `error`, `disabled`, and `out-of-stock` when relevant).
+- `P0` rules remain satisfied
+- guard checks pass
+- affected UI is checked in LTR and RTL
+- changed components cover required states
+- customer UI still follows the canonical commerce chain and contracts
 
-
-## 23) Premium Visual Codex (`P1`)
-Priority rule:
-- This section is `P1` guidance for premium commerce presentation.
-- If any item here conflicts with existing `P0` rules, existing `P0` rules win.
-
-### 23.1 Whitespace Discipline
-- Start with generous spacing and reduce only when needed for content density.
-- Use tokenized spacing only.
-- Prefer an 8px rhythm for layout spacing (`8, 16, 24, 32, 48, 64, 80, 96, 128`) through token mappings.
-- Avoid odd or ad-hoc spacing values in component code.
-
-### 23.2 Color System Governance
-- Define color tokens in HSL (or HSL-equivalent token functions) by default to keep tone control predictable.
-- Avoid introducing new HEX color definitions in token authoring unless required by an external integration format.
-- Neutral surfaces/text should be slightly hue-tinted (not dead neutral gray) while preserving accessibility.
-- High-saturation accents are reserved for primary actions, urgency, or interaction feedback.
-- Avoid hardcoded color values in UI component code.
-
-### 23.3 Typography Authority
-- All text must map to a defined tier: `display`, `headline`, `sub-headline`, `body`, `caption`.
-- Prefer contrast and weight hierarchy over oversized typography.
-- Headline tracking may be slightly tightened; editorial all-caps sub-labels may use slightly open tracking.
-- As type size increases, line-height ratio should decrease to preserve premium visual density.
-- Do not use low-contrast gray text on colored backgrounds.
-
-### 23.4 Elevation & Separation
-- Prefer depth (tokenized shadows) and tonal separation over decorative borders.
-- Shadow recipes should follow a single top-down light model and include:
-  - a subtle rim definition
-  - a soft ambient lift
-- Borders remain utilitarian and minimal.
-
-### 23.5 Interaction Presence
-- Keep secondary actions reveal-on-demand where appropriate (hover/focus/expanded states).
-- Use progressive disclosure (drawers/accordions/sheets) for technical or secondary information.
-- Preserve clean primary surfaces; avoid persistent visual noise.
-- Keep interaction motion subtle, tokenized, and performance-safe.
-
-### 23.6 Product Imagery & Density Taper
-- Product cards should be image-dominant (target at least ~70% visual area for media in catalog cards).
-- Maintain consistent product-image framing and card rhythm across rails.
-- Prefer editorial/low-density presentation higher on the page, and higher-density utility near conversion sections.
-
-## 24) Motion Manifesto (`P1`)
-Priority rule:
-- This section is `P1` guidance.
-- Existing `P0` architecture, data, and accessibility rules always win.
-
-### 24.1 Motion Physics
-- Motion should feel calm, premium, and intentional ("silent concierge"), never flashy.
-- Default easing for premium motion:
-  - `cubic-bezier(0.16, 1, 0.3, 1)`
-- No instant state changes for interactive elements.
-- Avoid `linear` and `ease-in-out` for UI motion in shared components.
-
-### 24.2 Duration Standards
-- Micro interactions (hover/focus/reveal): `300ms`
-- Hover scale/transform refinements: `400ms`
-- Section reveal/scroll entrance: `600ms`
-- Child stagger for narrative lists/rails: `20ms`
-
-### 24.3 Interaction Patterns
-- Reveal-on-demand for secondary actions (`Quick view`, `Add to cart`, etc.).
-- Use ghost-to-solid reveal for secondary overlays where appropriate.
-- Product hover should combine:
-  - subtle image scale to `1.02`
-  - shadow intensification via tokenized elevation/shadows
-- Preserve keyboard/focus accessibility behavior while applying hover patterns.
-
-### 24.4 Scroll & Section Entrance
-- New section entrances should use subtle Y-lift + fade with premium easing and `600ms` duration.
-- Prefer staggered entrances for repeated child elements.
-- Do not use motion that masks loading/error/disabled states.
-
-### 24.5 Visual Prohibitions
-- No decorative motion that competes with core shopping actions.
-- No mixed shadow directions; keep one top-down light model.
-- Avoid decorative border-based emphasis when depth/tonal separation can communicate hierarchy.
-
-## 25) Sovereign UI Composition Rules (`P1`)
-Priority rule:
-- This section is `P1` guidance.
-- Existing `P0` rules always win when conflicts appear.
-
-### 25.1 Linear Spacing Constitution
-- Use tokenized spacing only.
-- Prefer strict 8px rhythm values: `8, 16, 24, 32, 48, 64, 80, 96, 128`.
-- Do not introduce ad-hoc odd spacing values.
-- When a layout needs more room, move to the next approved spacing step.
-- Default to generous whitespace (especially vertical rhythm) for premium presentation.
-
-### 25.2 Contextual Typography Law
-- Every text element should map to one tier: `display`, `headline`, `sub-headline`, `body`, `caption`.
-- Prefer hierarchy via weight/contrast before increasing font size.
-- Headline tracking may be tightened for premium lock-up.
-- Editorial all-caps sub-headers may use open tracking.
-- Use proportional line-height scaling: larger tiers use tighter line-height ratios than body/caption tiers.
-- Avoid low-contrast gray text on colored backgrounds.
-
-### 25.3 Radius & Architectural Finish
-- Default to sharp/minimal radius (`2px–4px` equivalent token values).
-- Large rounded or pill-like radius must be explicitly justified by UX need.
-- Inner element radius should not exceed its container radius unless intentionally directional (e.g., badges/chips with explicit product requirement).
-
-### 25.4 Shadow & Depth Physics
-- Prefer depth and tonal hierarchy over decorative borders.
-- Elevation should follow two-part logic (rim definition + ambient lift).
-- Keep one global top-down light model across components.
-- Interactive hover/focus states should primarily communicate via lift/elevation, not color-only changes.
-
-### 25.5 Interaction Sovereignty
-- Use `cubic-bezier(0.16, 1, 0.3, 1)` for premium transitions.
-- Secondary metadata/actions should be reveal-on-demand.
-- Magnetic pointer affordance is allowed only for key web CTAs and only when performance/accessibility remain intact.
-
-## 26) Canonical Commerce UI Patterns (`P0`)
-Purpose:
-- Define mandatory composition patterns for core commerce surfaces.
-- Prevent ad-hoc layout invention and primitive duplication.
-
-Pattern rules (all patterns):
-- Use existing `@real/ui` primitives before creating new ones.
-- Include required states: `loading`, `empty`, `error`, `disabled`, plus `out-of-stock` when product purchase is involved.
-- Keep data flow in canonical chain: `UI -> apiClient -> BFF -> provider registry -> adapters`.
-- No hardcoded layout invention when a canonical pattern exists.
-
-### 26.1 ProductCard
-- Structure: media (fixed ratio) -> badges/meta -> title -> price -> stock/availability -> primary action.
-- Required states: loading skeleton, empty fallback, error fallback, disabled action, out-of-stock.
-- Composition rules: do not embed API calls; do not duplicate price/stock logic outside shared composition.
-- Reuse expectation: same card contract across rails, PLP, related, campaign blocks.
-
-### 26.2 PLP / Shop Grid
-- Structure: page scaffold -> filter/sort controls -> product grid -> pagination/infinite trigger.
-- Required states: loading grid, empty result state, error retry state.
-- Composition rules: filtering/sorting must route through provider-backed APIs, not local ad-hoc data mutations.
-- Reuse expectation: reuse ProductCard and shared filter primitives.
-
-### 26.3 PDP / Product Page
-- Structure: gallery/media -> summary (title/price/availability) -> variant/quantity/actions -> details tabs/sections -> related modules.
-- Required states: loading content, unavailable product, error fetch state.
-- Composition rules: keep purchasable actions and stock states explicit; no duplicated cart mutation logic.
-- Reuse expectation: reuse shared quantity, price, stock and action primitives.
-
-### 26.4 Cart Drawer / Cart Page
-- Structure: line items list -> editable quantities -> applied discounts/promotions -> totals -> checkout CTA.
-- Required states: loading cart, empty cart, error with recovery, disabled checkout.
-- Composition rules: totals and promotion math must come from pricing flow, not UI recomputation.
-- Reuse expectation: same line-item and summary primitives across drawer/page.
-
-### 26.5 Checkout Layout
-- Structure: contact -> fulfillment -> payment -> order summary -> place order action.
-- Required states: loading quote, invalid quote, explicit checkout errors, disabled submit while invalid.
-- Composition rules: quote validation is mandatory before place order; do not bypass server pricing authority.
-- Reuse expectation: shared form/state primitives and order summary components.
-
-### 26.6 Account Dashboard
-- Structure: account shell -> overview KPIs -> orders/tests/addresses/wishlist sections.
-- Required states: loading section skeletons, empty section states, recoverable fetch errors.
-- Composition rules: section composition is modular; no monolithic page-specific primitives.
-- Reuse expectation: shared cards, tables, state components across account/admin where applicable.
-
-Reference:
-- Detailed human and AI composition guidance lives in `docs/COMMERCE_PATTERNS.md`.
-
-## 27) Component Registry Guidance (`P0`)
-- Before adding a new primitive/component, check `packages/ui` and `docs/UI_COMPONENT_INVENTORY.md`.
-- Prefer extending existing component contracts over creating near-duplicate primitives.
-- New primitives must include required states and token/RTL compliance.
-- If a registry document exists, reference it; do not duplicate full registry inventories in AGENTS.
-
-## 28) Domain Ownership Guidance (Future-State) (`P1`)
-Guidance only (non-breaking, no forced refactor in this phase):
-- `catalog`: product/category/brand/query surfaces
-- `commerce`: cart/checkout/orders/pricing
-- `customer`: account/auth/profile/addresses/tests/wishlist
-- `marketing`: cms blocks/promotions/campaign content
-- `operations`: admin ops/audit/cache/i18n operations
-
-Rules:
-- Treat as evolutionary ownership guidance for future organization inside `packages/app`.
-- Do not perform destructive folder migrations without explicit approval.
-
-## 29) AI Task Workflow (`P0`)
-Expected flow for non-trivial AI execution:
-1. Classify domain and print required Domain/Skills header.
-2. Select workflow/prompt mode.
-3. Plan before implementation when task is non-trivial.
-4. Implement minimal scoped changes aligned to architecture.
-5. Run verification, including `yarn guard:checks`.
-6. Review against architecture, RTL, token, and state requirements.
-7. Stop and request guidance on any pause trigger.
-
-## 30) AI File Placement Rules (`P0`)
-- Reusable UI primitives/components -> `packages/ui`
-- Feature/domain logic and shared commerce logic -> `packages/app`
-- Provider contracts -> `packages/providers/contracts`
-- Adapter implementations -> `packages/adapters`
-- Human-readable architecture/composition docs -> `docs/`
-- Codex workflow/router/prompt files -> `.codex/`
-
-Do not place workflow orchestration files in core runtime packages.
+## References
+- `docs/UI_ARCHITECTURE.md`
+- `docs/COMMERCE_PATTERNS.md`
+- `docs/UI_COMPONENT_INVENTORY.md`
+- `docs/plans/2026-03-21-agents-md-rebuild-design.md`

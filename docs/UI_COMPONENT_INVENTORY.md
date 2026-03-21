@@ -1,104 +1,131 @@
-# `@real/ui` Component Inventory (Priority Build Order)
+# UI Component Inventory
 
-Purpose: define what exists, what is missing, and what to build first for premium ecommerce UX.
+## Purpose
+This document is the practical registry for `packages/ui`. Check here before creating new shared components.
 
-## 1) Current Components (Already in `packages/ui/components`)
+## How to Use This Inventory
+- Extend an existing component before creating a new primitive.
+- Create a new primitive only when the behavior is clearly reusable and no existing contract fits.
+- Keep business logic out of shared UI.
 
+## Primitives
+Core primitives under `packages/ui/primitives`:
 - `Box`
-- `Text`
 - `Container`
-- `Grid`
-- `Button`
-- `Input`
-- `Card`
-- `Drawer`
-- `Badge`
 - `Divider`
+- `Input`
+- `Scroll`
+- `Text`
+- `Touchable`
+
+Layout primitives under `packages/ui/layout`:
+- `Container`
+- `PageScaffold`
+- `Section`
+
+Use these as the first layer for shared composition.
+
+## Core Shared Components
+General reusable components:
+- `Alert`
+- `Badge`
+- `Button`
+- `Card`
+- `Checkbox`
+- `Drawer`
+- `FormField`
+- `Grid`
+- `Icon`
+- `IconButton`
 - `MetricCard`
-- `NavChip`
+- `SearchField`
 - `SectionHeading`
-
-## 2) Gaps vs Premium Commerce Requirements
-
-These are missing for a production-grade premium storefront:
-
-- Search components: `SearchInput`, `SearchSuggestionList`, `SearchEmptyState`
-- Product card system: `ProductCard`, `ProductPrice`, `ProductBadge`, `ProductActions`
-- Media: `ResponsiveImage`, `ImageRatioBox`, `Carousel`, `ThumbnailStrip`
-- State components: `Skeleton`, `EmptyState`, `InlineError`, `Toast`
-- Form UX: `FormField`, `Select`, `RadioGroup`, `Checkbox`, `QuantityStepper`
-- Filters/sort: `FilterPanel`, `FilterChip`, `SortSelect`, `AppliedFilterBar`
-- Commerce blocks: `CartLineItem`, `OrderSummary`, `PromoCodeField`, `StockIndicator`
-- Navigation shell blocks: `HeaderSearch`, `IconButton`, `MenuPanel`, `BottomTabBar`
-
-## 3) Priority Plan
-
-## P0 (Build First: Core Purchase Flow)
-
-- `ProductCard`
+- `Select`
+- `Sheet`
 - `Skeleton`
-- `EmptyState`
-- `InlineError`
-- `QuantityStepper`
-- `CartLineItem`
-- `OrderSummary`
-- `StockIndicator`
-- `FilterChip`
-- `SortSelect`
-
-Exit criteria:
-- Home, Shop, PDP, Cart, Checkout can render complete `loading/empty/error/success` states.
-- No direct ad-hoc UI patterns outside shared components.
-
-## P1 (Build Next: Conversion and Discoverability)
-
-- `SearchInput`
-- `SearchSuggestionList`
-- `SearchEmptyState`
-- `FilterPanel`
-- `AppliedFilterBar`
-- `PromoCodeField`
-- `Carousel`
-- `ThumbnailStrip`
+- `Spinner`
+- `Switch`
+- `Tabs`
+- `Textarea`
 - `Toast`
 
-Exit criteria:
-- Search, filtering, PDP media, and promo code interactions are consistent across web/mobile.
+Commerce-oriented components:
+- `PriceTag`
+- `ProductCard`
+- `QuantityInput`
+- `QuickViewModal`
+- `StockBadge`
+- `StarRating`
+- `PaymentBadges`
+- `MarketplacePromoStrip`
+- `MarketplaceSectionHeader`
+- `HorizontalRailState`
 
-## P2 (Build Last: Polish and Role-Specific Surfaces)
+## Shell and Navigation Components
+Under `packages/ui/components/chrome`:
+- `TopPromoBar`
+- `HeaderMainRow`
+- `CategoryRow`
+- `MiniSearchBar`
+- `SearchOverlay`
+- `SearchPanel`
+- `CartDrawer`
+- `FooterAccordion`
+- `FooterColumns`
+- `FooterNewsletter`
+- `FooterSocialLinks`
+- `FooterLegalRow`
+- `BrandArc`
 
-- `HeaderSearch`
-- `MenuPanel`
-- `BottomTabBar`
-- `FormField`
-- `Select`
-- `RadioGroup`
-- `Checkbox`
-- `IconButton`
+These are shared shell pieces. Keep them presentational and token-driven.
 
-Exit criteria:
-- Admin/pharmacist/customer navigation and forms use one shared component contract.
+## Home and Discovery Blocks
+Under `packages/ui/components/home`:
+- `HomeBrandRail`
+- `HomeCampaignBannerRow`
+- `HomeCategoryStrip`
+- `HomeHeroRail`
+- `HomeProductRail`
+- `HomeRecentlyViewedRail`
 
-## 4) Mandatory Component Contract Rules
+Under `packages/ui/components/home-v2`:
+- `AnnouncementTicker`
+- `BestItemsMonthRail`
+- `BrandSpotlightSection`
+- `BrandStoryBanner`
+- `BundlePromotionsRail`
+- `CampaignHeroBlock`
+- `CompleteSetBlock`
+- `CountdownTimer`
+- `FeaturedCampaignSlot`
+- `FlashSaleBand`
+- `HeroCampaignSlider`
+- `NewsletterLoyaltyCta`
+- `TopBrandsGrid`
+- `UgcGallery`
 
-- Every new component must support token-only visuals (no hardcoded visual values).
-- Every interactive component must define disabled/loading/focus states.
-- Every commerce-facing component must support RTL.
-- Web hover behavior must have a native touch equivalent.
-- Components accept content via props; no hardcoded marketing copy.
+Reference-only implementation artifacts currently present:
+- `SephoraReferenceHome`
+- `figmaHomeData`
 
-## 5) Mapping to Screens (`@real/app`)
+Treat reference-only artifacts as inspiration or migration inputs, not as default production primitives.
 
-- `HomeScreen`: needs `ProductCard`, `Skeleton`, `EmptyState`, `InlineError`, `Carousel`
-- `ShopScreen`: needs `ProductCard`, `FilterPanel`, `FilterChip`, `SortSelect`, `AppliedFilterBar`
-- `ProductScreen`: needs `StockIndicator`, `QuantityStepper`, `Carousel`, `ThumbnailStrip`
-- `CheckoutScreen`: needs `CartLineItem`, `OrderSummary`, `PromoCodeField`, form components
-- `Account/Admin/Pharmacist`: need common form/state components and shell/nav components
+## Shop-Specific Shared Components
+Under `packages/ui/components/shop`:
+- `ShopCatalogView`
 
-## 6) Definition of Done for `@real/ui`
+This is the current catalog composition anchor. Prefer extending it or extracting reusable subcontracts from it rather than creating parallel PLP systems.
 
-- Component exported from `packages/ui/index.ts`
-- Types included and props documented in code comments
-- LTR + RTL verified
-- Web + native behavior verified
-- Used by at least one shared screen in `@real/app`
+## Extension Guidance
+Prefer these moves in order:
+1. Reconfigure tokens or density presets.
+2. Extend an existing shared component contract.
+3. Compose existing components in `packages/app`.
+4. Add a new shared primitive only if the first three options fail cleanly.
+
+## Gaps To Watch
+These areas should stay deliberate:
+- price and stock presentation should not fork into multiple competing patterns
+- cart line-item and summary primitives should remain shared across drawer and page
+- filter chips, toolbar controls, and state blocks should consolidate rather than proliferate
+- reference/demo surfaces should not quietly become production dependencies without review
