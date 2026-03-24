@@ -48,7 +48,7 @@ const DEFAULT_SWATCH_COLORS = [
   colors.textPrimary,
 ]
 
-function ProductCardSkeleton({ width, density = 'compact' }: { width: number, density?: ProductCardDensity }) {
+function ProductCardSkeleton({ width, density = 'comfortable' }: { width: number, density?: ProductCardDensity }) {
   const tokens = componentTokens.storefrontHome.productCard
   const densityTokens = componentTokens.storefrontHome.productCardDensity[density]
   const shimmer = {
