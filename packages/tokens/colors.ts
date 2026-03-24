@@ -1,68 +1,109 @@
 export const colors = {
-  // Base surfaces — warm-tinted neutrals (hue 30°, 5-8% saturation)
+  // ── Base surfaces — storefront phase 1 neutral marketplace scale ─────────
   background: 'hsl(0 0% 100%)',
-  backgroundSecondary: 'hsl(0 0% 97%)',
+  backgroundSecondary: 'hsl(0 0% 96%)',
   surface: 'hsl(0 0% 100%)',
-  surfaceMuted: 'hsl(0 0% 97%)',
+  surfaceMuted: 'hsl(210 20% 98%)',
 
-  // Ink family — prestige dark surfaces + on-ink text (The Atelier)
-  inkBlack: 'hsl(20 10% 8%)',      // ink section background — same value as 'black'/'text'; explicit semantic name for ink sections
-  inkDeep: 'hsl(20 8% 13%)',       // card backgrounds inside ink sections
-  inkMid: 'hsl(20 8% 20%)',        // dividers / borders inside ink sections
-  inkFrost: 'hsl(30 8% 95%)',      // light text ON ink (warm off-white, not harsh)
+  // ── Grayscale — shades of #f8f8f8 (pure neutral) ─────────────────────────
+  gray0:  'hsl(0 0% 97%)',   // #f8f8f8 — base
+  gray5:  'hsl(0 0% 87%)',   // #dfdfdf — shade 1
+  gray10: 'hsl(0 0% 78%)',   // #c6c6c6 — shade 2
+  gray20: 'hsl(0 0% 68%)',   // #adadad — shade 3
+  gray30: 'hsl(0 0% 58%)',   // #949494 — shade 4
+  gray40: 'hsl(0 0% 49%)',   // #7c7c7c — shade 5
+  gray50: 'hsl(0 0% 39%)',   // #636363 — shade 6
+  gray60: 'hsl(0 0% 29%)',   // #4a4a4a — shade 7
+  gray70: 'hsl(0 0% 19%)',   // #313131 — shade 8
+  gray80: 'hsl(0 0% 9%)',    // #181818 — shade 9
+  gray90: 'hsl(0 0% 0%)',    // #000000 — shade 10
+  gray100: 'hsl(0 0% 0%)',   // #000000
 
-  // Gold family — luxury / loyalty accent (The Atelier)
-  goldPrimary: 'hsl(39 95% 43%)',  // gold text, loyalty badge fills, featured labels
-  goldLight: 'hsl(42 100% 75%)',   // hover / active state of gold elements
-  goldSubtle: 'hsl(42 60% 92%)',   // subtle gold tint on white backgrounds
+  // ── Tints of #f8f8f8 (near-white steps toward #ffffff) ────────────────────
+  tint0:  'hsl(0 0% 97%)',   // #f8f8f8 — base
+  tint10: 'hsl(0 0% 98%)',   // #f9f9f9 / #fafafa
+  tint20: 'hsl(0 0% 98%)',   // #fafafa
+  tint30: 'hsl(0 0% 98%)',   // #fbfbfb
+  tint40: 'hsl(0 0% 99%)',   // #fcfcfc
+  tint50: 'hsl(0 0% 99%)',   // #fdfdfd
+  tint60: 'hsl(0 0% 100%)',  // #fefefe / #ffffff
+  tint70: 'hsl(0 0% 100%)',  // #ffffff — white
 
-  // Text — warm-tinted neutrals
-  text: 'hsl(20 10% 8%)',
-  textPrimary: 'hsl(20 10% 8%)',
-  textSecondary: 'hsl(20 8% 35%)',
-  mutedText: 'hsl(20 8% 35%)',
-  textMuted: 'hsl(20 8% 35%)',
-  textInverted: 'hsl(0 0% 100%)',
+  // ── Ink family — The Atelier prestige dark surfaces ───────────────────────
+  // Updated to Figma Primary #1e1e1e and cool dark steps
+  inkBlack: 'hsl(0 0% 12%)',
+  inkDeep: 'hsl(0 0% 16%)',
+  inkMid: 'hsl(0 0% 22%)',
+  inkFrost: 'hsl(210 20% 95%)',
 
-  // Borders — warm-tinted
-  border: 'hsl(30 10% 88%)',
-  divider: 'hsl(30 10% 88%)',
+  // ── Gold family — Figma Attention #fac300 ─────────────────────────────────
+  goldPrimary: 'hsl(42 86% 48%)',
+  goldLight: 'hsl(42 88% 61%)',
+  goldSubtle: 'hsl(42 70% 93%)',
+  premiumBlue: 'hsl(216 100% 49%)',  // Figma Primary home 2 #0064FA
+  premiumMist: 'hsl(210 20% 98%)',
+  mint: 'hsl(216 100% 49%)',
+  sun: 'hsl(0 100% 98%)',
+  popPink: 'hsl(358 74% 50%)',
+  popBlush: 'hsl(0 100% 98%)',
+  stroke: 'hsla(0 0% 0% / 0.10)',
 
-  // Brand
-  primary: 'hsl(20 10% 8%)',
-  secondary: 'hsl(358 74% 50%)',
-  accent: 'hsl(20 10% 8%)',
-  brandPrimary: 'hsl(358 74% 50%)',
-  brandPrimaryHover: 'hsl(358 74% 44%)',
-  brandPrimaryPressed: 'hsl(358 74% 38%)',
-  brandPrimarySubtle: 'hsl(30 6% 97%)',
+  // ── Figma named palette anchors ────────────────────────────────────────────
+  primaryHome1: 'hsl(0 0% 12%)',    // #1E1E1E
+  primaryHome2: 'hsl(216 100% 49%)', // #0064FA
+  primaryHome3: 'hsl(11 100% 31%)',  // #9F1D00
+  secondaryHome1: 'hsl(47 100% 49%)', // #FAC300
+  secondaryHome2: 'hsl(0 0% 12%)',
+  secondaryHome3: 'hsl(0 0% 12%)',
+  linkPrimary: 'hsl(358 74% 50%)',
+
+  // ── Text ──────────────────────────────────────────────────────────────────
+  text: 'hsl(0 0% 12%)',
+  textPrimary: 'hsl(0 0% 12%)',
+  textSecondary: 'hsl(0 0% 32%)',
+  mutedText: 'hsl(0 0% 45%)',
+  textMuted: 'hsl(0 0% 45%)',
+  textInverted: 'hsl(0 0% 100%)',    // white
+
+  // ── Borders ───────────────────────────────────────────────────────────────
+  border: 'hsla(0 0% 0% / 0.10)',
+  divider: 'hsla(0 0% 0% / 0.10)',
+
+  // ── Brand — REAL Cosmetics crimson (unchanged — brand identity) ───────────
+  primary: 'hsl(0 0% 12%)',
+  secondary: 'hsl(358 74% 50%)',     // brandCrimson
+  accent: 'hsl(47 100% 49%)',        // Figma gold
+  brandPrimary: 'hsl(358 74% 50%)',  // REAL Cosmetics crimson CTA — unchanged
+  brandPrimaryHover: 'hsl(358 74% 41%)',
+  brandPrimaryPressed: 'hsl(358 74% 35%)',
+  brandPrimarySubtle: 'hsl(344 80% 98%)',
   primaryText: 'hsl(0 0% 100%)',
 
-  // Legacy aliases used in existing shell code — DO NOT REMOVE (backward compat)
-  chipBackground: 'hsl(30 6% 97%)',
+  // ── Legacy aliases — DO NOT REMOVE (backward compat) ─────────────────────
+  chipBackground: 'hsl(210 20% 98%)',
   brandTeal: 'hsl(358 74% 50%)',   // legacy name — same as brandPrimary
-  brandMint: 'hsl(30 6% 97%)',     // legacy name — same as surfaceMuted
+  brandMint: 'hsl(210 20% 98%)',
   brandGreen: 'hsl(358 74% 44%)',  // legacy name — same as brandPrimaryHover
 
-  // Correct-name aliases (use these going forward)
+  // ── Correct-name aliases ──────────────────────────────────────────────────
   brandCrimson: 'hsl(358 74% 50%)',
   brandCrimsonHover: 'hsl(358 74% 44%)',
-  surfaceSubtle: 'hsl(30 6% 97%)',
+  surfaceSubtle: 'hsl(0 0% 96%)',
 
-  // Status
-  success: 'hsl(162 100% 39%)',
-  warning: 'hsl(40 100% 50%)',
-  danger: 'hsl(358 100% 42%)',
-  error: 'hsl(358 100% 42%)',
-  sale: 'hsl(358 100% 42%)',
-  info: 'hsl(210 90% 40%)',
+  // ── Status — Figma pixel-perfect values ───────────────────────────────────
+  success: 'hsl(153 72% 34%)',
+  warning: 'hsl(42 86% 48%)',
+  danger: 'hsl(344 85% 55%)',
+  error: 'hsl(344 85% 55%)',
+  sale: 'hsl(344 85% 55%)',
+  info: 'hsl(214 90% 42%)',
 
-  // Utility
+  // ── Utility ───────────────────────────────────────────────────────────────
   white: 'hsl(0 0% 100%)',
-  black: 'hsl(20 10% 8%)',         // see also: inkBlack (semantic alias for ink-section use)
+  black: 'hsl(0 0% 12%)',
 
-  // Semantic intent aliases — explicit intent at call sites
-  salePrice: 'hsl(358 74% 50%)',      // = brandPrimary — for PriceTag sale price
+  // ── Semantic intent aliases ───────────────────────────────────────────────
+  salePrice: 'hsl(344 85% 55%)',
   ctaBackground: 'hsl(358 74% 50%)',  // = brandPrimary — for add-to-cart buttons
-  urgencyBadge: 'hsl(358 74% 50%)',   // = brandPrimary — for flash-sale badges
+  urgencyBadge: 'hsl(344 85% 55%)',
 } as const
