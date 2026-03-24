@@ -216,10 +216,10 @@
   --color-card:                 hsl(0 0% 100%);
   --color-muted:                hsl(210 20% 98%);
   --color-muted-foreground:     hsl(0 0% 49%);   
-  --color-primary-subtle:       hsl(0 100% 98%);
+  --color-primary-subtle:       hsl(344 80% 98%);
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning-subtle:       hsl(48 100% 94%);
-  --color-destructive-subtle:   hsl(0 100% 95%);
+  --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info-subtle:          hsl(224 100% 95%);
 }
 
@@ -249,10 +249,10 @@
   --color-card:                 hsl(0 0% 100%);
   --color-muted:                hsl(210 20% 98%);
   --color-muted-foreground:     hsl(0 0% 49%);   
-  --color-primary-subtle:       hsl(0 100% 98%);
+  --color-primary-subtle:       hsl(344 80% 98%);
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning-subtle:       hsl(48 100% 94%);
-  --color-destructive-subtle:   hsl(0 100% 95%);
+  --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info-subtle:          hsl(224 100% 95%);
 }
 
