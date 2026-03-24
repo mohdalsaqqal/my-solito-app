@@ -7,20 +7,20 @@
 
 @theme {
   /* ── Colors — from packages/tokens/colors.ts  ── */
-  --color-background:           hsl(0 0% 97%);   
-  --color-background-secondary: hsl(0 0% 98%);   
+  --color-background:           hsl(0 0% 100%);
+  --color-background-secondary: hsl(0 0% 96%);
   --color-foreground:           hsl(0 0% 12%);
   --color-foreground-muted:     hsl(0 0% 49%);   
-  --color-border:               hsl(0 0% 87%);   
+  --color-border:               hsla(0 0% 0% / 0.10);
   --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(0 0% 98%);   
+  --color-muted:                hsl(210 20% 98%);
   --color-muted-foreground:     hsl(0 0% 49%);   
 
   /* Brand — colors.brandPrimary = hsl(358 74% 50%) — REAL Cosmetics crimson */
   --color-primary:              hsl(358 74% 50%);
   --color-primary-hover:        hsl(358 74% 41%);
   --color-primary-pressed:      hsl(358 74% 35%);
-  --color-primary-subtle:       hsl(356 62% 96%);
+  --color-primary-subtle:       hsl(344 80% 98%);
   --color-primary-foreground:   hsl(0 0% 100%);
 
   /* Ink family — Figma Primary (cool pure darks) */
@@ -62,18 +62,18 @@
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning:              hsl(42 86% 48%);
   --color-warning-subtle:       hsl(48 100% 94%);
-  --color-destructive:          hsl(0 86% 56%);
-  --color-destructive-subtle:   hsl(0 100% 95%);
+  --color-destructive:          hsl(344 85% 55%);
+  --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info:                 hsl(214 90% 42%);
   --color-info-subtle:          hsl(224 100% 95%);
 
   /* ── Radius — from packages/tokens/radius.ts — sharp by default per §25.3 ── */
   --radius-none: 0px;
-  --radius-xs:   4px;
+  --radius-xs:   2px;
   --radius-sm:   6px;
   --radius-md:   8px;
-  --radius-lg:   10px;
-  --radius-xl:   12px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
   --radius-full: 9999px;
   --radius:      8px;
 
@@ -208,15 +208,15 @@
 
 :root,
 .light {
-  --color-background:           hsl(0 0% 97%);   
-  --color-background-secondary: hsl(0 0% 98%);   
+  --color-background:           hsl(0 0% 100%);
+  --color-background-secondary: hsl(0 0% 96%);
   --color-foreground:           hsl(0 0% 12%);
   --color-foreground-muted:     hsl(0 0% 49%);   
-  --color-border:               hsl(0 0% 87%);   
+  --color-border:               hsla(0 0% 0% / 0.10);
   --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(0 0% 98%);   
+  --color-muted:                hsl(210 20% 98%);
   --color-muted-foreground:     hsl(0 0% 49%);   
-  --color-primary-subtle:       hsl(356 62% 96%);
+  --color-primary-subtle:       hsl(0 100% 98%);
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning-subtle:       hsl(48 100% 94%);
   --color-destructive-subtle:   hsl(0 100% 95%);
@@ -241,15 +241,15 @@
 
 /* Uniwind themes must expose the exact same dashed variables per theme variant. */
 @variant light {
-  --color-background:           hsl(0 0% 97%);   
-  --color-background-secondary: hsl(0 0% 98%);   
+  --color-background:           hsl(0 0% 100%);
+  --color-background-secondary: hsl(0 0% 96%);
   --color-foreground:           hsl(0 0% 12%);
   --color-foreground-muted:     hsl(0 0% 49%);   
-  --color-border:               hsl(0 0% 87%);   
+  --color-border:               hsla(0 0% 0% / 0.10);
   --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(0 0% 98%);   
+  --color-muted:                hsl(210 20% 98%);
   --color-muted-foreground:     hsl(0 0% 49%);   
-  --color-primary-subtle:       hsl(356 62% 96%);
+  --color-primary-subtle:       hsl(0 100% 98%);
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning-subtle:       hsl(48 100% 94%);
   --color-destructive-subtle:   hsl(0 100% 95%);
