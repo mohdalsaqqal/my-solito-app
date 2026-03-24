@@ -1,26 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Image, Platform } from 'react-native'
+import { I18nManager, Image, Platform } from 'react-native'
 import {
   borderWidth,
   colors,
+  componentTokens,
   motionDuration,
-  motionEasing,
   radius,
+  shadows,
   spacing,
 } from '@real/tokens'
 import { Box, Text, Touchable } from '../primitives'
+import { Badge } from './Badge'
 import { Card } from './Card'
 import { Icon } from './Icon'
 import { StarRating } from './StarRating'
 import { HomeProductItem } from './home/types'
 
 type ProductCardVariant = 'default' | 'bundle' | 'flash'
-
 type ProductCardState = 'loading' | 'empty' | 'error' | 'disabled' | 'default'
+type ProductCardDensity = 'comfortable' | 'compact' | 'minimal'
 
 type ProductCardProps = {
   item?: HomeProductItem
   variant?: ProductCardVariant
+  density?: ProductCardDensity
   width?: number
   contentPadding?: keyof typeof spacing
   state?: ProductCardState
@@ -31,6 +34,7 @@ type ProductCardProps = {
   onAddToCart?: (item: HomeProductItem) => void
   onQuickView?: (item: HomeProductItem) => void
   onToggleWishlist?: (item: HomeProductItem) => void
+  onShare?: (item: HomeProductItem) => void
   isWishlisted?: boolean
 }
 
@@ -39,60 +43,65 @@ const DEFAULT_CURRENCY = 'USD'
 const DEFAULT_SWATCH_COLORS = [
   colors.brandPrimary,
   colors.info,
-  colors.warning,
+  colors.goldPrimary,
   colors.success,
   colors.textPrimary,
 ]
 
-function ProductCardSkeleton({ width }: { width: number }) {
+function ProductCardSkeleton({ width, density = 'compact' }: { width: number, density?: ProductCardDensity }) {
+  const tokens = componentTokens.storefrontHome.productCard
+  const densityTokens = componentTokens.storefrontHome.productCardDensity[density]
   const shimmer = {
     backgroundColor: colors.backgroundSecondary,
-    borderRadius: radius.xs,
+    borderRadius: radius.md,
   } as const
 
   return (
     <Card
       variant='flat'
-      radiusKey='md'
+      radiusKey='lg'
       style={{
         width,
-        gap: 0,
+        gap: densityTokens.cardGap,
         padding: 0,
         backgroundColor: colors.surface,
-        borderWidth: borderWidth.thin,
-        borderColor: colors.border,
+        borderWidth: tokens.shellBorderWidth,
+        borderColor: tokens.shellBorderColor,
         overflow: 'hidden',
+        ...(Platform.OS === 'web'
+          ? ({
+              boxShadow: tokens.shellShadowRest,
+            } as const)
+          : shadows.sm),
       }}
     >
-      {/* Image placeholder */}
-      <Box style={{ width: '100%', aspectRatio: 1, backgroundColor: colors.backgroundSecondary }} />
-
-      {/* Content */}
       <Box
         style={{
-          gap: spacing.sm,
-          paddingTop: spacing.sm,
-          paddingHorizontal: spacing['12'],
-          paddingBottom: spacing['12'],
+          paddingHorizontal: densityTokens.contentPaddingX,
+          paddingTop: densityTokens.contentPaddingY,
         }}
       >
-        <Box style={{ ...shimmer, height: 10, width: '40%' }} />
-        <Box style={{ ...shimmer, height: 13, width: '85%' }} />
-        <Box style={{ ...shimmer, height: 13, width: '65%' }} />
-        <Box style={{ ...shimmer, height: 10, width: '28%', marginTop: spacing.xs }} />
-        <Box style={{ ...shimmer, height: 18, width: '42%', marginTop: spacing.xs }} />
+        <Box
+          style={{
+            width: '100%',
+            aspectRatio: densityTokens.mediaAspectRatio,
+            backgroundColor: colors.backgroundSecondary,
+            borderRadius: radius.md,
+          }}
+        />
       </Box>
-
-      {/* CTA button placeholder */}
       <Box
         style={{
-          ...shimmer,
-          height: spacing['48'],
-          marginHorizontal: spacing.sm,
-          marginBottom: spacing.sm,
-          borderRadius: radius.xs,
+          gap: densityTokens.contentGap,
+          paddingHorizontal: densityTokens.contentPaddingX,
+          paddingVertical: densityTokens.contentPaddingY,
         }}
-      />
+      >
+        <Box style={{ ...shimmer, height: densityTokens.brandLineHeight, width: '46%' }} />
+        <Box style={{ ...shimmer, height: densityTokens.nameLineHeight, width: '92%' }} />
+        <Box style={{ ...shimmer, height: densityTokens.nameLineHeight, width: '72%' }} />
+        <Box style={{ ...shimmer, height: densityTokens.priceLineHeight, width: '58%' }} />
+      </Box>
     </Card>
   )
 }
@@ -100,8 +109,8 @@ function ProductCardSkeleton({ width }: { width: number }) {
 export function ProductCard({
   item,
   variant = 'default',
+  density = 'comfortable',
   width = spacing.xxl * 4,
-  contentPadding = 'sm',
   state = 'default',
   outOfStock = false,
   savingsLabel = 'Save 15%',
@@ -110,15 +119,17 @@ export function ProductCard({
   onAddToCart,
   onQuickView,
   onToggleWishlist,
+  onShare,
   isWishlisted = false,
 }: ProductCardProps) {
-  const hoverFadeDuration = motionDuration.microInteraction
-  const resolvedContentPadding = spacing[contentPadding]
+  const tokens = componentTokens.storefrontHome.productCard
+  const densityTokens = componentTokens.storefrontHome.productCardDensity[density]
 
   const [isHovering, setIsHovering] = useState(false)
-  const [showVariantPicker, setShowVariantPicker] = useState(false)
+  const [isFocused, setIsFocused] = useState(false)
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false)
   const [addState, setAddState] = useState<'idle' | 'loading' | 'success'>('idle')
-  const [localWishlisted, setLocalWishlisted] = useState(isWishlisted)
+  const [localCartQuantity, setLocalCartQuantity] = useState(0)
   const hideHoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const resetAddTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -137,7 +148,13 @@ export function ProductCard({
   const outFromInventory = typeof item?.stock === 'number' ? item.stock <= 0 : false
   const disabled = state === 'disabled' || outOfStock || inferredOutOfStock || outFromInventory
   const isWeb = Platform.OS === 'web'
-  const hovered = isWeb ? isHovering : false
+  const supportsHover =
+    Platform.OS === 'web'
+      ? ((globalThis as { matchMedia?: (query: string) => { matches: boolean } })
+          .matchMedia?.('(hover: hover) and (pointer: fine)')
+          ?.matches ?? true)
+      : false
+  const hovered = isWeb && supportsHover ? isHovering : false
 
   const resolvedSwatches = useMemo(() => {
     if (!item) return []
@@ -154,18 +171,9 @@ export function ProductCard({
       imageUrl: undefined,
     }))
   }, [item])
-  const hasSelectableVariants = Boolean(item?.requiresVariantSelection) || resolvedSwatches.length > 0
-  const [selectedSwatchId, setSelectedSwatchId] = useState<string | null>(
-    resolvedSwatches[0]?.id ?? null
-  )
 
-  useEffect(() => {
-    setLocalWishlisted(isWishlisted)
-  }, [isWishlisted])
-
-  useEffect(() => {
-    setSelectedSwatchId(resolvedSwatches[0]?.id ?? null)
-  }, [resolvedSwatches])
+  const imageUri = resolvedSwatches[0]?.imageUrl || item?.imageUrl || FALLBACK_IMAGE
+  const secondaryImageUri = resolvedSwatches[1]?.imageUrl || item?.hoverImageUrl || (resolvedSwatches.length > 1 ? imageUri : undefined)
 
   useEffect(() => {
     return () => {
@@ -178,8 +186,10 @@ export function ProductCard({
     }
   }, [])
 
-  const selectedSwatch = resolvedSwatches.find((swatch) => swatch.id === selectedSwatchId)
-  const imageUri = selectedSwatch?.imageUrl || item?.imageUrl || FALLBACK_IMAGE
+  useEffect(() => {
+    setLocalCartQuantity(0)
+    setAddState('idle')
+  }, [item?.id])
 
   const resolveCompareAtPrice = () => {
     if (item?.compareAtPrice) {
@@ -197,7 +207,7 @@ export function ProductCard({
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: DEFAULT_CURRENCY,
+      currency: item.currency || DEFAULT_CURRENCY,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value)
@@ -234,6 +244,7 @@ export function ProductCard({
         } else {
           onPress?.(item)
         }
+        setLocalCartQuantity((current) => current + 1)
       } finally {
         setAddState('success')
         resetAddTimeoutRef.current = setTimeout(() => {
@@ -243,37 +254,13 @@ export function ProductCard({
     }, motionDuration.fast)
   }
 
-  const handleAddToCart = () => {
-    if (!item) return
-    if (hasSelectableVariants && !selectedSwatchId) {
-      setShowVariantPicker(true)
-      return
-    }
-    if (hasSelectableVariants && !showVariantPicker) {
-      setShowVariantPicker(true)
-      return
-    }
-    setShowVariantPicker(false)
-    runAddToCart()
-  }
-
-  const handleToggleWishlist = () => {
-    if (!item) return
-    setLocalWishlisted((prev) => !prev)
-    if (onToggleWishlist) {
-      onToggleWishlist(item)
-      return
-    }
-    onPress?.(item)
-  }
-
   if (state === 'loading') {
-    return <ProductCardSkeleton width={width} />
+    return <ProductCardSkeleton width={width} density={density} />
   }
 
   if (state === 'error') {
     return (
-      <Card tone='subtle' radiusKey='xs' style={{ width }}>
+      <Card tone='subtle' radiusKey='md' style={{ width }}>
         <Text tone='danger' variant='bodySm'>
           Unable to load product.
         </Text>
@@ -283,7 +270,7 @@ export function ProductCard({
 
   if (state === 'empty' || !item) {
     return (
-      <Card tone='subtle' radiusKey='xs' style={{ width }}>
+      <Card tone='subtle' radiusKey='md' style={{ width }}>
         <Text tone='muted' variant='bodySm'>
           No product available.
         </Text>
@@ -291,7 +278,6 @@ export function ProductCard({
     )
   }
 
-  const isBundle = variant === 'bundle'
   const compareAtPrice = resolveCompareAtPrice()
   const hasDiscount = Boolean(compareAtPrice && compareAtPrice > item.price)
   const discountPercent =
@@ -301,28 +287,304 @@ export function ProductCard({
           Math.round(((compareAtPrice - item.price) / compareAtPrice) * 100),
         )
       : null
+
   const badgeLabel =
-    disabled
-      ? 'Out of stock'
-      : hasDiscount && discountPercent
+    hasDiscount && discountPercent
       ? `-${discountPercent}%`
-      : item.badge || (isBundle ? 'NEW' : undefined)
+      : item.badge
+
   const isNewProduct = Boolean(item.isNew || item.badge?.toLowerCase().includes('new'))
   const isLimitedProduct = Boolean(item.isLimited || item.badge?.toLowerCase().includes('limited'))
   const ratingValue = typeof item.rating === 'number' ? Math.max(0, Math.min(5, item.rating)) : null
-  const reviewCount = typeof item.reviews === 'number' ? Math.max(0, item.reviews) : null
-  const resolvedUrgencyLabel =
-    urgencyLabel ??
-    item.urgencyLabel ??
-    (hasDiscount ? 'Selling fast' : isBundle ? 'Limited stock' : undefined)
-  const addButtonLabel =
+  const showRating = ratingValue !== null
+  const interactionVisible = hovered || isFocused
+  const showActionMenuToggle = !supportsHover && !disabled
+  const showActionOverlayResolved = disabled
+    ? false
+    : supportsHover
+      ? interactionVisible
+      : isActionMenuOpen
+  const quickActionsTopInset = showActionMenuToggle
+    ? tokens.quickActionsInset + tokens.quickActionSize + tokens.quickActionsGap
+    : tokens.quickActionsInset
+  const buyButtonLabel =
     addState === 'loading'
-      ? 'Adding...'
+      ? 'Adding…'
       : addState === 'success'
       ? 'Added'
-      : hasSelectableVariants
-      ? 'Select options'
-      : 'Add to cart'
+      : 'Buy'
+  const showsQuantityControl = localCartQuantity > 0
+  const isRTL = I18nManager.isRTL
+  const displayTitle = item.displayTitle || item.name
+  const detailMeta = item.displaySubtitle || item.attributesList?.[0] || item.pricePerUnitLabel
+  const normalizeLabel = (value?: string | null) => value?.trim().replace(/\s+/g, ' ').toLowerCase() ?? ''
+  const supportingBadgeFromLabel = (label?: string | null) => {
+    const normalized = normalizeLabel(label)
+    if (!normalized) return null
+    if (/limited|selling fast|low stock|exclusive|member/i.test(normalized)) {
+      return { label: label!.trim(), tone: 'ink' as const, priority: 100 }
+    }
+    if (/bestseller|best seller|top rated|trending/i.test(normalized)) {
+      return { label: label!.trim(), tone: 'ink' as const, priority: 90 }
+    }
+    if (/new|just dropped|back in stock|pre-?order/i.test(normalized)) {
+      return { label: label!.trim(), tone: 'outline' as const, priority: 80 }
+    }
+    return null
+  }
+
+  const primaryBadge = hasDiscount && badgeLabel
+    ? { label: badgeLabel, tone: 'accent' as const, priority: 200 }
+    : null
+
+  const supportingBadgeCandidates = [
+    supportingBadgeFromLabel(urgencyLabel),
+    supportingBadgeFromLabel(item.badge),
+    !item.badge && isLimitedProduct ? { label: 'Limited', tone: 'ink' as const, priority: 100 } : null,
+    !item.badge && isNewProduct ? { label: 'New', tone: 'outline' as const, priority: 80 } : null,
+  ]
+    .filter((badge): badge is { label: string; tone: 'ink' | 'outline'; priority: number } => Boolean(badge))
+    .sort((left, right) => right.priority - left.priority)
+
+  const mediaBadges = [
+    ...(primaryBadge && !disabled ? [primaryBadge] : []),
+    ...(!disabled
+      ? supportingBadgeCandidates.filter((badge, index, array) =>
+          index === array.findIndex((candidate) => normalizeLabel(candidate.label) === normalizeLabel(badge.label)),
+        ).slice(0, primaryBadge ? 1 : 2)
+      : []),
+  ]
+
+  const runQuickView = () => {
+    if (!item || disabled) return
+    setIsActionMenuOpen(false)
+    if (onQuickView) {
+      onQuickView(item)
+      return
+    }
+    onPress?.(item)
+  }
+
+  const runToggleWishlist = () => {
+    if (!item || disabled) return
+    setIsActionMenuOpen(false)
+    if (onToggleWishlist) {
+      onToggleWishlist(item)
+    }
+  }
+
+  const runShare = () => {
+    if (!item || disabled) return
+    setIsActionMenuOpen(false)
+    if (onShare) {
+      onShare(item)
+      return
+    }
+    if (Platform.OS !== 'web') {
+      return
+    }
+    const nav = (globalThis as { navigator?: { share?: (data: { title?: string; text?: string; url?: string }) => Promise<void> } }).navigator
+    if (nav?.share) {
+      void nav.share({
+        title: item.name,
+        text: item.name,
+        url: item.href,
+      })
+    }
+  }
+
+  const runDecreaseQuantity = () => {
+    if (disabled || addState === 'loading' || localCartQuantity <= 0) return
+    setLocalCartQuantity((current) => {
+      const nextQuantity = Math.max(0, current - 1)
+      if (nextQuantity === 0) {
+        setAddState('idle')
+      }
+      return nextQuantity
+    })
+  }
+
+  const renderQuickActionLabel = (label: string, visible: boolean) => {
+    if (Platform.OS !== 'web' || !visible) return null
+
+    const labelOffset = densityTokens.quickActionSize + tokens.quickActionLabelGap
+    const labelTopOffset = Math.max(0, (densityTokens.quickActionSize - densityTokens.quickActionLabelMinHeight) / 2)
+
+    return (
+      <Box
+        style={{
+          position: 'absolute',
+          top: labelTopOffset,
+          minHeight: densityTokens.quickActionLabelMinHeight,
+          paddingHorizontal: tokens.quickActionLabelPaddingX,
+          borderRadius: radius.full,
+          borderWidth: borderWidth.none,
+          borderColor: 'transparent',
+          backgroundColor: colors.backgroundSecondary,
+          justifyContent: 'center',
+          zIndex: 1,
+          ...(I18nManager.isRTL ? { start: labelOffset } : { end: labelOffset }),
+          ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as const) : shadows.none),
+        }}
+      >
+        <Text
+          variant='caption'
+          weight='600'
+          style={{
+            color: colors.textPrimary,
+            fontSize: densityTokens.quickActionLabelFontSize,
+            lineHeight: densityTokens.quickActionLabelLineHeight,
+            letterSpacing: tokens.quickActionLabelTracking,
+          }}
+        >
+          {label}
+        </Text>
+      </Box>
+    )
+  }
+
+  const purchaseControl = showsQuantityControl ? (
+    <Box
+      style={{
+        width: '100%',
+        minHeight: densityTokens.buyActionHeight,
+        borderRadius: radius.lg,
+        borderWidth: borderWidth.thin,
+        borderColor: colors.border,
+        backgroundColor: colors.surface,
+        padding: tokens.quantityStepperInset,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: tokens.buyActionGap,
+      }}
+    >
+      <Touchable
+        onPress={runDecreaseQuantity}
+        accessibilityRole='button'
+        accessibilityLabel={`Decrease quantity. Current quantity ${localCartQuantity}`}
+        disabled={disabled || addState === 'loading'}
+      >
+        {({ hovered: actionHovered, focused: actionFocused }) => {
+          const active = actionHovered || actionFocused
+          return (
+            <Box
+              style={{
+                width: densityTokens.quantityStepperActionWidth,
+                height: densityTokens.quantityStepperActionWidth,
+                borderRadius: radius.md,
+                backgroundColor: active ? colors.surfaceMuted : 'transparent',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: [{ scale: active ? 1.02 : 1 }],
+                transitionProperty: 'background-color,transform',
+                transitionDuration: `${motionDuration.hoverScale}ms`,
+              }}
+            >
+              <Icon
+                name={isRTL ? 'caretRight' : 'caretLeft'}
+                size={densityTokens.buyActionIconSize}
+                color={colors.textSecondary}
+                weight='bold'
+              />
+            </Box>
+          )
+        }}
+      </Touchable>
+
+      <Box
+        style={{
+          minWidth: densityTokens.quantityChipMinWidth,
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text variant='caption' weight='700'>
+          {localCartQuantity}
+        </Text>
+      </Box>
+
+      <Touchable
+        onPress={runAddToCart}
+        accessibilityRole='button'
+        accessibilityLabel={`Increase quantity. Current quantity ${localCartQuantity}`}
+        disabled={disabled || addState === 'loading'}
+      >
+        {({ hovered: actionHovered, focused: actionFocused }) => {
+          const active = actionHovered || actionFocused
+          return (
+            <Box
+              style={{
+                width: densityTokens.quantityStepperActionWidth,
+                height: densityTokens.quantityStepperActionWidth,
+                borderRadius: radius.md,
+                backgroundColor: active ? colors.brandPrimaryHover : colors.brandPrimary,
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: [{ scale: active ? 1.02 : 1 }],
+                transitionProperty: 'background-color,transform',
+                transitionDuration: `${motionDuration.hoverScale}ms`,
+              }}
+            >
+              <Icon
+                name={isRTL ? 'caretLeft' : 'caretRight'}
+                size={densityTokens.buyActionIconSize}
+                color={colors.white}
+                weight='bold'
+              />
+            </Box>
+          )
+        }}
+      </Touchable>
+    </Box>
+  ) : (
+    <Touchable
+      onPress={runAddToCart}
+      accessibilityRole='button'
+      accessibilityLabel={buyButtonLabel}
+      disabled={disabled || addState === 'loading'}
+    >
+      {({ hovered: buyHovered, focused: buyFocused }) => {
+        const buyActive = buyHovered || buyFocused
+        return (
+          <Box
+            style={{
+              width: '100%',
+              minHeight: densityTokens.buyActionHeight,
+              paddingHorizontal: spacing['14'],
+              borderRadius: radius.lg,
+              borderWidth: borderWidth.thin,
+              borderColor: disabled ? colors.border : colors.brandPrimary,
+              backgroundColor: disabled
+                ? colors.backgroundSecondary
+                : buyActive
+                  ? colors.brandPrimaryHover
+                  : colors.brandPrimary,
+              alignItems: 'center',
+              justifyContent: 'center',
+              transform: [{ scale: buyActive ? 1.01 : 1 }],
+              transitionProperty: 'background-color,transform',
+              transitionDuration: `${motionDuration.hoverScale}ms`,
+            }}
+          >
+            <Text
+              variant='caption'
+              weight='600'
+              style={{
+                color: disabled ? colors.textSecondary : colors.white,
+                fontSize: densityTokens.buyActionTextSize,
+                lineHeight: densityTokens.buyActionTextSize + 1,
+                letterSpacing: tokens.buyActionTextTracking,
+              }}
+            >
+              {disabled ? 'Out of stock' : 'Add to cart'}
+            </Text>
+          </Box>
+        )
+      }}
+    </Touchable>
+  )
+  const bridgeOverlap = Math.round(densityTokens.buyActionHeight * 0.38)
 
   return (
     <Touchable
@@ -331,378 +593,446 @@ export function ProductCard({
       onPress={() => onPress?.(item)}
       onPointerEnter={isWeb ? handlePointerEnter : undefined}
       onPointerLeave={isWeb ? handlePointerLeave : undefined}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => {
+        setIsFocused(false)
+        if (!supportsHover) {
+          setIsActionMenuOpen(false)
+        }
+      }}
     >
       <Card
         variant='flat'
-        radiusKey='md'
-        className="transition-[box-shadow,transform] duration-[400ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
+        radiusKey='lg'
         style={{
           width,
-          gap: spacing.sm,
+          gap: densityTokens.cardGap,
           padding: 0,
           backgroundColor: colors.surface,
-          borderWidth: borderWidth.thin,
-          borderColor: colors.border,
+          borderWidth: tokens.shellBorderWidth,
+          borderColor: tokens.shellBorderColor,
+          transform: [{ translateY: 0 }],
+          transitionProperty: 'border-color',
+          transitionDuration: `${motionDuration.hoverScale}ms`,
+          ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as const) : shadows.none),
         }}
       >
         <Box
           style={{
             position: 'relative',
-            borderWidth: borderWidth.thin,
-            borderColor: colors.border,
-            overflow: 'hidden',
+            paddingHorizontal: densityTokens.contentPaddingX,
+            paddingTop: densityTokens.contentPaddingY,
           }}
         >
-          <Image
-            source={{ uri: imageUri }}
-            style={
-              {
+          <Box
+            style={{
+              width: '100%',
+              aspectRatio: densityTokens.mediaAspectRatio,
+              position: 'relative',
+              backgroundColor: colors.backgroundSecondary,
+              borderRadius: radius.md,
+              overflow: 'hidden',
+            }}
+          >
+            <Image
+              source={{ uri: imageUri }}
+              resizeMode='contain'
+              style={{
                 width: '100%',
-                aspectRatio: 1,
-                backgroundColor: isBundle ? colors.surface : colors.backgroundSecondary,
-                opacity: disabled ? 0.55 : 1,
-                transform: hovered ? [{ scale: 1.02 }] : [{ scale: 1 }],
-              }}
-            className="transition-transform duration-[400ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-          />
-          {!disabled ? (
-            <Box
-              style={
-                {
+                height: '100%',
+                backgroundColor: colors.backgroundSecondary,
+                opacity: disabled ? 0.6 : hovered && secondaryImageUri ? 0 : 1,
+                transform: [{ scale: 1 }],
+                transitionProperty: 'opacity',
+                transitionDuration: `${motionDuration.hoverScale}ms`,
+              } as any}
+            />
+            {secondaryImageUri && !disabled ? (
+              <Image
+                source={{ uri: secondaryImageUri }}
+                resizeMode='contain'
+                style={{
                   position: 'absolute',
                   top: 0,
+                  left: 0,
                   right: 0,
                   bottom: 0,
-                  left: 0,
-                  backgroundColor: colors.white,
-                  opacity: isWeb && hovered ? 0.24 : 0,
-                }}
-              className="transition-opacity duration-[300ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-            />
-          ) : null}
+                  width: '100%',
+                  height: '100%',
+                  opacity: hovered ? 1 : 0,
+                  transform: [{ scale: 1 }],
+                  transitionProperty: 'opacity',
+                  transitionDuration: `${motionDuration.hoverScale}ms`,
+                } as any}
+              />
+            ) : null}
 
-          {isNewProduct || badgeLabel || isLimitedProduct ? (
-            <Box
-              style={{
-                position: 'absolute',
-                top: spacing['12'],
-                start: spacing['12'],
-                gap: spacing['8'],
-                alignItems: 'flex-start',
-              }}
-            >
-              {isNewProduct ? (
-                <Box
-                  style={{
-                    borderWidth: borderWidth.thin,
-                    borderColor: colors.black,
-                    backgroundColor: colors.black,
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: spacing.xs,
-                  }}
-                >
-                  <Text variant='label' weight='700' tone='inverse' style={{ textTransform: 'uppercase' }}>
-                    New
-                  </Text>
-                </Box>
-              ) : null}
-              {badgeLabel ? (
-                <Box
-                  style={{
-                    borderWidth: hasDiscount ? borderWidth.thick : borderWidth.thin,
-                    borderColor: hasDiscount ? colors.primary : colors.border,
-                    backgroundColor: hasDiscount ? colors.primary : colors.surface,
-                    paddingHorizontal: hasDiscount ? spacing.sm : spacing['12'],
-                    paddingVertical: hasDiscount ? spacing.sm : spacing.xs,
-                  }}
-                >
-                  <Text
-                    variant='label'
-                    weight='700'
-                    tone={hasDiscount ? 'inverse' : 'default'}
-                    style={{ textTransform: 'uppercase' }}
-                  >
-                    {badgeLabel}
-                  </Text>
-                </Box>
-              ) : null}
-              {isLimitedProduct ? (
-                <Box
-                  style={{
-                    borderWidth: borderWidth.thin,
-                    borderColor: colors.warning,
-                    backgroundColor: colors.warning,
-                    paddingHorizontal: spacing.sm,
-                    paddingVertical: spacing.xs,
-                  }}
-                >
-                  <Text variant='label' weight='700' tone='inverse' style={{ textTransform: 'uppercase' }}>
-                    Limited
-                  </Text>
-                </Box>
-              ) : null}
-            </Box>
-          ) : null}
-
-          {!disabled ? (
-            <Box
-              style={{
-                position: 'absolute',
-                top: spacing['12'],
-                end: spacing['12'],
-              }}
-            >
-              <Touchable
-                onPress={handleToggleWishlist}
-                accessibilityRole='button'
-                accessibilityLabel={
-                  localWishlisted
-                    ? `Remove ${item.name} from wishlist`
-                    : `Add ${item.name} to wishlist`
-                }
-                accessibilityState={{ checked: localWishlisted }}
-              >
-                <Box
-                  p='xxs'
-                  bg='black'
-                  style={{
-                    borderWidth: borderWidth.thin,
-                    borderColor: colors.black,
-                  }}
-                >
-                  <Icon
-                    name='wishlist'
-                    size={spacing['16']}
-                    color={localWishlisted ? colors.primary : colors.white}
-                  />
-                </Box>
-              </Touchable>
-            </Box>
-          ) : null}
-
-          {isWeb && !disabled ? (
-            <Box
-              style={{
-                position: 'absolute',
-                top: '50%',
-                marginTop: -spacing['56'],
-                start: spacing['16'],
-                end: spacing['16'],
-                gap: spacing['16'],
-                opacity: hovered ? 1 : 0,
-                transform: hovered ? [{ translateY: 0 }] : [{ translateY: spacing['8'] }],
-              }}
-              className="transition-[opacity,transform] duration-[300ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-            >
-              <Touchable
-                disabled={!hovered}
-                onPress={() => (onQuickView ? onQuickView(item) : onPress?.(item))}
+            {disabled ? (
+              <Box
                 style={{
-                  minHeight: spacing['48'],
-                  paddingHorizontal: spacing.md,
-                  backgroundColor: colors.white,
-                  borderWidth: borderWidth.thin,
-                  borderColor: colors.border,
-                  borderRadius: radius.full,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'row',
-                  gap: spacing.xs,
-                }}
-              >
-                <Icon name='quickView' size={spacing['16']} color={colors.textPrimary} />
-                <Text variant='bodySm' tone='default'>
-                  Quick view
-                </Text>
-              </Touchable>
-              <Touchable
-                disabled={!hovered || addState === 'loading'}
-                onPress={handleAddToCart}
-                style={{
-                  minHeight: spacing['48'],
-                  paddingHorizontal: spacing.md,
-                  backgroundColor: variant === 'flash' ? colors.primary : colors.black,
-                  borderWidth: borderWidth.thin,
-                  borderColor: variant === 'flash' ? colors.primary : colors.black,
+                  position: 'absolute',
+                  top: '50%',
+                  start: spacing['8'],
+                  end: spacing['8'],
+                  minHeight: spacing['28'],
+                  paddingHorizontal: spacing['10'],
                   borderRadius: radius.xs,
+                  borderWidth: borderWidth.none,
+                  borderColor: 'transparent',
+                  backgroundColor: 'rgba(255,255,255,0.94)',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  transform: [{ translateY: -14 }],
                 }}
               >
                 <Text
                   variant='caption'
-                  tone='inverse'
-                  weight='700'
-                  style={{ textTransform: 'uppercase' }}
+                  weight='600'
+                  style={{
+                    color: colors.brandPrimary,
+                    textTransform: 'uppercase',
+                    fontSize: densityTokens.quickActionLabelFontSize + 1,
+                    lineHeight: densityTokens.quickActionLabelLineHeight + 1,
+                    letterSpacing: 1.1,
+                  }}
                 >
-                  {addButtonLabel}
+                  Sold out
                 </Text>
+              </Box>
+            ) : null}
+
+          </Box>
+
+          {mediaBadges.length > 0 ? (
+            <Box
+              style={{
+                position: 'absolute',
+                top: tokens.badgeTopInset,
+                start: tokens.badgeSideInset,
+                marginTop: densityTokens.contentPaddingY,
+                marginStart: densityTokens.contentPaddingX,
+                alignItems: 'flex-start',
+                gap: spacing['4'],
+              }}
+            >
+              {mediaBadges.map((badge) => (
+                <Badge
+                  key={`${item.id}-${badge.label}`}
+                  tone={badge.tone}
+                  size='sm'
+                  style={{
+                    transform: [{ scale: densityTokens.badgeScale }],
+                  }}
+                >
+                  {badge.label}
+                </Badge>
+              ))}
+            </Box>
+          ) : null}
+
+          {showActionMenuToggle ? (
+            <Box
+              style={{
+                position: 'absolute',
+                top: tokens.quickActionsInset + densityTokens.contentPaddingY,
+                end: tokens.quickActionsInset + densityTokens.contentPaddingX,
+              }}
+            >
+              <Touchable
+                onPress={() => setIsActionMenuOpen((current) => !current)}
+                accessibilityRole='button'
+                accessibilityLabel={isActionMenuOpen ? 'Hide product actions' : 'Show product actions'}
+              >
+                {({ hovered: actionHovered, focused: actionFocused }) => {
+                  const actionActive = isActionMenuOpen || actionHovered || actionFocused
+                  return (
+                    <Box
+                      style={{
+                        width: densityTokens.quickActionSize,
+                        height: densityTokens.quickActionSize,
+                        borderRadius: radius.full,
+                        borderWidth: borderWidth.thin,
+                        borderColor: actionActive ? colors.brandPrimary : colors.border,
+                        backgroundColor: actionActive ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transitionProperty: 'background-color,border-color,transform',
+                        transitionDuration: `${motionDuration.microInteraction}ms`,
+                        transform: [{ translateY: actionActive ? -1 : 0 }],
+                      }}
+                    >
+                      <Icon
+                        name='more'
+                        size={densityTokens.quickActionIconSize}
+                        color={actionActive ? colors.brandPrimary : colors.textPrimary}
+                      />
+                    </Box>
+                  )
+                }}
               </Touchable>
             </Box>
           ) : null}
 
-          {showVariantPicker && !disabled ? (
+          <Box
+            pointerEvents={showActionOverlayResolved ? 'auto' : 'none'}
+            style={{
+              position: 'absolute',
+              top: quickActionsTopInset + densityTokens.contentPaddingY,
+              end: tokens.quickActionsInset + densityTokens.contentPaddingX,
+              opacity: showActionOverlayResolved ? 1 : 0,
+              transform: [{ translateX: showActionOverlayResolved ? 0 : tokens.quickActionsRevealOffsetX }],
+              transitionProperty: 'opacity,transform',
+              transitionDuration: `${motionDuration.microInteraction}ms`,
+            }}
+          >
             <Box
               style={{
-                position: 'absolute',
-                left: spacing['12'],
-                right: spacing['12'],
-                bottom: spacing['12'],
-                borderWidth: borderWidth.thin,
-                borderColor: colors.border,
-                backgroundColor: colors.surface,
-                gap: spacing['8'],
-                padding: spacing['12'],
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: tokens.quickActionsGap,
               }}
             >
-              <Text variant='label' tone='default' style={{ textTransform: 'uppercase' }}>
-                Select Shade
-              </Text>
-              <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-                {resolvedSwatches.map((swatch) => {
-                  const selected = selectedSwatchId === swatch.id
+              <Touchable onPress={runQuickView} accessibilityRole='button' accessibilityLabel='Quick view'>
+                {({ hovered: actionHovered, focused: actionFocused }) => {
+                  const actionActive = actionHovered || actionFocused
                   return (
-                    <Touchable
-                      key={swatch.id}
-                      onPress={() => setSelectedSwatchId(swatch.id)}
-                      accessibilityRole='button'
-                      accessibilityLabel={swatch.label ?? swatch.id}
+                    <Box
+                      style={{
+                        position: 'relative',
+                        width: densityTokens.quickActionSize,
+                        height: densityTokens.quickActionSize,
+                      }}
                     >
+                      {renderQuickActionLabel('Quick view', actionActive)}
                       <Box
                         style={{
-                          width: spacing['16'] + spacing.xs,
-                          height: spacing['16'] + spacing.xs,
+                          width: densityTokens.quickActionSize,
+                          height: densityTokens.quickActionSize,
                           borderRadius: radius.full,
-                          backgroundColor: swatch.hex,
-                          borderWidth: selected ? borderWidth.thick : borderWidth.thin,
-                          borderColor: selected ? colors.textPrimary : colors.border,
+                          borderWidth: borderWidth.thin,
+                          borderColor: actionActive ? colors.brandPrimary : colors.border,
+                          backgroundColor: actionActive ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transform: [{ translateY: actionActive ? -1 : 0 }],
+                          transitionProperty: 'background-color,border-color,transform',
+                          transitionDuration: `${motionDuration.microInteraction}ms`,
+                          ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as const) : shadows.none),
                         }}
-                      />
-                    </Touchable>
+                      >
+                        <Icon
+                          name='quickView'
+                          size={densityTokens.quickActionIconSize}
+                          color={actionActive ? colors.brandPrimary : colors.textPrimary}
+                        />
+                      </Box>
+                    </Box>
                   )
-                })}
-              </Box>
-              <Touchable onPress={handleAddToCart} style={{ alignSelf: 'flex-start' }}>
-                <Box
-                  style={{
-                    minHeight: spacing['40'],
-                    paddingHorizontal: spacing['12'],
-                    borderWidth: borderWidth.thin,
-                    borderColor: colors.black,
-                    backgroundColor: colors.black,
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Text variant='label' tone='inverse' weight='700' style={{ textTransform: 'uppercase' }}>
-                    Confirm
-                  </Text>
-                </Box>
+                }}
+              </Touchable>
+
+              <Touchable onPress={runToggleWishlist} accessibilityRole='button' accessibilityLabel='Favorite'>
+                {({ hovered: actionHovered, focused: actionFocused }) => {
+                  const actionActive = actionHovered || actionFocused || isWishlisted
+                  return (
+                    <Box
+                      style={{
+                        position: 'relative',
+                        width: densityTokens.quickActionSize,
+                        height: densityTokens.quickActionSize,
+                      }}
+                    >
+                      {renderQuickActionLabel('Favorite', actionHovered || actionFocused)}
+                      <Box
+                        style={{
+                          width: densityTokens.quickActionSize,
+                          height: densityTokens.quickActionSize,
+                          borderRadius: radius.full,
+                          borderWidth: borderWidth.thin,
+                          borderColor: actionHovered || actionFocused ? colors.brandPrimary : colors.border,
+                          backgroundColor: actionHovered || actionFocused ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transform: [{ translateY: actionHovered || actionFocused ? -1 : 0 }],
+                          transitionProperty: 'background-color,border-color,transform',
+                          transitionDuration: `${motionDuration.microInteraction}ms`,
+                          ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as const) : shadows.none),
+                        }}
+                      >
+                        <Icon
+                          name='wishlist'
+                          size={densityTokens.quickActionIconSize}
+                          color={isWishlisted || actionHovered || actionFocused ? colors.brandPrimary : colors.textPrimary}
+                          weight={isWishlisted ? 'fill' : 'regular'}
+                        />
+                      </Box>
+                    </Box>
+                  )
+                }}
+              </Touchable>
+
+              <Touchable onPress={runShare} accessibilityRole='button' accessibilityLabel='Share'>
+                {({ hovered: actionHovered, focused: actionFocused }) => {
+                  const actionActive = actionHovered || actionFocused
+                  return (
+                    <Box
+                      style={{
+                        position: 'relative',
+                        width: densityTokens.quickActionSize,
+                        height: densityTokens.quickActionSize,
+                      }}
+                    >
+                      {renderQuickActionLabel('Share', actionActive)}
+                      <Box
+                        style={{
+                          width: densityTokens.quickActionSize,
+                          height: densityTokens.quickActionSize,
+                          borderRadius: radius.full,
+                          borderWidth: borderWidth.thin,
+                          borderColor: actionActive ? colors.brandPrimary : colors.border,
+                          backgroundColor: actionActive ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transform: [{ translateY: actionActive ? -1 : 0 }],
+                          transitionProperty: 'background-color,border-color,transform',
+                          transitionDuration: `${motionDuration.microInteraction}ms`,
+                          ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as const) : shadows.none),
+                        }}
+                      >
+                        <Icon
+                          name='trendArrow'
+                          size={densityTokens.quickActionIconSize}
+                          color={actionActive ? colors.brandPrimary : colors.textPrimary}
+                        />
+                      </Box>
+                    </Box>
+                  )
+                }}
               </Touchable>
             </Box>
-          ) : null}
+          </Box>
+
         </Box>
 
         <Box
           style={{
-            justifyContent: 'space-between',
-            gap: spacing.sm,
-            paddingTop: spacing.sm,
-            paddingHorizontal: spacing['12'],
-            paddingBottom: spacing['12'],
+            marginTop: -bridgeOverlap,
+            paddingHorizontal: densityTokens.contentPaddingX + spacing['2'],
+            zIndex: 2,
           }}
         >
-          <Box style={{ gap: spacing.xs }}>
+          {purchaseControl}
+        </Box>
+
+        <Box
+          style={{
+            gap: densityTokens.contentGap,
+            paddingHorizontal: densityTokens.contentPaddingX,
+            paddingTop: densityTokens.contentPaddingY + spacing['2'],
+            paddingBottom: densityTokens.contentPaddingY,
+          }}
+        >
+          <Text
+            variant='meta'
+            tone='muted'
+            weight='600'
+            numberOfLines={1}
+            style={{
+              textTransform: 'uppercase',
+              fontSize: densityTokens.brandFontSize,
+              lineHeight: densityTokens.brandLineHeight,
+              letterSpacing: tokens.brandTracking,
+            }}
+          >
+            {item.brand}
+          </Text>
+
+          <Text
+            tone='default'
+            numberOfLines={2}
+            style={{
+              fontSize: densityTokens.nameFontSize,
+              lineHeight: densityTokens.nameLineHeight,
+              minHeight: densityTokens.nameMinHeight,
+            }}
+          >
+            {displayTitle}
+          </Text>
+
+          {detailMeta ? (
             <Text
-              variant='label'
               tone='muted'
-              weight='500'
               numberOfLines={1}
-              style={{ textTransform: 'uppercase' }}
+              style={{
+                fontSize: tokens.subtitleFontSize,
+                lineHeight: tokens.subtitleLineHeight,
+                minHeight: tokens.subtitleMinHeight,
+              }}
             >
-              {item.brand}
+              {detailMeta}
             </Text>
-            <Text variant='bodySm' tone='default' numberOfLines={2}>
-              {item.name}
-            </Text>
-            {resolvedSwatches.length > 0 ? (
-              <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs, marginTop: spacing['4'] }}>
-                {resolvedSwatches.slice(0, 4).map((swatch) => (
-                  <Box
-                    key={swatch.id}
+          ) : null}
+
+          {showRating && density !== 'minimal' ? (
+            <Box style={{ minHeight: tokens.ratingMinHeight, justifyContent: 'center' }}>
+              <StarRating
+                value={ratingValue}
+                size={densityTokens.ratingSize}
+                color={colors.goldPrimary}
+              />
+            </Box>
+          ) : null}
+
+          <Box
+            style={{
+              minHeight: tokens.priceRowMinHeight,
+              alignItems: isRTL ? 'flex-end' : 'flex-start',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              style={{
+                alignItems: isRTL ? 'flex-end' : 'flex-start',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: tokens.priceGap,
+                  flexWrap: 'wrap',
+                  alignSelf: isRTL ? 'flex-end' : 'flex-start',
+                }}
+              >
+                <Text
+                  tone={hasDiscount ? 'danger' : 'default'}
+                  weight='700'
+                  style={{
+                    fontSize: densityTokens.priceFontSize,
+                    lineHeight: densityTokens.priceLineHeight,
+                  }}
+                >
+                  {formatCurrency(item.price)}
+                </Text>
+                {compareAtPrice ? (
+                  <Text
+                    tone='muted'
                     style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: radius.full,
-                      backgroundColor: swatch.hex,
-                      borderWidth: borderWidth.thin,
-                      borderColor: colors.border,
+                      textDecorationLine: 'line-through',
+                      fontSize: densityTokens.compareFontSize,
+                      lineHeight: densityTokens.compareLineHeight,
                     }}
-                  />
-                ))}
-                {resolvedSwatches.length > 4 ? (
-                  <Text variant='caption' tone='muted'>
-                    +{resolvedSwatches.length - 4}
+                  >
+                    {formatCurrency(compareAtPrice)}
                   </Text>
                 ) : null}
               </Box>
-            ) : null}
-          </Box>
-
-          {ratingValue !== null ? (
-            <StarRating value={ratingValue} reviewCount={reviewCount} size={11} />
-          ) : null}
-
-          <Box style={{ gap: spacing.xs }}>
-            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
-              <Text variant='price' tone='default' weight='700'>
-                {formatCurrency(item.price)}
-              </Text>
-              {compareAtPrice && hasDiscount ? (
-                <Text variant='caption' tone='danger' style={{ textDecorationLine: 'line-through' }}>
-                  {formatCurrency(compareAtPrice)}
-                </Text>
-              ) : compareAtPrice ? (
-                <Text variant='caption' tone='muted' style={{ textDecorationLine: 'line-through' }}>
-                  {formatCurrency(compareAtPrice)}
-                </Text>
-              ) : null}
             </Box>
-            {resolvedUrgencyLabel ? (
-              <Text variant='label' tone='danger' style={{ textTransform: 'uppercase' }}>
-                {resolvedUrgencyLabel}
-              </Text>
-            ) : null}
-            {disabled ? (
-              <Text variant='caption' tone='danger'>
-                Out of stock
-              </Text>
-            ) : null}
           </Box>
-        </Box>
 
-        {!disabled && !isWeb ? (
-          <Touchable
-            onPress={handleAddToCart}
-            disabled={addState === 'loading'}
-            style={{
-              minHeight: spacing['48'],
-              paddingHorizontal: spacing['16'],
-              marginHorizontal: spacing.sm,
-              marginBottom: spacing.sm,
-              backgroundColor: variant === 'flash' ? colors.primary : colors.black,
-              borderWidth: borderWidth.thin,
-              borderColor: variant === 'flash' ? colors.primary : colors.black,
-              borderRadius: radius.xs,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-            className="transition-[opacity,transform,background-color] duration-[300ms] [transition-timing-function:cubic-bezier(0.16,1,0.3,1)]"
-          >
-            <Text variant='caption' tone='inverse' weight='700' style={{ textTransform: 'uppercase' }}>
-              {addButtonLabel}
-            </Text>
-          </Touchable>
-        ) : null}
+        </Box>
       </Card>
     </Touchable>
   )
