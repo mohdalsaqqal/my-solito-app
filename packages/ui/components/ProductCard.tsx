@@ -950,6 +950,7 @@ export function ProductCard({
           <Text
             tone='default'
             numberOfLines={2}
+            weight='600'
             style={{
               fontSize: densityTokens.nameFontSize,
               lineHeight: densityTokens.nameLineHeight,

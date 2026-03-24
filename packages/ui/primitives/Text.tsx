@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import { TextProps, TextStyle } from 'react-native'
+import { Platform, TextProps, TextStyle } from 'react-native'
 import { colors, fontFamilies, fontWeights, letterSpacing, lineHeights, typography } from '@real/tokens'
 import { Text as ReusableText } from '../reusables/text'
 
@@ -46,44 +46,44 @@ const baseBodyVariant: ResolvedVariantStyle = {
 
 const textVariantStyles: Record<TextVariant, ResolvedVariantStyle> = {
   display: {
-    fontSize: typography.heading8,
-    lineHeight: Math.round(typography.heading8 * lineHeights.tight),
+    fontSize: typography.displayTier,
+    lineHeight: lineHeights.h1,
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.tight,
+    letterSpacing: letterSpacing.h1,
   },
   h1: {
-    fontSize: typography.xxl,
-    lineHeight: Math.round(typography.xxl * lineHeights.tight),
+    fontSize: typography.headlineTier,
+    lineHeight: lineHeights.h4,
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.tight,
+    letterSpacing: letterSpacing.headlineTier,
   },
   h2: {
-    fontSize: typography.xl,
-    lineHeight: Math.round(typography.xl * lineHeights.normal),
+    fontSize: typography.subHeadlineTier,
+    lineHeight: Math.round(typography.subHeadlineTier * lineHeights.tight),
     fontWeight: fontWeights.semibold,
     letterSpacing: letterSpacing.normal,
   },
   headline: {
     fontSize: typography.heading7,
-    lineHeight: Math.round(typography.heading7 * lineHeights.normal),
+    lineHeight: Math.round(typography.heading7 * lineHeights.tight),
     fontWeight: fontWeights.semibold,
-    letterSpacing: letterSpacing.normal,
+    letterSpacing: letterSpacing.headlineTier,
   },
   hero: {
     fontSize: typography.heading10,
-    lineHeight: Math.round(typography.heading10 * lineHeights.tight),
+    lineHeight: lineHeights.hero,
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.tight,
+    letterSpacing: letterSpacing.campaignHeading,
   },
   banner: {
     fontSize: typography.heading9,
-    lineHeight: Math.round(typography.heading9 * lineHeights.tight),
+    lineHeight: lineHeights.h2,
     fontWeight: fontWeights.bold,
-    letterSpacing: letterSpacing.tight,
+    letterSpacing: letterSpacing.h2,
   },
   title: {
     fontSize: typography.lg,
-    lineHeight: Math.round(typography.lg * lineHeights.normal),
+    lineHeight: Math.round(typography.lg * lineHeights.tight),
     fontWeight: fontWeights.semibold,
     letterSpacing: letterSpacing.normal,
   },
@@ -102,21 +102,21 @@ const textVariantStyles: Record<TextVariant, ResolvedVariantStyle> = {
   },
   caption: {
     fontSize: typography.caption,
-    lineHeight: Math.round(typography.caption * lineHeights.normal),
+    lineHeight: Math.round(typography.caption * lineHeights.relaxed),
     fontWeight: fontWeights.regular,
     letterSpacing: letterSpacing.normal,
   },
   label: {
     fontSize: typography.label,
-    lineHeight: Math.round(typography.label * lineHeights.normal),
-    fontWeight: fontWeights.medium,
-    letterSpacing: letterSpacing.wide,
+    lineHeight: Math.round(typography.label * lineHeights.relaxed),
+    fontWeight: fontWeights.semibold,
+    letterSpacing: letterSpacing.caps,
   },
   overline: {
     fontSize: typography.heading6,
-    lineHeight: Math.round(typography.heading6 * lineHeights.normal),
-    fontWeight: fontWeights.medium,
-    letterSpacing: letterSpacing.caps,
+    lineHeight: Math.round(typography.heading6 * lineHeights.relaxed),
+    fontWeight: fontWeights.semibold,
+    letterSpacing: letterSpacing.overline,
   },
   nav: {
     fontSize: typography.nav,
@@ -138,8 +138,8 @@ const textVariantStyles: Record<TextVariant, ResolvedVariantStyle> = {
   },
   price: {
     fontSize: typography.price,
-    lineHeight: Math.round(typography.price * lineHeights.normal),
-    fontWeight: fontWeights.semibold,
+    lineHeight: Math.round(typography.price * lineHeights.tight),
+    fontWeight: fontWeights.bold,
     letterSpacing: letterSpacing.normal,
   },
 }
@@ -178,8 +178,32 @@ export function Text({
 }: UiTextProps) {
   const resolved = textVariantStyles[variant] ?? baseBodyVariant
   const resolvedSize = typeof size === 'number' ? size : size ? typography[size] : resolved.fontSize
-  const headingVariants: TextVariant[] = ['display', 'h1', 'h2', 'headline', 'hero', 'banner', 'title', 'subtitle', 'overline']
-  const fontFamily = headingVariants.includes(variant) ? fontFamilies.heading : fontFamilies.sans
+  const displayVariants: TextVariant[] = ['display', 'hero', 'banner']
+  const headingVariants: TextVariant[] = ['h1', 'h2', 'headline', 'title', 'subtitle']
+  const utilityVariants: TextVariant[] = ['label', 'overline', 'meta', 'nav', 'caption']
+  const commerceValueVariants: TextVariant[] = ['price']
+  const isArabicWeb =
+    Platform.OS === 'web' &&
+    typeof document !== 'undefined' &&
+    (document.documentElement.lang === 'ar' || document.documentElement.lang.startsWith('ar-'))
+
+  const arabicHeadingFont =
+    'var(--font-tajawal, "Tajawal"), var(--font-cairo, "Cairo"), -apple-system, system-ui, sans-serif'
+  const arabicBodyFont =
+    'var(--font-almarai, "Almarai"), var(--font-cairo, "Cairo"), -apple-system, system-ui, sans-serif'
+
+  const defaultFontFamily = displayVariants.includes(variant)
+    ? fontFamilies.display
+    : commerceValueVariants.includes(variant)
+      ? fontFamilies.heading
+      : headingVariants.includes(variant)
+      ? fontFamilies.heading
+      : utilityVariants.includes(variant)
+        ? fontFamilies.secondary
+      : fontFamilies.sans
+  const fontFamily = isArabicWeb
+    ? (displayVariants.includes(variant) || headingVariants.includes(variant) ? arabicHeadingFont : arabicBodyFont)
+    : defaultFontFamily
 
   return (
     <ReusableText
