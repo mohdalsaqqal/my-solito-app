@@ -1,15 +1,20 @@
 import { ReactNode } from 'react'
-import { ActivityIndicator, ViewStyle } from 'react-native'
-import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
-import { Button as ReusableButton } from '../reusables/button'
+import { ActivityIndicator, Platform, ViewStyle } from 'react-native'
+import { borderWidth, buttonTokens, colors, elevation, fontWeights, motionDuration, opacity, shadows, spacing } from '@real/tokens'
+import { Box } from '../primitives/Box'
 import { Text } from '../primitives/Text'
+import { Touchable } from '../primitives/Touchable'
 
 type ButtonProps = {
   children?: ReactNode
-  variant?: 'solid' | 'outline' | 'ghost'
+  variant?: 'solid' | 'soft' | 'outline' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
+  leftIcon?: ReactNode
+  rightIcon?: ReactNode
+  fullWidth?: boolean
+  shape?: 'default' | 'pill'
   onPress?: () => void
 }
 
@@ -24,16 +29,16 @@ const buttonSizeStyles: Record<
   }
 > = {
   sm: {
-    minHeight: spacing['32'],
-    paddingHorizontal: spacing.sm,
+    minHeight: buttonTokens.height.sm,
+    paddingHorizontal: buttonTokens.paddingX.sm,
   },
   md: {
-    minHeight: spacing['40'],
-    paddingHorizontal: spacing.md,
+    minHeight: buttonTokens.height.md,
+    paddingHorizontal: buttonTokens.paddingX.md,
   },
   lg: {
-    minHeight: spacing['48'],
-    paddingHorizontal: spacing.lg,
+    minHeight: buttonTokens.height.lg,
+    paddingHorizontal: buttonTokens.paddingX.lg,
   },
 }
 
@@ -42,6 +47,11 @@ const buttonContainerStyles: Record<ButtonVariant, ViewStyle> = {
     backgroundColor: colors.brandPrimary,
     borderColor: colors.brandPrimary,
     borderWidth: borderWidth.none,
+  },
+  soft: {
+    backgroundColor: colors.surface,
+    borderColor: colors.textPrimary,
+    borderWidth: borderWidth.thin,
   },
   outline: {
     backgroundColor: 'transparent',
@@ -55,26 +65,16 @@ const buttonContainerStyles: Record<ButtonVariant, ViewStyle> = {
   },
 }
 
-const buttonTextTone: Record<ButtonVariant, 'inverse' | 'primary'> = {
+const buttonTextTone: Record<ButtonVariant, 'inverse' | 'primary' | 'default'> = {
   solid: 'inverse',
+  soft: 'default',
   outline: 'primary',
   ghost: 'primary',
 }
 
-const reusableVariantMap: Record<ButtonVariant, 'default' | 'outline' | 'ghost'> = {
-  solid: 'default',
-  outline: 'outline',
-  ghost: 'ghost',
-}
-
-const reusableSizeMap: Record<ButtonSize, 'sm' | 'default' | 'lg'> = {
-  sm: 'sm',
-  md: 'default',
-  lg: 'lg',
-}
-
 const spinnerColor: Record<ButtonVariant, string> = {
   solid: colors.white,
+  soft: colors.textPrimary,
   outline: colors.brandPrimary,
   ghost: colors.brandPrimary,
 }
@@ -85,42 +85,79 @@ export function Button({
   size = 'md',
   disabled,
   loading,
+  leftIcon,
+  rightIcon,
+  fullWidth = false,
+  shape = 'default',
   onPress,
 }: ButtonProps) {
   const sizeStyle = buttonSizeStyles[size]
   const variantStyle = buttonContainerStyles[variant]
   const isDisabled = disabled || loading
+  const isWeb = Platform.OS === 'web'
 
   return (
-    <ReusableButton
+    <Touchable
+      accessibilityRole='button'
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
-      variant={reusableVariantMap[variant]}
-      size={reusableSizeMap[size]}
-      style={{
-        minHeight: sizeStyle.minHeight,
-        paddingHorizontal: sizeStyle.paddingHorizontal,
-        borderRadius: radius.md,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: isDisabled ? opacity.disabled : 1,
-        ...variantStyle,
+      style={({ hovered, focused }) => {
+        const interactive = hovered || focused
+        const resolvedShape = shape === 'default' ? 'pill' : shape
+        const radius = resolvedShape === 'pill' ? buttonTokens.radius.pill : buttonTokens.radius.default
+        const ctaActiveBackground =
+          variant === 'solid'
+            ? interactive
+              ? colors.brandPrimaryHover
+              : colors.brandPrimary
+            : variantStyle.backgroundColor
+
+        return {
+          minHeight: sizeStyle.minHeight,
+          paddingHorizontal: sizeStyle.paddingHorizontal,
+          borderRadius: radius,
+          alignItems: 'center',
+          justifyContent: 'center',
+          alignSelf: fullWidth ? 'stretch' : 'flex-start',
+          width: fullWidth ? '100%' : undefined,
+          opacity: isDisabled ? opacity.disabled : 1,
+          transform: [{ scale: interactive && !isDisabled ? 1.005 : 1 }],
+          transitionProperty: 'background-color, border-color, box-shadow, transform',
+          transitionDuration: `${motionDuration.hoverScale}ms`,
+          backgroundColor: ctaActiveBackground,
+          borderColor:
+            variant === 'outline'
+              ? interactive
+                ? colors.brandPrimaryHover
+                : colors.brandPrimary
+              : variant === 'soft'
+                ? interactive
+                  ? colors.textPrimary
+                  : colors.border
+                : variantStyle.borderColor,
+          borderWidth: variantStyle.borderWidth,
+          ...(variant === 'solid'
+            ? isWeb
+              ? { boxShadow: interactive ? elevation.e01 : elevation.none }
+              : interactive
+                ? shadows.xs
+                : shadows.none
+            : null),
+        }
       }}
     >
       {loading ? (
-        <ActivityIndicator
-          accessibilityLabel="Loading"
-          color={spinnerColor[variant]}
-        />
+        <ActivityIndicator accessibilityLabel='Loading' color={spinnerColor[variant]} />
       ) : (
-        <Text
-          tone={buttonTextTone[variant]}
-          variant='label'
-          style={{ textTransform: 'uppercase' }}
-        >
-          {children}
-        </Text>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
+          {leftIcon ? leftIcon : null}
+          <Text tone={buttonTextTone[variant]} variant='bodySm' weight={fontWeights.semibold}>
+            {children}
+          </Text>
+          {rightIcon ? rightIcon : null}
+        </Box>
       )}
-    </ReusableButton>
+    </Touchable>
   )
 }
