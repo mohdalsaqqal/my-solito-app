@@ -5,23 +5,56 @@ import { Text } from '../primitives/Text'
 
 type BadgeProps = ViewProps & {
   children?: ReactNode
-  tone?: 'neutral' | 'accent' | 'outline'
+  tone?: 'neutral' | 'accent' | 'outline' | 'ink' | 'warning' | 'premium'
+  size?: 'sm' | 'md'
   disabled?: boolean
 }
 
-export function Badge({ children, tone = 'neutral', disabled, style, ...props }: BadgeProps) {
+export function Badge({ children, tone = 'neutral', size = 'sm', disabled, style, ...props }: BadgeProps) {
   const backgroundColor =
-    tone === 'accent' ? colors.brandPrimary : tone === 'outline' ? 'transparent' : colors.backgroundSecondary
-  const borderColor = tone === 'outline' ? colors.border : tone === 'accent' ? colors.brandPrimary : 'transparent'
-  const textTone = tone === 'accent' ? 'inverse' : tone === 'outline' ? 'default' : 'muted'
+    tone === 'accent'
+      ? colors.urgencyBadge
+      : tone === 'ink'
+        ? colors.inkBlack
+        : tone === 'warning'
+          ? colors.warning
+          : tone === 'premium'
+            ? colors.goldSubtle
+          : tone === 'outline'
+            ? colors.surfaceMuted
+            : colors.backgroundSecondary
+  const borderColor =
+    tone === 'outline'
+      ? 'transparent'
+      : tone === 'accent'
+        ? colors.urgencyBadge
+        : tone === 'ink'
+          ? colors.inkBlack
+          : tone === 'warning'
+            ? colors.warning
+            : tone === 'premium'
+              ? colors.goldPrimary
+            : 'transparent'
+  const textTone =
+    tone === 'accent' || tone === 'ink'
+      ? 'inverse'
+      : tone === 'warning'
+        ? 'default'
+        : tone === 'premium'
+          ? 'default'
+        : tone === 'outline'
+          ? 'default'
+          : 'muted'
+  const minHeight = size === 'md' ? spacing['32'] : spacing['24']
+  const paddingHorizontal = size === 'md' ? spacing['12'] : spacing.sm
 
   return (
     <View
       accessibilityState={{ disabled }}
       style={[
         {
-          minHeight: spacing['24'],
-          paddingHorizontal: spacing.sm,
+          minHeight,
+          paddingHorizontal,
           borderRadius: radius.full,
           alignItems: 'center',
           justifyContent: 'center',
@@ -35,7 +68,7 @@ export function Badge({ children, tone = 'neutral', disabled, style, ...props }:
       ]}
       {...props}
     >
-      <Text variant='caption' tone={textTone}>
+      <Text variant={size === 'md' ? 'label' : 'caption'} tone={textTone} style={{ textTransform: 'uppercase' }}>
         {children}
       </Text>
     </View>
