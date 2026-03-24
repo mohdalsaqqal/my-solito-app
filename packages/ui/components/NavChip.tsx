@@ -17,15 +17,16 @@ export function NavChip({ label, active = false, onPress }: NavChipProps) {
         paddingHorizontal: spacing.md,
         borderRadius: radius.full,
         borderWidth: borderWidth.thin,
-        borderColor: active ? colors.textPrimary : colors.border,
-        backgroundColor: active ? colors.textPrimary : colors.surface,
+        borderColor: active ? colors.brandPrimary : colors.border,
+        backgroundColor: active ? colors.brandPrimarySubtle : colors.surface,
         justifyContent: 'center',
         alignItems: 'center',
       }}
     >
       <Text
-        variant='label'
-        tone={active ? 'inverse' : 'default'}
+        variant='caption'
+        weight='700'
+        tone={active ? 'primary' : 'default'}
         style={{ textTransform: 'uppercase' }}
       >
         {label}
