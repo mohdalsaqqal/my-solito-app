@@ -29,6 +29,7 @@ test('GET /api/cms/home returns success payload', { concurrency: false }, async 
 
   assert.equal(response.status, 200)
   assert.equal(response.body.success, true)
+  assert.equal(response.body.data.storeId, 'default')
   assert.equal(Array.isArray(response.body.data.heroSlides), true)
   assert.equal(typeof response.body.data.shell, 'object')
   assert.equal(typeof response.body.data.quoteId, 'undefined')

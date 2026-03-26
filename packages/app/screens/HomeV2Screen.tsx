@@ -1,28 +1,54 @@
 import { useMemo } from 'react'
-import { colors } from '@real/tokens'
+import { Platform, ScrollView } from 'react-native'
 import { resolveMarketingCampaign } from '@real/app/lib/campaigns'
 import { HomeV2Sections } from '@real/app/sections/home/HomeV2Sections'
 import { CMSHome, Product } from '@real/app/lib/types'
 import {
   HomeBrandItem,
+  HomeCategoryItem,
   HomeEducationBanner,
+  HomeEditorialHotspotSection,
   HomeNewsletterCta,
   HomeProductItem,
   HomeUgcItem,
 } from '@real/ui/components/home/types'
 import { applyProductFilter } from '@real/app/lib/product-filter'
-import { passThroughPricingService } from '@real/app/lib/pricing'
+import {
+  buildHomeProductItem,
+  resolveRealProductCardUrgency,
+} from '@real/app/lib/product-card-presentation'
+
+const HomeV2SectionsAny = HomeV2Sections as any
 
 type HomeV2ScreenProps = {
   cmsHome?: CMSHome | null
   products: Product[]
+  brands: Array<{
+    id: string
+    slug: string
+    name: { en: string; ar: string }
+    logo?: string
+    description?: { en: string; ar: string }
+    isActive: boolean
+  }>
+  categories: Array<{
+    id: string
+    slug: string
+    name: { en: string; ar: string }
+    parentId?: string
+    image?: string
+    isActive: boolean
+    sortOrder: number
+  }>
   loading: boolean
   error: string | null
   onReload: () => void
   locale?: 'en' | 'ar'
   onNavigate?: (href: string) => void
   onSelectProduct?: (productId: string) => void
+  onQuickView?: (item: HomeProductItem) => void
   onAddToCart?: (productId: string) => void
+  onAddAllToCart?: (productIds: string[]) => void
 }
 
 type RailQuery = {
@@ -42,63 +68,6 @@ type ResolvedRail = {
 function localize(locale: 'en' | 'ar', value?: { en: string; ar: string }, fallback = '') {
   if (!value) return fallback
   return locale === 'ar' ? value.ar : value.en
-}
-
-function deriveBrand(product: Product) {
-  if (product.brand) {
-    return product.brand
-      .split('-')
-      .map((part) => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`)
-      .join(' ')
-  }
-
-  const [left] = product.name.split('-')
-  return left?.trim() || 'Brand'
-}
-
-function deriveProductName(product: Product) {
-  const split = product.name.split('-')
-  if (split.length < 2) {
-    return product.name
-  }
-  return split.slice(1).join('-').trim()
-}
-
-const SWATCH_PALETTE = [
-  colors.brandPrimary,
-  colors.warning,
-  colors.info,
-  colors.success,
-  colors.textPrimary,
-]
-
-function toHomeProductItem(product: Product): HomeProductItem {
-  const resolvedPrice = passThroughPricingService.getProductPrice(product)
-  const swatches =
-    product.category === 'makeup'
-      ? SWATCH_PALETTE.map((hex, index) => ({
-          id: `${product.id}-shade-${index + 1}`,
-          hex,
-          label: `Shade ${index + 1}`,
-        }))
-      : undefined
-
-  return {
-    id: product.id,
-    name: deriveProductName(product),
-    brand: deriveBrand(product),
-    price: resolvedPrice.unitPrice,
-    imageUrl: product.image,
-    href: `/product/${product.id}`,
-    rating: product.rating,
-    reviews: product.reviews,
-    isNew: product.isNew,
-    isLimited: product.isLimited,
-    stock: product.stock,
-    requiresVariantSelection: product.category === 'makeup',
-    swatches,
-    badge: product.isLimited ? 'Limited' : product.isNew ? 'New' : undefined,
-  }
 }
 
 function resolveRailProducts(allProducts: Product[], query?: RailQuery) {
@@ -163,6 +132,10 @@ function formatCountdown(timerEndsAt: string | undefined) {
   return `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m left`
 }
 
+function toBrandSlug(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, '-')
+}
+
 function createFallbackTicker(locale: 'en' | 'ar') {
   return [
     {
@@ -181,14 +154,21 @@ function createFallbackTicker(locale: 'en' | 'ar') {
 export function HomeV2Screen({
   cmsHome,
   products,
+  brands,
+  categories,
   loading,
   error,
   onReload,
   locale = 'en',
   onNavigate,
   onSelectProduct,
+  onQuickView,
   onAddToCart,
+  onAddAllToCart,
 }: HomeV2ScreenProps) {
+  const publishedHomeBlocks = cmsHome?.page?.blocks ?? null
+  const hasPublishedHomeBlocks = (publishedHomeBlocks?.length ?? 0) > 0
+
   const heroCampaign = useMemo(
     () => resolveMarketingCampaign(cmsHome, locale, 'home_hero_primary'),
     [cmsHome, locale],
@@ -223,16 +203,11 @@ export function HomeV2Screen({
   }, [cmsHome?.marketing?.campaignZoneOverrides?.productCard, locale])
 
   const resolveProductCardUrgency = (product: Product) => {
-    if (
-      typeof product.stock === 'number' &&
-      product.stock > 0 &&
-      typeof productCardLowStockThreshold === 'number' &&
-      product.stock <= productCardLowStockThreshold &&
-      productCardLowStockLabel
-    ) {
-      return productCardLowStockLabel
-    }
-    return productCardUrgency
+    return resolveRealProductCardUrgency(product, locale, {
+      lowStockThreshold: productCardLowStockThreshold,
+      lowStockLabel: productCardLowStockLabel,
+      includeLimitedRelease: productCardUrgency !== undefined,
+    })
   }
 
   const heroItems = useMemo(() => {
@@ -337,7 +312,7 @@ export function HomeV2Screen({
       id,
       title,
       items: resolveRailProducts(products, query).map((item) => ({
-        ...toHomeProductItem(item),
+        ...buildHomeProductItem(item, locale),
         urgencyLabel: resolveProductCardUrgency(item),
       })),
     })
@@ -419,7 +394,7 @@ export function HomeV2Screen({
         id: staticRail.id,
         title: localize(locale, staticRail.title),
         items: resolveRailProducts(products, staticRail.query).map((item) => ({
-          ...toHomeProductItem(item),
+          ...buildHomeProductItem(item, locale),
           urgencyLabel: resolveProductCardUrgency(item),
         })),
       }
@@ -457,7 +432,7 @@ export function HomeV2Screen({
         localize(locale, cmsHome?.marketing?.personalization?.recommendedTitle) ||
         (locale === 'ar' ? 'موصى بها لك' : 'Recommended for You'),
       items: ruleBased.map((item) => ({
-        ...toHomeProductItem(item),
+        ...buildHomeProductItem(item, locale),
         urgencyLabel: resolveProductCardUrgency(item),
       })),
     }
@@ -514,28 +489,129 @@ export function HomeV2Screen({
     }
   }, [cmsHome?.marketing?.featuredSlot, locale, rails.bundles])
 
+  const productBrandCounts = useMemo(() => {
+    return products.reduce<Record<string, number>>((accumulator, product) => {
+      const key = product.brand?.trim().toLowerCase()
+      if (!key) return accumulator
+      accumulator[key] = (accumulator[key] ?? 0) + 1
+      return accumulator
+    }, {})
+  }, [products])
+
+  const productBrandImages = useMemo(() => {
+    return products.reduce<Record<string, string>>((accumulator, product) => {
+      const key = product.brand?.trim().toLowerCase()
+      if (!key || accumulator[key] || !product.image) return accumulator
+      accumulator[key] = product.image
+      return accumulator
+    }, {})
+  }, [products])
+
+  const topBrands = useMemo(() => {
+    const cmsBrands = (cmsHome?.marketing?.brands ?? []).slice(0, 8).map((item): HomeBrandItem => ({
+      id: item.id,
+      name: item.name,
+      href: item.href,
+      logoUrl: item.logoUrl,
+    }))
+
+    const catalogBrands = brands
+      .filter((brand) => brand.isActive)
+      .map((brand) => ({
+        id: brand.id,
+        slug: brand.slug,
+        name: localize(locale, brand.name, brand.slug),
+        href: `/shop?brands=${brand.slug}`,
+        logoUrl: brand.logo || productBrandImages[brand.slug],
+        productCount: productBrandCounts[brand.slug] ?? 0,
+      }))
+      .filter((brand) => brand.productCount > 0)
+      .sort((left, right) => right.productCount - left.productCount || left.name.localeCompare(right.name))
+      .slice(0, 8)
+      .map<HomeBrandItem>(({ id, name, href, logoUrl }) => ({
+        id,
+        name,
+        href,
+        logoUrl,
+      }))
+
+    const mergedBrands = [...cmsBrands]
+    const seenKeys = new Set(
+      cmsBrands.map((brand) => brand.href || brand.name.trim().toLowerCase().replace(/\s+/g, '-')),
+    )
+
+    for (const brand of catalogBrands) {
+      const brandKey = brand.href || brand.name.trim().toLowerCase().replace(/\s+/g, '-')
+      if (seenKeys.has(brandKey)) continue
+      mergedBrands.push(brand)
+      seenKeys.add(brandKey)
+      if (mergedBrands.length >= 8) break
+    }
+
+    return mergedBrands.slice(0, 8)
+  }, [brands, cmsHome?.marketing?.brands, locale, productBrandCounts, productBrandImages])
+
   const brandSpotlights = useMemo(() => {
     const sections =
       cmsHome?.marketing?.brandSpotlights && cmsHome.marketing.brandSpotlights.length > 0
         ? cmsHome.marketing.brandSpotlights
         : (cmsHome?.marketing?.brandSections ?? [])
 
-    return sections
+    const resolvedSections = sections
       .filter((section) => section.enabled ?? true)
-      .map((section) => ({
-        id: section.id,
-        bannerTitle: localize(locale, section.bannerTitle),
-        bannerSubtitle: localize(locale, section.bannerSubtitle),
-        bannerCtaLabel: localize(locale, section.bannerCtaLabel),
-        bannerHref: section.bannerHref,
-        bannerImageUrl: section.bannerImageUrl,
-        railTitle: localize(locale, section.railTitle),
-        items: resolveRailProducts(products, section.query).map((item) => ({
-          ...toHomeProductItem(item),
+      .map((section) => {
+        const selectedBrandName = section.query?.brandNames?.map((item) => item.trim()).find(Boolean)
+        const spotlightItems = resolveRailProducts(products, {
+          ...section.query,
+          brandNames: selectedBrandName ? [selectedBrandName] : section.query?.brandNames,
+        }).map((item) => ({
+          ...buildHomeProductItem(item, locale),
           urgencyLabel: resolveProductCardUrgency(item),
-        })),
+        }))
+        const brandHref = selectedBrandName ? `/shop?brands=${toBrandSlug(selectedBrandName)}` : section.bannerHref
+        return {
+          id: section.id,
+          bannerTitle: localize(locale, section.bannerTitle),
+          bannerSubtitle: localize(locale, section.bannerSubtitle),
+          bannerCtaLabel: localize(locale, section.bannerCtaLabel),
+          bannerHref: brandHref,
+          bannerImageUrl: section.bannerImageUrl ?? spotlightItems[0]?.imageUrl,
+          railTitle: localize(locale, section.railTitle),
+          items: spotlightItems,
+        }
+      })
+      .filter((section) => section.items.length > 0)
+
+    if (resolvedSections.length > 0) {
+      return resolvedSections
+    }
+
+    return topBrands.slice(0, 2).map((brand, index) => {
+      const slug = brand.href?.split('brands=')[1] ?? ''
+      const brandProducts = resolveRailProducts(products, {
+        brandNames: slug ? [slug] : [brand.name],
+        limit: 12,
+      }).map((item) => ({
+        ...buildHomeProductItem(item, locale),
+        urgencyLabel: resolveProductCardUrgency(item),
       }))
-  }, [cmsHome?.marketing?.brandSections, cmsHome?.marketing?.brandSpotlights, locale, products])
+
+      const leadProduct = brandProducts[0]
+      return {
+        id: `fallback-brand-spotlight-${index + 1}`,
+        bannerTitle: locale === 'ar' ? `${brand.name} المختارة` : `${brand.name} Spotlight`,
+        bannerSubtitle:
+          locale === 'ar'
+            ? 'تسوقي أفضل المنتجات من هذه العلامة.'
+            : 'Shop the best-performing products from this brand.',
+        bannerCtaLabel: locale === 'ar' ? 'تسوقي العلامة' : 'Shop Brand',
+        bannerHref: brand.href ?? '/shop',
+        bannerImageUrl: leadProduct?.imageUrl,
+        railTitle: locale === 'ar' ? `منتجات ${brand.name}` : `${brand.name} Picks`,
+        items: brandProducts,
+      }
+    }).filter((section) => section.items.length > 0)
+  }, [cmsHome?.marketing?.brandSections, cmsHome?.marketing?.brandSpotlights, locale, products, topBrands])
   const primaryBrandSpotlight = brandSpotlights[0] ?? null
 
   const educationBanner = useMemo<HomeEducationBanner | null>(() => {
@@ -571,17 +647,122 @@ export function HomeV2Screen({
     }
   }, [cmsHome?.marketing?.educationBanner, inlineCampaign, locale])
 
-  const topBrands = useMemo(() => {
-    const brands = cmsHome?.marketing?.brands ?? []
-    return brands.slice(0, 8).map((item): HomeBrandItem => ({
-      id: item.id,
-      name: item.name,
-      href: item.href,
-      logoUrl: item.logoUrl,
-    }))
-  }, [cmsHome?.marketing?.brands])
+  const offerBanners = useMemo(
+    () =>
+      cmsHome?.marketing?.offerBanners
+        ?.filter((b) => b.enabled !== false)
+        .map((b) => ({
+          id: b.id,
+          imageUrl: b.imageUrl,
+          href: b.href,
+          title: b.title ? localize(locale, b.title) : undefined,
+          subtitle: b.subtitle ? localize(locale, b.subtitle) : undefined,
+          ctaLabel: b.ctaLabel ? localize(locale, b.ctaLabel) : undefined,
+        })) ?? null,
+    [cmsHome?.marketing?.offerBanners, locale],
+  )
+
+  const editorialHotspotSection = useMemo<HomeEditorialHotspotSection | null>(() => {
+    const section = cmsHome?.marketing?.editorialHotspotSection
+    if (section?.enabled === false || !section?.imageUrl) {
+      return null
+    }
+
+    const productById = new Map(products.map((product) => [product.id, product]))
+    const seenProductIds = new Set<string>()
+    const hotspots = (section.hotspots ?? [])
+      .map((hotspot) => {
+        const product = productById.get(hotspot.productId)
+        if (!product) return null
+        return {
+          id: hotspot.id,
+          productId: product.id,
+          xPercent: hotspot.xPercent,
+          yPercent: hotspot.yPercent,
+          label: localize(locale, hotspot.label) || undefined,
+        }
+      })
+      .filter((hotspot): hotspot is HomeEditorialHotspotSection['hotspots'][number] => Boolean(hotspot))
+
+    const orderedProductIds = section.productIds?.length
+      ? section.productIds
+      : hotspots.map((hotspot) => hotspot.productId)
+
+    const productsForSection: HomeProductItem[] = []
+    for (const productId of orderedProductIds.slice(0, 4)) {
+      if (seenProductIds.has(productId)) continue
+      const rawProduct = productById.get(productId)
+      if (!rawProduct) continue
+      productsForSection.push({
+        ...buildHomeProductItem(rawProduct, locale),
+        urgencyLabel: resolveProductCardUrgency(rawProduct),
+      })
+      seenProductIds.add(productId)
+    }
+
+    if (productsForSection.length === 0) {
+      return null
+    }
+
+    return {
+      id: section.id,
+      title: localize(locale, section.title) || undefined,
+      subtitle: localize(locale, section.subtitle) || undefined,
+      ctaLabel: localize(locale, section.ctaLabel) || undefined,
+      href: section.href,
+      imageUrl: section.imageUrl,
+      hotspots,
+      products: productsForSection,
+    }
+  }, [cmsHome?.marketing?.editorialHotspotSection, locale, products])
 
   const topBrandsTitle = useMemo(() => localize(locale, cmsHome?.marketing?.topBrandsTitle), [cmsHome?.marketing?.topBrandsTitle, locale])
+
+  const categoryItems = useMemo<HomeCategoryItem[]>(() => {
+    const productCounts = products.reduce<Record<string, number>>((accumulator, product) => {
+      const key = product.category?.trim().toLowerCase()
+      if (!key) return accumulator
+      accumulator[key] = (accumulator[key] ?? 0) + 1
+      return accumulator
+    }, {})
+
+    const categoryImages = products.reduce<Record<string, string>>((accumulator, product) => {
+      const key = product.category?.trim().toLowerCase()
+      if (!key || accumulator[key] || !product.image) {
+        return accumulator
+      }
+      accumulator[key] = product.image
+      return accumulator
+    }, {})
+
+    const primaryCategories = categories
+      .filter((category) => category.isActive)
+      .filter((category) => !category.parentId)
+      .sort((left, right) => left.sortOrder - right.sortOrder)
+      .map((category) => ({
+        id: category.id,
+        label: localize(locale, category.name, category.slug),
+        href: `/shop/categories/${category.slug}`,
+        itemCount: productCounts[category.slug.toLowerCase()] ?? 0,
+        imageUrl: category.image || categoryImages[category.slug.toLowerCase()],
+      }))
+
+    if (primaryCategories.length > 0) {
+      return primaryCategories
+    }
+
+    const fallback = [...new Set(products.map((product) => product.category).filter(Boolean))]
+      .sort()
+      .map((category) => ({
+        id: `fallback-${category}`,
+        label: category!.charAt(0).toUpperCase() + category!.slice(1),
+        href: `/shop/categories/${category}`,
+        itemCount: productCounts[category!.toLowerCase()] ?? 0,
+        imageUrl: categoryImages[category!.toLowerCase()],
+      }))
+
+    return fallback
+  }, [categories, locale, products])
 
   const ugcSection = useMemo(() => {
     const ugc = cmsHome?.marketing?.ugcGallery
@@ -601,12 +782,15 @@ export function HomeV2Screen({
     const fallbackItems = products
       .filter((item) => Boolean(item.image))
       .slice(0, 10)
-      .map((item): HomeUgcItem => ({
-        id: `ugc-${item.id}`,
-        imageUrl: item.image || '/brand-logo-placeholder.svg',
-        productId: item.id,
-        caption: `${deriveBrand(item)} • ${deriveProductName(item)}`,
-      }))
+      .map((item): HomeUgcItem => {
+        const productCardItem = buildHomeProductItem(item, locale)
+        return {
+          id: `ugc-${item.id}`,
+          imageUrl: item.image || '/brand-logo-placeholder.svg',
+          productId: item.id,
+          caption: `${productCardItem.brand} • ${productCardItem.displayTitle ?? productCardItem.name}`,
+        }
+      })
 
     return {
       title: locale === 'ar' ? 'إطلالات من مجتمعنا' : 'Looks From Our Community',
@@ -644,8 +828,47 @@ export function HomeV2Screen({
     }
   }, [cmsHome?.marketing?.newsletterCta, cmsHome?.shell?.footer, locale])
 
-  return (
-    <HomeV2Sections
+  const homeSections = hasPublishedHomeBlocks ? (
+    <HomeV2SectionsAny
+      homeBlocks={publishedHomeBlocks}
+      tickerItems={tickerItems}
+      loading={loading}
+      error={error}
+      tickerSpeedMs={cmsHome?.marketing?.ticker?.speedMs ?? 22000}
+      heroAutoplay={cmsHome?.marketing?.hero?.autoplay ?? true}
+      heroAutoplayMs={cmsHome?.marketing?.hero?.autoplayMs ?? 4200}
+      railAutoplay={{
+        hero: {
+          enabled: cmsHome?.marketing?.railAutoplay?.hero?.enabled ?? cmsHome?.marketing?.hero?.autoplay ?? true,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.hero?.autoplayMs ?? cmsHome?.marketing?.hero?.autoplayMs ?? 4200,
+        },
+        categories: {
+          enabled: cmsHome?.marketing?.railAutoplay?.categories?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.categories?.autoplayMs ?? 5200,
+        },
+        newArrivals: {
+          enabled: cmsHome?.marketing?.railAutoplay?.newArrivals?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.newArrivals?.autoplayMs ?? 4800,
+        },
+        featured: {
+          enabled: cmsHome?.marketing?.railAutoplay?.featured?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.featured?.autoplayMs ?? 5000,
+        },
+        brandSpotlights: {
+          enabled: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.autoplayMs ?? 5200,
+        },
+      }}
+      locale={locale}
+      onReload={onReload}
+      onNavigate={onNavigate}
+      onSelectProduct={onSelectProduct}
+      onQuickView={onQuickView}
+      onAddToCart={onAddToCart}
+      onAddAllToCart={onAddAllToCart}
+    />
+  ) : (
+    <HomeV2SectionsAny
       heroItems={heroItems}
       tickerItems={tickerItems}
       bestSellersRail={rails.bestSellers}
@@ -656,9 +879,13 @@ export function HomeV2Screen({
       personalizedRail={personalizedRail}
       featuredSlot={featuredSlot}
       spotlight={primaryBrandSpotlight}
+      brandSpotlights={brandSpotlights}
       educationBanner={educationBanner}
+      offerBanners={offerBanners}
+      editorialHotspotSection={editorialHotspotSection}
       topBrandsTitle={topBrandsTitle}
       topBrands={topBrands}
+      categoryItems={categoryItems}
       ugcTitle={ugcSection.title}
       ugcItems={ugcSection.items}
       newsletterCta={newsletterCta}
@@ -669,10 +896,49 @@ export function HomeV2Screen({
       tickerSpeedMs={cmsHome?.marketing?.ticker?.speedMs ?? 22000}
       heroAutoplay={cmsHome?.marketing?.hero?.autoplay ?? true}
       heroAutoplayMs={cmsHome?.marketing?.hero?.autoplayMs ?? 4200}
+      railAutoplay={{
+        hero: {
+          enabled: cmsHome?.marketing?.railAutoplay?.hero?.enabled ?? cmsHome?.marketing?.hero?.autoplay ?? true,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.hero?.autoplayMs ?? cmsHome?.marketing?.hero?.autoplayMs ?? 4200,
+        },
+        categories: {
+          enabled: cmsHome?.marketing?.railAutoplay?.categories?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.categories?.autoplayMs ?? 5200,
+        },
+        newArrivals: {
+          enabled: cmsHome?.marketing?.railAutoplay?.newArrivals?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.newArrivals?.autoplayMs ?? 4800,
+        },
+        featured: {
+          enabled: cmsHome?.marketing?.railAutoplay?.featured?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.featured?.autoplayMs ?? 5000,
+        },
+        brandSpotlights: {
+          enabled: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.enabled ?? false,
+          autoplayMs: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.autoplayMs ?? 5200,
+        },
+      }}
+      locale={locale}
       onReload={onReload}
       onNavigate={onNavigate}
       onSelectProduct={onSelectProduct}
+      onQuickView={onQuickView}
       onAddToCart={onAddToCart}
+      onAddAllToCart={onAddAllToCart}
     />
   )
+
+  if (Platform.OS !== 'web') {
+    return (
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ flexGrow: 1 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {homeSections}
+      </ScrollView>
+    )
+  }
+
+  return homeSections
 }

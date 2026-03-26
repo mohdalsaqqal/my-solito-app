@@ -1,3 +1,6 @@
+import type { HomeBlock, HeroCarouselCard, OfferBannerItem } from './cms/blocks'
+import type { PagePayload } from './layout/page-types'
+
 export type Product = {
   id: string
   name: string
@@ -381,12 +384,33 @@ export type TranslationPrefillResult = {
 
 export type ReleaseEnvironment = 'staging' | 'production'
 export type ReleaseStatus = 'draft' | 'published'
-export type ReleaseBlockType = 'hero' | 'product_slider' | 'brand_promo' | 'promo_strip'
+export type ReleaseBlockType =
+  | 'hero'
+  | 'product_slider'
+  | 'brand_promo'
+  | 'promo_strip'
+  | 'category_shortcuts'
+  | 'offer_stack'
+  | 'sticky_listing_promo'
+  | 'hero_carousel'
+  | 'flash_sale'
+  | 'brand_spotlight'
+  | 'offer_banners'
+  | 'education_banner'
+  | 'newsletter_cta'
+  | 'top_brands'
+  | 'ugc_gallery'
+  | 'personalized_rail'
+  | 'editorial_hotspot'
+  | 'pdp_offer_cluster'
+  | 'cart_upsell_rail'
 
 export type AdminReleaseRecord = {
   id: string
+  name?: string
   environment: ReleaseEnvironment
   status: ReleaseStatus
+  scheduledAt?: string
   createdAt: string
   updatedAt: string
 }
@@ -397,6 +421,7 @@ export type AdminReleaseBlockRecord = {
   position: number
   type: ReleaseBlockType
   payloadJson: unknown
+  enabled: boolean
 }
 
 export type PromotionCondition =
@@ -462,6 +487,48 @@ export type CheckoutQuoteResponse = {
 
 export type LogoSizeKey = 'sm' | 'md' | 'lg'
 
+export type CMSLocale = 'en' | 'ar'
+
+export type CMSHomeHeroCarouselCard = HeroCarouselCard & {
+  titleText: string
+  subtitleText?: string
+  ctaText?: string
+  badgeText?: string
+}
+
+export type CMSHomeOfferBannerItem = OfferBannerItem & {
+  ctaText?: string
+}
+
+export type CMSHomeBlock = HomeBlock & {
+  position: number
+  releaseId: string
+  locale: CMSLocale
+  titleText?: string
+  subtitleText?: string
+  ctaText?: string
+  textValue?: string
+  cardsLocalized?: CMSHomeHeroCarouselCard[]
+  itemsLocalized?: CMSHomeOfferBannerItem[]
+  products?: Product[]
+  hotspots?: Array<{
+    id: string
+    productId: string
+    xPercent: number
+    yPercent: number
+    label?: LocalizedString
+  }>
+  items?: Array<{
+    id: string
+    imageUrl: string
+    caption?: LocalizedString
+    href?: string
+    productId?: string
+  }>
+}
+
+export type CMSPageBlock = PagePayload<string, CMSHomeBlock>['blocks'][number]
+
 export type MarketingCampaignZone =
   | 'home_hero_primary'
   | 'home_flash_sale'
@@ -485,6 +552,8 @@ export type MarketingCampaign = {
 }
 
 export type CMSHome = {
+  storeId: string
+  page?: PagePayload<string, CMSHomeBlock>
   heroSlides: Array<{
     id: string
     title: string
@@ -543,6 +612,28 @@ export type CMSHome = {
     }
   }
   marketing?: {
+    railAutoplay?: {
+      hero?: {
+        enabled?: boolean
+        autoplayMs?: number
+      }
+      categories?: {
+        enabled?: boolean
+        autoplayMs?: number
+      }
+      newArrivals?: {
+        enabled?: boolean
+        autoplayMs?: number
+      }
+      featured?: {
+        enabled?: boolean
+        autoplayMs?: number
+      }
+      brandSpotlights?: {
+        enabled?: boolean
+        autoplayMs?: number
+      }
+    }
     rails?: Array<{
       id: string
       enabled?: boolean
@@ -621,6 +712,22 @@ export type CMSHome = {
       imageUrl?: string
       badgeLabel?: LocalizedString
     }>
+    editorialHotspotSection?: {
+      enabled?: boolean
+      title?: LocalizedString
+      subtitle?: LocalizedString
+      ctaLabel?: LocalizedString
+      href?: string
+      imageUrl?: string
+      productIds?: string[]
+      hotspots?: Array<{
+        id: string
+        productId: string
+        xPercent: number
+        yPercent: number
+        label?: LocalizedString
+      }>
+    }
     ticker?: {
       enabled?: boolean
       speedMs?: number
@@ -700,7 +807,41 @@ export type CMSHome = {
       mode?: 'static' | 'rule-based' | 'ai'
       recommendedTitle?: LocalizedString
     }
-    homeBlocks?: Array<Record<string, unknown>>
+    marketplace?: {
+      gridDensity?: 'compact' | 'dense'
+      railSizePreset?: 'compact' | 'dense'
+      promoInsertion?: {
+        home?: number[]
+        shop?: number[]
+        search?: number[]
+      }
+      stickyListingPromo?: {
+        enabled?: boolean
+        badgeLabel?: LocalizedString
+        title?: LocalizedString
+        subtitle?: LocalizedString
+        ctaLabel?: LocalizedString
+        href?: string
+      }
+      pdpOfferCluster?: {
+        enabled?: boolean
+        badgeLabel?: LocalizedString
+        title?: LocalizedString
+        subtitle?: LocalizedString
+      }
+      cartUpsellRail?: {
+        enabled?: boolean
+        title?: LocalizedString
+        query?: {
+          source?: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
+          limit?: number
+          sortBy?: 'price_desc' | 'price_asc' | 'name_asc' | 'name_desc'
+          productIds?: string[]
+          brandNames?: string[]
+        }
+      }
+    }
+    homeBlocks?: CMSHomeBlock[]
   }
   identity?: {
     customer?: {

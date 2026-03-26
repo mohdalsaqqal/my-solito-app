@@ -1,9 +1,11 @@
 import crypto from 'node:crypto'
+import { DEFAULT_STORE_ID } from './release-env'
 
 const DEFAULT_TTL_SECONDS = 60 * 30
 
 type PreviewPayload = {
   releaseId: string
+  storeId: string
   exp: number
 }
 
@@ -18,9 +20,14 @@ function signPayload(payload: PreviewPayload) {
     .digest('hex')
 }
 
-export function createPreviewToken(releaseId: string, ttlSeconds = DEFAULT_TTL_SECONDS) {
+export function createPreviewToken(
+  releaseId: string,
+  storeId = DEFAULT_STORE_ID,
+  ttlSeconds = DEFAULT_TTL_SECONDS,
+) {
   const payload: PreviewPayload = {
     releaseId,
+    storeId,
     exp: Math.floor(Date.now() / 1000) + Math.max(10, ttlSeconds),
   }
   const signature = signPayload(payload)
@@ -37,7 +44,7 @@ export function verifyPreviewToken(token: string | null | undefined) {
     const decoded = Buffer.from(token, 'base64url').toString('utf8')
     const parsed = JSON.parse(decoded) as PreviewPayload & { signature?: string }
 
-    if (!parsed.releaseId || typeof parsed.exp !== 'number' || !parsed.signature) {
+    if (!parsed.releaseId || !parsed.storeId || typeof parsed.exp !== 'number' || !parsed.signature) {
       return { valid: false as const, reason: 'MALFORMED' }
     }
 
@@ -45,7 +52,7 @@ export function verifyPreviewToken(token: string | null | undefined) {
       return { valid: false as const, reason: 'EXPIRED' }
     }
 
-    const expected = signPayload({ releaseId: parsed.releaseId, exp: parsed.exp })
+    const expected = signPayload({ releaseId: parsed.releaseId, storeId: parsed.storeId, exp: parsed.exp })
     if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(parsed.signature))) {
       return { valid: false as const, reason: 'INVALID_SIGNATURE' }
     }
@@ -53,6 +60,7 @@ export function verifyPreviewToken(token: string | null | undefined) {
     return {
       valid: true as const,
       releaseId: parsed.releaseId,
+      storeId: parsed.storeId,
     }
   } catch {
     return { valid: false as const, reason: 'MALFORMED' }
