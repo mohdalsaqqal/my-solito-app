@@ -2,7 +2,10 @@ import { productQueryProvider, releaseProvider } from '@real/providers'
 import { fail, ok } from '../../_lib/response'
 import { requireAdminDomainSession } from '../../_lib/request-auth'
 import { parseHomeBlock } from '@real/app/lib/cms/blocks'
+import { getBlockQueryReference, validateBlockQueryReference } from '@real/app/lib/cms/query-references'
 import { pushAudit, readAdminControlsState, writeAdminControlsState } from '../../_lib/admin-controls-store'
+import { syncReleaseBlocksToPageDraft } from '../../_lib/page-config-store'
+import { resolveStoreId } from '../../_lib/release-env'
 
 export async function GET(request: Request) {
   try {
@@ -23,10 +26,30 @@ export async function GET(request: Request) {
   }
 }
 
+type BlockType =
+  | 'hero'
+  | 'product_slider'
+  | 'brand_promo'
+  | 'promo_strip'
+  | 'category_shortcuts'
+  | 'offer_stack'
+  | 'sticky_listing_promo'
+  | 'hero_carousel'
+  | 'flash_sale'
+  | 'brand_spotlight'
+  | 'offer_banners'
+  | 'education_banner'
+  | 'newsletter_cta'
+  | 'top_brands'
+  | 'ugc_gallery'
+  | 'personalized_rail'
+  | 'pdp_offer_cluster'
+  | 'cart_upsell_rail'
+
 type CreatePayload = {
   releaseId?: string
   position?: number
-  type?: 'hero' | 'product_slider' | 'brand_promo' | 'promo_strip'
+  type?: BlockType
   payloadJson?: unknown
 }
 
@@ -47,9 +70,14 @@ export async function POST(request: Request) {
     if (parsed.type !== body.type) {
       return fail('ADMIN_RELEASE_BLOCK_TYPE_MISMATCH', 'Block payload type does not match request type.', 400)
     }
-    if (parsed.type === 'product_slider' || (parsed.type === 'brand_promo' && parsed.querySlug)) {
-      const querySlug = parsed.type === 'product_slider' ? parsed.querySlug : parsed.querySlug
-      if (!querySlug) return fail('ADMIN_RELEASE_QUERY_REQUIRED', 'querySlug is required for product blocks.', 400)
+    const queryIssues = validateBlockQueryReference(parsed, [], {
+      blockType: body.type,
+    })
+    const requiredIssue = queryIssues.find((issue) => issue.code === 'BLOCK_QUERY_REQUIRED')
+    if (requiredIssue) return fail('ADMIN_RELEASE_QUERY_REQUIRED', requiredIssue.message, 400)
+
+    const querySlug = getBlockQueryReference(parsed)?.querySlug?.trim() ?? ''
+    if (querySlug) {
       const query = await productQueryProvider.getBySlug(querySlug)
       if (!query.ok || !query.data.active) {
         return fail('ADMIN_RELEASE_QUERY_INVALID', 'querySlug references missing/inactive query.', 400)
@@ -63,6 +91,16 @@ export async function POST(request: Request) {
       payloadJson: body.payloadJson,
     })
     if (!created.ok) return fail(created.error.code, created.error.message, 400)
+
+    const releaseBlocks = await releaseProvider.listBlocks(body.releaseId)
+    if (!releaseBlocks.ok) {
+      return fail(releaseBlocks.error.code, releaseBlocks.error.message, 400)
+    }
+    await syncReleaseBlocksToPageDraft({
+      storeId: resolveStoreId(request),
+      releaseId: body.releaseId,
+      blocks: releaseBlocks.data,
+    })
 
     const state = await readAdminControlsState()
     pushAudit(state, {

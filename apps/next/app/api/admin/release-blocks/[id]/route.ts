@@ -2,12 +2,36 @@ import { productQueryProvider, releaseProvider } from '@real/providers'
 import { fail, ok } from '../../../_lib/response'
 import { requireAdminDomainSession } from '../../../_lib/request-auth'
 import { parseHomeBlock } from '@real/app/lib/cms/blocks'
+import { getBlockQueryReference, validateBlockQueryReference } from '@real/app/lib/cms/query-references'
 import { pushAudit, readAdminControlsState, writeAdminControlsState } from '../../../_lib/admin-controls-store'
+import { removeBlockFromPageDraft, syncReleaseBlocksToPageDraft } from '../../../_lib/page-config-store'
+import { resolveStoreId } from '../../../_lib/release-env'
+
+type BlockType =
+  | 'hero'
+  | 'product_slider'
+  | 'brand_promo'
+  | 'promo_strip'
+  | 'category_shortcuts'
+  | 'offer_stack'
+  | 'sticky_listing_promo'
+  | 'hero_carousel'
+  | 'flash_sale'
+  | 'brand_spotlight'
+  | 'offer_banners'
+  | 'education_banner'
+  | 'newsletter_cta'
+  | 'top_brands'
+  | 'ugc_gallery'
+  | 'personalized_rail'
+  | 'pdp_offer_cluster'
+  | 'cart_upsell_rail'
 
 type PatchPayload = {
   position?: number
-  type?: 'hero' | 'product_slider' | 'brand_promo' | 'promo_strip'
+  type?: BlockType
   payloadJson?: unknown
+  enabled?: boolean
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -24,9 +48,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       if (body.type && parsed.type !== body.type) {
         return fail('ADMIN_RELEASE_BLOCK_TYPE_MISMATCH', 'Block payload type does not match request type.', 400)
       }
-      if (parsed.type === 'product_slider' || (parsed.type === 'brand_promo' && parsed.querySlug)) {
-        const querySlug = parsed.type === 'product_slider' ? parsed.querySlug : parsed.querySlug
-        if (!querySlug) return fail('ADMIN_RELEASE_QUERY_REQUIRED', 'querySlug is required for product blocks.', 400)
+      const queryIssues = validateBlockQueryReference(parsed, [], {
+        blockType: body.type ?? parsed.type,
+      })
+      const requiredIssue = queryIssues.find((issue) => issue.code === 'BLOCK_QUERY_REQUIRED')
+      if (requiredIssue) return fail('ADMIN_RELEASE_QUERY_REQUIRED', requiredIssue.message, 400)
+
+      const querySlug = getBlockQueryReference(parsed)?.querySlug?.trim() ?? ''
+      if (querySlug) {
         const query = await productQueryProvider.getBySlug(querySlug)
         if (!query.ok || !query.data.active) {
           return fail('ADMIN_RELEASE_QUERY_INVALID', 'querySlug references missing/inactive query.', 400)
@@ -38,11 +67,22 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
       position: typeof body.position === 'number' ? body.position : undefined,
       type: body.type,
       payloadJson: body.payloadJson,
+      enabled: typeof body.enabled === 'boolean' ? body.enabled : undefined,
     })
     if (!updated.ok) {
       const status = updated.error.code === 'RELEASE_BLOCK_NOT_FOUND' ? 404 : 400
       return fail(updated.error.code, updated.error.message, status)
     }
+
+    const releaseBlocks = await releaseProvider.listBlocks(updated.data.releaseId)
+    if (!releaseBlocks.ok) {
+      return fail(releaseBlocks.error.code, releaseBlocks.error.message, 400)
+    }
+    await syncReleaseBlocksToPageDraft({
+      storeId: resolveStoreId(request),
+      releaseId: updated.data.releaseId,
+      blocks: releaseBlocks.data,
+    })
 
     const state = await readAdminControlsState()
     pushAudit(state, {
@@ -73,6 +113,11 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
       const status = deleted.error.code === 'RELEASE_BLOCK_NOT_FOUND' ? 404 : 400
       return fail(deleted.error.code, deleted.error.message, status)
     }
+
+    await removeBlockFromPageDraft({
+      storeId: resolveStoreId(request),
+      blockId: id,
+    })
 
     const state = await readAdminControlsState()
     pushAudit(state, {

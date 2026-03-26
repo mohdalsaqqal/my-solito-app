@@ -1,8 +1,10 @@
 import { productQueryProvider, releaseProvider } from '@real/providers'
 import { fail, ok } from '../../../../_lib/response'
 import { requireAdminDomainSession } from '../../../../_lib/request-auth'
-import { parseHomeBlock } from '@real/app/lib/cms/blocks'
+import { validateReleasePublishReadiness } from '@real/app/lib/cms/release-publish-readiness'
 import { pushAudit, readAdminControlsState, writeAdminControlsState } from '../../../../_lib/admin-controls-store'
+import { createPageVersionSnapshot } from '../../../../_lib/page-version-store'
+import { resolveStoreId } from '../../../../_lib/release-env'
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params
@@ -16,23 +18,27 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const blocksResult = await releaseProvider.listBlocks(id)
     if (!blocksResult.ok) return fail(blocksResult.error.code, blocksResult.error.message, 400)
 
-    for (const block of blocksResult.data) {
-      const parsed = parseHomeBlock(block.payloadJson)
-      if (!parsed) {
-        return fail('ADMIN_RELEASE_BLOCK_INVALID', `Block ${block.id} payload is invalid.`, 400)
-      }
-      if (parsed.type === 'product_slider' || (parsed.type === 'brand_promo' && parsed.querySlug)) {
-        const querySlug = parsed.type === 'product_slider' ? parsed.querySlug : parsed.querySlug
-        if (!querySlug) return fail('ADMIN_RELEASE_QUERY_REQUIRED', `Block ${block.id} requires querySlug.`, 400)
-        const query = await productQueryProvider.getBySlug(querySlug)
-        if (!query.ok || !query.data.active) {
-          return fail('ADMIN_RELEASE_QUERY_INVALID', `Block ${block.id} references missing/inactive query.`, 400)
-        }
-      }
+    const queriesResult = await productQueryProvider.list()
+    if (!queriesResult.ok) return fail(queriesResult.error.code, queriesResult.error.message, 500)
+
+    const readiness = validateReleasePublishReadiness({
+      blocks: blocksResult.data,
+      activeQuerySlugs: queriesResult.data.filter((query) => query.active).map((query) => query.slug),
+    })
+    if (!readiness.ok) {
+      const firstIssue = readiness.issues[0]
+      return fail(firstIssue.code, firstIssue.message, 400)
     }
 
     const published = await releaseProvider.publish(id)
     if (!published.ok) return fail(published.error.code, published.error.message, 400)
+
+    const pageVersion = await createPageVersionSnapshot({
+      releaseId: id,
+      storeId: resolveStoreId(request),
+      source: 'publish',
+      blocks: blocksResult.data,
+    })
 
     const state = await readAdminControlsState()
     pushAudit(state, {
@@ -43,7 +49,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     })
     await writeAdminControlsState(state)
 
-    return ok(published.data)
+    return ok({ ...published.data, pageVersionId: pageVersion.id })
   } catch (cause) {
     return fail('ADMIN_RELEASE_PUBLISH_UNEXPECTED', 'Unexpected error while publishing release.', 500, {
       scope: 'POST /api/admin/releases/[id]/publish',
@@ -51,4 +57,3 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     })
   }
 }
-

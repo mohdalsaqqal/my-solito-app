@@ -11,6 +11,11 @@ import { resolveRequestLocale } from '../../_lib/request-locale'
 import { readSiteConfig } from '../../_lib/admin-site-config-store'
 import { readBannersState } from '../../_lib/admin-banners-store'
 import { readUGCState } from '../../_lib/admin-ugc-store'
+import {
+  findLatestPageVersionByRelease,
+  getPageVersionById,
+  toReleaseBlockRecords,
+} from '../../_lib/page-version-store'
 
 function dropLog(reason: string, details: Record<string, unknown>) {
   console.warn('[cms-home:block-dropped]', reason, details)
@@ -102,10 +107,35 @@ export async function GET(request: Request) {
 
     const safeBlocks: CMSHomeBlock[] = []
 
+    async function loadReleaseBlocksForHome(releaseId: string) {
+      if (preview.valid && preview.versionId) {
+        const pageVersion = await getPageVersionById(preview.versionId)
+        if (
+          pageVersion &&
+          pageVersion.releaseId === releaseId &&
+          pageVersion.storeId === storeId
+        ) {
+          return toReleaseBlockRecords(pageVersion)
+        }
+      }
+
+      const version = await findLatestPageVersionByRelease({
+        releaseId,
+        storeId,
+      })
+      if (version) {
+        return toReleaseBlockRecords(version)
+      }
+
+      const blocksResult = await releaseProvider.listBlocks(releaseId)
+      if (!blocksResult.ok) return null
+      return blocksResult.data
+    }
+
     if (effectiveReleaseId) {
-      const blocksResult = await releaseProvider.listBlocks(effectiveReleaseId)
-      if (blocksResult.ok) {
-        for (const blockRecord of blocksResult.data) {
+      const releaseBlocks = await loadReleaseBlocksForHome(effectiveReleaseId)
+      if (releaseBlocks) {
+        for (const blockRecord of releaseBlocks) {
           if (blockRecord.enabled === false) continue
           const parsed = parseHomeBlock(blockRecord.payloadJson)
           if (!parsed) {
