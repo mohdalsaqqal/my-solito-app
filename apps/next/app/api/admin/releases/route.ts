@@ -2,6 +2,8 @@ import { releaseProvider } from '@real/providers'
 import { fail, ok } from '../../_lib/response'
 import { requireAdminDomainSession } from '../../_lib/request-auth'
 import { pushAudit, readAdminControlsState, writeAdminControlsState } from '../../_lib/admin-controls-store'
+import { buildPageConfigId, upsertPageConfig } from '../../_lib/page-config-store'
+import { resolveStoreId } from '../../_lib/release-env'
 
 export async function GET(request: Request) {
   try {
@@ -22,6 +24,8 @@ export async function GET(request: Request) {
 type CreatePayload = {
   environment?: 'staging' | 'production'
   status?: 'draft' | 'published'
+  name?: string
+  scheduledAt?: string
 }
 
 export async function POST(request: Request) {
@@ -37,8 +41,21 @@ export async function POST(request: Request) {
     const created = await releaseProvider.create({
       environment: body.environment,
       status: body.status === 'published' ? 'published' : 'draft',
+      name: typeof body.name === 'string' ? body.name.trim() || undefined : undefined,
+      scheduledAt: typeof body.scheduledAt === 'string' ? body.scheduledAt : undefined,
     })
     if (!created.ok) return fail(created.error.code, created.error.message, 400)
+
+    const storeId = resolveStoreId(request)
+    await upsertPageConfig({
+      pageConfigId: buildPageConfigId({ storeId, slug: '/', pageType: 'home', releaseId: created.data.id }),
+      releaseId: created.data.id,
+      storeId,
+      slug: '/',
+      pageType: 'home',
+      updatedAt: new Date().toISOString(),
+      blocks: [],
+    })
 
     const state = await readAdminControlsState()
     pushAudit(state, {

@@ -17,7 +17,12 @@ export async function GET(request: Request) {
 
     const result = await releaseProvider.listBlocks(releaseId)
     if (!result.ok) return fail(result.error.code, result.error.message, 400)
-    return ok(result.data)
+    const pageDraft = await syncReleaseBlocksToPageDraft({
+      storeId: resolveStoreId(request),
+      releaseId,
+      blocks: result.data,
+    })
+    return ok(pageDraft.blocks)
   } catch (cause) {
     return fail('ADMIN_RELEASE_BLOCKS_LIST_UNEXPECTED', 'Unexpected error while loading release blocks.', 500, {
       scope: 'GET /api/admin/release-blocks',

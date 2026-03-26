@@ -34,7 +34,7 @@ Ship one real production store across web, Expo, and admin workflows using the l
 
 ## Current Sprint Focus
 - Sprint 1 implementation complete and ready for review
-- prepare Sprint 2 storefront surface rollout
+- `P1-011` internal page config store and version snapshots ready for review
 
 ## Backlog
 
@@ -50,7 +50,7 @@ Ship one real production store across web, Expo, and admin workflows using the l
 | P1-008 | Storefront | Migrate cart and checkout surfaces | TBD | todo | P1-002, P1-004 | Cart and checkout stay server-authoritative and production-safe |
 | P1-009 | Storefront | Migrate account core surfaces | TBD | todo | P1-002, P1-004 | Account surfaces align with normalized page model where approved |
 | P1-010 | Mobile | Ensure Expo consumes normalized page/block payloads | TBD | todo | P1-002, P1-004 | Expo customer app uses the same BFF-owned contracts as web where applicable |
-| P1-011 | Admin | Add internal page config store and version snapshots | Agent 4 | todo | P1-002 | Page config persistence and versioning exist behind admin APIs |
+| P1-011 | Admin | Add internal page config store and version snapshots | Agent 4 | review | P1-002 | Page config persistence and versioning exist behind admin APIs |
 | P1-012 | Admin | Generalize admin editor from release blocks to page blocks | Agent 4 | todo | P1-011 | Admin editing works by page/store/position/props |
 | P1-013 | Admin | Complete preview, publish, and release workflow | Agent 4 | todo | P1-011, P1-012 | Preview and publish are stable for the real store |
 | P1-014 | Verification | Run guards, docs, RTL, and launch checks | Agent 5 / Main | todo | All major epics | Definition of done satisfied and production readiness confirmed |
@@ -64,6 +64,7 @@ Ship one real production store across web, Expo, and admin workflows using the l
 - `P1-003 Define final block schema and ProductQuery resolver contracts`
 - `P1-004 Create shared block registry and block renderer`
 - `P1-005 Migrate homepage to ordered normalized blocks`
+- `P1-011 Add internal page config store and version snapshots`
 
 ## Blocked
 - None
