@@ -8,6 +8,7 @@ import {
   AdminControlToggleUpdate,
   AdminOpsAuditEntry,
   AdminReleaseBlockRecord,
+  AdminPageBlockRecord,
   AdminReleaseRecord,
   AdminBrandSpotlightRecord,
   AdminOfferBannerRecord,
@@ -67,6 +68,7 @@ import {
   AdminJobCreateInput,
   AdminCategoryRecord,
   AdminBrandRecord,
+  ReleaseBlockType,
 } from './types'
 
 export type ApiClientConfig = {
@@ -224,7 +226,12 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         }),
     },
     cms: {
-      home: () => request<CMSHome>(endpoints.cmsHome),
+      home: (previewToken?: string) => {
+        const url = previewToken
+          ? `${endpoints.cmsHome}?previewToken=${encodeURIComponent(previewToken)}`
+          : endpoints.cmsHome
+        return request<CMSHome>(url)
+      },
     },
     auth: {
       session: () => request<AuthSession | null>(endpoints.authSession),
@@ -605,7 +612,7 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           body: JSON.stringify(input ?? {}),
         }),
       listReleases: () => request<AdminReleaseRecord[]>(endpoints.adminReleases),
-      createRelease: (input: { environment: 'staging' | 'production'; status?: 'draft' | 'published' }) =>
+      createRelease: (input: { environment: 'staging' | 'production'; status?: 'draft' | 'published'; name?: string; scheduledAt?: string }) =>
         request<AdminReleaseRecord>(endpoints.adminReleases, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -613,7 +620,7 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         }),
       updateRelease: (
         id: string,
-        input: Partial<{ environment: 'staging' | 'production'; status: 'draft' | 'published' }>
+        input: Partial<{ environment: 'staging' | 'production'; status: 'draft' | 'published'; name: string; scheduledAt: string }>
       ) =>
         request<AdminReleaseRecord>(endpoints.adminRelease(id), {
           method: 'PATCH',
@@ -628,30 +635,84 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         }),
       listReleaseBlocks: (releaseId: string) =>
         request<AdminReleaseBlockRecord[]>(`${endpoints.adminReleaseBlocks}?releaseId=${encodeURIComponent(releaseId)}`),
+      listPageBlocks: (input: {
+        releaseId?: string
+        storeId: string
+        slug: string
+        pageType?: string
+      }) => {
+        const params = new URLSearchParams()
+        if (input.releaseId) params.set('releaseId', input.releaseId)
+        params.set('storeId', input.storeId)
+        params.set('slug', input.slug)
+        if (input.pageType) params.set('pageType', input.pageType)
+        return request<AdminPageBlockRecord[]>(`${endpoints.adminReleaseBlocks}?${params.toString()}`)
+      },
       createReleaseBlock: (input: {
         releaseId: string
         position: number
-        type: 'hero' | 'product_slider' | 'brand_promo' | 'promo_strip'
+        type: ReleaseBlockType
         payloadJson: unknown
+        storeId?: string
+        slug?: string
+        pageType?: string
       }) =>
-        request<AdminReleaseBlockRecord>(endpoints.adminReleaseBlocks, {
+        request<AdminReleaseBlockRecord>(
+          (() => {
+            const params = new URLSearchParams()
+            if (input.storeId) params.set('storeId', input.storeId)
+            if (input.slug) params.set('slug', input.slug)
+            if (input.pageType) params.set('pageType', input.pageType)
+            const suffix = params.size > 0 ? `?${params.toString()}` : ''
+            return `${endpoints.adminReleaseBlocks}${suffix}`
+          })(),
+          {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
-        }),
+          },
+        ),
       updateReleaseBlock: (
         id: string,
-        input: Partial<{ position: number; type: 'hero' | 'product_slider' | 'brand_promo' | 'promo_strip'; payloadJson: unknown }>
+        input: Partial<{
+          position: number
+          type: ReleaseBlockType
+          payloadJson: unknown
+          enabled: boolean
+          storeId: string
+          slug: string
+          pageType: string
+        }>
       ) =>
-        request<AdminReleaseBlockRecord>(endpoints.adminReleaseBlock(id), {
+        request<AdminReleaseBlockRecord>(
+          (() => {
+            const params = new URLSearchParams()
+            if (input.storeId) params.set('storeId', input.storeId)
+            if (input.slug) params.set('slug', input.slug)
+            if (input.pageType) params.set('pageType', input.pageType)
+            const suffix = params.size > 0 ? `?${params.toString()}` : ''
+            return `${endpoints.adminReleaseBlock(id)}${suffix}`
+          })(),
+          {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
-        }),
-      deleteReleaseBlock: (id: string) =>
-        request<{ id: string; deleted: true }>(endpoints.adminReleaseBlock(id), {
+          },
+        ),
+      deleteReleaseBlock: (id: string, input?: { storeId?: string; slug?: string; pageType?: string }) =>
+        request<{ id: string; deleted: true }>(
+          (() => {
+            const params = new URLSearchParams()
+            if (input?.storeId) params.set('storeId', input.storeId)
+            if (input?.slug) params.set('slug', input.slug)
+            if (input?.pageType) params.set('pageType', input.pageType)
+            const suffix = params.size > 0 ? `?${params.toString()}` : ''
+            return `${endpoints.adminReleaseBlock(id)}${suffix}`
+          })(),
+          {
           method: 'DELETE',
-        }),
+          },
+        ),
       getProductColumns: () =>
         request<{
           columns: Array<{

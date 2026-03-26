@@ -4,25 +4,60 @@ import { requireAdminDomainSession } from '../../_lib/request-auth'
 import { parseHomeBlock } from '@real/app/lib/cms/blocks'
 import { getBlockQueryReference, validateBlockQueryReference } from '@real/app/lib/cms/query-references'
 import { pushAudit, readAdminControlsState, writeAdminControlsState } from '../../_lib/admin-controls-store'
-import { syncReleaseBlocksToPageDraft } from '../../_lib/page-config-store'
+import {
+  getPageConfig,
+  getPageConfigByReleaseId,
+  syncReleaseBlocksToPageDraft,
+} from '../../_lib/page-config-store'
 import { resolveStoreId } from '../../_lib/release-env'
+import { HOME_PAGE_SLUG, HOME_PAGE_TYPE } from '@real/app/lib/layout/page-types'
 
 export async function GET(request: Request) {
   try {
     const session = requireAdminDomainSession(request, 'marketing')
     if (session instanceof Response) return session
 
-    const releaseId = new URL(request.url).searchParams.get('releaseId')?.trim()
+    const url = new URL(request.url)
+    const releaseId = url.searchParams.get('releaseId')?.trim()
+    const storeId = url.searchParams.get('storeId')?.trim() || resolveStoreId(request)
+    const slug = url.searchParams.get('slug')?.trim() || HOME_PAGE_SLUG
+    const pageType = url.searchParams.get('pageType')?.trim() || HOME_PAGE_TYPE
     if (!releaseId) return fail('ADMIN_RELEASE_ID_REQUIRED', 'releaseId is required.', 400)
 
-    const result = await releaseProvider.listBlocks(releaseId)
-    if (!result.ok) return fail(result.error.code, result.error.message, 400)
-    const pageDraft = await syncReleaseBlocksToPageDraft({
-      storeId: resolveStoreId(request),
-      releaseId,
-      blocks: result.data,
-    })
-    return ok(pageDraft.blocks)
+    let pageDraft = await getPageConfigByReleaseId(releaseId)
+    if (!pageDraft) {
+      const result = await releaseProvider.listBlocks(releaseId)
+      if (!result.ok) return fail(result.error.code, result.error.message, 400)
+      pageDraft = await syncReleaseBlocksToPageDraft({
+        storeId,
+        releaseId,
+        slug,
+        pageType,
+        blocks: result.data,
+      })
+    }
+
+    const scopedDraft =
+      pageDraft.storeId === storeId && pageDraft.slug === slug && pageDraft.pageType === pageType
+        ? pageDraft
+        : await getPageConfig(storeId, slug, pageType)
+
+    const draft = scopedDraft ?? pageDraft
+    return ok(
+      draft.blocks.map((block) => ({
+        id: block.id,
+        releaseId: block.releaseId,
+        position: block.position,
+        type: block.type,
+        payloadJson: block.payloadJson,
+        enabled: block.enabled,
+        version: block.version,
+        storeId: draft.storeId,
+        slug: draft.slug,
+        pageType: draft.pageType,
+        pageConfigId: draft.pageConfigId,
+      })),
+    )
   } catch (cause) {
     return fail('ADMIN_RELEASE_BLOCKS_LIST_UNEXPECTED', 'Unexpected error while loading release blocks.', 500, {
       scope: 'GET /api/admin/release-blocks',

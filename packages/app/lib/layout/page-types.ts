@@ -24,10 +24,20 @@ import type {
 export const PAGE_BLOCK_CONTRACT_VERSION = 'v1' as const
 export const HOME_PAGE_TYPE = 'home' as const
 export const HOME_PAGE_SLUG = '/' as const
+export const DEFAULT_PAGE_BLOCK_SCOPE = {
+  storeId: 'default',
+  slug: HOME_PAGE_SLUG,
+  pageType: HOME_PAGE_TYPE,
+} as const
 
 export type PageBlockContractVersion = typeof PAGE_BLOCK_CONTRACT_VERSION
 export type PageType = typeof HOME_PAGE_TYPE
 export type PageSlug = typeof HOME_PAGE_SLUG | string
+export type AdminPageBlockScope = {
+  storeId: string
+  slug: PageSlug
+  pageType: PageType | string
+}
 
 export type PageBlock<
   TType extends string = string,

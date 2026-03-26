@@ -1,5 +1,5 @@
 import type { HomeBlock, HeroCarouselCard, OfferBannerItem } from './cms/blocks'
-import type { PagePayload } from './layout/page-types'
+import type { PageBlockContractVersion, PagePayload } from './layout/page-types'
 
 export type Product = {
   id: string
@@ -422,6 +422,14 @@ export type AdminReleaseBlockRecord = {
   type: ReleaseBlockType
   payloadJson: unknown
   enabled: boolean
+}
+
+export type AdminPageBlockRecord = AdminReleaseBlockRecord & {
+  pageConfigId?: string
+  storeId: string
+  slug: string
+  pageType: string
+  version: PageBlockContractVersion
 }
 
 export type PromotionCondition =
