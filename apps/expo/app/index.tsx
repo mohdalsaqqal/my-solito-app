@@ -18,7 +18,7 @@ import {
   WishlistItem,
 } from '@real/app/lib/types'
 import { spacing } from '@real/tokens'
-import { Box, Drawer, Text, Touchable } from '@real/ui'
+import { Box, Drawer, StorefrontStatusPanel, Text, Touchable } from '@real/ui'
 import {
   Layout,
   defaultBottomNavItems,
@@ -36,7 +36,7 @@ import { AuthLoginScreen } from '@real/app/screens/AuthLoginScreen'
 import { AuthRegisterScreen } from '@real/app/screens/AuthRegisterScreen'
 import { CartScreen } from '@real/app/screens/CartScreen'
 import { CheckoutScreen } from '@real/app/screens/CheckoutScreen'
-import { HomeV2Screen } from '@real/app/screens/HomeV2Screen'
+import { HomeScreen } from '@real/app/screens/HomeScreen'
 import { OrderDetailScreen } from '@real/app/screens/OrderDetailScreen'
 import { OrdersScreen } from '@real/app/screens/OrdersScreen'
 import { ProductScreen } from '@real/app/screens/ProductScreen'
@@ -159,6 +159,7 @@ export default function HomeRoute() {
   const [hasBootstrappedAccount, setHasBootstrappedAccount] = useState(false)
   const [hasAutoLoadedOrders, setHasAutoLoadedOrders] = useState(false)
   const dir = resolveDirection(localeState)
+  const homeUnavailable = Boolean(error) && (!cmsHome || products.length === 0)
 
   const applyLocale = useCallback(async (nextLocale: 'en' | 'ar') => {
     setCurrentLocale(nextLocale)
@@ -370,6 +371,21 @@ export default function HomeRoute() {
     [activeOrderId, orders]
   )
 
+  const statusCopy = useMemo(() => ({
+    title:
+      cmsHome?.shell?.statusPages?.homeUnavailableTitle?.[localeState] ??
+      defaultShellContent.statusPages?.homeUnavailableTitle?.[localeState] ??
+      '',
+    subtitle:
+      cmsHome?.shell?.statusPages?.homeUnavailableSubtitle?.[localeState] ??
+      defaultShellContent.statusPages?.homeUnavailableSubtitle?.[localeState] ??
+      '',
+    ctaLabel:
+      cmsHome?.shell?.statusPages?.homeUnavailableCtaLabel?.[localeState] ??
+      defaultShellContent.statusPages?.homeUnavailableCtaLabel?.[localeState] ??
+      '',
+  }), [cmsHome, localeState])
+
   const defaultAddress = accountAddresses.find((address) => address.isDefault) ?? null
 
   const loadOrders = useCallback(async () => {
@@ -436,6 +452,19 @@ export default function HomeRoute() {
   }, [])
 
   const renderScreen = () => {
+    if (view === 'home' && homeUnavailable) {
+      return (
+        <StorefrontStatusPanel
+          title={statusCopy.title}
+          subtitle={statusCopy.subtitle}
+          ctaLabel={statusCopy.ctaLabel}
+          onRetry={() => {
+            void loadProducts()
+          }}
+        />
+      )
+    }
+
     if (view === 'categories') {
       return (
         <ShopScreen
@@ -841,7 +870,7 @@ export default function HomeRoute() {
     }
 
     return (
-      <HomeV2Screen
+      <HomeScreen
         locale={localeState}
         cmsHome={cmsHome}
         products={products}

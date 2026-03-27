@@ -3,7 +3,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
 
-const SCREEN_PATH = path.join(process.cwd(), 'packages', 'app', 'screens', 'HomeV2Screen.tsx')
+const SCREEN_PATH = path.join(process.cwd(), 'packages', 'app', 'screens', 'HomeScreen.tsx')
 const HOME_SECTIONS_PATH = path.join(process.cwd(), 'packages', 'app', 'sections', 'home', 'HomeV2Sections.tsx')
 const BLOCK_TYPES_PATH = path.join(process.cwd(), 'packages', 'app', 'sections', 'blocks', 'block-types.ts')
 const BLOCK_REGISTRY_PATH = path.join(process.cwd(), 'packages', 'app', 'sections', 'blocks', 'block-registry.ts')
@@ -18,11 +18,11 @@ test('homepage body prefers the direct published block path and keeps legacy fal
   )
   assert.match(
     screenSource,
-    /const homeSections = hasPublishedHomeBlocks \? \([\s\S]{0,1600}<HomeV2SectionsAny[\s\S]{0,1600}homeBlocks=\{publishedHomeBlocks\}/,
+    /const homeSections = hasPublishedHomeBlocks \? \([\s\S]{0,1600}<HomeSectionsAny[\s\S]{0,1600}homeBlocks=\{publishedHomeBlocks\}/,
   )
   assert.match(
     screenSource,
-    /:\s*\([\s\S]{0,2200}<HomeV2SectionsAny[\s\S]{0,2200}heroItems=\{heroItems\}[\s\S]{0,2200}bestSellersRail=\{rails\.bestSellers\}[\s\S]{0,2200}personalizedRail=\{personalizedRail\}/,
+    /:\s*\([\s\S]{0,2200}<HomeSectionsAny[\s\S]{0,2200}heroItems=\{heroItems\}[\s\S]{0,2200}bestSellersRail=\{rails\.bestSellers\}[\s\S]{0,2200}personalizedRail=\{personalizedRail\}/,
   )
 })
 

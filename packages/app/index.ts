@@ -1,5 +1,5 @@
 export * from './screens/HomeScreen'
-export * from './screens/HomeV2Screen'
+export * from './screens/LegacyHomeScreen'
 export * from './screens/ShopScreen'
 export * from './screens/ProductScreen'
 export * from './screens/CartScreen'
