@@ -6,6 +6,7 @@ import {
   AdminOpsAuditEntry,
   AdminPermissionSet,
 } from '@real/app/lib/types'
+import type { CMSHome as ProviderCMSHome } from '@real/providers/contracts/CMSProvider'
 
 type Actor = {
   userId: string
@@ -31,11 +32,18 @@ type BrandSpotlightMeta = {
   updatedBy: Actor
 }
 
+type OfferBannerMeta = {
+  updatedAt: string
+  updatedBy: Actor
+}
+
 type AdminControlsState = {
   toggleOverrides: Record<string, ToggleOverride>
   userOverrides: Record<string, UserOverride>
   brandSpotlightsOverride?: NonNullable<NonNullable<CMSHome['marketing']>['brandSpotlights']>
   brandSpotlightMeta: Record<string, BrandSpotlightMeta>
+  offerBannersOverride?: NonNullable<NonNullable<CMSHome['marketing']>['offerBanners']>
+  offerBannerMeta: Record<string, OfferBannerMeta>
   audits: AdminOpsAuditEntry[]
 }
 
@@ -48,6 +56,7 @@ function initialState(): AdminControlsState {
     toggleOverrides: {},
     userOverrides: {},
     brandSpotlightMeta: {},
+    offerBannerMeta: {},
     audits: [],
   }
 }
@@ -61,6 +70,8 @@ export async function readAdminControlsState() {
       userOverrides: parsed.userOverrides ?? {},
       brandSpotlightsOverride: parsed.brandSpotlightsOverride,
       brandSpotlightMeta: parsed.brandSpotlightMeta ?? {},
+      offerBannersOverride: parsed.offerBannersOverride,
+      offerBannerMeta: parsed.offerBannerMeta ?? {},
       audits: parsed.audits ?? [],
     }
   } catch {
@@ -73,8 +84,11 @@ export async function writeAdminControlsState(state: AdminControlsState) {
   await fs.writeFile(STORAGE_FILE, JSON.stringify(state, null, 2), 'utf8')
 }
 
-export function applyAdminControlsToCms(home: CMSHome, state: AdminControlsState) {
-  const next = structuredClone(home)
+export function applyAdminControlsToCms(home: CMSHome | ProviderCMSHome, state: AdminControlsState): CMSHome {
+  const next = structuredClone({
+    storeId: 'default',
+    ...home,
+  }) as CMSHome
   const toggles = next.identity?.admin?.controlToggles ?? []
   for (const toggle of toggles) {
     const override = state.toggleOverrides[toggle.id]
@@ -109,6 +123,13 @@ export function applyAdminControlsToCms(home: CMSHome, state: AdminControlsState
       next.marketing = {}
     }
     next.marketing.brandSpotlights = state.brandSpotlightsOverride
+  }
+
+  if (state.offerBannersOverride) {
+    if (!next.marketing) {
+      next.marketing = {}
+    }
+    next.marketing.offerBanners = state.offerBannersOverride
   }
 
   return next

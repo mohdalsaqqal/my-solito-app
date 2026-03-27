@@ -1,3 +1,5 @@
+"use client"
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { I18nManager, Image, Platform } from 'react-native'
 import {
@@ -110,7 +112,7 @@ export function ProductCard({
   item,
   variant = 'default',
   density = 'comfortable',
-  width = spacing.xxl * 4,
+  width = componentTokens.storefrontHome.productCard.defaultWidth,
   state = 'default',
   outOfStock = false,
   savingsLabel = 'Save 15%',
@@ -207,7 +209,7 @@ export function ProductCard({
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: item.currency || DEFAULT_CURRENCY,
+      currency: item?.currency || DEFAULT_CURRENCY,
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value)
@@ -408,14 +410,14 @@ export function ProductCard({
     if (Platform.OS !== 'web' || !visible) return null
 
     const labelOffset = densityTokens.quickActionSize + tokens.quickActionLabelGap
-    const labelTopOffset = Math.max(0, (densityTokens.quickActionSize - densityTokens.quickActionLabelMinHeight) / 2)
+    const labelTopOffset = Math.max(0, (densityTokens.quickActionSize - tokens.quickActionLabelMinHeight) / 2)
 
     return (
       <Box
         style={{
           position: 'absolute',
           top: labelTopOffset,
-          minHeight: densityTokens.quickActionLabelMinHeight,
+          minHeight: tokens.quickActionLabelMinHeight,
           paddingHorizontal: tokens.quickActionLabelPaddingX,
           borderRadius: radius.full,
           borderWidth: borderWidth.none,
@@ -551,7 +553,7 @@ export function ProductCard({
             style={{
               width: '100%',
               minHeight: densityTokens.buyActionHeight,
-              paddingHorizontal: spacing['14'],
+              paddingHorizontal: spacing['16'],
               borderRadius: radius.lg,
               borderWidth: borderWidth.thin,
               borderColor: disabled ? colors.border : colors.brandPrimary,
@@ -674,7 +676,7 @@ export function ProductCard({
                   top: '50%',
                   start: spacing['8'],
                   end: spacing['8'],
-                  minHeight: spacing['28'],
+                  minHeight: spacing['32'],
                   paddingHorizontal: spacing['10'],
                   borderRadius: radius.xs,
                   borderWidth: borderWidth.none,

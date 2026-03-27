@@ -6,6 +6,7 @@ export type Product = {
   name: string
   description?: string
   price: number
+  compareAtPrice?: number
   currency: string
   image?: string
   rating?: number
@@ -526,13 +527,22 @@ export type CMSHomeBlock = HomeBlock & {
     yPercent: number
     label?: LocalizedString
   }>
-  items?: Array<{
-    id: string
-    imageUrl: string
-    caption?: LocalizedString
-    href?: string
-    productId?: string
-  }>
+  items?: Array<
+    | {
+        id: string
+        imageUrl?: string
+        caption?: LocalizedString
+        label?: LocalizedString
+        href?: string
+        productId?: string
+      }
+    | {
+        id: string
+        name: string
+        logoUrl?: string
+        href?: string
+      }
+  >
 }
 
 export type CMSPageBlock = PagePayload<string, CMSHomeBlock>['blocks'][number]
@@ -617,6 +627,16 @@ export type CMSHome = {
         noRecentSearches?: LocalizedString
       }
       clearRecentLabel?: LocalizedString
+    }
+    mobileHeader?: {
+      deliveryLabel?: LocalizedString
+      deliveryLocation?: LocalizedString
+      searchPlaceholder?: LocalizedString
+    }
+    statusPages?: {
+      homeUnavailableTitle?: LocalizedString
+      homeUnavailableSubtitle?: LocalizedString
+      homeUnavailableCtaLabel?: LocalizedString
     }
   }
   marketing?: {
@@ -1042,6 +1062,8 @@ export type SearchSuggestion = {
 }
 
 export type SearchResult = {
+  storeId?: string
+  page?: PagePayload<string, CMSHomeBlock>
   suggestions: SearchSuggestion[]
   trendingSearches: string[]
   popularBrands: string[]

@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   Icon,
+  MarketplacePromoStrip,
   PaymentBadges,
   PriceTag,
   ProductCard,
@@ -312,7 +313,7 @@ export function ProductScreen({
 
   if (loading) {
     return (
-      <PageScaffold variant='product' density='standard' scroll='auto'>
+      <PageScaffold variant='product' density='tight' scroll='auto'>
         <PageScaffold.Body>
           <Section>
             <Box gap='lg'>
@@ -327,7 +328,7 @@ export function ProductScreen({
 
   if (error) {
     return (
-      <PageScaffold variant='product' density='standard' scroll='auto'>
+      <PageScaffold variant='product' density='tight' scroll='auto'>
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
@@ -345,7 +346,7 @@ export function ProductScreen({
 
   if (!product) {
     return (
-      <PageScaffold variant='product' density='standard' scroll='auto'>
+      <PageScaffold variant='product' density='tight' scroll='auto'>
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
@@ -361,14 +362,18 @@ export function ProductScreen({
     )
   }
 
-  const inStock = !inferOutOfStock(product)
-  const productId = product.id
-  const productPrice = passThroughPricingService.getProductPrice(product).unitPrice
-  const compareAtPrice = product.compareAtPrice && product.compareAtPrice > productPrice ? product.compareAtPrice : undefined
+  const resolvedProduct = product
+  const inStock = !inferOutOfStock(resolvedProduct)
+  const productId = resolvedProduct.id
+  const productPrice = passThroughPricingService.getProductPrice(resolvedProduct).unitPrice
+  const compareAtPrice =
+    resolvedProduct.compareAtPrice && resolvedProduct.compareAtPrice > productPrice
+      ? resolvedProduct.compareAtPrice
+      : undefined
   const savingsAmount = compareAtPrice ? compareAtPrice - productPrice : 0
   const savingsPercent = compareAtPrice ? Math.round((savingsAmount / compareAtPrice) * 100) : 0
-  const brand = deriveBrand(product.name)
-  const displayName = deriveProductName(product.name)
+  const brand = deriveBrand(resolvedProduct.name)
+  const displayName = deriveProductName(resolvedProduct.name)
   const hasThumbnailRail = imageUrls.length > 1
   const activeImage = imageUrls[Math.min(activeImageIndex, imageUrls.length - 1)] ?? PLACEHOLDER_IMAGE
   const stickyTop = layout.header.mainRowHeight + layout.header.navRowHeight + spacing.md
@@ -500,19 +505,31 @@ export function ProductScreen({
   function renderPurchaseActions(compact = false) {
     return (
       <Card
-        variant='raised'
+        variant='flat'
         style={{
           gap: pdpTokens.purchasePanelGap,
           backgroundColor: colors.surface,
+          borderWidth: borderWidth.thin,
+          borderColor: colors.border,
         }}
       >
+        <MarketplacePromoStrip
+          badge={savingsPercent >= 10 ? `-${savingsPercent}%` : stockLevel === 'low-stock' ? 'Limited offer' : 'Fast ship'}
+          title={compareAtPrice ? `Save ${formatPrice(savingsAmount)} on this item` : stockMessage}
+          subtitle={compareAtPrice ? 'Promotion-first pricing with low-friction add to cart' : deliveryAssuranceLabel}
+        />
         <Box style={{ gap: spacing['12'] }}>
           <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-            {product.isLimited ? <Badge tone='premium'>{bestsellerLabel}</Badge> : null}
+            {resolvedProduct.isLimited ? <Badge tone='premium'>{bestsellerLabel}</Badge> : null}
             {averageRating >= 4.5 ? <Badge tone='premium'>{topRatedLabel}</Badge> : null}
             {savingsPercent >= 10 ? <Badge tone='accent'>Save {savingsPercent}%</Badge> : null}
           </Box>
-          <PriceTag price={productPrice} compareAt={compareAtPrice} currency={product.currency} size='lg' />
+          <PriceTag
+            price={productPrice}
+            compareAt={compareAtPrice}
+            currency={resolvedProduct.currency}
+            size='lg'
+          />
           {compareAtPrice ? (
             <Text variant='bodySm' tone='danger'>
               {locale === 'ar'
@@ -521,13 +538,13 @@ export function ProductScreen({
             </Text>
           ) : null}
           <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-            <StockBadge level={stockLevel} quantity={product.stock} />
+            <StockBadge level={stockLevel} quantity={resolvedProduct.stock} />
             <Text variant='caption' tone='muted'>
               {stockMessage}
             </Text>
           </Box>
           <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-            <Icon name='star' size={spacing['14']} color={colors.goldPrimary} weight='fill' />
+            <Icon name='star' size={spacing['16']} color={colors.goldPrimary} weight='fill' />
             <Text variant='caption' tone='muted'>
               {reviews.length > 0
                 ? `${averageRating.toFixed(1)} / 5 (${reviews.length})`
@@ -540,7 +557,9 @@ export function ProductScreen({
           <Box style={{ gap: spacing['8'] }}>
             {optionGroups.map((group) => (
               <Box key={group.id} style={{ gap: spacing['8'] }}>
-                <Text variant='label'>{group.label}</Text>
+                <Text variant='caption' weight='700' tone='muted'>
+                  {group.label}
+                </Text>
                 <HorizontalScroll>
                   <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                     {group.values.map((value) => {
@@ -572,7 +591,9 @@ export function ProductScreen({
         )}
 
         <Box style={{ gap: spacing['8'] }}>
-          <Text variant='label'>{quantityLabel}</Text>
+          <Text variant='caption' weight='700' tone='muted'>
+            {quantityLabel}
+          </Text>
           <QuantityInput value={quantity} onChange={setQuantity} disabled={!inStock || submitting} />
         </Box>
 
@@ -595,15 +616,18 @@ export function ProductScreen({
           style={{
             gap: pdpTokens.trustCardGap,
             padding: pdpTokens.trustCardPadding,
-            borderColor: colors.divider,
+            borderWidth: borderWidth.thin,
+            borderColor: colors.border,
           }}
         >
-          <Text variant='label'>{deliveryAssuranceLabel}</Text>
+          <Text variant='caption' weight='700' tone='muted'>
+            {deliveryAssuranceLabel}
+          </Text>
           {deliveryHighlights.map((item, index) => (
             <Box key={item} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
               <Icon
                 name={index === 0 ? 'shipping' : index === 1 ? 'returns' : 'secure'}
-                size={spacing['14']}
+                size={spacing['16']}
                 color={colors.textSecondary}
               />
               <Text variant='caption' tone='muted'>
@@ -622,7 +646,7 @@ export function ProductScreen({
       <View style={mobileStickyStyle}>
         <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'] }}>
           <Box style={{ gap: spacing.xxs, paddingEnd: spacing['8'] }}>
-            <PriceTag price={productPrice} currency={product.currency} size='sm' />
+            <PriceTag price={productPrice} currency={resolvedProduct.currency} size='sm' />
             <Text variant='caption' tone='muted' numberOfLines={1}>
               {inStock ? inStockLabel : outOfStockLabel}
             </Text>
@@ -660,6 +684,7 @@ export function ProductScreen({
                     style={{
                       borderWidth: borderWidth.thin,
                       borderColor: index === activeImageIndex ? colors.brandPrimary : colors.border,
+                      backgroundColor: index === activeImageIndex ? colors.brandPrimarySubtle : colors.surface,
                       borderRadius: radius.xs,
                       padding: spacing.hairline,
                     }}
@@ -678,17 +703,24 @@ export function ProductScreen({
               </Box>
             ) : null}
             <Box style={{ flex: 1 }}>
-              <Image
-                source={{ uri: activeImage }}
+              <Box
                 style={{
-                  width: '100%' as const,
-                  aspectRatio: 1,
                   borderWidth: borderWidth.thin,
                   borderColor: colors.border,
                   borderRadius: radius.xs,
+                  overflow: 'hidden',
                   backgroundColor: colors.backgroundSecondary,
                 }}
-              />
+              >
+                <Image
+                  source={{ uri: activeImage }}
+                  style={{
+                    width: '100%' as const,
+                    aspectRatio: 1,
+                    backgroundColor: colors.backgroundSecondary,
+                  }}
+                />
+              </Box>
             </Box>
           </Box>
 
@@ -718,7 +750,7 @@ export function ProductScreen({
 
       {completeSetProducts.length > 0 ? (
         <Card style={{ gap: pdpTokens.detailsGap }}>
-          <Text variant='title'>{completeSetTitle}</Text>
+          <Text variant='h2'>{completeSetTitle}</Text>
           <Box style={{ gap: spacing['8'] }}>
             {completeSetProducts.map((setProduct) => {
               const selected = selectedSetIds.includes(setProduct.id)
@@ -768,14 +800,18 @@ export function ProductScreen({
                       {unavailable ? <Text variant='caption' tone='danger'>{completeSetOutOfStockLabel}</Text> : null}
                     </Box>
                   </Box>
-                  <Text variant='label'>{formatPrice(passThroughPricingService.getProductPrice(setProduct).unitPrice)}</Text>
+                  <Text variant='subtitle' weight='700'>
+                    {formatPrice(passThroughPricingService.getProductPrice(setProduct).unitPrice)}
+                  </Text>
                 </Touchable>
               )
             })}
           </Box>
           <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text tone='muted'>{selectedSubtotalLabel}</Text>
-            <Text variant='title'>{formatPrice(completeSetSubtotal)}</Text>
+            <Text variant='subtitle' weight='700'>
+              {formatPrice(completeSetSubtotal)}
+            </Text>
           </Box>
         </Card>
       ) : null}
@@ -799,7 +835,9 @@ export function ProductScreen({
                   marginEnd: spacing.md,
                 }}
               >
-                <Text tone={active ? 'primary' : 'muted'} variant='label'>{tab.label}</Text>
+                <Text tone={active ? 'primary' : 'muted'} variant='caption' weight='700'>
+                  {tab.label}
+                </Text>
               </Touchable>
             )
           })}
@@ -812,7 +850,7 @@ export function ProductScreen({
 
       <Card style={{ gap: spacing.md }}>
         <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text variant='title'>{reviewsTitleLabel}</Text>
+          <Text variant='h2'>{reviewsTitleLabel}</Text>
           <Text variant='caption' tone='muted'>
             {reviewsLoading
               ? loadingLabel
@@ -836,7 +874,7 @@ export function ProductScreen({
             {reviews.map((review) => (
               <Box key={review.id} style={{ gap: spacing.xs }}>
                 <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text variant='label'>{review.title}</Text>
+                  <Text variant='subtitle' weight='700'>{review.title}</Text>
                   <Text variant='caption' tone='muted'>{`${review.rating}/5`}</Text>
                 </Box>
                 <Text variant='bodySm' tone='muted'>{review.body}</Text>
@@ -851,12 +889,13 @@ export function ProductScreen({
 
       {relatedProducts.length > 0 ? (
         <Box style={{ gap: pdpTokens.detailsGap }}>
-          <Text variant='title'>{relatedTitle}</Text>
+          <Text variant='h2'>{relatedTitle}</Text>
           <HorizontalScroll contentContainerStyle={{ gap: spacing['16'] }}>
             {relatedHomeItems.map((item) => (
               <ProductCard
                 key={item.id}
                 item={item}
+                density="minimal"
                 width={isCompact ? pdpTokens.relatedCardWidthMobile : pdpTokens.relatedCardWidthDesktop}
                 onPress={(selected) => onSelectProduct?.(selected.id)}
                 onAddToCart={(selected) => onAddToCart?.(selected.id, 1)}

@@ -15,7 +15,7 @@ import {
 } from '@real/app/features/shell'
 import { SearchResultsScreen } from '@real/app/screens/SearchResultsScreen'
 import { CartLine } from '@real/app/features/shell'
-import { CMSHome, Cart, Product, SearchSuggestion } from '@real/app/lib/types'
+import { CMSHome, Cart, Product, SearchResult } from '@real/app/lib/types'
 import { apiClient } from '../apiClient'
 import { cartCount, cartSubtotal, toCartLines } from '../cart-utils'
 
@@ -27,7 +27,11 @@ export default function SearchPage() {
   const [cart, setCart] = useState<Cart | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [cmsHome, setCmsHome] = useState<CMSHome | null>(null)
-  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
+  const [searchResult, setSearchResult] = useState<SearchResult>({
+    suggestions: [],
+    trendingSearches: [],
+    popularBrands: [],
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -42,12 +46,14 @@ export default function SearchPage() {
         apiClient.products.list(),
         apiClient.cart.get(),
         apiClient.cms.home(),
-        query ? apiClient.search.query(query) : Promise.resolve({ suggestions: [], trendingSearches: [], popularBrands: [] }),
+        query
+          ? apiClient.search.query(query)
+          : Promise.resolve<SearchResult>({ suggestions: [], trendingSearches: [], popularBrands: [] }),
       ])
       setProducts(productsResult)
       setCart(cartResult)
       setCmsHome(cmsResult)
-      setSuggestions(searchResult.suggestions)
+      setSearchResult(searchResult)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Unable to fetch search results.')
     } finally {
@@ -61,7 +67,7 @@ export default function SearchPage() {
 
   const lines = toCartLines(cart, products)
   const linesSubtotal = cartSubtotal(lines)
-  const linesCount = cartCount(cart)
+  const linesCount = cartCount(lines)
 
   return (
     <Layout
@@ -109,10 +115,13 @@ export default function SearchPage() {
     >
       <SearchResultsScreen
         query={query}
-        suggestions={suggestions}
+        suggestions={searchResult.suggestions}
+        page={searchResult?.page}
+        locale={locale}
         loading={loading}
         error={error}
         onReload={loadData}
+        onNavigate={(href) => router.push(href)}
         onSelectProduct={(id) => router.push(`/product/${id}`)}
         onAddToCart={async (productId) => {
           const updated = await apiClient.cart.add(productId, 1)
@@ -122,3 +131,4 @@ export default function SearchPage() {
     </Layout>
   )
 }
+

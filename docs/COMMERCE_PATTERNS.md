@@ -10,6 +10,24 @@ This document defines the canonical composition contracts for the core commerce 
 - Add `out-of-stock` when the surface represents a purchasable product.
 - Keep layout compact and action hierarchy clear.
 
+## Layout-As-Data Scope
+- Layout-as-data is approved only for bounded storefront surfaces with code-owned contracts and BFF-normalized payloads.
+- Every normalized page payload must include `storeId`, `slug`, `pageType`, and ordered `blocks` with explicit `version`.
+- Shared commerce surfaces consume normalized contracts only. Raw CMS/admin persistence models must stop at the BFF.
+- Approved block-driven surfaces today are homepage and search/discovery. Search may add ordered promotional or editorial blocks around code-owned results.
+- Search, PLP, PDP, cart, checkout, and account query/purchase flows remain server-authoritative and must not be replaced by free-form admin layouts.
+
+## Release And Preview Rules
+- Draft editing works against internal page-block persistence, then publishes release/version snapshots for rendering.
+- Preview and published payloads must preserve `storeId` so the same normalized contract works for default-store and future multi-store expansion.
+- Shared UI should never branch on admin persistence models or release storage details; it should branch only on normalized page/block contracts.
+- Contract evolution must happen through explicit block `version` updates, not silent prop-shape drift.
+
+## Store Context Contract
+- `storeId` is first-class in page payloads and defaults to `"default"` when no explicit store context is present.
+- Store context must flow through preview, published page payloads, and internal admin editing APIs before true multi-store behavior is introduced.
+- Block contracts may vary by store over time, but shared renderers still consume the same normalized page envelope.
+
 ## ProductCard
 Structure:
 - media
@@ -43,6 +61,8 @@ Rules:
 - Filters and sorting must route through provider-backed APIs.
 - Product listing should reuse the same card contract as rails and related items.
 - Dense catalog is the default preset for discovery surfaces.
+- Additive layout blocks may appear above or around the grid only when the BFF resolves them into approved block contracts.
+- Search/discovery block rendering must not replace the server-authoritative results set, query params, sorting, or pagination logic.
 
 States:
 - loading grid
@@ -100,6 +120,7 @@ Rules:
 - Quote validation is mandatory before submission.
 - Order summary remains compact and legible.
 - Do not hide errors behind motion or optimistic assumptions.
+- Checkout structure is not an approved layout-as-data surface.
 
 States:
 - loading quote
@@ -117,6 +138,7 @@ Rules:
 - Avoid monolithic page-specific primitives.
 - Reuse shared cards, sections, and state handling.
 - Keep sections modular so features can evolve independently.
+- Account shell structure is not an approved layout-as-data surface.
 
 States:
 - loading section skeletons
@@ -132,3 +154,9 @@ Use these composition presets as defaults:
 - `checkoutUtility` for checkout
 
 The preset may change density and emphasis, but it must not change the canonical contract.
+
+## Explicit Non-Goals
+- Do not turn PDP, cart, checkout, or account into arbitrary page builders.
+- Do not move pricing, inventory, checkout validation, or account truth into CMS-like content blocks.
+- Do not introduce a runtime plugin engine to discover or render storefront blocks.
+- Do not treat raw CMS/admin records as render contracts in `packages/app` or `packages/ui`.

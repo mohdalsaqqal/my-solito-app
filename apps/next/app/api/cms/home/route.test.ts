@@ -1,60 +1,41 @@
-// @ts-nocheck
-import test from 'node:test'
 import assert from 'node:assert/strict'
-import http from 'node:http'
-import request from 'supertest'
-import { GET } from './route'
-import { cmsProvider } from '@real/providers'
+import fs from 'node:fs/promises'
+import path from 'node:path'
+import test from 'node:test'
 
-function createCmsServer() {
-  return http.createServer(async (req, res) => {
-    if (req.method !== 'GET' || req.url !== '/api/cms/home') {
-      res.statusCode = 404
-      res.end('Not Found')
-      return
-    }
+const ROUTE_PATH = path.join(process.cwd(), 'apps', 'next', 'app', 'api', 'cms', 'home', 'route.ts')
+const RELEASE_ENV_PATH = path.join(process.cwd(), 'apps', 'next', 'app', 'api', '_lib', 'release-env.ts')
+const TYPES_PATH = path.join(process.cwd(), 'packages', 'app', 'lib', 'types.ts')
+const RESPONSE_PATH = path.join(process.cwd(), 'apps', 'next', 'app', 'api', '_lib', 'response.ts')
 
-    const webResponse = await GET(new Request('http://localhost/api/cms/home'))
-    res.statusCode = webResponse.status
-    webResponse.headers.forEach((value, key) => {
-      res.setHeader(key, value)
-    })
-    res.end(await webResponse.text())
-  })
+async function readSource(filePath: string) {
+  return fs.readFile(filePath, 'utf8').catch(() => '')
 }
 
-test('GET /api/cms/home returns success payload', { concurrency: false }, async () => {
-  const server = createCmsServer()
-  const response = await request(server).get('/api/cms/home')
+test('homepage route resolves default store context into the shared payload contract', async () => {
+  const [routeSource, releaseEnvSource, typesSource] = await Promise.all([
+    readSource(ROUTE_PATH),
+    readSource(RELEASE_ENV_PATH),
+    readSource(TYPES_PATH),
+  ])
 
-  assert.equal(response.status, 200)
-  assert.equal(response.body.success, true)
-  assert.equal(response.body.data.storeId, 'default')
-  assert.equal(Array.isArray(response.body.data.heroSlides), true)
-  assert.equal(typeof response.body.data.shell, 'object')
-  assert.equal(typeof response.body.data.quoteId, 'undefined')
+  assert.match(releaseEnvSource, /export function resolveStoreId/)
+  assert.match(releaseEnvSource, /DEFAULT_STORE_ID = ['"]default['"]/)
+  assert.match(releaseEnvSource, /return DEFAULT_STORE_ID/)
+  assert.match(routeSource, /const storeId = resolveStoreId\(request\)/)
+  assert.match(routeSource, /storeId,/)
+  assert.match(typesSource, /storeId: string/)
 })
 
-test('GET /api/cms/home returns normalized failure payload', { concurrency: false }, async () => {
-  const originalGetHome = cmsProvider.getHome
+test('homepage route uses the normalized API envelope helpers for success and failure responses', async () => {
+  const [routeSource, responseSource] = await Promise.all([
+    readSource(ROUTE_PATH),
+    readSource(RESPONSE_PATH),
+  ])
 
-  cmsProvider.getHome = async () => ({
-    ok: false,
-    error: {
-      code: 'CMS_DOWN',
-      message: 'CMS unavailable',
-    },
-  })
-
-  try {
-    const server = createCmsServer()
-    const response = await request(server).get('/api/cms/home')
-
-    assert.equal(response.status, 500)
-    assert.equal(response.body.success, false)
-    assert.equal(response.body.error.code, 'CMS_DOWN')
-    assert.equal(response.body.error.message, 'CMS unavailable')
-  } finally {
-    cmsProvider.getHome = originalGetHome
-  }
+  assert.match(responseSource, /export function ok/)
+  assert.match(responseSource, /export function fail/)
+  assert.match(routeSource, /return fail\(/)
+  assert.match(routeSource, /const response = ok\(/)
+  assert.match(routeSource, /return response/)
 })

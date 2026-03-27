@@ -1,7 +1,9 @@
+"use client"
+
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Image, Platform, ScrollView, View } from 'react-native'
-import { borderWidth, colors, elevation, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
-import { Box, Divider, Text, Touchable } from '../../primitives'
+import { I18nManager, Image, Platform, ScrollView, View } from 'react-native'
+import { borderWidth, colors, elevation, motionDuration, radius, spacing, zIndex } from '@real/tokens'
+import { Box, Text, Touchable } from '../../primitives'
 import { Button } from '../Button'
 import { Card } from '../Card'
 import { Icon } from '../Icon'
@@ -148,10 +150,19 @@ export function CartDrawer({
     return null
   }
 
+  const isRtl =
+    Platform.OS === 'web'
+      ? (((globalThis as { document?: { documentElement?: { dir?: string } } }).document?.documentElement?.dir ??
+          (I18nManager.isRTL ? 'rtl' : 'ltr')) === 'rtl')
+      : I18nManager.isRTL
   const currency = items[0]?.currency ?? 'USD'
+  const freeDeliveryTarget = 99
+  const amountToFreeDelivery = Math.max(0, freeDeliveryTarget - subtotal)
+  const freeDeliveryProgress = Math.max(0, Math.min(1, subtotal / freeDeliveryTarget))
 
   return (
     <Box
+      data-ect-node="CartDrawer"
       style={{
         position: 'fixed',
         top: 0,
@@ -170,7 +181,7 @@ export function CartDrawer({
           bottom: 0,
           left: 0,
           backgroundColor: colors.black,
-          opacity: 0.4,
+          opacity: 0.32,
           transitionProperty: 'opacity',
           transitionDuration: `${motionDuration.pageReveal}ms`,
         } as any}
@@ -187,12 +198,12 @@ export function CartDrawer({
         style={{
           position: 'absolute',
           top: 0,
-          right: 0,
+          [isRtl ? 'left' : 'right']: 0,
           bottom: 0,
-          width: spacing.xxl * 9,
+          width: spacing.xxl * 9.6,
           maxWidth: '92%' as any,
           backgroundColor: colors.surface,
-          borderLeftWidth: borderWidth.thin,
+          [isRtl ? 'borderRightWidth' : 'borderLeftWidth']: borderWidth.thin,
           borderColor: colors.border,
           flexDirection: 'column',
           ...(Platform.OS === 'web'
@@ -205,44 +216,136 @@ export function CartDrawer({
         {/* Header */}
         <Box
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            paddingHorizontal: spacing['16'],
-            paddingVertical: spacing['16'],
+            paddingHorizontal: spacing['12'],
+            paddingTop: spacing['4'],
+            paddingBottom: spacing['3'],
             borderBottomWidth: borderWidth.thin,
             borderBottomColor: colors.border,
             backgroundColor: colors.surface,
           }}
         >
-          <Text variant='title' size={18} weight='700'>
-            Your Cart {items.length > 0 ? `(${items.length})` : ''}
-          </Text>
-          <Touchable
-            nativeID='cart-drawer-close'
-            accessibilityRole='button'
-            onPress={onClose}
+          <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Touchable
+              nativeID='cart-drawer-close'
+              accessibilityRole='button'
+              onPress={onClose}
+            >
+              {({ hovered, focused }) => (
+                <Box
+                  style={{
+                    width: spacing['32'],
+                    height: spacing['32'],
+                    borderRadius: radius.full,
+                    backgroundColor: hovered || focused ? colors.surfaceMuted : colors.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: hovered || focused ? 1 : 0.72,
+                  }}
+                >
+                  <Icon name='close' size={16} />
+                </Box>
+              )}
+            </Touchable>
+            <Text variant='title' size={15} weight='700'>
+              Bag
+              <Text variant='caption' tone='muted' style={{ letterSpacing: 0.2 }}>
+                {' '}
+                ({totalQuantity} item{totalQuantity === 1 ? '' : 's'})
+              </Text>
+            </Text>
+            <Box style={{ width: spacing['32'], height: spacing['32'] }} />
+          </Box>
+        </Box>
+
+        {/* Free Delivery Progress */}
+        {items.length > 0 ? (
+          <Box
             style={{
-              width: spacing['32'],
-              height: spacing['32'],
-              borderRadius: radius.full,
-              backgroundColor: colors.backgroundSecondary,
-              alignItems: 'center',
-              justifyContent: 'center',
+              paddingHorizontal: spacing['16'],
+              paddingVertical: spacing['6'],
+              borderBottomWidth: borderWidth.thin,
+              borderBottomColor: colors.border,
+              backgroundColor: colors.surface,
             }}
           >
-            {({ hovered }) => (
-              <Box style={{ opacity: hovered ? 1 : 0.7 }}>
-                <Icon name='close' size={16} />
+            <Box
+              style={{
+                paddingHorizontal: spacing['4'],
+                paddingVertical: spacing['2'],
+                backgroundColor: colors.surface,
+                gap: spacing['4'],
+              }}
+            >
+              <Box
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: spacing['8'],
+                }}
+              >
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['6'], flex: 1 }}>
+                  <Icon name='shipping' size={14} color={colors.textSecondary} />
+                  <Text variant='bodySm' tone='muted' weight='500' numberOfLines={1} style={{ flex: 1 }}>
+                    {amountToFreeDelivery > 0
+                      ? `Add ${formatCurrency(amountToFreeDelivery, currency)} for free delivery`
+                      : 'You unlocked free delivery'}
+                  </Text>
+                </Box>
+                {amountToFreeDelivery > 0 ? (
+                  <Touchable
+                    onPress={() => {
+                      onViewCart()
+                      onClose()
+                    }}
+                    accessibilityRole='button'
+                    accessibilityLabel='Add more items for free delivery'
+                  >
+                    {({ hovered }) => (
+                      <Box
+                        style={{
+                          minHeight: spacing['24'],
+                          borderRadius: radius.full,
+                          paddingHorizontal: spacing['8'],
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: hovered ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                          borderWidth: borderWidth.thin,
+                          borderColor: hovered ? colors.brandPrimary : colors.border,
+                        }}
+                      >
+                    <Text variant='caption' weight='700' tone='primary'>
+                      Add more
+                    </Text>
+                      </Box>
+                    )}
+                  </Touchable>
+                ) : null}
               </Box>
-            )}
-          </Touchable>
-        </Box>
+              <Box
+                style={{
+                  height: spacing['1'],
+                  borderRadius: radius.full,
+                  backgroundColor: colors.surfaceMuted,
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  style={{
+                    height: '100%',
+                    width: `${Math.round(freeDeliveryProgress * 100)}%`,
+                    backgroundColor: colors.brandPrimary,
+                  }}
+                />
+              </Box>
+            </Box>
+          </Box>
+        ) : null}
 
         {/* Scrollable Content */}
         <ScrollView
-          style={{ flex: 1, backgroundColor: colors.backgroundPrimary }}
-          contentContainerStyle={{ padding: spacing['16'], paddingBottom: spacing['48'] }}
+          style={{ flex: 1, backgroundColor: colors.surface }}
+          contentContainerStyle={{ padding: spacing['12'], paddingBottom: spacing['16'] }}
         >
           {loading ? (
             <Box style={{ gap: spacing['16'] }}>
@@ -251,7 +354,7 @@ export function CartDrawer({
             </Box>
           ) : error ? (
             <Box style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: spacing.sm }}>
-              <Icon name='info' size={32} color={colors.textSecondary} />
+              <Icon name='unknown' size={32} color={colors.textSecondary} />
               <Text tone='danger' weight='600'>Unable to load cart.</Text>
               <Text tone='muted' variant='bodySm'>{error}</Text>
             </Box>
@@ -270,14 +373,25 @@ export function CartDrawer({
               </Button>
             </Box>
           ) : (
-            <Box style={{ gap: spacing['16'] }}>
+            <Box style={{ gap: spacing['10'] }}>
               {items.map((item) => (
-                <Box key={item.id} style={{ flexDirection: 'row', gap: spacing['12'] }}>
+                <Box
+                  key={item.id}
+                  style={{
+                    flexDirection: 'row',
+                    gap: spacing['8'],
+                    paddingVertical: spacing['8'],
+                    borderRadius: radius.sm,
+                    backgroundColor: colors.surface,
+                    borderBottomWidth: borderWidth.thin,
+                    borderBottomColor: colors.stroke,
+                  }}
+                >
                   {/* Thumbnail */}
                   <Box
                     style={{
                       width: 52,
-                      height: 68,
+                      height: 64,
                       borderRadius: radius.sm,
                       backgroundColor: colors.backgroundSecondary,
                       borderWidth: borderWidth.thin,
@@ -294,10 +408,16 @@ export function CartDrawer({
                   </Box>
 
                   {/* Details */}
-                  <Box style={{ flex: 1, justifyContent: 'space-between' }}>
+                  <Box style={{ flex: 1, justifyContent: 'space-between', gap: spacing['4'] }}>
                     <Box style={{ gap: spacing['2'] }}>
                       {item.brand ? (
-                        <Text variant='meta' size={10} tone='muted' weight='600' style={{ textTransform: 'uppercase' }}>
+                        <Text
+                          variant='caption'
+                          size={10}
+                          tone='muted'
+                          weight='600'
+                          style={{ textTransform: 'uppercase', letterSpacing: 0.6 }}
+                        >
                           {item.brand}
                         </Text>
                       ) : null}
@@ -307,10 +427,10 @@ export function CartDrawer({
                     </Box>
 
                     {/* Quantity & Price Row */}
-                    <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: spacing.xs }}>
-                      
+                    <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing['8'] }}>
+
                       {/* Pill Quantity Selector */}
-                      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+                      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2'] }}>
                         <Box
                           style={{
                             flexDirection: 'row',
@@ -318,8 +438,8 @@ export function CartDrawer({
                             borderWidth: borderWidth.thin,
                             borderColor: colors.border,
                             borderRadius: radius.full,
-                            backgroundColor: colors.surface,
-                            height: 28,
+                            backgroundColor: colors.surfaceMuted,
+                            height: 32,
                           }}
                         >
                           <Touchable
@@ -327,17 +447,17 @@ export function CartDrawer({
                             disabled={pendingById[item.id]}
                             style={{ width: 28, height: '100%', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <Text variant='bodySm' tone='muted' weight='500'>-</Text>
+                            <Text variant='caption' tone='muted' weight='700'>−</Text>
                           </Touchable>
                           <Box style={{ minWidth: 20, alignItems: 'center', justifyContent: 'center' }}>
-                            <Text variant='meta' weight='500'>{item.quantity}</Text>
+                            <Text variant='caption' weight='700'>{item.quantity}</Text>
                           </Box>
                           <Touchable
                             onPress={() => runMutation(item, 'updating', onIncrease)}
                             disabled={pendingById[item.id]}
                             style={{ width: 28, height: '100%', alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <Text variant='bodySm' tone='muted' weight='500'>+</Text>
+                            <Text variant='caption' tone='muted' weight='700'>+</Text>
                           </Touchable>
                         </Box>
 
@@ -349,15 +469,17 @@ export function CartDrawer({
                           {({ hovered }) => (
                             <Box
                               style={{
-                                width: spacing['32'],
-                                height: spacing['32'],
+                                width: spacing['24'],
+                                height: spacing['24'],
+                                borderRadius: radius.full,
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                backgroundColor: hovered ? colors.brandPrimarySubtle : colors.surface,
                               }}
                             >
                               <Icon
                                 name='delete'
-                                size={16}
+                                size={14}
                                 color={hovered ? colors.error : colors.textSecondary}
                               />
                             </Box>
@@ -367,11 +489,11 @@ export function CartDrawer({
 
                       <Box style={{ alignItems: 'flex-end' }}>
                         {pendingById[item.id] ? (
-                          <Text variant='meta' size={10} tone='muted' style={{ marginBottom: 2 }}>
+                          <Text variant='caption' size={10} tone='muted' style={{ marginBottom: 2 }}>
                             {actionById[item.id] === 'removing' ? 'Removing...' : 'Updating...'}
                           </Text>
                         ) : null}
-                        <Text variant='bodySm' weight='600'>
+                        <Text variant='bodySm' weight='700'>
                           {formatCurrency(item.price * item.quantity, item.currency)}
                         </Text>
                       </Box>
@@ -387,46 +509,44 @@ export function CartDrawer({
         {items.length > 0 && !loading && !error && (
           <Box
             style={{
-              padding: spacing['16'],
+              paddingHorizontal: spacing['12'],
+              paddingTop: spacing['8'],
+              paddingBottom: spacing['10'],
               backgroundColor: colors.surface,
               borderTopWidth: borderWidth.thin,
               borderTopColor: colors.border,
-              ...(Platform.OS === 'web'
-                ? {
-                    boxShadow: elevation.drawerFooter,
-                  }
-                : {}),
             }}
           >
-            <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing['12'] }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing['8'] }}>
               <Text variant='bodySm' tone='muted'>Estimated Total</Text>
-              <Text variant='title' weight='700'>{formatCurrency(subtotal, currency)}</Text>
+              <Text variant='title' size={18} weight='700'>{formatCurrency(subtotal, currency)}</Text>
             </Box>
-            <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
-              <Box style={{ flex: 1 }}>
-                <Button
-                  variant='ghost'
-                  onPress={() => {
-                    onViewCart()
-                    onClose()
-                  }}
-                  style={{ width: '100%', minHeight: 44 }}
-                >
-                  View Full Cart
-                </Button>
-              </Box>
-              <Box style={{ flex: 1.5 }}>
-                <Button
-                  variant='solid'
-                  onPress={() => {
-                    onCheckout()
-                    onClose()
-                  }}
-                  style={{ width: '100%', minHeight: 44, paddingHorizontal: 0 }}
-                >
-                  Proceed to Checkout
-                </Button>
-              </Box>
+            <Button
+              variant='solid'
+              size='sm'
+              fullWidth
+              onPress={() => {
+                onCheckout()
+                onClose()
+              }}
+            >
+              Checkout
+            </Button>
+            <Box style={{ alignItems: 'center', marginTop: spacing['6'] }}>
+              <Touchable
+                onPress={() => {
+                  onViewCart()
+                  onClose()
+                }}
+                accessibilityRole='button'
+                accessibilityLabel='View full cart'
+              >
+                {({ hovered }) => (
+                  <Text variant='bodySm' tone='muted' style={{ textDecorationLine: hovered ? 'underline' : 'none' }}>
+                    View full cart
+                  </Text>
+                )}
+              </Touchable>
             </Box>
           </Box>
         )}

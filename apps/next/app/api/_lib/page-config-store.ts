@@ -156,7 +156,7 @@ export function createPageConfigStore(options: CreatePageConfigStoreOptions = {}
       return normalized
     },
 
-    async getPageConfig(storeId: string, slug: string, pageType = HOME_PAGE_TYPE) {
+    async getPageConfig(storeId: string, slug: string, pageType: string = HOME_PAGE_TYPE) {
       const state = await readState()
       return (
         state.pages.find(
@@ -228,7 +228,7 @@ export async function upsertPageConfig(record: PageConfigRecord) {
   return defaultStore.upsertPageConfig(record)
 }
 
-export async function getPageConfig(storeId: string, slug: string, pageType = HOME_PAGE_TYPE) {
+export async function getPageConfig(storeId: string, slug: string, pageType: string = HOME_PAGE_TYPE) {
   return defaultStore.getPageConfig(storeId, slug, pageType)
 }
 

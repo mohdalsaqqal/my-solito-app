@@ -85,6 +85,38 @@ Otherwise:
 - Marketing copy, hero slides, and promotional content are data.
 - Card skeletons, rails, grids, drawers, and checkout structure remain code-owned.
 
+## Layout-As-Data Boundaries
+- Layout-as-data is BFF-owned and emitted as normalized `page` payloads with explicit block versions.
+- Shared UI in `packages/app` and `packages/ui` consumes only normalized page/block contracts, never raw admin persistence shapes.
+- `storeId` is a first-class part of the page contract and defaults to `"default"` until true multi-store expansion is enabled.
+- Approved surfaces today are homepage and search/discovery. These surfaces may render ordered `page.blocks` through the shared block registry.
+- Search/discovery may use additive layout blocks above or around core result modules, but the results grid and query logic remain code-owned.
+- PDP, cart, checkout, and account remain mostly code-owned until their contracts are intentionally approved and verified.
+
+## Normalized Page Contract
+- The BFF owns normalization from internal page config and release/version state into a strict shared page payload.
+- The normalized page envelope must include `storeId`, `slug`, `pageType`, and ordered `blocks`.
+- Every normalized block must include `id`, `type`, `version`, `position`, and `props`.
+- Data-bearing blocks such as product-query, editorial-reference, or spotlight blocks must be resolved into render-ready payloads by the BFF before they reach shared UI.
+
+## Page Ownership
+- Internal ownership is `store -> page -> page blocks -> release/version`.
+- Admin editing operates on page blocks and release snapshots, not raw UI component trees.
+- Homepage header and footer remain code-owned shell structure even when homepage body blocks are data-driven.
+- Search/discovery keeps its result mechanics code-owned while allowing additive promotional or editorial blocks around that core structure.
+
+## Approved Block Surfaces
+- Homepage is the proving ground for ordered shared block rendering.
+- Search/discovery is the second approved surface and uses the same normalized page/block contract as homepage.
+- Current approved block families are bounded to shared registry contracts such as hero, rails, banners, brand/editorial spotlight, and `editorial_hotspot`.
+- New critical commerce surfaces must not become block-driven until their contracts, states, RTL behavior, and provider/BFF flow are explicitly reviewed.
+
+## Current Non-Goals
+- No runtime plugin engine or arbitrary builder runtime.
+- No CMS-owned checkout, pricing, inventory, or account structure.
+- No free-form mutation of critical commerce layouts through admin tooling.
+- No assumption that every storefront route should become block-driven.
+
 ## Visual Review Checklist
 Before closing UI work, confirm:
 - token usage is consistent

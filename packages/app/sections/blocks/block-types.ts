@@ -1,7 +1,8 @@
 import type { CMSPageBlock, LocalizedString, Product } from '@real/app/lib/types'
 import type { HomeBrandItem, HomeProductItem } from '@real/ui/components/home/types'
 
-export type RegisteredHomePageBlock = CMSPageBlock
+export type RegisteredStorefrontPageBlock = CMSPageBlock
+export type RegisteredHomePageBlock = RegisteredStorefrontPageBlock
 
 export type HomeBlockRendererRailAutoplaySettings = {
   featured?: {
@@ -15,7 +16,7 @@ export type HomeBlockRendererRailAutoplaySettings = {
 }
 
 export type HomeBlockRendererProps = {
-  block: RegisteredHomePageBlock
+  block: RegisteredStorefrontPageBlock
   isDesktop: boolean
   tickerSpeedMs: number
   loading: boolean

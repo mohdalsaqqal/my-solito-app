@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { forwardRef, ReactNode } from 'react'
 import { View, ViewProps, ViewStyle } from 'react-native'
 import { colors, spacing } from '@real/tokens'
 
@@ -28,7 +28,7 @@ function resolveSpace(value?: SpaceValue) {
   return value ? spacing[value] : undefined
 }
 
-export function Box({
+export const Box = forwardRef<View, BoxProps>(function Box({
   children,
   style,
   flex,
@@ -44,9 +44,10 @@ export function Box({
   justify,
   align,
   ...props
-}: BoxProps) {
+}, ref) {
   return (
     <View
+      ref={ref}
       style={[
         {
           flex,
@@ -69,4 +70,4 @@ export function Box({
       {children}
     </View>
   )
-}
+})

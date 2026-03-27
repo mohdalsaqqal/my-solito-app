@@ -2,6 +2,11 @@ import { productProvider } from '@real/providers'
 import { matchProviderResult } from '@real/providers/contracts'
 import { fail, ok } from '../_lib/response'
 import { passThroughPricingService } from '@real/app/lib/pricing'
+import { createPagePayload } from '@real/app/lib/layout/page-schema'
+import { resolveStoreId } from '../_lib/release-env'
+import { resolveRequestLocale } from '../_lib/request-locale'
+import { SEARCH_PAGE_SLUG, SEARCH_PAGE_TYPE, type PagePayload } from '@real/app/lib/layout/page-types'
+import type { CMSHomeBlock } from '@real/app/lib/types'
 
 type SearchItem = {
   id: string
@@ -17,6 +22,8 @@ type SearchItem = {
 }
 
 type SearchPayload = {
+  storeId: string
+  page: PagePayload<string, CMSHomeBlock>
   suggestions: SearchItem[]
   trendingSearches: string[]
   popularBrands: string[]
@@ -136,6 +143,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q') ?? ''
+    const locale = resolveRequestLocale(request)
+    const storeId = resolveStoreId(request)
 
     const result = await productProvider.list()
     return matchProviderResult(result, {
@@ -143,10 +152,59 @@ export async function GET(request: Request) {
         const productSuggestions = buildProductSuggestions(products, query)
         const brandSuggestions = query ? buildBrandSuggestions(products, query) : []
         const suggestions: SearchItem[] = [...brandSuggestions, ...productSuggestions]
+        const popularBrands = buildPopularBrands(products)
+        const searchPageBlocks: CMSHomeBlock[] = [
+          {
+            id: 'search-promo-strip',
+            type: 'promo_strip',
+            text: {
+              en: query ? `Search results for "${query}"` : 'Search trending products and popular brands',
+              ar: query ? `نتائج البحث عن "${query}"` : 'ابحث عن المنتجات الرائجة والعلامات الشائعة',
+            },
+            href: '/shop',
+            position: 1,
+            releaseId: 'search-page',
+            locale,
+            textValue:
+              locale === 'ar'
+                ? query
+                  ? `نتائج البحث عن "${query}"`
+                  : 'ابحث عن المنتجات الرائجة والعلامات الشائعة'
+                : query
+                  ? `Search results for "${query}"`
+                  : 'Search trending products and popular brands',
+          },
+          {
+            id: 'search-top-brands',
+            type: 'top_brands',
+            titleEn: 'Popular brands',
+            titleAr: 'العلامات الشائعة',
+            items: popularBrands.map((brand, index) => ({
+              id: `search-brand-${index + 1}`,
+              name: brand,
+              href: `/brands/${encodeURIComponent(brand.toLowerCase().replace(/\s+/g, '-'))}`,
+            })),
+            position: 2,
+            releaseId: 'search-page',
+            locale,
+            titleText: locale === 'ar' ? 'العلامات الشائعة' : 'Popular brands',
+          },
+        ]
         const payload: SearchPayload = {
+          storeId,
+          page: createPagePayload(storeId, {
+            slug: SEARCH_PAGE_SLUG,
+            pageType: SEARCH_PAGE_TYPE,
+            blocks: searchPageBlocks.map((block) => ({
+              id: block.id,
+              type: block.type,
+              position: block.position,
+              props: block,
+            })),
+          }),
           suggestions,
           trendingSearches: buildTrending(products),
-          popularBrands: buildPopularBrands(products),
+          popularBrands,
         }
         return ok(payload)
       },

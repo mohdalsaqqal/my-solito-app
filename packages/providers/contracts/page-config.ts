@@ -4,7 +4,8 @@ import type {
   PageType,
   QueryBoundBlockType,
 } from '@real/app/lib/layout/page-types'
-import type { Product, ProductQuery } from './CatalogProviders'
+import type { ProductQuery } from './CatalogProviders'
+import type { Product } from './ProductProvider'
 
 export type PageConfigBlock<
   TType extends string = string,

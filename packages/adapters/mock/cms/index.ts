@@ -1,4 +1,146 @@
 import { CMSProvider } from '@real/providers/contracts'
+import { generatedMockProductRows } from '../product/generated-mock-erp-data'
+
+type MockProductRow = {
+  id: string
+  brand?: string
+  category?: string
+  image?: string
+  csv_brand_label?: string
+  rating?: number
+  reviews?: number
+}
+
+type BrandShowcaseRow = {
+  id: string
+  slug: string
+  name: string
+  href: string
+  logoUrl?: string
+  spotlight: {
+    id: string
+    enabled: boolean
+    bannerTitle: { en: string; ar: string }
+    bannerSubtitle: { en: string; ar: string }
+    bannerCtaLabel: { en: string; ar: string }
+    bannerHref: string
+    bannerImageUrl?: string
+    railTitle: { en: string; ar: string }
+    query: {
+      source: 'best_sellers'
+      limit: number
+      sortBy: 'price_desc'
+      brandNames: string[]
+    }
+  }
+}
+
+const sourceProducts = generatedMockProductRows as MockProductRow[]
+
+function formatBrandName(slug: string, label?: string) {
+  if (label && label.trim()) return label.trim()
+  return slug
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+function buildBrandShowcaseRows(): BrandShowcaseRow[] {
+  const grouped = new Map<
+    string,
+    {
+      label?: string
+      productCount: number
+      topImage?: string
+      reviewsScore: number
+      ratingScore: number
+      categories: Set<string>
+    }
+  >()
+
+  for (const product of sourceProducts) {
+    if (!product.brand) continue
+    const current = grouped.get(product.brand) ?? {
+      label: product.csv_brand_label,
+      productCount: 0,
+      topImage: product.image,
+      reviewsScore: 0,
+      ratingScore: 0,
+      categories: new Set<string>(),
+    }
+
+    current.label ||= product.csv_brand_label
+    current.productCount += 1
+    current.reviewsScore += product.reviews ?? 0
+    current.ratingScore += product.rating ?? 0
+    if (!current.topImage && product.image) current.topImage = product.image
+    if (product.category) current.categories.add(product.category)
+    grouped.set(product.brand, current)
+  }
+
+  return Array.from(grouped.entries())
+    .map<BrandShowcaseRow>(([slug, entry]) => {
+      const name = formatBrandName(slug, entry.label)
+      const leadCategory = Array.from(entry.categories)[0] ?? 'beauty'
+
+      return {
+        id: `cms-brand-${slug}`,
+        slug,
+        name,
+        href: `/shop?brands=${slug}`,
+        logoUrl: entry.topImage,
+        spotlight: {
+          id: `spotlight-${slug}`,
+          enabled: true,
+          bannerTitle: {
+            en: `${name} Spotlight`,
+            ar: `${name} Spotlight`,
+          },
+          bannerSubtitle: {
+            en: `Shop the most-loved ${leadCategory.replace(/-/g, ' ')} picks from ${name}.`,
+            ar: `Shop the most-loved ${leadCategory.replace(/-/g, ' ')} picks from ${name}.`,
+          },
+          bannerCtaLabel: {
+            en: `Shop ${name}`,
+            ar: `Shop ${name}`,
+          },
+          bannerHref: `/shop?brands=${slug}`,
+          bannerImageUrl: entry.topImage,
+          railTitle: {
+            en: `${name} Highlights`,
+            ar: `${name} Highlights`,
+          },
+          query: {
+            source: 'best_sellers',
+            limit: 8,
+            sortBy: 'price_desc',
+            brandNames: [name],
+          },
+        },
+      }
+    })
+    .sort((left, right) => {
+      const leftMeta = grouped.get(left.slug)
+      const rightMeta = grouped.get(right.slug)
+      const countDelta = (rightMeta?.productCount ?? 0) - (leftMeta?.productCount ?? 0)
+      if (countDelta !== 0) return countDelta
+      const reviewsDelta = (rightMeta?.reviewsScore ?? 0) - (leftMeta?.reviewsScore ?? 0)
+      if (reviewsDelta !== 0) return reviewsDelta
+      const ratingDelta = (rightMeta?.ratingScore ?? 0) - (leftMeta?.ratingScore ?? 0)
+      if (ratingDelta !== 0) return ratingDelta
+      return left.name.localeCompare(right.name)
+    })
+}
+
+const cmsBrandShowcase = buildBrandShowcaseRows()
+const cmsMarketingBrands = cmsBrandShowcase.slice(0, 8).map((brand) => ({
+  id: brand.id,
+  name: brand.name,
+  href: brand.href,
+  logoUrl: brand.logoUrl,
+}))
+const cmsBrandSpotlights = cmsBrandShowcase.slice(0, 2).map((brand) => brand.spotlight)
 
 export const mockCMSAdapter: CMSProvider = {
   async getHome() {
@@ -166,6 +308,28 @@ export const mockCMSAdapter: CMSProvider = {
           },
         },
         marketing: {
+          railAutoplay: {
+            hero: {
+              enabled: true,
+              autoplayMs: 3200,
+            },
+            categories: {
+              enabled: true,
+              autoplayMs: 4400,
+            },
+            newArrivals: {
+              enabled: true,
+              autoplayMs: 4200,
+            },
+            featured: {
+              enabled: true,
+              autoplayMs: 4600,
+            },
+            brandSpotlights: {
+              enabled: true,
+              autoplayMs: 4800,
+            },
+          },
           rails: [
             {
               id: 'best-items-month',
@@ -246,126 +410,8 @@ export const mockCMSAdapter: CMSProvider = {
             imageUrl:
               'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1800&h=700&q=80',
           },
-          brandSpotlights: [
-            {
-              id: 'spotlight-fenty',
-              enabled: true,
-              bannerTitle: {
-                en: 'Fenty Beauty Spotlight',
-                ar: 'واجهة Fenty Beauty',
-              },
-              bannerSubtitle: {
-                en: 'Editorial lip and gloss picks with premium finish.',
-                ar: 'اختيارات تحريرية للشفاه واللمعان بلمسة فاخرة.',
-              },
-              bannerCtaLabel: {
-                en: 'Shop Fenty',
-                ar: 'تسوق Fenty',
-              },
-              bannerHref: '/shop',
-              bannerImageUrl:
-                'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1800&h=700&q=80',
-              railTitle: {
-                en: 'Fenty Highlights',
-                ar: 'منتجات Fenty المميزة',
-              },
-              query: {
-                source: 'new_arrivals',
-                limit: 8,
-                sortBy: 'price_desc',
-                brandNames: ['Fenty Beauty'],
-              },
-            },
-            {
-              id: 'spotlight-huda',
-              enabled: true,
-              bannerTitle: {
-                en: 'Huda Beauty Editorial',
-                ar: 'تحرير Huda Beauty',
-              },
-              bannerSubtitle: {
-                en: 'Bold color stories and glossy seasonal edits.',
-                ar: 'تدرجات جريئة ولمسات لامعة موسمية.',
-              },
-              bannerCtaLabel: {
-                en: 'Shop Huda',
-                ar: 'تسوق Huda',
-              },
-              bannerHref: '/shop',
-              bannerImageUrl:
-                'https://images.unsplash.com/photo-1590156203854-e88c6b4f6a43?auto=format&fit=crop&w=1800&h=700&q=80',
-              railTitle: {
-                en: 'Huda New Arrivals',
-                ar: 'أحدث منتجات Huda',
-              },
-              query: {
-                source: 'best_sellers',
-                limit: 8,
-                sortBy: 'price_desc',
-                brandNames: ['Huda Beauty'],
-              },
-            },
-          ],
-          brandSections: [
-            {
-              id: 'brand-fenty',
-              enabled: true,
-              bannerTitle: {
-                en: 'Fenty Beauty Spotlight',
-                ar: 'واجهة Fenty Beauty',
-              },
-              bannerSubtitle: {
-                en: 'Editorial lip and gloss picks with premium finish.',
-                ar: 'اختيارات تحريرية للشفاه واللمعان بلمسة فاخرة.',
-              },
-              bannerCtaLabel: {
-                en: 'Shop Fenty',
-                ar: 'تسوق Fenty',
-              },
-              bannerHref: '/shop',
-              bannerImageUrl:
-                'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1800&h=700&q=80',
-              railTitle: {
-                en: 'Fenty Highlights',
-                ar: 'منتجات Fenty المميزة',
-              },
-              query: {
-                source: 'new_arrivals',
-                limit: 8,
-                sortBy: 'price_desc',
-                brandNames: ['Fenty Beauty'],
-              },
-            },
-            {
-              id: 'brand-huda',
-              enabled: true,
-              bannerTitle: {
-                en: 'Huda Beauty Editorial',
-                ar: 'تحرير Huda Beauty',
-              },
-              bannerSubtitle: {
-                en: 'Bold color stories and glossy seasonal edits.',
-                ar: 'تدرجات جريئة ولمسات لامعة موسمية.',
-              },
-              bannerCtaLabel: {
-                en: 'Shop Huda',
-                ar: 'تسوق Huda',
-              },
-              bannerHref: '/shop',
-              bannerImageUrl:
-                'https://images.unsplash.com/photo-1590156203854-e88c6b4f6a43?auto=format&fit=crop&w=1800&h=700&q=80',
-              railTitle: {
-                en: 'Huda New Arrivals',
-                ar: 'أحدث منتجات Huda',
-              },
-              query: {
-                source: 'best_sellers',
-                limit: 8,
-                sortBy: 'price_desc',
-                brandNames: ['Huda Beauty'],
-              },
-            },
-          ],
+          brandSpotlights: cmsBrandSpotlights,
+          brandSections: cmsBrandSpotlights,
           ticker: {
             enabled: true,
             speedMs: 22000,
@@ -401,50 +447,50 @@ export const mockCMSAdapter: CMSProvider = {
             cards: [
               {
                 id: 'm-hero-1',
-                title: 'Deals up to 30%',
-                subtitle: 'Limited-time routines for everyday glow.',
-                ctaLabel: 'Shop offers',
-                href: '/sales',
-                imageUrl: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1200&h=700&q=80',
+                title: 'Build a Better Daily Ritual',
+                subtitle: 'A skin-first edit of cleansers, serums, and moisturizers that layer beautifully.',
+                ctaLabel: 'Explore the edit',
+                href: '/shop',
+                imageUrl: '/figma/hero/tile-2-editorial.png',
                 badgeLabel: {
-                  en: 'Flash deal',
-                  ar: 'عرض سريع',
+                  en: 'Routine Notes',
+                  ar: 'ملاحظات الروتين',
                 },
               },
               {
                 id: 'm-hero-2',
-                title: 'Luxury brand highlights',
-                subtitle: 'Curated launches from premium houses.',
-                ctaLabel: 'Explore brands',
+                title: 'Fresh Launches Across the Floor',
+                subtitle: 'Trending drops, exclusive bundles, and just-landed beauty from the brands shoppers watch.',
+                ctaLabel: 'Shop new arrivals',
                 href: '/shop',
-                imageUrl: 'https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=1200&h=700&q=80',
+                imageUrl: '/figma/hero/tile-3-new.jpg',
                 badgeLabel: {
-                  en: 'Top brands',
-                  ar: 'أبرز العلامات',
+                  en: 'New In',
+                  ar: 'جديد',
                 },
               },
               {
                 id: 'm-hero-3',
-                title: 'New arrivals this week',
-                subtitle: 'Fresh picks for skincare and makeup.',
-                ctaLabel: 'See new',
+                title: 'A More Refined Way to Shop Beauty',
+                subtitle: 'Discover prestige fragrance, polished skincare, and elevated gifting in one destination.',
+                ctaLabel: 'Enter prestige',
                 href: '/shop',
-                imageUrl: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1200&h=700&q=80',
+                imageUrl: '/figma/hero/tile-4-luxury.png',
                 badgeLabel: {
-                  en: 'New arrivals',
-                  ar: 'وصل حديثاً',
+                  en: 'Prestige Hall',
+                  ar: 'قاعة الفخامة',
                 },
               },
               {
                 id: 'm-hero-4',
-                title: 'Editor approved essentials',
-                subtitle: 'Build your high-impact daily set.',
-                ctaLabel: 'Build set',
+                title: 'More Beauty in Every Order',
+                subtitle: 'Unlock bonus samples, bundle savings, and member-only offers built to convert.',
+                ctaLabel: 'Unlock offers',
                 href: '/shop',
-                imageUrl: 'https://images.unsplash.com/photo-1590156203854-e88c6b4f6a43?auto=format&fit=crop&w=1200&h=700&q=80',
+                imageUrl: '/figma/hero/tile-5-member.png',
                 badgeLabel: {
-                  en: 'Editor picks',
-                  ar: 'اختيارات المحرر',
+                  en: 'Member Value',
+                  ar: 'قيمة الأعضاء',
                 },
               },
             ],
@@ -455,27 +501,26 @@ export const mockCMSAdapter: CMSProvider = {
               enabled: true,
               zone: 'home_hero_primary',
               title: {
-                en: 'Flash Sale Weekend',
-                ar: 'ويكند التخفيضات السريعة',
+                en: "The Week's Best Beauty Savings",
+                ar: 'أفضل عروض الجمال لهذا الأسبوع',
               },
               subtitle: {
-                en: 'Limited-time premium deals. Selling fast across top brands.',
-                ar: 'عروض فاخرة لفترة محدودة. الطلب مرتفع على أبرز العلامات.',
+                en: 'Shop the strongest markdowns across skincare, fragrance, hair, and makeup.',
+                ar: 'تسوقي أقوى التخفيضات عبر العناية بالبشرة والعطور والشعر والمكياج.',
               },
               ctaLabel: {
-                en: 'Shop now',
-                ar: 'تسوق الآن',
+                en: 'See all deals',
+                ar: 'عرض كل التخفيضات',
               },
-              href: '/sales',
-              imageUrl:
-                'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1800&h=600&q=80',
-              timerEndsAt: '2026-03-01T22:59:59.000Z',
+              href: '/shop',
+              imageUrl: '/figma/hero/tile-1-top-offers.png',
+              timerEndsAt: '2026-03-31T22:59:59.000Z',
               urgencyBadge: {
-                en: 'Limited',
-                ar: 'محدود',
+                en: 'Top Offers',
+                ar: 'أفضل العروض',
               },
-              showTimer: true,
-              showUrgency: true,
+              showTimer: false,
+              showUrgency: false,
             },
             {
               id: 'm-camp-home-flash-zone',
@@ -552,35 +597,136 @@ export const mockCMSAdapter: CMSProvider = {
               },
             },
           },
-          brands: [
-            {
-              id: 'b-ysl',
-              name: 'YSL',
-              href: '/shop',
-              logoUrl: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=240&h=240&q=80',
-            },
-            {
-              id: 'b-fenty',
-              name: 'Fenty Beauty',
-              href: '/shop',
-              logoUrl: 'https://images.unsplash.com/photo-1583241800698-61f4f53d6e8d?auto=format&fit=crop&w=240&h=240&q=80',
-            },
-            {
-              id: 'b-dior',
-              name: 'Dior',
-              href: '/shop',
-              logoUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=240&h=240&q=80',
-            },
-            {
-              id: 'b-huda',
-              name: 'Huda Beauty',
-              href: '/shop',
-              logoUrl: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=240&h=240&q=80',
-            },
-          ],
+          brands: cmsMarketingBrands,
           topBrandsTitle: {
             en: 'Top Brands',
             ar: 'أهم العلامات التجارية',
+          },
+          educationBanner: {
+            enabled: true,
+            title: {
+              en: 'Find Your Perfect Routine',
+              ar: 'ابحثي عن روتينك المثالي',
+            },
+            subtitle: {
+              en: 'Take a guided skin quiz and unlock expert product picks.',
+              ar: 'خذي اختبار البشرة واحصلي على ترشيحات دقيقة.',
+            },
+            ctaLabel: {
+              en: 'Take Test',
+              ar: 'ابدأ الاختبار',
+            },
+            href: '/shop',
+            imageUrl:
+              'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1800&h=700&q=80',
+          },
+          offerBanners: [
+            {
+              id: 'offer-banner-1',
+              enabled: true,
+              imageUrl: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1800&h=700&q=80',
+              href: '/shop/categories/skincare',
+              ctaLabel: { en: 'Shop Skincare', ar: 'تسوق العناية بالبشرة' },
+            },
+            {
+              id: 'offer-banner-2',
+              enabled: true,
+              imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1800&h=700&q=80',
+              href: '/shop/categories/makeup',
+              ctaLabel: { en: 'Shop Makeup', ar: 'تسوق المكياج' },
+            },
+            {
+              id: 'offer-banner-3',
+              enabled: true,
+              imageUrl: 'https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&w=1800&h=700&q=80',
+              href: '/shop/categories/fragrance',
+              ctaLabel: { en: 'Shop Fragrance', ar: 'تسوق العطور' },
+            },
+            {
+              id: 'offer-banner-4',
+              enabled: true,
+              imageUrl: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=1800&h=700&q=80',
+              href: '/shop/categories/haircare',
+              ctaLabel: { en: 'Shop Haircare', ar: 'تسوق العناية بالشعر' },
+            },
+          ],
+          editorialHotspotSection: {
+            enabled: true,
+            title: {
+              en: 'The Makeup Map',
+              ar: 'خريطة المكياج',
+            },
+            subtitle: {
+              en: 'Follow the look with a quieter editorial image and the exact products layered beside it.',
+              ar: 'اتبعي الإطلالة عبر صورة تحريرية هادئة مع المنتجات الدقيقة المعروضة بجانبها.',
+            },
+            ctaLabel: {
+              en: 'Shop the look',
+              ar: 'تسوقي الإطلالة',
+            },
+            href: '/shop/categories/makeup',
+            imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=1800&h=1800&q=80',
+            productIds: ['76959', '66583', '72078', '76960'],
+          },
+          ugcGallery: {
+            enabled: true,
+            title: {
+              en: 'Looks From Our Community',
+              ar: 'إطلالات من مجتمعنا',
+            },
+            items: [
+              {
+                id: 'ugc-1',
+                imageUrl: 'https://images.unsplash.com/photo-1616683693504-3ea7e9ad6fec?auto=format&fit=crop&w=900&h=900&q=80',
+                caption: {
+                  en: 'Hydrating Serum Glow',
+                  ar: 'إشراقة سيروم الترطيب',
+                },
+                productId: '1',
+              },
+              {
+                id: 'ugc-2',
+                imageUrl: 'https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=900&h=900&q=80',
+                caption: {
+                  en: 'Bold Lip Story',
+                  ar: 'إطلالة شفاه جريئة',
+                },
+                productId: '3',
+              },
+              {
+                id: 'ugc-3',
+                imageUrl: 'https://images.unsplash.com/photo-1498842812179-c81beecf902c?auto=format&fit=crop&w=900&h=900&q=80',
+                caption: {
+                  en: 'Soft Matte Daily Look',
+                  ar: 'إطلالة يومية مات ناعمة',
+                },
+                productId: '4',
+              },
+            ],
+          },
+          newsletterCta: {
+            enabled: true,
+            title: {
+              en: 'Join our rewards program',
+              ar: 'انضم لبرنامج المكافآت',
+            },
+            subtitle: {
+              en: 'Earn points on every order and unlock exclusive launches.',
+              ar: 'اكسب نقاطاً مع كل طلب واحصل على إطلاقات حصرية.',
+            },
+            ctaLabel: {
+              en: 'Subscribe',
+              ar: 'اشترك',
+            },
+            href: '/account',
+          },
+          personalization: {
+            enabled: true,
+            mode: 'rule-based',
+            recommendedTitle: {
+              en: 'Recommended for You',
+              ar: 'موصى بها لك',
+            },
           },
         },
         identity: {

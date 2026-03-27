@@ -1,11 +1,13 @@
 import { ProviderResult } from './types'
 import { ProductFilter } from './CatalogProviders'
+import { CanonicalEntity } from './EntityMapping'
 
-export type Product = {
+export type Product = CanonicalEntity & {
   id: string
   name: string
   description?: string
   price: number
+  compareAtPrice?: number
   currency: string
   image?: string
   rating?: number

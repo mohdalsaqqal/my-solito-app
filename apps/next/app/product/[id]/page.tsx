@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { resolveDirection } from '@real/app/lib/rtl-manager'
 import { setCurrentLocale, useCurrentLocale } from '@real/app/lib/i18n/client'
 import { useParams, useRouter } from 'next/navigation'
@@ -12,6 +12,14 @@ import {
   defaultSalesItems,
   defaultShellContent,
   defaultSocialLinks,
+  type LayoutBranding,
+  type LayoutCampaign,
+  type LayoutCart,
+  type LayoutNavigation,
+  type LayoutNewsletter,
+  type LayoutLocale,
+  type LayoutActions,
+  type LayoutDisplay,
 } from '@real/app/features/shell'
 import { CMSHome, Product, Cart, Review } from '@real/app/lib/types'
 import { CartLine } from '@real/app/features/shell'
@@ -100,49 +108,84 @@ export default function ProductPage() {
 
   const lines = toCartLines(cart, products)
   const linesSubtotal = cartSubtotal(lines)
-  const linesCount = cartCount(cart)
+  const linesCount = cartCount(lines)
+
+  // Grouped props for Layout
+  const branding: LayoutBranding = useMemo(() => ({
+    logoSrc: cmsHome?.shell?.branding?.logo.uri ?? '/brand-logo-placeholder.svg',
+    logoAlt: cmsHome?.shell?.branding?.logo.alt?.[locale] ?? (locale === 'ar' ? 'ريال كوزمتكس' : 'Real Cosmetics'),
+    logoSize: cmsHome?.shell?.branding?.logoSize,
+  }), [cmsHome, locale])
+
+  const campaign: LayoutCampaign = useMemo(() => ({
+    text: cmsHome?.shell?.topBar?.message?.[locale] ?? 'Free delivery for orders above 99 USD',
+    link: cmsHome?.shell?.topBar?.ctaLabel?.[locale] ?? 'Shop now',
+  }), [cmsHome, locale])
+
+  const cartProps: LayoutCart = useMemo(() => ({
+    count: linesCount,
+    items: lines,
+    subtotal: linesSubtotal,
+    loading,
+    error,
+    onViewCart: () => router.push('/cart'),
+    onCheckout: () => router.push('/checkout'),
+    onMobileCartNavigate: () => router.push('/cart'),
+    onIncrease: async (item: CartLine) => {
+      const updated = await apiClient.cart.setQuantity(item.id, item.quantity + 1)
+      setCart(updated)
+    },
+    onDecrease: async (item: CartLine) => {
+      const updated = await apiClient.cart.setQuantity(item.id, Math.max(0, item.quantity - 1))
+      setCart(updated)
+    },
+    onRemove: async (item: CartLine) => {
+      const updated = await apiClient.cart.remove(item.id)
+      setCart(updated)
+    },
+  }), [lines, linesCount, linesSubtotal, loading, error])
+
+  const navigation: LayoutNavigation = useMemo(() => ({
+    categories: defaultCategories,
+    salesItems: defaultSalesItems,
+    brandItems: defaultBrandItems,
+    footerLinks: defaultFooterLinks,
+    socialLinks: defaultSocialLinks,
+  }), [])
+
+  const newsletter: LayoutNewsletter = useMemo(() => ({
+    title: cmsHome?.shell?.footer?.newsletterTitle?.[locale] ?? 'Stay in the loop',
+    subtitle: cmsHome?.shell?.footer?.newsletterSubtitle?.[locale] ?? 'Get launches, offers, and skincare insights.',
+  }), [cmsHome, locale])
+
+  const localeProps: LayoutLocale = useMemo(() => ({
+    code: locale,
+    dir,
+    onChange: (nextLocale) => setCurrentLocale(nextLocale),
+  }), [locale, dir])
+
+  const actions: LayoutActions = useMemo(() => ({
+    onPressLogo: () => router.push('/'),
+  }), [])
+
+  const display: LayoutDisplay = useMemo(() => ({
+    showFooter: true,
+  }), [])
 
   return (
     <Layout
-      locale={locale}
-      onLocaleChange={(nextLocale) => setCurrentLocale(nextLocale)}
-      dir={dir}
-      shellContent={cmsHome?.shell ?? defaultShellContent}
-      logoSrc={cmsHome?.shell?.branding?.logo.uri ?? '/brand-logo-placeholder.svg'}
-      logoAlt="Real Cosmetics"
-      campaignText={cmsHome?.shell?.topBar?.message?.[locale] ?? 'Free delivery for orders above 99 USD'}
-      campaignLink={cmsHome?.shell?.topBar?.ctaLabel?.[locale] ?? 'Shop now'}
-      cartCount={linesCount}
+      branding={branding}
+      campaign={campaign}
+      cart={cartProps}
+      cartFeedbackKey={cartFeedbackKey}
       wishlistCount={1}
       accountCount={1}
-      cartItems={lines}
-      cartSubtotal={linesSubtotal}
-      cartLoading={loading}
-      cartError={error}
-      cartFeedbackKey={cartFeedbackKey}
-      categories={defaultCategories}
-      salesItems={defaultSalesItems}
-      brandItems={defaultBrandItems}
-      footerLinks={defaultFooterLinks}
-      socialLinks={defaultSocialLinks}
-      newsletterTitle={cmsHome?.shell?.footer?.newsletterTitle?.[locale] ?? 'Stay in the loop'}
-      newsletterSubtitle={cmsHome?.shell?.footer?.newsletterSubtitle?.[locale] ?? 'Get launches, offers, and skincare insights.'}
-      onViewCart={() => router.push('/cart')}
-      onCheckout={() => router.push('/checkout')}
-      onMobileCartNavigate={() => router.push('/cart')}
-      onPressLogo={() => router.push('/')}
-      onCartIncrease={async (item: CartLine) => {
-        const updated = await apiClient.cart.setQuantity(item.id, item.quantity + 1)
-        setCart(updated)
-      }}
-      onCartDecrease={async (item: CartLine) => {
-        const updated = await apiClient.cart.setQuantity(item.id, Math.max(0, item.quantity - 1))
-        setCart(updated)
-      }}
-      onCartRemove={async (item: CartLine) => {
-        const updated = await apiClient.cart.remove(item.id)
-        setCart(updated)
-      }}
+      navigation={navigation}
+      newsletter={newsletter}
+      locale={localeProps}
+      shellContent={cmsHome?.shell ?? defaultShellContent}
+      actions={actions}
+      display={display}
     >
       <ProductScreen
         product={product}

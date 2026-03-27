@@ -1,24 +1,25 @@
-import { useMemo, useState } from 'react'
-import { Platform, Image } from 'react-native'
+"use client"
+
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { I18nManager, Platform, Image, useWindowDimensions } from 'react-native'
 import {
+  buttonTokens,
   borderWidth,
   breakpoints,
   colors,
-  componentTokens,
   elevation,
+  iconButtonTokens,
   motionDuration,
   radius,
   shadows,
   spacing,
-  typography,
 } from '@real/tokens'
 import { Box, Text, Touchable } from '../primitives'
+import { Badge } from './Badge'
 import { Icon } from './Icon'
 import { StarRating } from './StarRating'
-import { Badge } from './Badge'
 import { StockBadge } from './StockBadge'
 import { PriceTag } from './PriceTag'
-import { QuantityInput } from './QuantityInput'
 import { Button } from './Button'
 import { HomeProductItem } from './home/types'
 
@@ -37,10 +38,13 @@ export function QuickViewModal({
   onAddToCart,
   onSelectProduct,
 }: QuickViewModalProps) {
+  const { width } = useWindowDimensions()
+  const dialogRef = useRef<any>(null)
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
+  const [mediaIndex, setMediaIndex] = useState(0)
 
-  const isDesktop = Platform.OS === 'web' ? true : false
+  const isDesktop = width >= breakpoints.desktopMin
 
   const handleAddToCart = async () => {
     if (!item || addingToCart) return
@@ -54,33 +58,110 @@ export function QuickViewModal({
     }
   }
 
-  if (!open || !item) return null
+  useEffect(() => {
+    if (open) {
+      setQuantity(1)
+      setAddingToCart(false)
+      setMediaIndex(0)
+    }
+  }, [item?.id, open])
 
-  const isOutOfStock = item.stock === 0 || item.outOfStock === true
-  const hasDiscount = item.compareAtPrice && item.compareAtPrice > item.price
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !open) {
+      return
+    }
+    const doc = (globalThis as { document?: Document }).document
+    if (!doc) {
+      return
+    }
+    const previousActiveElement = doc.activeElement as HTMLElement | null
+    const previousOverflow = doc.body.style.overflow
+    doc.body.style.overflow = 'hidden'
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+      }
+    }
+    doc.addEventListener('keydown', handleEscape)
+    requestAnimationFrame(() => {
+      dialogRef.current?.focus?.()
+    })
+
+    return () => {
+      doc.removeEventListener('keydown', handleEscape)
+      doc.body.style.overflow = previousOverflow
+      previousActiveElement?.focus?.()
+    }
+  }, [open, onClose])
+
+  const isOutOfStock = item?.stock === 0 || item?.outOfStock === true
+  const stockLevel: 'in-stock' | 'low-stock' | 'out-of-stock' = isOutOfStock
+    ? 'out-of-stock'
+    : typeof item?.stock === 'number' && item.stock > 0 && item.stock <= 5
+      ? 'low-stock'
+      : 'in-stock'
+  const mediaItems = useMemo(() => {
+    const swatchImages = (item?.swatches ?? [])
+      .map((swatch) => swatch.imageUrl)
+      .filter((value): value is string => Boolean(value))
+    const primary = swatchImages[0] || item?.imageUrl || FALLBACK_IMAGE
+    const secondary = swatchImages[1] || item?.hoverImageUrl || undefined
+    const candidates = [primary, secondary, ...swatchImages].filter((value): value is string => Boolean(value))
+    return Array.from(new Set(candidates))
+  }, [item?.hoverImageUrl, item?.imageUrl, item?.swatches])
+  const hasMediaNavigation = mediaItems.length > 1
+  const safeMediaIndex = Math.min(mediaIndex, Math.max(0, mediaItems.length - 1))
+  const currentMedia = mediaItems[safeMediaIndex] || FALLBACK_IMAGE
+  const canDecreaseQuantity = quantity > 1
+  const canIncreaseQuantity = quantity < 10
+  const detailArrowIcon = I18nManager.isRTL ? 'caretLeft' : 'caretRight'
+  const titleText = item?.displayTitle || item?.name || ''
+
+  useEffect(() => {
+    setMediaIndex(0)
+  }, [item?.id, mediaItems.length])
+
+  if (!open || !item) return null
 
   return (
     <Box
       style={{
-        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
         backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        ...(Platform.OS === 'web'
+          ? ({ position: 'fixed' as any } as const)
+          : ({ position: 'absolute' } as const)),
         zIndex: 9999,
         alignItems: 'center',
         justifyContent: 'center',
       }}
-      onTouchStart={onClose}
+      onClick={
+        Platform.OS === 'web'
+          ? ((event: any) => {
+              if (event.target === event.currentTarget) {
+                onClose()
+              }
+            })
+          : undefined
+      }
+      onTouchStart={Platform.OS !== 'web' ? onClose : undefined}
     >
       <Box
+        ref={dialogRef}
+        accessibilityRole='dialog'
+        aria-modal={Platform.OS === 'web' ? true : undefined}
+        tabIndex={Platform.OS === 'web' ? -1 : undefined}
         style={{
           backgroundColor: colors.surface,
-          borderRadius: radius.xl,
-          maxWidth: 960,
+          borderRadius: radius.lg,
+          maxWidth: 860,
           width: '90%',
-          maxHeight: '90vh',
+          maxHeight: Platform.OS === 'web' ? '90vh' : '90%',
           overflow: 'hidden',
           ...(Platform.OS === 'web'
             ? ({
@@ -88,7 +169,8 @@ export function QuickViewModal({
               } as any)
             : shadows.lg),
         }}
-        onTouchStart={(e) => e.stopPropagation()}
+        onClick={Platform.OS === 'web' ? (event: any) => event.stopPropagation() : undefined}
+        onTouchStart={Platform.OS !== 'web' ? (event: any) => event.stopPropagation() : undefined}
       >
         {/* Close button */}
         <Touchable
@@ -97,16 +179,16 @@ export function QuickViewModal({
           accessibilityLabel='Close quick view'
           style={{
             position: 'absolute',
-            top: spacing.md,
-            right: spacing.md,
+            top: spacing['12'],
+            right: spacing['12'],
             zIndex: 10,
           }}
         >
           {({ hovered, focused }) => (
             <Box
               style={{
-                width: spacing['40'],
-                height: spacing['40'],
+                width: spacing['32'],
+                height: spacing['32'],
                 borderRadius: radius.full,
                 backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
                 alignItems: 'center',
@@ -115,7 +197,7 @@ export function QuickViewModal({
                 transitionDuration: `${motionDuration.microInteraction}ms`,
               }}
             >
-              <Icon name='close' size={24} color={colors.textPrimary} />
+              <Icon name='close' size={spacing['20']} color={colors.textPrimary} />
             </Box>
           )}
         </Touchable>
@@ -123,8 +205,8 @@ export function QuickViewModal({
         <Box
           style={{
             flexDirection: isDesktop ? 'row' : 'column',
-            gap: isDesktop ? spacing['32'] : spacing['24'],
-            padding: isDesktop ? spacing['32'] : spacing['24'],
+            gap: isDesktop ? spacing['16'] : spacing['12'],
+            padding: isDesktop ? spacing['16'] : spacing['12'],
           }}
         >
           {/* Product Image */}
@@ -132,6 +214,9 @@ export function QuickViewModal({
             style={{
               flex: isDesktop ? 1 : undefined,
               width: isDesktop ? 'auto' : '100%',
+              borderEndWidth: isDesktop ? borderWidth.thin : borderWidth.none,
+              borderColor: colors.stroke,
+              paddingEnd: isDesktop ? spacing['16'] : spacing.none,
             }}
           >
             <Box
@@ -140,13 +225,67 @@ export function QuickViewModal({
                 borderRadius: radius.lg,
                 overflow: 'hidden',
                 backgroundColor: colors.backgroundSecondary,
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               <Image
-                source={{ uri: item.imageUrl || FALLBACK_IMAGE }}
-                resizeMode='cover'
+                source={{ uri: currentMedia }}
+                resizeMode='contain'
                 style={{ width: '100%', height: '100%' }}
               />
+              {item.badge ? (
+                <Badge
+                  tone='outline'
+                  style={{
+                    position: 'absolute',
+                    top: spacing['12'],
+                    end: spacing['12'],
+                    backgroundColor: colors.surface,
+                  }}
+                >
+                  {item.badge}
+                </Badge>
+              ) : null}
+              <Box
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  start: spacing['8'],
+                  transform: [{ translateY: -spacing['24'] }],
+                }}
+              >
+                <IconCircleButton
+                  icon={I18nManager.isRTL ? 'caretRight' : 'caretLeft'}
+                  label='Previous image'
+                  disabled={!hasMediaNavigation}
+                  onPress={
+                    hasMediaNavigation
+                      ? () =>
+                          setMediaIndex((current) => (current === 0 ? mediaItems.length - 1 : current - 1))
+                      : undefined
+                  }
+                />
+              </Box>
+              <Box
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  end: spacing['8'],
+                  transform: [{ translateY: -spacing['24'] }],
+                }}
+              >
+                <IconCircleButton
+                  icon={I18nManager.isRTL ? 'caretLeft' : 'caretRight'}
+                  label='Next image'
+                  disabled={!hasMediaNavigation}
+                  onPress={
+                    hasMediaNavigation
+                      ? () => setMediaIndex((current) => (current + 1) % mediaItems.length)
+                      : undefined
+                  }
+                />
+              </Box>
             </Box>
           </Box>
 
@@ -155,7 +294,7 @@ export function QuickViewModal({
             style={{
               flex: isDesktop ? 1 : undefined,
               width: isDesktop ? 'auto' : '100%',
-              gap: spacing['16'],
+              gap: spacing['20'],
             }}
           >
             {/* Brand */}
@@ -173,14 +312,11 @@ export function QuickViewModal({
 
             {/* Title */}
             <Text
-              variant='h5'
+              variant='title'
               weight='700'
-              style={{
-                color: colors.textPrimary,
-                lineHeight: 32,
-              }}
+              numberOfLines={2}
             >
-              {item.displayTitle || item.name}
+              {titleText}
             </Text>
 
             {/* Rating */}
@@ -199,45 +335,137 @@ export function QuickViewModal({
             <PriceTag
               price={item.price}
               currency={item.currency}
-              compareAtPrice={item.compareAtPrice}
+              compareAt={item.compareAtPrice}
             />
 
+            <Text variant='caption' tone='muted'>
+              Tax included.
+            </Text>
+
             {/* Stock Status */}
-            <StockBadge inStock={!isOutOfStock} lowStockThreshold={5} />
+            <StockBadge level={stockLevel} quantity={item.stock} />
 
             {/* Description */}
             {item.description && (
-              <Text variant='body' tone='default'>
+              <Text variant='bodySm' tone='default' numberOfLines={3}>
                 {item.description}
               </Text>
             )}
 
-            {/* Quantity Selector */}
-            {!isOutOfStock && (
-              <Box>
-                <Text variant='bodySm' weight='600' style={{ marginBottom: spacing['8'] }}>
-                  Quantity
-                </Text>
-                <QuantityInput
-                  value={quantity}
-                  onChange={setQuantity}
-                  min={1}
-                  max={10}
-                />
-              </Box>
-            )}
+            <Box style={{ gap: spacing['8'] }}>
+              <Text variant='bodySm' tone='default'>
+                Earn <Text weight='700'>Glow Points</Text> by purchasing this product
+              </Text>
+              <Touchable accessibilityRole='button' accessibilityLabel='Sign in to earn points'>
+                {({ hovered, focused }) => (
+                  <Text
+                    variant='bodySm'
+                    weight='600'
+                    tone='muted'
+                    style={{
+                      textDecorationLine: 'underline',
+                      color: hovered || focused ? colors.textPrimary : colors.textSecondary,
+                    }}
+                  >
+                    Sign In or create an account to earn points
+                  </Text>
+                )}
+              </Touchable>
+            </Box>
 
+            {/* Quantity Selector */}
             {/* Actions */}
             <Box style={{ gap: spacing['12'] }}>
-              <Button
-                variant='solid'
-                size='lg'
-                onPress={handleAddToCart}
-                disabled={isOutOfStock || addingToCart}
-                fullWidth
-              >
-                {isOutOfStock ? 'Out of Stock' : addingToCart ? 'Adding...' : `Add to Cart`}
-              </Button>
+              {!isOutOfStock ? (
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+                  <Box
+                    style={{
+                      height: buttonTokens.height.sm,
+                      minWidth: spacing['80'],
+                      borderRadius: radius.full,
+                      borderWidth: borderWidth.thin,
+                      borderColor: colors.stroke,
+                      backgroundColor: colors.surface,
+                      paddingHorizontal: spacing['6'],
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: spacing['8'],
+                    }}
+                  >
+                    <Touchable
+                      onPress={() => setQuantity((current) => Math.max(1, current - 1))}
+                      disabled={!canDecreaseQuantity || addingToCart}
+                      accessibilityRole='button'
+                      accessibilityLabel='Decrease quantity'
+                    >
+                      {({ hovered, focused }) => (
+                        <Box
+                          style={{
+                            width: spacing['24'],
+                            height: spacing['24'],
+                            borderRadius: radius.full,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: hovered || focused ? colors.surfaceMuted : colors.surface,
+                          }}
+                        >
+                          <Icon
+                            name={I18nManager.isRTL ? 'caretRight' : 'caretLeft'}
+                            size={spacing['16']}
+                            color={colors.textPrimary}
+                          />
+                        </Box>
+                      )}
+                    </Touchable>
+                      <Text variant='bodySm' weight='700'>
+                        {quantity}
+                      </Text>
+                    <Touchable
+                      onPress={() => setQuantity((current) => Math.min(10, current + 1))}
+                      disabled={!canIncreaseQuantity || addingToCart}
+                      accessibilityRole='button'
+                      accessibilityLabel='Increase quantity'
+                    >
+                      {({ hovered, focused }) => (
+                        <Box
+                          style={{
+                            width: spacing['24'],
+                            height: spacing['24'],
+                            borderRadius: radius.full,
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            backgroundColor: hovered || focused ? colors.surfaceMuted : colors.surface,
+                          }}
+                        >
+                          <Icon
+                            name={I18nManager.isRTL ? 'caretLeft' : 'caretRight'}
+                            size={spacing['16']}
+                            color={colors.textPrimary}
+                          />
+                        </Box>
+                      )}
+                    </Touchable>
+                  </Box>
+                  <Box style={{ flex: isDesktop ? undefined : 1, width: isDesktop ? 220 : undefined }}>
+                    <Button
+                      variant='solid'
+                      size='sm'
+                      onPress={handleAddToCart}
+                      disabled={addingToCart}
+                      fullWidth
+                    >
+                      {addingToCart ? 'Adding...' : 'Add to Cart'}
+                    </Button>
+                  </Box>
+                  <IconCircleButton icon='wishlist' label='Add to wishlist' />
+                  <IconCircleButton icon='trendArrow' label='Share product' />
+                </Box>
+              ) : (
+                <Button variant='solid' size='lg' disabled fullWidth>
+                  Out of Stock
+                </Button>
+              )}
 
               <Touchable
                 onPress={() => {
@@ -251,23 +479,30 @@ export function QuickViewModal({
                   <Box
                     style={{
                       paddingVertical: spacing['12'],
+                      flexDirection: 'row',
+                      gap: spacing['6'],
                       alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
                     <Text
-                      variant='body'
+                      variant='bodySm'
                       weight='600'
                       style={{
                         color: hovered || focused ? colors.brandPrimary : colors.textSecondary,
                         textDecorationLine: hovered || focused ? 'underline' : 'none',
                       }}
-                    >
-                      View Full Details →
+                      >
+                      View Full Details
                     </Text>
+                    <Icon name={detailArrowIcon} size={spacing['16']} color={colors.textSecondary} />
                   </Box>
                 )}
               </Touchable>
             </Box>
+            <Text variant='meta' tone='muted'>
+              SKU: {item.id}
+            </Text>
           </Box>
         </Box>
       </Box>
@@ -276,3 +511,43 @@ export function QuickViewModal({
 }
 
 const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
+
+function IconCircleButton({
+  icon,
+  label,
+  onPress,
+  disabled = false,
+}: {
+  icon: 'wishlist' | 'trendArrow' | 'caretLeft' | 'caretRight'
+  label: string
+  onPress?: () => void
+  disabled?: boolean
+}) {
+  return (
+    <Touchable onPress={onPress} disabled={disabled} accessibilityRole='button' accessibilityLabel={label}>
+      {({ hovered, focused }) => {
+        const active = hovered || focused
+        return (
+          <Box
+            style={{
+              width: iconButtonTokens.size.lg,
+              height: iconButtonTokens.size.lg,
+              borderRadius: radius.full,
+              borderWidth: borderWidth.thin,
+              borderColor: active ? colors.textPrimary : colors.stroke,
+              backgroundColor: active ? colors.surfaceMuted : colors.surface,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: disabled ? 0.45 : 1,
+              transitionProperty: 'background-color,border-color,transform',
+              transitionDuration: `${motionDuration.microInteraction}ms`,
+              transform: [{ scale: active ? 1.02 : 1 }],
+            }}
+          >
+            <Icon name={icon} size={iconButtonTokens.icon.lg} color={colors.textPrimary} />
+          </Box>
+        )
+      }}
+    </Touchable>
+  )
+}

@@ -24,6 +24,8 @@ import type {
 export const PAGE_BLOCK_CONTRACT_VERSION = 'v1' as const
 export const HOME_PAGE_TYPE = 'home' as const
 export const HOME_PAGE_SLUG = '/' as const
+export const SEARCH_PAGE_TYPE = 'search' as const
+export const SEARCH_PAGE_SLUG = '/search' as const
 export const DEFAULT_PAGE_BLOCK_SCOPE = {
   storeId: 'default',
   slug: HOME_PAGE_SLUG,
@@ -31,8 +33,8 @@ export const DEFAULT_PAGE_BLOCK_SCOPE = {
 } as const
 
 export type PageBlockContractVersion = typeof PAGE_BLOCK_CONTRACT_VERSION
-export type PageType = typeof HOME_PAGE_TYPE
-export type PageSlug = typeof HOME_PAGE_SLUG | string
+export type PageType = typeof HOME_PAGE_TYPE | typeof SEARCH_PAGE_TYPE
+export type PageSlug = typeof HOME_PAGE_SLUG | typeof SEARCH_PAGE_SLUG | string
 export type AdminPageBlockScope = {
   storeId: string
   slug: PageSlug

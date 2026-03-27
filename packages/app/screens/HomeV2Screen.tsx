@@ -670,19 +670,20 @@ export function HomeV2Screen({
 
     const productById = new Map(products.map((product) => [product.id, product]))
     const seenProductIds = new Set<string>()
-    const hotspots = (section.hotspots ?? [])
-      .map((hotspot) => {
+    const hotspots = (section.hotspots ?? []).reduce<
+      NonNullable<HomeEditorialHotspotSection['hotspots']>
+    >((accumulator, hotspot) => {
         const product = productById.get(hotspot.productId)
-        if (!product) return null
-        return {
+        if (!product) return accumulator
+        accumulator.push({
           id: hotspot.id,
           productId: product.id,
           xPercent: hotspot.xPercent,
           yPercent: hotspot.yPercent,
           label: localize(locale, hotspot.label) || undefined,
-        }
-      })
-      .filter((hotspot): hotspot is HomeEditorialHotspotSection['hotspots'][number] => Boolean(hotspot))
+        })
+        return accumulator
+      }, [])
 
     const orderedProductIds = section.productIds?.length
       ? section.productIds
@@ -705,7 +706,7 @@ export function HomeV2Screen({
     }
 
     return {
-      id: section.id,
+      id: section.href ? `editorial-hotspot:${section.href}` : 'editorial-hotspot-section',
       title: localize(locale, section.title) || undefined,
       subtitle: localize(locale, section.subtitle) || undefined,
       ctaLabel: localize(locale, section.ctaLabel) || undefined,
@@ -751,7 +752,7 @@ export function HomeV2Screen({
       return primaryCategories
     }
 
-    const fallback = [...new Set(products.map((product) => product.category).filter(Boolean))]
+    const fallback = Array.from(new Set(products.map((product) => product.category).filter(Boolean)))
       .sort()
       .map((category) => ({
         id: `fallback-${category}`,

@@ -62,7 +62,7 @@ export async function GET(request: Request) {
     }
 
     // Helper: fetch and price products for a querySlug — used inside the block loop below
-    async function enrichProducts(querySlug: string) {
+    const enrichProducts = async (querySlug: string) => {
       const queryResult = await productQueryProvider.getBySlug(querySlug)
       if (!queryResult.ok || !queryResult.data.active) return null
       const productsResult = await productProvider.list(queryResult.data.filters)
@@ -73,7 +73,7 @@ export async function GET(request: Request) {
       })
     }
 
-    async function enrichProductsByIds(productIds: string[]) {
+    const enrichProductsByIds = async (productIds: string[]) => {
       if (productIds.length === 0) return []
       const productsResult = await productProvider.list({ ids: productIds, limit: productIds.length })
       if (!productsResult.ok || productsResult.data.length === 0) return []
@@ -86,9 +86,12 @@ export async function GET(request: Request) {
       return productIds.map((id) => productsById.get(id)).filter((product): product is NonNullable<typeof product> => Boolean(product))
     }
 
-    type EnrichedProduct = Awaited<ReturnType<typeof enrichProducts>> extends Array<infer T> ? T : never
+    type EnrichedProduct = NonNullable<Awaited<ReturnType<typeof enrichProducts>>>[number]
 
-    function localizeHeroCarouselCards(cards: NonNullable<Extract<ReturnType<typeof parseHomeBlock>, { type: 'hero_carousel' }>['cards']>, blockLocale: typeof locale): CMSHomeHeroCarouselCard[] {
+    const localizeHeroCarouselCards = (
+      cards: NonNullable<Extract<ReturnType<typeof parseHomeBlock>, { type: 'hero_carousel' }>['cards']>,
+      blockLocale: typeof locale,
+    ): CMSHomeHeroCarouselCard[] => {
       return cards.map((card) => ({
         ...card,
         titleText: blockLocale === 'ar' ? card.titleAr : card.titleEn,
@@ -98,7 +101,10 @@ export async function GET(request: Request) {
       }))
     }
 
-    function localizeOfferBannerItems(items: NonNullable<Extract<ReturnType<typeof parseHomeBlock>, { type: 'offer_banners' }>['items']>, blockLocale: typeof locale): CMSHomeOfferBannerItem[] {
+    const localizeOfferBannerItems = (
+      items: NonNullable<Extract<ReturnType<typeof parseHomeBlock>, { type: 'offer_banners' }>['items']>,
+      blockLocale: typeof locale,
+    ): CMSHomeOfferBannerItem[] => {
       return items.map((item) => ({
         ...item,
         ctaText: blockLocale === 'ar' ? item.ctaLabelAr : item.ctaLabelEn,
@@ -107,7 +113,7 @@ export async function GET(request: Request) {
 
     const safeBlocks: CMSHomeBlock[] = []
 
-    async function loadReleaseBlocksForHome(releaseId: string) {
+    const loadReleaseBlocksForHome = async (releaseId: string) => {
       if (preview.valid && preview.versionId) {
         const pageVersion = await getPageVersionById(preview.versionId)
         if (
@@ -245,6 +251,7 @@ export async function GET(request: Request) {
               position: blockRecord.position,
               releaseId: blockRecord.releaseId,
               locale,
+              cardsLocalized: localizeHeroCarouselCards(parsed.cards, locale),
             })
             continue
           }
@@ -344,7 +351,6 @@ export async function GET(request: Request) {
             position: blockRecord.position,
             releaseId: blockRecord.releaseId,
             locale,
-            ...(parsed.type === 'hero_carousel' ? { cardsLocalized: localizeHeroCarouselCards(parsed.cards, locale) } : {}),
             titleText:
               'title' in parsed
                 ? localizeString((parsed as { title?: { en: string; ar: string } }).title, locale)
@@ -493,9 +499,9 @@ export async function GET(request: Request) {
     )
 
     const responsePayload = {
+      ...cms,
       storeId,
       page,
-      ...cms,
       marketing: {
         ...(cms.marketing ?? {}),
         homeBlocks: safeBlocks,

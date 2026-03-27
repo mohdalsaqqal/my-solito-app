@@ -383,7 +383,6 @@ export function HomeV2Sections({
           gap: layoutTokens.rootGap,
           backgroundColor: colors.background,
         }}
-        suppressHydrationWarning
       >
         {orderedHomeBlocks.map((block) => (
           <Fragment key={block.id}>
@@ -415,14 +414,13 @@ export function HomeV2Sections({
         gap: layoutTokens.rootGap,
         backgroundColor: colors.background,
       }}
-      suppressHydrationWarning
     >
       {/* 1. Announcement ticker */}
       {tickerItems.length > 0 && (
         <AnnouncementTicker
           items={tickerItems}
           speedMs={tickerSpeedMs}
-          onPressItem={onNavigate}
+          onPressItem={(href) => (href ? onNavigate?.(href) : undefined)}
         />
       )}
 
@@ -441,7 +439,9 @@ export function HomeV2Sections({
       {heroItems.length > 0 && (
         <HeroTileRail
           heroItems={heroItems}
-          promoBlocks={promoBlocks.slice(0, 3)}
+          promoBlocks={promoBlocks
+            .filter((block): block is OfferBannerBlock & { title: string } => typeof block.title === 'string' && block.title.length > 0)
+            .slice(0, 3)}
           autoplay={heroAutoplay}
           autoplayMs={heroAutoplayMs}
           onNavigate={onNavigate}
@@ -564,7 +564,7 @@ export function HomeV2Sections({
             loading={loading}
             error={error}
             onRetry={onReload}
-            onPressBanner={onNavigate}
+            onPressBanner={(href) => (href ? onNavigate?.(href) : undefined)}
             onPressProduct={(item) => onSelectProduct?.(item.id)}
             onAddToCart={(item) => onAddToCart?.(item.id)}
           />

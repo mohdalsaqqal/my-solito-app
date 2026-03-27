@@ -34,7 +34,7 @@ const webOverlayStyle = {
   right: 0,
   bottom: 0,
   zIndex: zIndex.modal,
-  backgroundColor: colors.surface,
+  backgroundColor: colors.background,
   transitionProperty: 'opacity, transform',
   transitionTimingFunction: motionEasing.standard,
   display: 'flex',
@@ -49,7 +49,7 @@ const nativeOverlayStyle = {
   end: 0,
   bottom: 0,
   zIndex: zIndex.modal,
-  backgroundColor: colors.surface,
+  backgroundColor: colors.background,
 }
 
 export function SearchOverlay({
@@ -71,6 +71,7 @@ export function SearchOverlay({
     // Web: always mounted, CSS opacity+transform transition (no worklets)
     return (
       <div
+        data-ect-node="SearchOverlay"
         style={{
           ...webOverlayStyle,
           opacity: open ? 1 : 0,
@@ -103,7 +104,7 @@ export function SearchOverlay({
   if (!open) return null
 
   return (
-    <View style={{ ...nativeOverlayStyle, direction: dir as any }}>
+    <View data-ect-node="SearchOverlay" style={{ ...nativeOverlayStyle, direction: dir as any }}>
       <OverlayContent
         query={query}
         placeholder={placeholder}
@@ -172,7 +173,7 @@ function OverlayContent({
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: radius.full,
-            backgroundColor: colors.backgroundSecondary,
+            backgroundColor: colors.surfaceMuted,
             flexShrink: 0,
           }}
         >
@@ -180,7 +181,6 @@ function OverlayContent({
             variant='title'
             tone='muted'
             style={{ includeFontPadding: false }}
-            accessibilityHidden
           >
             ×
           </Text>
@@ -227,7 +227,7 @@ function OverlayContent({
                 paddingHorizontal: spacing['16'],
                 borderBottomWidth: borderWidth.thin,
                 borderColor: colors.border,
-                ...(hovered || focused ? { backgroundColor: colors.backgroundSecondary } : {}),
+                ...(hovered || focused ? { backgroundColor: colors.surfaceMuted } : {}),
                 transitionProperty: 'background-color',
                 transitionDuration: `${motionDuration.microInteraction}ms`,
                 transitionTimingFunction: motionEasing.standard,

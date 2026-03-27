@@ -4,7 +4,15 @@ import { useWindowDimensions } from 'react-native'
 import { ArrowUp } from 'phosphor-react'
 import { borderWidth, breakpoints, colors, layout, radius, spacing, zIndex } from '@real/tokens'
 import { Box, Icon, Text } from '@real/ui'
-import { defaultBottomNavItems, defaultShellContent } from './defaults'
+import {
+  defaultBottomNavItems,
+  defaultBrandItems,
+  defaultCategories,
+  defaultFooterLinks,
+  defaultSalesItems,
+  defaultShellContent,
+  defaultSocialLinks,
+} from './defaults'
 import { Footer } from './Footer'
 import { Header } from './Header'
 import {
@@ -22,17 +30,18 @@ import {
 // Grouped Prop Types (for better organization and maintainability)
 // ─────────────────────────────────────────────────────────────────────────────
 
-type LayoutBranding = {
+export type LayoutBranding = {
   logoSrc: string
   logoAlt: string
+  logoSize?: 'sm' | 'md' | 'lg'
 }
 
-type LayoutCampaign = {
+export type LayoutCampaign = {
   text?: string
   link?: string
 }
 
-type LayoutCart = {
+export type LayoutCart = {
   count: number
   items: CartLine[]
   subtotal: number
@@ -47,7 +56,7 @@ type LayoutCart = {
   onRemove?: (item: CartLine) => void | Promise<void>
 }
 
-type LayoutNavigation = {
+export type LayoutNavigation = {
   categories: NavItem[]
   salesItems: NavItem[]
   brandItems: NavItem[]
@@ -58,41 +67,72 @@ type LayoutNavigation = {
   onBottomNavChange?: (item: BottomNavItem) => void
 }
 
-type LayoutNewsletter = {
+export type LayoutNewsletter = {
   title: string
   subtitle: string
 }
 
-type LayoutLocale = {
+export type LayoutLocale = {
   code: LocaleCode
   dir?: Direction
   onChange?: (nextLocale: LocaleCode) => void
 }
 
-type LayoutActions = {
+export type LayoutActions = {
   onSearchSubmit?: (query: string) => void
   onPressLogo?: () => void
   onNativeAccountPress?: () => void
 }
 
-type LayoutDisplay = {
+export type LayoutDisplay = {
   showFooter?: boolean
   mobileBottomInset?: number
 }
 
-type LayoutProps = {
+export type LayoutProps = {
   children: ReactNode
-  branding: LayoutBranding
+  branding?: LayoutBranding
   campaign?: LayoutCampaign
-  cart: LayoutCart
+  cart?: LayoutCart
   wishlistCount?: number
   accountCount?: number
-  navigation: LayoutNavigation
-  newsletter: LayoutNewsletter
-  locale?: LayoutLocale
+  navigation?: LayoutNavigation
+  newsletter?: LayoutNewsletter
+  locale?: LayoutLocale | LocaleCode
   shellContent?: ShellContent
   actions?: LayoutActions
   display?: LayoutDisplay
+  logoSrc?: string
+  logoAlt?: string
+  logoSize?: 'sm' | 'md' | 'lg'
+  campaignText?: string
+  campaignLink?: string
+  cartCount?: number
+  cartItems?: CartLine[]
+  cartSubtotal?: number
+  cartLoading?: boolean
+  cartError?: string | null
+  cartFeedbackKey?: number
+  categories?: NavItem[]
+  salesItems?: NavItem[]
+  brandItems?: NavItem[]
+  footerLinks?: FooterColumn[]
+  socialLinks?: SocialLink[]
+  newsletterTitle?: string
+  newsletterSubtitle?: string
+  onViewCart?: () => void
+  onCheckout?: () => void
+  onMobileCartNavigate?: () => void
+  onCartIncrease?: (item: CartLine) => void | Promise<void>
+  onCartDecrease?: (item: CartLine) => void | Promise<void>
+  onCartRemove?: (item: CartLine) => void | Promise<void>
+  dir?: Direction
+  onLocaleChange?: (nextLocale: LocaleCode) => void
+  onSearchSubmit?: (query: string) => void
+  onPressLogo?: () => void
+  onNativeAccountPress?: () => void
+  showFooter?: boolean
+  mobileBottomInset?: number
 }
 
 export function Layout({
@@ -108,25 +148,65 @@ export function Layout({
   shellContent,
   actions,
   display,
+  logoSrc,
+  logoAlt,
+  logoSize,
+  campaignText,
+  campaignLink,
+  cartCount,
+  cartItems,
+  cartSubtotal,
+  cartLoading,
+  cartError,
+  cartFeedbackKey,
+  categories,
+  salesItems,
+  brandItems,
+  footerLinks,
+  socialLinks,
+  newsletterTitle,
+  newsletterSubtitle,
+  onViewCart,
+  onCheckout,
+  onMobileCartNavigate,
+  onCartIncrease,
+  onCartDecrease,
+  onCartRemove,
+  dir: legacyDir,
+  onLocaleChange: legacyOnLocaleChange,
+  onSearchSubmit: legacyOnSearchSubmit,
+  onPressLogo: legacyOnPressLogo,
+  onNativeAccountPress: legacyOnNativeAccountPress,
+  showFooter: legacyShowFooter,
+  mobileBottomInset: legacyMobileBottomInset,
 }: LayoutProps) {
   const { width } = useWindowDimensions()
   const isDesktopViewport = width >= breakpoints.desktopMin
-  // Keep first SSR/hydration pass deterministic on web to avoid bottom-nav mismatch.
-  const isDesktop = isDesktopViewport || (Platform.OS === 'web' && width === 0)
+  const [hasHydrated, setHasHydrated] = useState(Platform.OS !== 'web')
+  // Keep the first web render deterministic so shell chrome does not choose a different mobile/desktop tree.
+  const isDesktop = Platform.OS === 'web' && !hasHydrated ? true : isDesktopViewport
   const showMobileBottomNav = !isDesktop
   const mobileNavHeight = spacing['64'] + spacing['8']
-  const mobileBottomInset = display?.mobileBottomInset ?? 0
+  const mobileBottomInset = display?.mobileBottomInset ?? legacyMobileBottomInset ?? 0
   const mobileContentBottomOffset = showMobileBottomNav ? mobileNavHeight + mobileBottomInset : 0
   
   // Destructure grouped props
-  const locale = localeProps?.code ?? 'en'
-  const dir = localeProps?.dir ?? 'ltr'
-  const onLocaleChange = localeProps?.onChange
-  const onSearchSubmit = actions?.onSearchSubmit
-  const onPressLogo = actions?.onPressLogo
-  const showFooter = display?.showFooter ?? true
+  const locale = typeof localeProps === 'string' ? localeProps : localeProps?.code ?? 'en'
+  const dir = (typeof localeProps === 'string' ? undefined : localeProps?.dir) ?? legacyDir ?? 'ltr'
+  const onLocaleChange =
+    (typeof localeProps === 'string' ? undefined : localeProps?.onChange) ?? legacyOnLocaleChange
+  const onSearchSubmit = actions?.onSearchSubmit ?? legacyOnSearchSubmit
+  const onPressLogo = actions?.onPressLogo ?? legacyOnPressLogo
+  const onNativeAccountPress = actions?.onNativeAccountPress ?? legacyOnNativeAccountPress
+  const showFooter = display?.showFooter ?? legacyShowFooter ?? true
   
   const [showScrollTop, setShowScrollTop] = useState(false)
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      setHasHydrated(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (Platform.OS !== 'web') return
@@ -161,9 +241,88 @@ export function Layout({
     [shellContent]
   )
 
+  const resolvedBranding = useMemo<LayoutBranding>(
+    () => {
+      const fallbackBranding = shellContent?.branding ?? defaultShellContent.branding
+      return {
+        logoSrc: branding?.logoSrc ?? logoSrc ?? fallbackBranding?.logo.uri ?? '/brand-logo-placeholder.svg',
+        logoAlt:
+          branding?.logoAlt ??
+          logoAlt ??
+          (locale === 'ar' ? fallbackBranding?.logo.alt.ar : fallbackBranding?.logo.alt.en) ??
+          'Real Cosmetics',
+        logoSize: branding?.logoSize ?? logoSize ?? fallbackBranding?.logoSize,
+      }
+    },
+    [branding, locale, logoAlt, logoSize, logoSrc, shellContent?.branding?.logo.alt.ar, shellContent?.branding?.logo.alt.en, shellContent?.branding?.logo.uri, shellContent?.branding?.logoSize]
+  )
+
+  const resolvedCampaign = useMemo<LayoutCampaign | undefined>(
+    () => {
+      if (campaign?.text || campaign?.link) {
+        return campaign
+      }
+      if (campaignText || campaignLink) {
+        return {
+          text: campaignText,
+          link: campaignLink,
+        }
+      }
+      return undefined
+    },
+    [campaign, campaignLink, campaignText]
+  )
+
+  const resolvedCart = useMemo<LayoutCart>(
+    () => ({
+      count: cart?.count ?? cartCount ?? 0,
+      items: cart?.items ?? cartItems ?? [],
+      subtotal: cart?.subtotal ?? cartSubtotal ?? 0,
+      loading: cart?.loading ?? cartLoading,
+      error: cart?.error ?? cartError,
+      feedbackKey: cart?.feedbackKey ?? cartFeedbackKey,
+      onViewCart: cart?.onViewCart ?? onViewCart ?? (() => undefined),
+      onCheckout: cart?.onCheckout ?? onCheckout ?? (() => undefined),
+      onMobileCartNavigate: cart?.onMobileCartNavigate ?? onMobileCartNavigate ?? (() => undefined),
+      onIncrease: cart?.onIncrease ?? onCartIncrease,
+      onDecrease: cart?.onDecrease ?? onCartDecrease,
+      onRemove: cart?.onRemove ?? onCartRemove,
+    }),
+    [cart, cartCount, cartError, cartFeedbackKey, cartItems, cartLoading, cartSubtotal, onCartDecrease, onCartIncrease, onCartRemove, onCheckout, onMobileCartNavigate, onViewCart]
+  )
+
+  const resolvedNavigation = useMemo<LayoutNavigation>(
+    () => ({
+      categories: navigation?.categories ?? categories ?? defaultCategories,
+      salesItems: navigation?.salesItems ?? salesItems ?? defaultSalesItems,
+      brandItems: navigation?.brandItems ?? brandItems ?? defaultBrandItems,
+      footerLinks: navigation?.footerLinks ?? footerLinks ?? defaultFooterLinks,
+      socialLinks: navigation?.socialLinks ?? socialLinks ?? defaultSocialLinks,
+      bottomNavItems: navigation?.bottomNavItems ?? defaultBottomNavItems,
+      activeBottomNavId: navigation?.activeBottomNavId,
+      onBottomNavChange: navigation?.onBottomNavChange,
+    }),
+    [brandItems, categories, footerLinks, navigation, salesItems, socialLinks]
+  )
+
+  const resolvedNewsletter = useMemo<LayoutNewsletter>(
+    () => {
+      const fallbackFooter = shellContent?.footer ?? defaultShellContent.footer
+      return {
+        title: newsletter?.title ?? newsletterTitle ?? fallbackFooter?.newsletterTitle?.en ?? 'Stay in the loop',
+        subtitle:
+          newsletter?.subtitle ??
+          newsletterSubtitle ??
+          fallbackFooter?.newsletterSubtitle?.en ??
+          'Get launches, offers, and skincare insights.',
+      }
+    },
+    [newsletter, newsletterSubtitle, newsletterTitle, shellContent?.footer]
+  )
+
   const handleBottomNavPress = (item: BottomNavItem) => {
-    if (navigation.onBottomNavChange) {
-      navigation.onBottomNavChange(item)
+    if (resolvedNavigation.onBottomNavChange) {
+      resolvedNavigation.onBottomNavChange(item)
       return
     }
     if (Platform.OS !== 'web') {
@@ -185,7 +344,7 @@ export function Layout({
   //            Content must be padded by headerHeight to clear it.
   const desktopHeaderHeight =
     layout.header.topBarHeight + layout.header.mainRowHeight + layout.header.navRowHeight
-  const mobileHeaderHeight = layout.header.mainRowHeight + spacing['48']
+  const mobileHeaderHeight = layout.header.mobileExpandedHeight
   const nativeHeaderHeight = isDesktop ? desktopHeaderHeight : mobileHeaderHeight
   const contentTopOffset = Platform.OS !== 'web' ? nativeHeaderHeight : 0
 
@@ -197,30 +356,31 @@ export function Layout({
         locale={locale}
         dir={dir}
         shellContent={resolvedShell}
-        socialLinks={navigation.socialLinks}
-        campaignText={campaign?.text}
-        campaignLink={campaign?.link}
-        logoSrc={branding.logoSrc}
-        logoAlt={branding.logoAlt}
-        cartCount={cart.count}
+        socialLinks={resolvedNavigation.socialLinks}
+        campaignText={resolvedCampaign?.text}
+        campaignLink={resolvedCampaign?.link}
+        logoSrc={resolvedBranding.logoSrc}
+        logoAlt={resolvedBranding.logoAlt}
+        logoSize={resolvedBranding.logoSize}
+        cartCount={resolvedCart.count}
         wishlistCount={wishlistCount}
         accountCount={accountCount}
-        categories={navigation.categories}
-        cartItems={cart.items}
-        cartSubtotal={cart.subtotal}
-        cartLoading={cart.loading}
-        cartError={cart.error}
-        cartFeedbackKey={cart.feedbackKey}
-        onViewCart={cart.onViewCart}
-        onCheckout={cart.onCheckout}
-        onMobileCartNavigate={cart.onMobileCartNavigate}
-        onCartIncrease={cart.onIncrease}
-        onCartDecrease={cart.onDecrease}
-        onCartRemove={cart.onRemove}
+        categories={resolvedNavigation.categories}
+        cartItems={resolvedCart.items}
+        cartSubtotal={resolvedCart.subtotal}
+        cartLoading={resolvedCart.loading}
+        cartError={resolvedCart.error}
+        cartFeedbackKey={resolvedCart.feedbackKey}
+        onViewCart={resolvedCart.onViewCart}
+        onCheckout={resolvedCart.onCheckout}
+        onMobileCartNavigate={resolvedCart.onMobileCartNavigate}
+        onCartIncrease={resolvedCart.onIncrease}
+        onCartDecrease={resolvedCart.onDecrease}
+        onCartRemove={resolvedCart.onRemove}
         onSearchSubmit={onSearchSubmit}
         onLogoPress={onPressLogo}
         onLocaleChange={onLocaleChange}
-        onNativeAccountPress={actions?.onNativeAccountPress}
+        onNativeAccountPress={onNativeAccountPress}
       />
 
       {/* Content — padded top on native to clear absolute header */}
@@ -239,10 +399,10 @@ export function Layout({
           locale={locale}
           dir={dir}
           shellContent={resolvedShell}
-          footerLinks={navigation.footerLinks}
-          socialLinks={navigation.socialLinks}
-          newsletterTitle={newsletter.title}
-          newsletterSubtitle={newsletter.subtitle}
+          footerLinks={resolvedNavigation.footerLinks}
+          socialLinks={resolvedNavigation.socialLinks}
+          newsletterTitle={resolvedNewsletter.title}
+          newsletterSubtitle={resolvedNewsletter.subtitle}
         />
       ) : null}
 
@@ -290,8 +450,8 @@ export function Layout({
             paddingBottom: spacing.xs + mobileBottomInset,
           }}
         >
-          {navigation.bottomNavItems?.map((item) => {
-            const active = navigation.activeBottomNavId === item.id
+          {resolvedNavigation.bottomNavItems?.map((item) => {
+            const active = resolvedNavigation.activeBottomNavId === item.id
             const label = locale === 'ar' ? item.label.ar : item.label.en
             return (
               <Pressable
@@ -305,7 +465,7 @@ export function Layout({
                       name={toBottomNavIconName(item.id)}
                       color={active ? colors.brandPrimary : colors.textSecondary}
                     />
-                    {item.id === 'cart' && cart.count > 0 ? (
+                    {item.id === 'cart' && resolvedCart.count > 0 ? (
                       <Box
                         style={{
                           position: 'absolute',
@@ -320,7 +480,7 @@ export function Layout({
                         }}
                       >
                         <Text variant='meta' tone='inverse' weight='700'>
-                          {cart.count > 9 ? '9+' : String(cart.count)}
+                          {resolvedCart.count > 9 ? '9+' : String(resolvedCart.count)}
                         </Text>
                       </Box>
                     ) : null}

@@ -1,12 +1,16 @@
 import { ReactNode } from 'react'
 import { Platform, Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native'
-import { opacity } from '@real/tokens'
+import { opacity, motion } from '@real/tokens'
 
 type TouchableProps = Omit<PressableProps, 'children'> & {
   children?: ReactNode | ((state: { pressed: boolean; hovered: boolean; focused: boolean }) => ReactNode)
   disabledOpacity?: number
   pressedOpacity?: number
   hoveredOpacity?: number
+  href?: string
+  target?: string
+  rel?: string
+  download?: string
 }
 
 export function Touchable({
@@ -14,16 +18,32 @@ export function Touchable({
   disabled,
   style,
   disabledOpacity = opacity.disabled,
-  pressedOpacity = opacity.pressed,
-  hoveredOpacity = opacity.hover,
+  pressedOpacity = opacity.medium,
+  hoveredOpacity = opacity.high,
+  href,
+  target,
+  rel,
+  download,
   ...props
 }: TouchableProps) {
-  const webButtonProps = Platform.OS === 'web' ? ({ type: 'button' } as any) : undefined
+  const webInteractionProps =
+    Platform.OS === 'web'
+      ? href
+        ? ({
+            href,
+            hrefAttrs: {
+              target,
+              rel,
+              download,
+            },
+          } as any)
+        : ({ type: 'button' } as any)
+      : undefined
 
   return (
     <Pressable
       disabled={disabled}
-      {...webButtonProps}
+      {...webInteractionProps}
       style={(state) => {
         const dynamicOpacity = disabled
           ? disabledOpacity
@@ -33,8 +53,14 @@ export function Touchable({
               ? hoveredOpacity
               : 1
 
-        const baseStyle: ViewStyle = {
+        const baseStyle: ViewStyle & { transitionProperty?: string; transitionDuration?: string; transitionTimingFunction?: string } = {
           opacity: dynamicOpacity,
+          transform: [{ scale: state.pressed ? 0.995 : 1 }],
+          ...(Platform.OS === 'web' && {
+            transitionProperty: 'opacity, transform',
+            transitionDuration: `${state.pressed ? motion.durations.instant : motion.durations.microInteraction}ms`,
+            transitionTimingFunction: motion.easings.standard,
+          }),
         }
 
         if (typeof style === 'function') {

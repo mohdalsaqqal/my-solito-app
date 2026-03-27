@@ -14,7 +14,8 @@ import {
 } from '@real/ui/components'
 import type { OfferBannerBlock } from '@real/ui/components'
 import { componentTokens, layout } from '@real/tokens'
-import type { HomeBlockRendererComponent, RegisteredHomePageBlock } from './block-types'
+import type { HomeBlockRendererComponent, RegisteredStorefrontPageBlock } from './block-types'
+import type { HomeHeroItem, HomeUgcItem } from '@real/ui/components/home/types'
 import {
   mapBrandItems,
   mapProductsToHomeItems,
@@ -22,22 +23,29 @@ import {
   resolvePairString,
 } from './block-types'
 
-function mapHeroItems(block: RegisteredHomePageBlock['props']) {
+function mapHeroItems(block: RegisteredStorefrontPageBlock['props']): HomeHeroItem[] {
   if (block.type === 'hero_carousel') {
     const cards = block.cardsLocalized ?? block.cards
     return cards.map((card) => ({
       id: card.id,
-      title: 'titleText' in card && card.titleText ? card.titleText : resolvePairString(block.locale, card.titleEn, card.titleAr),
+      title:
+        'titleText' in card && typeof card.titleText === 'string'
+          ? card.titleText
+          : resolvePairString(block.locale, card.titleEn, card.titleAr),
       subtitle:
-        'subtitleText' in card && card.subtitleText
+        'subtitleText' in card && typeof card.subtitleText === 'string'
           ? card.subtitleText
           : resolvePairString(block.locale, card.subtitleEn, card.subtitleAr),
       ctaLabel:
-        'ctaText' in card && card.ctaText ? card.ctaText : resolvePairString(block.locale, card.ctaLabelEn, card.ctaLabelAr),
+        'ctaText' in card && typeof card.ctaText === 'string'
+          ? card.ctaText
+          : resolvePairString(block.locale, card.ctaLabelEn, card.ctaLabelAr),
       href: card.href,
       imageUrl: card.imageUrl,
       badgeLabel:
-        'badgeText' in card && card.badgeText ? card.badgeText : resolvePairString(block.locale, card.badgeLabelEn, card.badgeLabelAr),
+        'badgeText' in card && typeof card.badgeText === 'string'
+          ? card.badgeText
+          : resolvePairString(block.locale, card.badgeLabelEn, card.badgeLabelAr),
     }))
   }
 
@@ -119,7 +127,12 @@ const HeroCarouselBlockComponent: HomeBlockRendererComponent = ({ block, onNavig
   if (published.type !== 'hero_carousel') return null
   const items = mapHeroItems(published)
   return items.length > 0 ? (
-    <HomeHeroRail items={items} autoplay={published.autoplayMs > 0} autoplayMs={published.autoplayMs} onPressItem={onNavigate} />
+    <HomeHeroRail
+      items={items}
+      autoplay={published.autoplayMs > 0}
+      autoplayMs={published.autoplayMs}
+      onPressItem={(href) => (href ? onNavigate?.(href) : undefined)}
+    />
   ) : null
 }
 
@@ -127,12 +140,15 @@ const HeroBlockComponent: HomeBlockRendererComponent = ({ block, onNavigate }) =
   const published = block.props
   if (published.type !== 'hero') return null
   const items = mapHeroItems(published)
-  return items.length > 0 ? <HomeHeroRail items={items} autoplay={false} onPressItem={onNavigate} /> : null
+  return items.length > 0 ? (
+    <HomeHeroRail items={items} autoplay={false} onPressItem={(href) => (href ? onNavigate?.(href) : undefined)} />
+  ) : null
 }
 
 const FlashSaleBlockComponent: HomeBlockRendererComponent = ({ block, onNavigate }) => {
   const published = block.props
   if (published.type !== 'flash_sale') return null
+  const href = published.href
   return (
     <FlashSaleBand
       offerText={published.titleText ?? resolvePairString(published.locale, published.titleEn, published.titleAr, '')}
@@ -140,7 +156,7 @@ const FlashSaleBlockComponent: HomeBlockRendererComponent = ({ block, onNavigate
       postLabel=''
       endsAtIso={published.timerEndsAt}
       ctaLabel={published.ctaText ?? resolvePairString(published.locale, published.ctaLabelEn, published.ctaLabelAr, '')}
-      onPressCta={published.href ? () => onNavigate?.(published.href) : undefined}
+      onPressCta={href ? () => onNavigate?.(href) : undefined}
     />
   )
 }
@@ -158,12 +174,18 @@ const ProductRailBlockComponent: HomeBlockRendererComponent = ({
 }) => {
   const published = block.props
   if (published.type !== 'product_slider' && published.type !== 'personalized_rail') return null
+  const href = 'href' in published && typeof published.href === 'string' ? published.href : ''
+  const title =
+    published.titleText ??
+    (published.type === 'product_slider'
+      ? resolveBlockString(published.locale, published.title, '')
+      : resolvePairString(published.locale, published.titleEn, published.titleAr, ''))
   const items = mapProductsToHomeItems(published.products ?? [])
   return items.length > 0 ? (
     <ProductRail
-      title={published.titleText ?? resolveBlockString(published.locale, published.title, '')}
+      title={title}
       actionLabel={published.ctaText}
-      actionHref={published.href ?? ''}
+      actionHref={href}
       items={items}
       showFilterChips={published.type === 'product_slider'}
       autoplay={railAutoplay?.featured?.enabled !== false}
@@ -171,7 +193,7 @@ const ProductRailBlockComponent: HomeBlockRendererComponent = ({
       loading={loading}
       error={error}
       onRetry={onReload}
-      onPressAction={published.href ? () => onNavigate?.(published.href) : undefined}
+      onPressAction={href ? () => onNavigate?.(href) : undefined}
       onSelectProduct={onSelectProduct}
       onQuickView={onQuickView}
       onAddToCart={onAddToCart}
@@ -223,7 +245,7 @@ const BrandSpotlightBlockComponent: HomeBlockRendererComponent = ({
       loading={loading}
       error={error}
       onRetry={onReload}
-      onPressBanner={onNavigate}
+      onPressBanner={(href) => (href ? onNavigate?.(href) : undefined)}
       onPressProduct={(item) => onSelectProduct?.(item.id)}
       onAddToCart={(item) => onAddToCart?.(item.id)}
     />
@@ -306,15 +328,22 @@ const TopBrandsBlockComponent: HomeBlockRendererComponent = ({ block, onNavigate
 const UgcGalleryBlockComponent: HomeBlockRendererComponent = ({ block, isDesktop, onNavigate }) => {
   const published = block.props
   if (published.type !== 'ugc_gallery') return null
+  const ugcItems = (published.items ?? []).reduce<HomeUgcItem[]>((accumulator, item) => {
+    if (!('imageUrl' in item) || typeof item.imageUrl !== 'string' || item.imageUrl.length === 0) {
+      return accumulator
+    }
+    accumulator.push({
+      id: item.id,
+      imageUrl: item.imageUrl,
+      productId: item.productId,
+      caption: resolveBlockString(published.locale, item.caption),
+      href: item.href,
+    })
+    return accumulator
+  }, [])
   return (
     <TestimonialsBlock
-      ugcItems={(published.items ?? []).map((item) => ({
-        id: item.id,
-        imageUrl: item.imageUrl,
-        productId: item.productId,
-        caption: resolveBlockString(published.locale, item.caption),
-        href: item.href,
-      }))}
+      ugcItems={ugcItems}
       isDesktop={isDesktop}
       onNavigate={onNavigate}
     />
@@ -391,7 +420,7 @@ const PromoStripBlockComponent: HomeBlockRendererComponent = ({ block, tickerSpe
     <AnnouncementTicker
       items={[{ id: published.id, label: published.textValue ?? resolveBlockString(published.locale, published.text, ''), href: published.href }]}
       speedMs={tickerSpeedMs}
-      onPressItem={onNavigate}
+      onPressItem={(href) => (href ? onNavigate?.(href) : undefined)}
     />
   )
 }
@@ -420,6 +449,6 @@ export const blockRegistry = {
   [getBlockRegistryKey('promo_strip', 'v1')]: PromoStripBlockComponent,
 } satisfies Record<string, HomeBlockRendererComponent>
 
-export function getBlockComponent(block: RegisteredHomePageBlock) {
+export function getBlockComponent(block: RegisteredStorefrontPageBlock) {
   return blockRegistry[getBlockRegistryKey(block.type, block.version)] ?? null
 }
