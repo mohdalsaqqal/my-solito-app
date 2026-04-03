@@ -7,8 +7,14 @@ The full architecture rules and platform operating model live in **AGENTS.md** �
 
 ## Repo At A Glance
 
-**REAL Cosmetics** — cross-platform beauty commerce platform.
+Cross-platform commerce platform.
 Solito v5 monorepo: Next.js 16 (web + BFF) + Expo 54 (React Native mobile).
+
+> Brand identity, color palette, typography, and design language live in:
+> - `packages/tokens/` — source of truth for all design values
+> - `packages/ui/global.css` — CSS token bridge
+> - `DESIGN.md` (if present) — design system specification
+> Do NOT assume brand name, colors, or fonts from these docs.
 
 ```
 apps/next      — Next.js App Router, server layer, BFF
@@ -56,7 +62,7 @@ apps/expo (React Native)
 ## Active Work (as of 2026-04-03)
 
 ### Completed
-- [x] Editorial Monolith design system — tokens, global.css, fonts, button, input, header
+- [x] Design system implementation — tokens, global.css, fonts, button, input, header (see `packages/tokens/` for values)
 - [x] Homepage block pipeline fix — `block.version ?? 'v1'`, full `PageBlock[]` passthrough
 - [x] Home layout engine Phases 1–6 — complete, all block types dispatched to typed renderers
 
@@ -188,7 +194,7 @@ next build --webpack --debug-prerender
 
 - Colors → `colors.xxx` from `@real/tokens` (inline style) or `bg-primary` Tailwind class (reusables)
 - Spacing → `spacing.xxx` — never raw numbers
-- Radius → `radius.xxx` — all 0 per DESIGN.md except `radius.full` (9999px)
+- Radius → `radius.xxx` from `@real/tokens` — never hardcode values
 - Typography → `typography.xxx` and `fontWeights.xxx`
 - No hex literals (`#...`) in `packages/app` or `packages/ui` TypeScript files
 - `className` is forbidden in `packages/app`

@@ -246,7 +246,7 @@ Step 5 — Run `yarn guard:checks` + `yarn tsc -p apps/next/tsconfig.json --noEm
 - `packages/app` and `packages/ui` TypeScript files: no hex literals, no `className`, no `process.env`
 - Inline styles: always `colors.xxx`, `spacing.xxx`, `radius.xxx` from `@real/tokens`
 - className-based (reusables): use Tailwind token classes, no arbitrary hex values `bg-[#hex]`
-- Radius: all `0` per DESIGN.md — only `radius.full` (9999px) for pills/avatars
+- Radius: always use `radius.xxx` from `@real/tokens` — never hardcode values
 
 ## Cross-platform guarantee
 
