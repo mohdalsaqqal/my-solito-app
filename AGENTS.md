@@ -1,350 +1,336 @@
 # AGENTS VERSION
-- Version: `v2.0`
-- Last updated: `2026-03-21`
-- This file is the product-specific operating handbook for this premium commerce platform.
+- Version: `v4.0`
+- Last updated: `2026-03-31`
+- This file defines the architecture and execution rules for the premium commerce platform using Next.js App Router, server-first services, and the active full-RNR shared UI system.
 
-## Platform Operating Model
-- This repository builds a web-first premium commerce platform.
-- `apps/next` owns the web app and the BFF.
-- `apps/expo` owns the customer mobile app only.
-- `packages/ui` owns shared primitives and reusable UI components.
-- `packages/app` owns shared screens, commerce flows, and feature logic.
-- `packages/providers` owns contracts and registry-based provider selection.
-- `packages/adapters` owns external system implementations.
-- CMS controls mutable marketing content, not core layout structure.
-- Modules extend core through explicit slots, not embedded special-case logic.
-- Canonical runtime flow is `UI -> apiClient -> BFF -> provider registry -> adapters`.
+---
 
-## Rule Priorities
-- `P0` Blocker: must pass before merge.
-- `P1` Preferred: enforce unless explicitly deferred.
-- If `P0` and `P1` conflict, `P0` wins.
+# Platform Operating Model
 
-## Use This File
-- `AGENTS.md` is the executable contract. Keep it short enough to apply during active work.
-- Companion docs hold deeper UI and composition guidance:
-  - `docs/UI_ARCHITECTURE.md`
-  - `docs/COMMERCE_PATTERNS.md`
-  - `docs/UI_COMPONENT_INVENTORY.md`
-- `.codex/` owns task routing and prompt workflow. `AGENTS.md` remains the source of truth for repo rules.
+- `apps/next` owns:
+  - Web app (App Router)
+  - Server layer
+  - Route Handlers
+  - Server Actions
+  - `server/services`
+- `apps/expo` owns the mobile app
+- `packages/ui` owns the active shared UI system
+- `packages/app` owns shared screens and flows
+- `packages/providers` owns contracts plus registry
+- `packages/adapters` owns external integrations
 
-## Common Commands
-- Route non-trivial tasks through `.codex/router.js`:
-  - `node .codex/router.js "<task>"`
-- Run repo guards before claiming completion:
-  - `yarn guard:checks`
-- If guard execution fails because of shell or line-ending issues, run the normalized fallback:
-  - `tmp=scripts/.guard-checks.tmp.sh && tr -d '\r' < scripts/guard-checks.sh > "$tmp" && bash "$tmp"; status=$?; rm -f "$tmp"; exit $status`
+---
 
-## AI Execution Rules (`P0`)
-### Required Response Header
-Before implementation responses, include:
-- `Skills: <comma-separated selected skills>`
+# Core Architecture (P0)
 
-### Workflow Integration
-- For non-trivial work, consult `.codex/router.js` before implementation.
-- Use the router output to confirm task classification, scoped folders, guard expectations, and pause triggers.
-- Do not let workflow tooling override architecture or repository rules in this file.
+## Canonical Data Flow
 
-### Working Discipline
-- Prefer repo-local docs and code over memory.
-- Prefer enforceable rules over vague preference.
-- Do not silently change architecture, dependency direction, or platform boundaries.
+UI (Server + Client Components)
+-> Next.js Server Layer
+-> Services
+-> Provider Registry
+-> Adapters
 
-## Architecture Contract (`P0`)
-### Non-Negotiables
-- Tokens over hardcoded values.
-- Adapters over direct external calls.
-- Modules over embedded feature logic.
-- Slots over hardcoded module insertion.
-- Config and CMS over code for mutable business rules.
+## Canonical UI Flow
 
-### Canonical Data Flow
-Required flow:
+Shared UI Consumers
+-> `packages/ui/components`
+-> `packages/ui/reusables`
 
-`UI -> apiClient -> BFF -> provider registry -> adapters`
+---
 
-Rules:
-- Do not bypass the BFF from customer UI.
-- Do not import adapters into UI, shared commerce logic, or BFF routes.
-- Do not insert a storefront framework layer between UI and the BFF chain without approval.
+# Non-Negotiables
 
-### Monorepo Shape
-```txt
+- Tokens over hardcoded values
+- Adapters over direct external calls
+- Providers over adapter imports
+- Server layer owns all data access
+- CMS controls content, not layout
+- Do not reintroduce public `Touchable`-style legacy primitives into the active shared UI contract
+
+---
+
+# Next.js Rules (P0)
+
+## Allowed
+
+- Server Components fetching data through `apps/next/server/services`
+- Route Handlers under `app/api`
+- Server Actions only when they delegate to services
+- Cache Components and tagged caching for safe public reads
+- Client islands for mutations, browser-only state, and UI interactions
+
+## Forbidden
+
+- Server Components calling internal Route Handlers over HTTP
+- Reintroducing `apiClient` in Server Components
+- Direct adapter usage in UI
+- External API calls from the client when the server layer should own them
+- External BFF layer
+
+## Cache Components Rules
+
+- Keep `cacheComponents` enabled
+- Fix request-bound rendering with lower `Suspense` boundaries and nested async server components
+- Do not use old dynamic-route shortcuts that conflict with Cache Components
+- Keep request-bound flows dynamic only where they actually need request state
+
+---
+
+# Shared UI Rules (P0)
+
+## Active Contract
+
+- The active shared UI system is full RNR-centered
+- `packages/ui/reusables` is the core shared control layer
+- `packages/ui/components` is the product-facing shared UI layer
+- `packages/ui/primitives` must not grow new legacy API surface
+
+## Forbidden
+
+- Reintroducing public `Touchable` usage in active shared components
+- Reintroducing old primitive-only contracts when an RNR shared component already exists
+- Bypassing tokens in shared UI
+
+---
+
+# Monorepo Structure
+
 apps/
-  next/                 # web app + BFF
-  expo/                 # customer mobile app
+  next/
+  expo/
 
 packages/
-  app/                  # shared screens, features, commerce logic
-  ui/                   # shared primitives and reusable components
-  tokens/               # design tokens
-  providers/            # contracts + registry
-  adapters/             # infrastructure implementations
-```
+  app/
+  ui/
+  tokens/
+  providers/
+  adapters/
 
-Required aliases:
-- `@real/app`
-- `@real/ui`
-- `@real/tokens`
-- `@real/providers`
-- `@real/adapters`
+---
 
-### Layer Boundaries
-#### `packages/ui`
-- Primitives and reusable components only.
-- UniWind styling is allowed here.
-- No provider imports.
-- No adapter imports.
-- No business-specific data fetching.
+# Layer Responsibilities
 
-#### `packages/app`
-- Shared commerce screens, flows, modules, and app-side logic.
-- May import from `@real/providers`.
-- Must not import from `@real/adapters`.
-- Must not call ERP, payment, or auth systems directly.
-- `className` is forbidden here.
-- `process.env` is forbidden here.
+## `apps/next`
 
-#### `packages/providers`
-- Contracts and provider selection only.
-- Use `ProviderResult<T>` and matching helpers.
-- No UI code.
-
-#### `packages/adapters`
-- Infrastructure implementations only.
-- Must fully implement provider contracts.
-- Must never leak raw infrastructure errors upward.
-
-### Provider Registry Pattern
-Core and BFF code must import from the registry, not concrete adapters.
-
-```ts
-import { mockProductAdapter } from '@real/adapters/mock/product'
-
-const useMock = process.env.USE_MOCK !== 'false'
-
-export const productProvider = useMock
-  ? mockProductAdapter
-  : mockProductAdapter
-```
-
-### BFF Contract
-BFF code lives under `apps/next/app/api/*`.
-
-Routes must:
-- import providers, not adapters
-- normalize responses
-- return the public envelope only
-
-Public envelope:
-```ts
-{ success: true, data: T }
-{ success: false, error: { code: string; message: string } }
-```
-
-Correct pattern:
-```ts
-import { matchProviderResult } from '@real/providers/contracts'
-import { productProvider } from '@real/providers'
-import { fail, ok } from '../_lib/response'
-
-export async function GET() {
-  const result = await productProvider.list()
-
-  return matchProviderResult(result, {
-    ok: (data) => ok(data),
-    fail: (error) => fail(error.code, error.message, 500),
-  })
-}
-```
-
-### Extension Slots
-Use explicit slot registration. No runtime plugin engine. No dynamic scanning.
-
-Canonical slot path:
-`packages/app/platform/extensions/slots.ts`
-
-Correct pattern:
-```ts
-import { ComponentType } from 'react'
-
-export type CheckoutExtension = ComponentType
-export const checkoutExtensions: CheckoutExtension[] = []
-```
-
-### Role Exposure
-- `customer`: web + Expo
-- `pharmacist`: web only
-- `admin`: web only
+- Server Components
+- Route Handlers
+- Server Actions
+- `server/services`
 
 Rules:
-- Expo must not expose admin or pharmacist routes.
-- `/pharmacist` and `/pharmasset` are intentionally web-only.
+- Import providers, not adapters
+- Normalize server data
+- Keep page reads in services
+- Keep route handlers thin
 
-### Environment Contract
-Naming:
-- `NEXT_PUBLIC_*`: web client-safe
-- `EXPO_PUBLIC_*`: mobile client-safe
-- `*_SECRET`: server-only
-- `*_URL`: endpoint
-- `USE_*`: feature toggle
+## `packages/app`
 
-Required env vars:
-- `USE_MOCK`
-- `ODOO_URL`
-- `ODOO_SECRET`
-- `PAYMENT_GATEWAY_URL`
-- `PAYMENT_GATEWAY_SECRET`
-- `NEXT_PUBLIC_API_BASE_URL`
-- `EXPO_PUBLIC_API_BASE_URL`
+- Shared screens and logic
 
 Rules:
-- No hardcoded secrets or service URLs.
-- All env vars must appear in `.env.example`.
-- `process.env` is forbidden in `packages/ui` and `packages/app`.
+- No adapters
+- No `process.env`
+- No `className`
 
-### File Placement
-- reusable UI primitives and components -> `packages/ui`
-- shared commerce logic and screens -> `packages/app`
-- provider contracts -> `packages/providers/contracts`
-- adapter implementations -> `packages/adapters`
-- human-readable architecture and composition docs -> `docs/`
-- workflow and router files -> `.codex/`
+## `packages/ui`
 
-## Commerce UI Contracts (`P0`)
-### Core Principle
-Core commerce surfaces are fixed contracts, not ad-hoc layouts. Reuse the canonical pattern before inventing a new one.
+- Pure UI
+- Shared reusable controls
+- Product-facing shared components
 
-### Required Component States
-Every new UI component must define:
-- `loading`
-- `empty`
-- `error`
-- `disabled`
+## `packages/providers`
 
-Add `out-of-stock` when the component represents purchasable product state.
+- Contracts
+- Registry
 
-### Canonical Surface Contracts
-These patterns are mandatory for composition. Full detail lives in `docs/COMMERCE_PATTERNS.md`.
+## `packages/adapters`
 
-- `ProductCard`: media -> badges/meta -> title -> price -> stock/urgency -> primary CTA
-- `PLP / Shop Grid`: scaffold -> filters/sort -> grid -> pagination or load-more
-- `PDP`: gallery -> summary -> variant/quantity/actions -> details -> related modules
-- `Cart Drawer / Cart Page`: line items -> edits -> discounts -> totals -> checkout CTA
-- `Checkout`: contact -> fulfillment -> payment -> order summary -> place order
-- `Account Dashboard`: shell -> overview -> modular sections
+- External integrations only
 
-### CMS and Config Ownership
-CMS controls content for:
-- hero slides
-- promotional banners
-- campaign messaging
-- loyalty marketing blocks
-- newsletter copy
-- brand spotlight content
+---
 
-Rules:
-- CMS controls content, not layout structure.
-- Core layout remains code-owned.
-- Mutable business policies belong in config or CMS, not component code.
+# Services Layer
 
-## UI System Rules
-### Tokens and Styling (`P0`)
-- All color, spacing, type, radius, border, and motion values must come from tokens.
-- Never hardcode visual values in shared components.
-- Tokens are the single source of truth for visual primitives.
-- UniWind is allowed only in `packages/ui/**`.
-- Unsupported shared/native pseudo-classes remain forbidden: `visited:`, `before:`, `after:`.
+Location:
+`apps/next/server/services`
 
-### Platform Files (`P0`)
-- Default shared file: `.ts` or `.tsx`
-- Prefer `.native.tsx` for native differences
-- Use `.web.tsx` only when unavoidable
+Responsibilities:
+- Business logic
+- Provider calls
+- Shared server composition
+- Reusable read and mutation orchestration
 
-Pause before adding `.web.tsx`.
+---
 
-### RTL (`P0`)
-- All new UI must work in both LTR and RTL.
-- Use logical start/end alignment and spacing.
-- Avoid hardcoded `left/right`.
-- Mirror directional icons where needed.
-- Check new UI in both LTR and RTL before claiming completion.
+# Layout-As-Data
 
-### Solito v5 (`P0` / `P1`)
-Core:
-- URL is the source of truth for navigation.
-- Use `solito/navigation` for App Router paths.
-- If a Pages Router area exists, keep `solito/router` isolated there.
-- Do not use deprecated `viewProps` or `textProps`.
+Flow:
+CMS -> Server Layer -> Normalized Blocks -> UI
 
-Guidance:
-- Prefer Next DOM primitives in web-only shells and routes.
-- Use RN primitives mainly for shared cross-platform surfaces.
-- Split web-heavy shared components only when necessary.
+---
 
-### Motion (`P0` / `P1`)
-Core:
-- If shared animation must work on web and native, use `moti`.
-- Do not add `import 'react-native-reanimated'` side-effect imports in Next entry or layout files.
-- Motion must not hide loading, error, or interaction feedback.
+# Tokens
 
-Guidance:
-- Motion should be subtle, fast, and purposeful.
-- Prefer opacity and small transforms over dramatic movement.
-- Use tokenized timing and easing where possible.
+- No hardcoded design values in shared UI
+- Use tokens for colors, spacing, radius, typography, and sizing
 
-### Design Direction (`P1`)
-This storefront favors a compact, flat-leaning, high-density marketplace posture:
-- compact spacing rhythm
-- low-shadow surfaces
-- card-first composition
-- one clear primary commerce action per block
-- expressive hierarchy without bloated chrome
+---
 
-Expanded rules live in `docs/UI_ARCHITECTURE.md`.
+# Routing
 
-## Pause Triggers (`P0`)
-Stop and ask before:
-- creating a new top-level folder
-- changing provider interfaces
-- changing dependency direction
-- introducing `.web.tsx`
-- adding a runtime plugin system
-- adding a new external integration
-- introducing a new layout region not covered by current UI patterns
-- using colors or spacing not represented by tokens
-- making RTL behavior guesses you cannot verify
+- Use Next.js App Router under `apps/next/app`
+- Use `proxy.ts` for routing/auth/locale entry behavior
+- Keep root layout compatible with Cache Components
 
-## Verification (`P0`)
-### Guard Checks
-Agents must run `yarn guard:checks` for every non-trivial change.
+---
 
-If the command fails because of shell, runtime, or line-ending issues, use the normalized fallback command listed earlier in this file.
+# Removed / Disallowed
 
-Canonical guard expectations:
-- no direct adapter imports in UI or shared app layers
-- no provider imports in `packages/ui`
-- no raw hex colors in shared packages
-- no adapter imports in BFF routes
-- no deprecated Solito props
-- no `solito/router` usage in App Router paths
-- no unsupported pseudo-classes in shared/native surfaces
-- no `className` in `packages/app`
-- no `process.env` in shared packages
-- no forbidden `__tests__` folders in `packages/app` or `packages/ui`
-- no reanimated side-effect import in Next entries and layouts
+- Public `Touchable` shared UI contract
+- Server-side `apiClient`
+- External BFF
 
-### Definition of Done
-Before merge:
-- `P0` rules remain satisfied
-- guard checks pass
-- affected UI is checked in LTR and RTL
-- changed components cover required states
-- customer UI still follows the canonical commerce chain and contracts
+---
 
-## References
-- `docs/UI_ARCHITECTURE.md`
-- `docs/COMMERCE_PATTERNS.md`
-- `docs/UI_COMPONENT_INVENTORY.md`
-- `docs/plans/2026-03-21-agents-md-rebuild-design.md`
+# Creating New Components
+
+## Decision: which layer?
+
+| Goal | Location |
+|---|---|
+| Reusable control (button, input, badge) | `packages/ui/reusables/` |
+| Product-facing UI section (rail, card, banner, hotspot) | `packages/ui/components/` |
+| Homepage CMS block renderer | `packages/app/features/home/renderers/` |
+| Shared screen (web + native) | `packages/app/screens/` |
+| Web-only page | `apps/next/app/[locale]/` |
+| Native-only screen | `apps/expo/app/` |
+
+## Shared UI component (`packages/ui/components/`)
+
+1. Create `MyComponent.tsx` using React Native primitives: `Box`, `Text`, `Image`, `Pressable`
+2. Style with inline tokens only: `colors.xxx`, `spacing.xxx`, `typography.xxx`, `radius.xxx`
+3. No `className`, no hex, no hardcoded px/rgba, no `Platform.OS`
+4. Use `useBreakpoint()` from `@real/ui/responsive` for responsive layout decisions
+5. For native-only scroll/gesture differences: create `MyComponent.native.tsx` alongside
+6. Export from `packages/ui/components/index.ts`
+
+## Reusable control (`packages/ui/reusables/`)
+
+- Uses `cva` + `className` for Tailwind/Uniwind variants (web + native via Uniwind)
+- Uses token class names: `bg-primary`, `text-foreground`, `rounded-none`
+- No hex in className strings — use CSS token vars (`bg-primary-hover`) defined in `global.css`
+- Export from `packages/ui/reusables/index.ts` if one exists, or import directly
+
+## New homepage CMS block type
+
+Step 1 — `packages/app/lib/cms/blocks.ts`:
+- Define `MyNewBlock` with `type: 'my_new_block'` literal
+- Add to `HomeBlock` union type
+
+Step 2 — `packages/app/features/home/renderers/renderMyNewBlock.tsx`:
+- Props: `{ slot: IndependentRenderSlot, ...callbacks }`
+- Type guard: `if (block.type !== 'my_new_block') return null`
+- Map block data → UI component from `packages/ui/components/`
+
+Step 3 — `packages/app/features/home/HomeBlocksRenderer.tsx`:
+- Import the renderer
+- Add dispatch case in `dispatchHomeRenderer` function
+
+Step 4 — Add mock data in `packages/adapters/mock/`
+
+Step 5 — Run `yarn guard:checks` + `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+
+## Token enforcement (guard:checks)
+
+- `packages/app` and `packages/ui` TypeScript files: no hex literals, no `className`, no `process.env`
+- Inline styles: always `colors.xxx`, `spacing.xxx`, `radius.xxx` from `@real/tokens`
+- className-based (reusables): use Tailwind token classes, no arbitrary hex values `bg-[#hex]`
+- Radius: all `0` per DESIGN.md — only `radius.full` (9999px) for pills/avatars
+
+## Cross-platform guarantee
+
+Anything in `packages/` renders on both web (Next.js) and native (Expo).
+- React Native primitives → DOM elements on web via Uniwind
+- `useBreakpoint()` is the only place `Platform.OS` may live
+- Same component, zero duplication, both platforms
+
+---
+
+# Memory Update Rule
+
+After every substantial update, agents must sync the repo memory.
+
+## Update Required
+
+- `SESSION-STATE.md`
+- `RECENT_CONTEXT.md`
+- `MEMORY.md`
+
+## Update `AGENTS.md` Too When
+
+- Architecture rules changed
+- A previously forbidden pattern becomes allowed
+- A new permanent platform rule was introduced
+
+## "Substantial Update" Means
+
+- Architecture changes
+- Data-flow changes
+- Shared UI contract changes
+- Build/config changes
+- Major verification or tradeoff decisions
+
+---
+
+# Verification
+
+Minimum:
+- `yarn guard:checks`
+
+When changing `apps/next` architecture/build behavior:
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- `next build --webpack --debug-prerender` from `apps/next`
+
+---
+
+# Definition of Done
+
+- Guards pass
+- Required type/build verification passes for the touched layer
+- Data flows via the server layer
+- Shared UI respects the active RNR contract
+- Memory files are updated after substantial work
+
+---
+
+# Token Efficiency — Parallel Agent Dispatch
+
+**Mandatory for all agentic AI executing multi-file implementation tasks in this repo.**
+
+## The Rule
+
+Pre-read all required context before dispatching agents. Then dispatch one agent per file in parallel — each agent receives a self-contained prompt with only the context it needs. Agents must never explore the codebase speculatively.
+
+## Protocol
+
+1. The orchestrating agent reads the relevant existing files first (narrow, targeted reads only)
+2. Relevant snippets are extracted and pasted directly into each sub-agent prompt
+3. Each sub-agent is given exact file content to write — no ambiguity, no open-ended search
+4. All sub-agents are launched in parallel (`run_in_background: true` where supported)
+5. After all complete, the orchestrator spot-checks key lines only — no full re-reads
+
+## Forbidden
+
+- Telling an agent to "explore the codebase and figure out what to write"
+- Putting multiple output files in one agent prompt
+- Doing sequential multi-file work in the main context when parallel dispatch is possible
+- Agents writing to overlapping files (causes conflicts)
+
+## Why This Matters
+
+Each sub-agent's token usage is isolated from the main context. Parallel dispatch solves N files in the time of 1 file. The orchestrator context stays lean for coordination and verification only. This preserves output quality while minimizing quota consumption.
+
+---
+
+# END
