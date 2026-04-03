@@ -1,9 +1,9 @@
 export const colors = {
-  // ── Base surfaces — storefront phase 1 neutral marketplace scale ─────────
-  background: 'hsl(0 0% 100%)',
-  backgroundSecondary: 'hsl(0 0% 96%)',
-  surface: 'hsl(0 0% 100%)',
-  surfaceMuted: 'hsl(210 20% 98%)',
+  // ── Base surfaces — DESIGN.md "Paper-on-Paper" editorial system ──────────
+  background: '#f9f9f9',             // surface — main page bg
+  backgroundSecondary: '#f3f3f3',    // surface-container-low
+  surface: '#f9f9f9',                // main surface
+  surfaceMuted: '#eeeeee',           // surface-container
 
   // ── Grayscale — shades of #f8f8f8 (pure neutral) ─────────────────────────
   gray0:  'hsl(0 0% 97%)',   // #f8f8f8 — base
@@ -36,6 +36,14 @@ export const colors = {
   inkMid: 'hsl(0 0% 22%)',
   inkFrost: 'hsl(210 20% 95%)',
 
+  // ── Purple family — header accent system ──────────────────────────────────
+  purpleDark: 'hsl(270 60% 8%)',       // near-black purple — deep background
+  purpleDeep: 'hsl(270 55% 14%)',      // dark purple surface
+  purpleMid: 'hsl(270 50% 22%)',       // mid purple — borders, hover
+  purpleAccent: 'hsl(270 70% 55%)',    // vivid purple — active states, icons
+  purpleGlow: 'hsl(270 80% 65%)',      // bright purple — highlights
+  purpleFrost: 'hsl(270 30% 92%)',     // near-white with purple tint — text on dark
+
   // ── Gold family — Figma Attention #fac300 ─────────────────────────────────
   goldPrimary: 'hsl(42 86% 48%)',
   goldLight: 'hsl(42 88% 61%)',
@@ -58,37 +66,53 @@ export const colors = {
   linkPrimary: 'hsl(358 74% 50%)',
 
   // ── Text ──────────────────────────────────────────────────────────────────
-  text: 'hsl(0 0% 12%)',
-  textPrimary: 'hsl(0 0% 12%)',
-  textSecondary: 'hsl(0 0% 32%)',
-  mutedText: 'hsl(0 0% 45%)',
-  textMuted: 'hsl(0 0% 45%)',
-  textInverted: 'hsl(0 0% 100%)',    // white
+  text: '#1a1a1a',                   // near-black — on-surface
+  textPrimary: '#1a1a1a',
+  textSecondary: '#5e5e5e',          // DESIGN.md secondary label color
+  mutedText: '#9e9e9e',
+  textMuted: '#9e9e9e',
+  textInverted: '#ffffff',
 
   // ── Borders ───────────────────────────────────────────────────────────────
   border: 'hsla(0 0% 0% / 0.10)',
   divider: 'hsla(0 0% 0% / 0.10)',
 
-  // ── Brand — REAL Cosmetics crimson (unchanged — brand identity) ───────────
-  primary: 'hsl(0 0% 12%)',
-  secondary: 'hsl(358 74% 50%)',     // brandCrimson
-  accent: 'hsl(47 100% 49%)',        // Figma gold
-  brandPrimary: 'hsl(358 74% 50%)',  // REAL Cosmetics crimson CTA — unchanged
-  brandPrimaryHover: 'hsl(358 74% 41%)',
-  brandPrimaryPressed: 'hsl(358 74% 35%)',
-  brandPrimarySubtle: 'hsl(344 80% 98%)',
-  primaryText: 'hsl(0 0% 100%)',
+  // ── Brand — REAL Cosmetics — DESIGN.md "Editorial Monolith" ──────────────
+  // primary = #a8000d (deep blood red — "bloodline" of the design)
+  // primary_container = #d31018 (hover state — gradient partner)
+  primary: '#a8000d',
+  secondary: 'hsl(0 0% 37%)',        // #5e5e5e — secondary text / ghost borders
+  accent: 'hsl(47 100% 49%)',         // gold — kept for promo accents
+  brandPrimary: '#a8000d',
+  brandPrimaryHover: '#d31018',
+  brandPrimaryPressed: '#8a000b',
+  brandPrimarySubtle: '#fff5f5',
+  primaryText: '#ffffff',
+
+  // ── DESIGN.md surface hierarchy — "Paper-on-Paper" ───────────────────────
+  // surface-container-lowest  #ffffff — cards, elevated objects
+  // surface-container-low     #f3f3f3 — section separators
+  // surface-container         #eeeeee — page backgrounds between sections
+  // surface                   #f9f9f9 — main page background
+  // surface-dim               #e5e5e5 — overlays, editorial image washes
+  surfaceLowest:    '#ffffff',       // cards — innermost layer
+  surfaceContainerLow: '#f3f3f3',   // section boundaries (no-line rule)
+  surfaceContainer: '#eeeeee',      // mid-layer backgrounds
+  surfaceDim:       '#e5e5e5',      // image overlays / editorial reveal
+
+  // ── DESIGN.md ghost border — outline-variant at 15% ──────────────────────
+  outlineVariant: '#e7bdb7',         // 15% opacity on use — accessibility ghost
 
   // ── Legacy aliases — DO NOT REMOVE (backward compat) ─────────────────────
   chipBackground: 'hsl(210 20% 98%)',
-  brandTeal: 'hsl(358 74% 50%)',   // legacy name — same as brandPrimary
+  brandTeal: '#a8000d',              // legacy name — remapped to editorial red
   brandMint: 'hsl(210 20% 98%)',
-  brandGreen: 'hsl(358 74% 44%)',  // legacy name — same as brandPrimaryHover
+  brandGreen: '#d31018',             // legacy name — remapped to hover red
 
   // ── Correct-name aliases ──────────────────────────────────────────────────
-  brandCrimson: 'hsl(358 74% 50%)',
-  brandCrimsonHover: 'hsl(358 74% 44%)',
-  surfaceSubtle: 'hsl(0 0% 96%)',
+  brandCrimson: '#a8000d',
+  brandCrimsonHover: '#d31018',
+  surfaceSubtle: '#f3f3f3',
 
   // ── Status — Figma pixel-perfect values ───────────────────────────────────
   success: 'hsl(153 72% 34%)',
@@ -103,7 +127,7 @@ export const colors = {
   black: 'hsl(0 0% 12%)',
 
   // ── Semantic intent aliases ───────────────────────────────────────────────
-  salePrice: 'hsl(344 85% 55%)',
-  ctaBackground: 'hsl(358 74% 50%)',  // = brandPrimary — for add-to-cart buttons
-  urgencyBadge: 'hsl(344 85% 55%)',
+  salePrice: '#a8000d',
+  ctaBackground: '#a8000d',
+  urgencyBadge: '#a8000d',
 } as const

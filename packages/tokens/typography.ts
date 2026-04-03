@@ -1,16 +1,16 @@
 export const typography = {
-  // ── Figma type scale — pixel-perfect ─────────────────────────────────────
-  // H1 96 / H2 60 / H3 48 / H4 34 / H5 26 / H6 20
-  // Body1 16 / Body2 14 / Caption 12 / Button 16 / Overline 10
-  h1: 96,
-  h2: 60,
-  h3: 48,
-  h4: 34,
-  h5: 26,
+  h1: 64,
+  h2: 48,
+  h3: 36,
+  h4: 30,
+  h5: 24,
   h6: 20,
+  subtitle1: 16,
+  subtitle2: 14,
   body1: 16,
   body2: 14,
   button: 16,
+  caption: 13,
   overline: 10,
 
   // ── Legacy / component aliases (keep for backward compat) ─────────────────
@@ -20,48 +20,50 @@ export const typography = {
   lg: 18,
   xl: 20,
   xxl: 24,
-  display: 96,       // → Figma H1
+  display: 64,
 
   base: 16,
   '2xl': 24,
   '3xl': 30,
   '4xl': 36,
 
-  displayTier: 96,       // → Figma H1
-  headlineTier: 34,      // → Figma H4 — section-level headings
-  subHeadlineTier: 20,   // → Figma H6
+  displayTier: 64,
+  headlineTier: 34,
+  subHeadlineTier: 28,
   bodyTier: 16,
-  captionTier: 12,
+  captionTier: 13,
 
-  heading6: 15,
-  heading7: 28,
-  heading8: 48,   // → Figma H3
-  heading9: 60,   // → Figma H2
-  heading10: 96,  // → Figma H1
+  heading6: 11,
+  heading7: 32,
+  heading8: 48,
+  heading9: 56,
+  heading10: 64,
 
   bodySm: 14,
   bodyMd: 16,
   bodyLg: 18,
   body: 16,
-  hero: 96,      // → Figma H1
-  // Campaign tiers — The Atelier mixed-weight contrast system
-  campaign: 96,      // full-width hero headlines — Figma H1
-  headline: 60,      // section-level ink-anchor headings — Figma H2
-  subheadline: 18,   // offer descriptor line above/below campaign number
+  hero: 56,
+  campaign: 64,
+  headline: 34,
+  subheadline: 16,
   price: 20,
-  caption: 12,
   nav: 13,
-  label: 12,
-  meta: 11,
+  label: 11,
+  meta: 12,
   footer: 13,
 } as const
 
 export const fontFamilies = {
-  // ── Figma pixel-perfect: Poppins primary, Montserrat secondary ────────────
-  sans: '"Poppins", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-  heading: '"Poppins", "Montserrat", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  display: '"Poppins", "Montserrat", -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  secondary: '"Montserrat", "Poppins", -apple-system, system-ui, sans-serif',
+  // ── DESIGN.md §3 — "The Editorial Voice" ─────────────────────────────────
+  // Display/Headlines: Noto Serif — heritage, timelessness, "endless beauty"
+  // Body/Labels:       Manrope — geometric sans, modern, technical precision
+  sans: 'var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  heading: 'var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif',
+  display: 'var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif',
+  secondary: 'var(--font-manrope, "Manrope"), -apple-system, system-ui, sans-serif',
+  logo: 'var(--font-noto-serif, "Noto Serif"), Georgia, serif',
+  logoSecondary: 'var(--font-manrope, "Manrope"), sans-serif',
   mono: 'Menlo, monospace',
 } as const
 
@@ -75,39 +77,52 @@ export const fontWeights = {
 } as const
 
 export const lineHeights = {
-  // ── Figma pixel-perfect line heights ──────────────────────────────────────
-  h1: 104,   // Figma H1 96/104
-  h2: 68,    // Figma H2 60/68
-  h3: 52,    // Figma H3 48/52
-  h4: 40,    // Figma H4 34/40
-  h5: 32,    // Figma H5 26/32
+  h1: 72,
+  h2: 56,
+  h3: 44,
+  h4: 36,
+  h5: 30,
   h6: 24,    // Figma H6 20/24
-  body1: 24, // Figma Body1 16/24
-  body2: 20, // Figma Body2 14/20
-  caption: 16, // Figma Caption 12/16
-  overline: 16, // Figma Overline 10/16
-  // Legacy ratio aliases
-  tight: 1.2,
-  normal: 1.4,
-  relaxed: 1.6,
+  subtitle1: 24,
+  subtitle2: 22,
+  body1: 24,
+  body2: 22,
+  button: 20,
+  caption: 18,
+  overline: 16,
+  tight: 1.15,
+  normal: 1.35,
+  relaxed: 1.55,
   body: 24,
   heading: 40,
-  hero: 104,
+  hero: 68,
 } as const
 
 export const letterSpacing = {
-  // ── Figma pixel-perfect letter spacing ────────────────────────────────────
-  h1: -1.44,   // Figma H1: -1.44px (≈ -0.015em at 96px)
-  h2: -0.3,    // Figma H2: -0.3px  (≈ -0.005em at 60px)
+  h1: -1.92,
+  h2: -1.2,
+  h3: 0,
+  h4: 0.085,
+  h5: 0,
+  h6: 0.03,
+  subtitle1: 0.2,
+  subtitle2: 0.14,
+  body1: 0.08,
+  body2: 0.035,
+  caption: 0.06,
+  button: 0,
+  // DESIGN.md §3 — editorial display tracking (wide on display-lg)
+  displayWide: 2.8,   // display-lg 3.5rem with wide tracking — "Art Pieces"
+  labelSmallCaps: 1.6, // label-md/sm in small-caps or generous spacing
   // Legacy aliases (kept for backward compat)
-  tight: -0.2,
+  tight: -0.6,
   normal: 0,
   wide: 0.3,
   caps: 1,
   capsWide: 2,
-  headlineTier: -0.3,
+  headlineTier: -0.8,
   subHeaderCaps: 1.2,
-  campaignHeading: -1.44,
+  campaignHeading: -1.6,
   labelPill: 1.92,
-  overline: 1.6,   // Figma Overline: +1.6px (wide caps tracking)
+  overline: 1.6,
 } as const

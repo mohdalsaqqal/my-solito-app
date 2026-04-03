@@ -7,7 +7,8 @@ import { Platform, Pressable } from 'react-native';
 
 const buttonVariants = cva(
   cn(
-    'group shrink-0 flex-row items-center justify-center gap-2 rounded-md shadow-none',
+    // DESIGN.md §4 — "Roundedness Scale of 0px" — Brutalist-Luxe, no radius
+    'group shrink-0 flex-row items-center justify-center gap-2 rounded-none shadow-none',
     Platform.select({
       web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     })
@@ -15,24 +16,25 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // DESIGN.md primary red — hover/pressed via CSS token vars
         default: cn(
-          'bg-primary active:bg-primary/90 shadow-sm shadow-black/5',
-          Platform.select({ web: 'hover:bg-primary/90' })
+          'bg-primary active:bg-primary-pressed',
+          Platform.select({ web: 'hover:bg-primary-hover active:scale-[0.98]' })
         ),
         destructive: cn(
-          'bg-destructive active:bg-destructive/90 dark:bg-destructive/60 shadow-sm shadow-black/5',
+          'bg-destructive active:bg-destructive/90 dark:bg-destructive/60',
           Platform.select({
             web: 'hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40',
           })
         ),
         outline: cn(
-          'border-border bg-background active:bg-accent dark:bg-input/30 dark:border-input dark:active:bg-input/50 border shadow-sm shadow-black/5',
+          'border border-foreground/20 bg-transparent active:bg-accent dark:bg-input/30 dark:border-input dark:active:bg-input/50',
           Platform.select({
             web: 'hover:bg-accent dark:hover:bg-input/50',
           })
         ),
         secondary: cn(
-          'bg-secondary active:bg-secondary/80 shadow-sm shadow-black/5',
+          'bg-secondary active:bg-secondary/80',
           Platform.select({ web: 'hover:bg-secondary/80' })
         ),
         ghost: cn(
@@ -42,9 +44,10 @@ const buttonVariants = cva(
         link: '',
       },
       size: {
-        default: cn('h-10 px-4 py-2 sm:h-9', Platform.select({ web: 'has-[>svg]:px-3' })),
-        sm: cn('h-9 gap-1.5 rounded-md px-3 sm:h-8', Platform.select({ web: 'has-[>svg]:px-2.5' })),
-        lg: cn('h-11 rounded-md px-6 sm:h-10', Platform.select({ web: 'has-[>svg]:px-4' })),
+        // DESIGN.md — generous padding (px-8) on primary CTAs
+        default: cn('h-12 px-8 py-3 sm:h-11', Platform.select({ web: 'has-[>svg]:px-6' })),
+        sm: cn('h-9 gap-1.5 px-4 sm:h-8', Platform.select({ web: 'has-[>svg]:px-3' })),
+        lg: cn('h-14 px-10 sm:h-12', Platform.select({ web: 'has-[>svg]:px-8' })),
         icon: 'h-10 w-10 sm:h-9 sm:w-9',
       },
     },
@@ -91,20 +94,37 @@ const buttonTextVariants = cva(
 );
 
 type ButtonProps = React.ComponentProps<typeof Pressable> &
-  React.RefAttributes<typeof Pressable> &
   VariantProps<typeof buttonVariants> & {
-    className?: string
+    className?: string;
+    href?: string;
+    target?: string;
+    rel?: string;
+    download?: string;
   };
 
-const PressableWithClassName = Pressable as any
+const NativePressable = Pressable as unknown as React.ComponentType<any>;
 
-function Button({ className, variant, size, ...props }: ButtonProps) {
+function Button({ className, variant, size, href, target, rel, download, ...props }: ButtonProps) {
+  const webLinkProps =
+    Platform.OS === 'web'
+      ? href
+        ? ({
+            href,
+            hrefAttrs: {
+              target,
+              rel,
+              download,
+            },
+          } as const)
+        : ({ type: 'button' } as const)
+      : undefined;
+
   return (
     <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-      <PressableWithClassName
-        // Uniwind supports className at runtime; RN type defs do not include it.
+      <NativePressable
         className={cn(props.disabled && 'opacity-50', buttonVariants({ variant, size }), className)}
-        role="button"
+        role={href ? 'link' : 'button'}
+        {...webLinkProps}
         {...props}
       />
     </TextClassContext.Provider>

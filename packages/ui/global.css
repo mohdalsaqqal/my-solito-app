@@ -6,22 +6,38 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 @theme {
-  /* ── Colors — from packages/tokens/colors.ts  ── */
-  --color-background:           hsl(0 0% 100%);
-  --color-background-secondary: hsl(0 0% 96%);
-  --color-foreground:           hsl(0 0% 12%);
-  --color-foreground-muted:     hsl(0 0% 49%);   
-  --color-border:               hsla(0 0% 0% / 0.10);
-  --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(210 20% 98%);
-  --color-muted-foreground:     hsl(0 0% 49%);   
+  /* ── Colors — DESIGN.md "The Editorial Monolith" ── */
+  /* surface hierarchy: lowest white → surface hsl(0 0% 97.6%) → container-low hsl(0 0% 95.3%) → container 93.3% → dim hsl(0 0% 89.8%) */
+  --color-background:              hsl(0 0% 97.6%);
+  --color-background-secondary:    hsl(0 0% 95.3%);
+  --color-surface-lowest:          hsl(0 0% 100%);
+  --color-surface-container-low:   hsl(0 0% 95.3%);
+  --color-surface-container:       hsl(0 0% 93.3%);
+  --color-surface-dim:             hsl(0 0% 89.8%);
+  --color-foreground:              hsl(0 0% 10.2%);
+  --color-foreground-muted:        hsl(0 0% 62%);
+  --color-border:                  transparent;
+  --color-outline-variant:         rgba(231, 189, 183, 0.15);
+  --color-card:                    hsl(0 0% 100%);
+  --color-muted:                   hsl(0 0% 93.3%);
+  --color-muted-foreground:        hsl(0 0% 36.9%);
 
-  /* Brand — colors.brandPrimary = hsl(358 74% 50%) — REAL Cosmetics crimson */
-  --color-primary:              hsl(358 74% 50%);
-  --color-primary-hover:        hsl(358 74% 41%);
-  --color-primary-pressed:      hsl(358 74% 35%);
-  --color-primary-subtle:       hsl(344 80% 98%);
+  /* Brand — DESIGN.md primary = hsl(356 100% 33%) — deep blood red */
+  --color-primary:              hsl(356 100% 33%);
+  --color-primary-hover:        hsl(357 100% 45%);
+  --color-primary-pressed:      hsl(356 100% 27%);
+  --color-primary-subtle:       hsl(0 100% 98%);
   --color-primary-foreground:   hsl(0 0% 100%);
+  --color-secondary:            hsl(0 0% 36.9%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-accent:               hsl(0 0% 93.3%);
+  --color-accent-foreground:    hsl(0 0% 10.2%);
+  --color-input:                transparent;
+  --color-ring:                 hsl(356 100% 33%);
+  --color-popover:              hsl(0 0% 100%);
+  --color-popover-foreground:   hsl(0 0% 10.2%);
+  --color-card-foreground:      hsl(0 0% 10.2%);
+  --color-destructive-foreground: hsl(0 0% 100%);
 
   /* Ink family — Figma Primary (cool pure darks) */
   --color-ink-black:  hsl(0 0% 12%);
@@ -67,15 +83,15 @@
   --color-info:                 hsl(214 90% 42%);
   --color-info-subtle:          hsl(224 100% 95%);
 
-  /* ── Radius — from packages/tokens/radius.ts — sharp by default per §25.3 ── */
+  /* ── Radius — DESIGN.md §4 "Roundedness Scale of 0px" — Brutalist-Luxe ── */
   --radius-none: 0px;
-  --radius-xs:   2px;
-  --radius-sm:   6px;
-  --radius-md:   8px;
-  --radius-lg:   12px;
-  --radius-xl:   16px;
-  --radius-full: 9999px;
-  --radius:      8px;
+  --radius-xs:   0px;
+  --radius-sm:   0px;
+  --radius-md:   0px;
+  --radius-lg:   0px;
+  --radius-xl:   0px;
+  --radius-full: 9999px;  /* pill badges / avatar crops only */
+  --radius:      0px;
 
   /* ── Spacing — from packages/tokens/spacing.ts ── */
   --spacing-px:   1px;
@@ -96,10 +112,14 @@
   --spacing-24:   96px;
   --spacing-32:   128px;
 
-  /* ── Typography — Figma pixel-perfect: Poppins primary, Montserrat secondary ── */
-  --font-sans:      var(--font-poppins, "Poppins"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-heading:   var(--font-poppins, "Poppins"), "Montserrat", -apple-system, system-ui, sans-serif;
-  --font-secondary: "Montserrat", var(--font-poppins, "Poppins"), -apple-system, system-ui, sans-serif;
+  /* ── Typography — DESIGN.md §3 "The Editorial Voice" ── */
+  /* Body/Labels: Manrope — geometric sans, modern, technical precision      */
+  /* Display/Headlines: Noto Serif — heritage, timelessness, "endless beauty" */
+  --font-sans:      var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading:   var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif;
+  --font-display:   var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif;
+  --font-secondary: var(--font-manrope, "Manrope"), -apple-system, system-ui, sans-serif;
+  --font-logo:      var(--font-noto-serif, "Noto Serif"), Georgia, serif;
   --font-mono:      Menlo, monospace;
 
   /* Figma type scale — H1 96 → Overline 10 */
@@ -208,22 +228,72 @@
 
 :root,
 .light {
-  --color-background:           hsl(0 0% 100%);
-  --color-background-secondary: hsl(0 0% 96%);
-  --color-foreground:           hsl(0 0% 12%);
-  --color-foreground-muted:     hsl(0 0% 49%);   
-  --color-border:               hsla(0 0% 0% / 0.10);
+  /* ── DESIGN.md "Paper-on-Paper" light theme ── */
+  --background:                hsl(0 0% 97.6%);
+  --foreground:                hsl(0 0% 10.2%);
+  --card:                      hsl(0 0% 100%);
+  --card-foreground:           hsl(0 0% 10.2%);
+  --popover:                   hsl(0 0% 100%);
+  --popover-foreground:        hsl(0 0% 10.2%);
+  --primary:                   hsl(356 100% 33%);
+  --primary-foreground:        hsl(0 0% 100%);
+  --secondary:                 hsl(0 0% 36.9%);
+  --secondary-foreground:      hsl(0 0% 100%);
+  --muted:                     hsl(0 0% 93.3%);
+  --muted-foreground:          hsl(0 0% 36.9%);
+  --accent:                    hsl(0 0% 93.3%);
+  --accent-foreground:         hsl(0 0% 10.2%);
+  --destructive:               hsl(344 85% 55%);
+  --destructive-foreground:    hsl(0 0% 100%);
+  --border:                    transparent;
+  --input:                     transparent;
+  --ring:                      hsl(356 100% 33%);
+  --color-background:           hsl(0 0% 97.6%);
+  --color-background-secondary: hsl(0 0% 95.3%);
+  --color-foreground:           hsl(0 0% 10.2%);
+  --color-foreground-muted:     hsl(0 0% 62%);
+  --color-border:               transparent;
   --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(210 20% 98%);
-  --color-muted-foreground:     hsl(0 0% 49%);   
-  --color-primary-subtle:       hsl(344 80% 98%);
+  --color-muted:                hsl(0 0% 93.3%);
+  --color-muted-foreground:     hsl(0 0% 36.9%);
+  --color-primary-subtle:       hsl(0 100% 98%);
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning-subtle:       hsl(48 100% 94%);
   --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info-subtle:          hsl(224 100% 95%);
+  --color-secondary:            hsl(0 0% 36.9%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-accent:               hsl(0 0% 93.3%);
+  --color-accent-foreground:    hsl(0 0% 10.2%);
+  --color-input:                transparent;
+  --color-ring:                 hsl(356 100% 33%);
+  --color-popover:              hsl(0 0% 100%);
+  --color-popover-foreground:   hsl(0 0% 10.2%);
+  --color-card-foreground:      hsl(0 0% 10.2%);
+  --color-destructive-foreground: hsl(0 0% 100%);
 }
 
 .dark {
+  /* ── DESIGN.md dark theme — Ink surfaces ── */
+  --background:                hsl(0 0% 9%);
+  --foreground:                hsl(0 0% 94%);
+  --card:                      hsl(0 0% 12%);
+  --card-foreground:           hsl(0 0% 94%);
+  --popover:                   hsl(0 0% 12%);
+  --popover-foreground:        hsl(0 0% 94%);
+  --primary:                   hsl(356 100% 33%);
+  --primary-foreground:        hsl(0 0% 100%);
+  --secondary:                 hsl(0 0% 16%);
+  --secondary-foreground:      hsl(0 0% 94%);
+  --muted:                     hsl(0 0% 16%);
+  --muted-foreground:          hsl(0 0% 54%);
+  --accent:                    hsl(0 0% 16%);
+  --accent-foreground:         hsl(0 0% 94%);
+  --destructive:               hsl(344 85% 55%);
+  --destructive-foreground:    hsl(0 0% 100%);
+  --border:                    hsl(0 0% 22%);
+  --input:                     hsl(0 0% 16%);
+  --ring:                      hsl(356 100% 33%);
   --color-background:           hsl(0 0% 9%);
   --color-background-secondary: hsl(0 0% 12%);
   --color-foreground:           hsl(0 0% 94%);
@@ -237,26 +307,86 @@
   --color-warning-subtle:       hsl(48 40% 12%);
   --color-destructive-subtle:   hsl(0 40% 12%);
   --color-info-subtle:          hsl(224 40% 12%);
+  --color-secondary:            hsl(0 0% 16%);
+  --color-secondary-foreground: hsl(0 0% 94%);
+  --color-accent:               hsl(0 0% 16%);
+  --color-accent-foreground:    hsl(0 0% 94%);
+  --color-input:                hsl(0 0% 16%);
+  --color-ring:                 hsl(356 100% 33%);
+  --color-popover:              hsl(0 0% 12%);
+  --color-popover-foreground:   hsl(0 0% 94%);
+  --color-card-foreground:      hsl(0 0% 94%);
+  --color-destructive-foreground: hsl(0 0% 100%);
 }
 
 /* Uniwind themes must expose the exact same dashed variables per theme variant. */
 @variant light {
-  --color-background:           hsl(0 0% 100%);
-  --color-background-secondary: hsl(0 0% 96%);
-  --color-foreground:           hsl(0 0% 12%);
-  --color-foreground-muted:     hsl(0 0% 49%);   
-  --color-border:               hsla(0 0% 0% / 0.10);
+  /* ── DESIGN.md "Paper-on-Paper" light theme ── */
+  --background:                hsl(0 0% 97.6%);
+  --foreground:                hsl(0 0% 10.2%);
+  --card:                      hsl(0 0% 100%);
+  --card-foreground:           hsl(0 0% 10.2%);
+  --popover:                   hsl(0 0% 100%);
+  --popover-foreground:        hsl(0 0% 10.2%);
+  --primary:                   hsl(356 100% 33%);
+  --primary-foreground:        hsl(0 0% 100%);
+  --secondary:                 hsl(0 0% 36.9%);
+  --secondary-foreground:      hsl(0 0% 100%);
+  --muted:                     hsl(0 0% 93.3%);
+  --muted-foreground:          hsl(0 0% 36.9%);
+  --accent:                    hsl(0 0% 93.3%);
+  --accent-foreground:         hsl(0 0% 10.2%);
+  --destructive:               hsl(344 85% 55%);
+  --destructive-foreground:    hsl(0 0% 100%);
+  --border:                    transparent;
+  --input:                     transparent;
+  --ring:                      hsl(356 100% 33%);
+  --color-background:           hsl(0 0% 97.6%);
+  --color-background-secondary: hsl(0 0% 95.3%);
+  --color-foreground:           hsl(0 0% 10.2%);
+  --color-foreground-muted:     hsl(0 0% 62%);
+  --color-border:               transparent;
   --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(210 20% 98%);
-  --color-muted-foreground:     hsl(0 0% 49%);   
-  --color-primary-subtle:       hsl(344 80% 98%);
+  --color-muted:                hsl(0 0% 93.3%);
+  --color-muted-foreground:     hsl(0 0% 36.9%);
+  --color-primary-subtle:       hsl(0 100% 98%);
   --color-success-subtle:       hsl(153 95% 94%);
   --color-warning-subtle:       hsl(48 100% 94%);
   --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info-subtle:          hsl(224 100% 95%);
+  --color-secondary:            hsl(0 0% 36.9%);
+  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-accent:               hsl(0 0% 93.3%);
+  --color-accent-foreground:    hsl(0 0% 10.2%);
+  --color-input:                transparent;
+  --color-ring:                 hsl(356 100% 33%);
+  --color-popover:              hsl(0 0% 100%);
+  --color-popover-foreground:   hsl(0 0% 10.2%);
+  --color-card-foreground:      hsl(0 0% 10.2%);
+  --color-destructive-foreground: hsl(0 0% 100%);
 }
 
 @variant dark {
+  /* ── DESIGN.md dark theme — Ink surfaces ── */
+  --background:                hsl(0 0% 9%);
+  --foreground:                hsl(0 0% 94%);
+  --card:                      hsl(0 0% 12%);
+  --card-foreground:           hsl(0 0% 94%);
+  --popover:                   hsl(0 0% 12%);
+  --popover-foreground:        hsl(0 0% 94%);
+  --primary:                   hsl(356 100% 33%);
+  --primary-foreground:        hsl(0 0% 100%);
+  --secondary:                 hsl(0 0% 16%);
+  --secondary-foreground:      hsl(0 0% 94%);
+  --muted:                     hsl(0 0% 16%);
+  --muted-foreground:          hsl(0 0% 54%);
+  --accent:                    hsl(0 0% 16%);
+  --accent-foreground:         hsl(0 0% 94%);
+  --destructive:               hsl(344 85% 55%);
+  --destructive-foreground:    hsl(0 0% 100%);
+  --border:                    hsl(0 0% 22%);
+  --input:                     hsl(0 0% 16%);
+  --ring:                      hsl(356 100% 33%);
   --color-background:           hsl(0 0% 9%);
   --color-background-secondary: hsl(0 0% 12%);
   --color-foreground:           hsl(0 0% 94%);
@@ -270,4 +400,14 @@
   --color-warning-subtle:       hsl(48 40% 12%);
   --color-destructive-subtle:   hsl(0 40% 12%);
   --color-info-subtle:          hsl(224 40% 12%);
+  --color-secondary:            hsl(0 0% 16%);
+  --color-secondary-foreground: hsl(0 0% 94%);
+  --color-accent:               hsl(0 0% 16%);
+  --color-accent-foreground:    hsl(0 0% 94%);
+  --color-input:                hsl(0 0% 16%);
+  --color-ring:                 hsl(356 100% 33%);
+  --color-popover:              hsl(0 0% 12%);
+  --color-popover-foreground:   hsl(0 0% 94%);
+  --color-card-foreground:      hsl(0 0% 94%);
+  --color-destructive-foreground: hsl(0 0% 100%);
 }

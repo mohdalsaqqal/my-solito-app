@@ -1,11 +1,10 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
-import { Platform, useWindowDimensions } from 'react-native'
+import { useMemo } from 'react'
 import { localizeString } from '@real/app/lib/cms/blocks'
-import type { LocalizedString, Product } from '@real/app/lib/types'
-import { BlockRenderer } from '@real/app/sections/blocks/BlockRenderer'
+import type { LocalizedString } from '@real/app/lib/types'
+import { HomeBlocksRenderer } from '@real/app/features/home/HomeBlocksRenderer'
 import type { RegisteredHomePageBlock } from '@real/app/sections/blocks/block-types'
-import { breakpoints, colors, componentTokens, layout, spacing } from '@real/tokens'
-import { Box } from '@real/ui/primitives'
+import { useBreakpoint } from '@real/ui/responsive'
+import { colors, componentTokens, layout } from '@real/tokens'
 import {
   AnnouncementTicker,
   BrandSpotlightPanel,
@@ -14,14 +13,13 @@ import {
   EditorialHotspotSection,
   FlashSaleBand,
   HeroTileRail,
-  HomeHeroRail,
   NewsletterLoyaltyCta,
   OfferBannersGrid,
   ProductRail,
   TestimonialsBlock,
-  TopBrandsGrid,
 } from '@real/ui/components'
 import type { OfferBannerBlock } from '@real/ui/components'
+import type { ProductCardModel } from '@real/ui/components/ProductCard.types'
 import {
   HomeBrandItem,
   HomeCategoryItem,
@@ -29,16 +27,14 @@ import {
   HomeEditorialHotspotSection,
   HomeHeroItem,
   HomeNewsletterCta,
-  HomeProductItem,
   HomeUgcItem,
 } from '@real/ui/components/home/types'
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { Box } from '@real/ui/primitives'
 
 type ResolvedRail = {
   id: string
   title: string
-  items: HomeProductItem[]
+  items: ProductCardModel[]
 }
 
 type FeaturedSlot = {
@@ -57,13 +53,15 @@ type SpotlightSection = {
   bannerHref?: string
   bannerImageUrl?: string
   railTitle: string
-  items: HomeProductItem[]
+  items: ProductCardModel[]
 }
 
 type TickerItem = {
   id: string
   label: string
   href?: string
+  badgeLabel?: string
+  ctaLabel?: string
 }
 
 type RailAutoplaySetting = {
@@ -95,28 +93,6 @@ function resolvePairString(
 ) {
   if (locale === 'ar') return valueAr || valueEn || fallback
   return valueEn || valueAr || fallback
-}
-
-function mapProductToHomeItem(product: Product): HomeProductItem {
-  return {
-    id: product.id,
-    name: product.name,
-    brand: product.brand ?? '',
-    price: product.price,
-    currency: product.currency,
-    imageUrl: product.image,
-    href: `/product/${product.id}`,
-    rating: product.rating,
-    reviews: product.reviews,
-    isNew: product.isNew,
-    isLimited: product.isLimited,
-    stock: product.stock,
-    displayTitle: product.name,
-  }
-}
-
-function mapProductsToHomeItems(products: Product[]) {
-  return products.map(mapProductToHomeItem)
 }
 
 function mapBrandItems(
@@ -172,16 +148,14 @@ function mapHeroItems(block: PublishedHomeBlock) {
   }
 
   if (block.type === 'hero') {
-    return [
-      {
-        id: block.id,
-        title: resolveBlockString(block, block.title),
-        subtitle: resolveBlockString(block, block.subtitle),
-        ctaLabel: resolveBlockString(block, block.ctaLabel),
-        href: block.href,
-        imageUrl: block.imageUrl,
-      },
-    ]
+    return [{
+      id: block.id,
+      title: resolveBlockString(block, block.title),
+      subtitle: resolveBlockString(block, block.subtitle),
+      ctaLabel: resolveBlockString(block, block.ctaLabel),
+      href: block.href,
+      imageUrl: block.imageUrl,
+    }]
   }
 
   return []
@@ -275,12 +249,9 @@ type HomeV2SectionsProps = {
   onReload: () => void
   onNavigate?: (href: string) => void
   onSelectProduct?: (productId: string) => void
-  onQuickView?: (item: HomeProductItem) => void
   onAddToCart?: (productId: string) => void
   onAddAllToCart?: (productIds: string[]) => void
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function HomeV2Sections({
   homeBlocks = null,
@@ -314,21 +285,12 @@ export function HomeV2Sections({
   onReload,
   onNavigate,
   onSelectProduct,
-  onQuickView,
   onAddToCart,
   onAddAllToCart,
 }: HomeV2SectionsProps) {
-  const { width } = useWindowDimensions()
-  const [hasHydrated, setHasHydrated] = useState(Platform.OS !== 'web')
+  const profile = useBreakpoint()
+  const isDesktop = profile.breakpoint === 'desktop'
   const layoutTokens = componentTokens.storefrontHome.layout
-
-  useEffect(() => {
-    if (Platform.OS === 'web') setHasHydrated(true)
-  }, [])
-
-  const effectiveWidth = Platform.OS === 'web' && !hasHydrated ? 0 : width
-  const viewportWidth = effectiveWidth || layout.containerMaxWidth
-  const isDesktop = viewportWidth >= breakpoints.desktopMin || (Platform.OS === 'web' && effectiveWidth === 0)
   const orderedHomeBlocks = useMemo(
     () =>
       homeBlocks && homeBlocks.length > 0
@@ -337,23 +299,25 @@ export function HomeV2Sections({
     [homeBlocks],
   )
 
-  // ── Rail resolution ──────────────────────────────────────────────────────
-  // Primary: new arrivals preferred; fallback chain
-  const primaryRail = newArrivalsRail ?? trendingRail ?? bundlesRail ?? personalizedRail ?? communityFavoritesRail ?? bestSellersRail
-  // Secondary: best sellers preferred, must differ from primary
-  const secondaryRail = (() => {
-    const candidates = [bestSellersRail, communityFavoritesRail, trendingRail, personalizedRail, newArrivalsRail]
-    return candidates.find((r) => r && r.id !== primaryRail?.id) ?? null
-  })()
+  const flashOffersRail =
+    trendingRail ??
+    bundlesRail ??
+    communityFavoritesRail ??
+    personalizedRail ??
+    bestSellersRail ??
+    newArrivalsRail
+  const bestSellerShowcaseRail = [bestSellersRail, communityFavoritesRail, personalizedRail, trendingRail]
+    .find((rail) => rail && rail.id !== flashOffersRail?.id) ?? null
+  const newArrivalsShowcaseRail = [newArrivalsRail, trendingRail, personalizedRail]
+    .find((rail) => rail && rail.id !== flashOffersRail?.id && rail.id !== bestSellerShowcaseRail?.id) ?? null
 
-  // ── Promo blocks for hero tiles and offer banners ────────────────────────
   const promoBlocks: OfferBannerBlock[] = offerBanners
-    ? offerBanners.map((b) => ({
-        title: b.title ?? '',
-        subtitle: b.subtitle,
-        ctaLabel: b.ctaLabel,
-        href: b.href,
-        imageUrl: b.imageUrl,
+    ? offerBanners.map((banner) => ({
+        title: banner.title ?? '',
+        subtitle: banner.subtitle,
+        ctaLabel: banner.ctaLabel,
+        href: banner.href,
+        imageUrl: banner.imageUrl,
       }))
     : [
         featuredSlot?.imageUrl ? featuredSlot : null,
@@ -367,43 +331,29 @@ export function HomeV2Sections({
             }
           : null,
         educationBanner?.imageUrl ? educationBanner : null,
-      ].filter((b): b is NonNullable<typeof b> => Boolean(b))
+      ].filter((block): block is NonNullable<typeof block> => Boolean(block))
 
-  // ── Showcase image for brand spotlight panel ─────────────────────────────
   const showcaseImageUrl =
+    spotlight?.bannerImageUrl ??
     promoBlocks[0]?.imageUrl ??
     heroItems[0]?.imageUrl ??
     ugcItems[0]?.imageUrl
 
   if (orderedHomeBlocks && orderedHomeBlocks.length > 0) {
     return (
-      <Box
-        style={{
-          width: '100%',
-          gap: layoutTokens.rootGap,
-          backgroundColor: colors.background,
-        }}
-      >
-        {orderedHomeBlocks.map((block) => (
-          <Fragment key={block.id}>
-            <BlockRenderer
-              block={block}
-              isDesktop={isDesktop}
-              tickerSpeedMs={tickerSpeedMs}
-              loading={loading}
-              error={error}
-              railAutoplay={railAutoplay}
-              locale={locale}
-              onReload={onReload}
-              onNavigate={onNavigate}
-              onSelectProduct={onSelectProduct}
-              onQuickView={onQuickView}
-              onAddToCart={onAddToCart}
-              onAddAllToCart={onAddAllToCart}
-            />
-          </Fragment>
-        ))}
-      </Box>
+      <HomeBlocksRenderer
+        blocks={orderedHomeBlocks}
+        loading={loading}
+        error={error}
+        tickerSpeedMs={tickerSpeedMs}
+        railAutoplay={railAutoplay}
+        locale={locale}
+        onReload={onReload}
+        onNavigate={onNavigate}
+        onSelectProduct={onSelectProduct}
+        onAddToCart={onAddToCart}
+        onAddAllToCart={onAddAllToCart}
+      />
     )
   }
 
@@ -415,28 +365,20 @@ export function HomeV2Sections({
         backgroundColor: colors.background,
       }}
     >
-      {/* 1. Announcement ticker */}
-      {tickerItems.length > 0 && (
+      {tickerItems.length > 0 ? (
         <AnnouncementTicker
-          items={tickerItems}
+          items={tickerItems.map((item) => ({
+            ...item,
+            badgeLabel: tickerItems.length === 1 && heroItems.length > 0 ? (locale === 'ar' ? 'حملة' : 'Campaign') : item.badgeLabel,
+            ctaLabel: tickerItems.length === 1 && heroItems.length > 0 && item.href ? (locale === 'ar' ? 'تسوّق الآن' : 'Shop now') : item.ctaLabel,
+          }))}
           speedMs={tickerSpeedMs}
+          variant={tickerItems.length === 1 && heroItems.length > 0 ? 'campaign' : 'utility'}
           onPressItem={(href) => (href ? onNavigate?.(href) : undefined)}
         />
-      )}
+      ) : null}
 
-      {/* 2. Flash sale band */}
-      {flashSale && (
-        <FlashSaleBand
-          offerText={flashSale.offerText}
-          preLabel={flashSale.preLabel}
-          postLabel={flashSale.postLabel}
-          endsAtIso={flashSale.endsAtIso}
-          ctaLabel={flashSale.ctaLabel}
-        />
-      )}
-
-      {/* 3. Editorial hero tile rail (with promo blocks merged in) */}
-      {heroItems.length > 0 && (
+      {heroItems.length > 0 ? (
         <HeroTileRail
           heroItems={heroItems}
           promoBlocks={promoBlocks
@@ -446,52 +388,64 @@ export function HomeV2Sections({
           autoplayMs={heroAutoplayMs}
           onNavigate={onNavigate}
         />
-      )}
+      ) : null}
 
-      {/* 4. Category rail */}
-      {categoryItems.length > 0 && (
+      {categoryItems.length > 0 ? (
         <CategoryRail
           items={categoryItems}
           autoplay={railAutoplay?.categories?.enabled}
           autoplayMs={railAutoplay?.categories?.autoplayMs}
           onPressItem={(item) => onNavigate?.(item.href ?? '/shop')}
         />
-      )}
+      ) : null}
 
-      {/* 5. Primary product rail (New Arrivals) with filter chips */}
-      {primaryRail && (
+      {flashSale ? (
+        <FlashSaleBand
+          offerText={flashSale.offerText}
+          preLabel={flashSale.preLabel}
+          postLabel={flashSale.postLabel}
+          endsAtIso={flashSale.endsAtIso}
+          ctaLabel={flashSale.ctaLabel}
+        />
+      ) : null}
+
+      {flashOffersRail ? (
         <ProductRail
-          title={primaryRail.title}
+          title={flashOffersRail.title}
           actionLabel='Shop All'
           actionHref='/shop'
-          items={primaryRail.items}
+          items={flashOffersRail.items}
+          cardVariant='compact'
           showFilterChips
-          autoplay={railAutoplay?.newArrivals?.enabled}
-          autoplayMs={railAutoplay?.newArrivals?.autoplayMs}
+          autoplay={railAutoplay?.featured?.enabled}
+          autoplayMs={railAutoplay?.featured?.autoplayMs}
           loading={loading}
           error={error}
           onRetry={onReload}
           onPressAction={() => onNavigate?.('/shop')}
           onSelectProduct={onSelectProduct}
-          onQuickView={onQuickView}
           onAddToCart={onAddToCart}
         />
-      )}
+      ) : null}
 
-      {/* 6. Today's deals / offer banners */}
-      {promoBlocks.length > 0 && (
-        <OfferBannersGrid
-          title="Today's Deals"
-          actionLabel='Shop deals'
-          blocks={promoBlocks}
-          isDesktop={isDesktop}
-          onNavigate={onNavigate}
+      {bestSellerShowcaseRail ? (
+        <ProductRail
+          title={bestSellerShowcaseRail.title}
+          actionLabel='Shop All'
+          actionHref='/shop'
+          items={bestSellerShowcaseRail.items}
+          autoplay={railAutoplay?.featured?.enabled}
+          autoplayMs={railAutoplay?.featured?.autoplayMs}
+          loading={loading}
+          error={error}
+          onRetry={onReload}
           onPressAction={() => onNavigate?.('/shop')}
+          onSelectProduct={onSelectProduct}
+          onAddToCart={onAddToCart}
         />
-      )}
+      ) : null}
 
-      {/* 7. Editorial hotspot section */}
-      {editorialHotspotSection && (
+      {editorialHotspotSection ? (
         <Box
           style={{
             width: '100%',
@@ -511,10 +465,9 @@ export function HomeV2Sections({
             addAllToCartLabel={locale === 'ar' ? 'أضف الكل إلى السلة' : 'Add all to cart'}
           />
         </Box>
-      )}
+      ) : null}
 
-      {/* 8. Brand spotlight panel (showcase image + trending brands hall) */}
-      {(showcaseImageUrl || topBrands.length > 0) && (
+      {(showcaseImageUrl || topBrands.length > 0) ? (
         <BrandSpotlightPanel
           showcaseImageUrl={showcaseImageUrl}
           featureTitle={topBrands[0] ? `${topBrands[0].name} beauty spotlight` : undefined}
@@ -524,43 +477,22 @@ export function HomeV2Sections({
           isDesktop={isDesktop}
           onNavigate={onNavigate}
         />
-      )}
+      ) : null}
 
-      {/* 9. Secondary product rail (Best Sellers / Featured) */}
-      {secondaryRail && (
-        <ProductRail
-          title={secondaryRail.title}
-          actionLabel='Shop All'
-          actionHref='/shop'
-          items={secondaryRail.items}
-          showFilterChips
-          autoplay={railAutoplay?.featured?.enabled}
-          autoplayMs={railAutoplay?.featured?.autoplayMs}
-          loading={loading}
-          error={error}
-          onRetry={onReload}
-          onPressAction={() => onNavigate?.('/shop')}
-          onSelectProduct={onSelectProduct}
-          onQuickView={onQuickView}
-          onAddToCart={onAddToCart}
-        />
-      )}
-
-      {/* 10. Brand spotlight rail sections (brand banner + product rail) */}
       {brandSpotlights
-        .filter((s) => (s.items?.length ?? 0) > 0)
+        .filter((section) => (section.items?.length ?? 0) > 0)
         .slice(0, 2)
-        .map((spot) => (
+        .map((section) => (
           <BrandSpotlightSection
-            key={spot.id}
-            id={spot.id}
-            bannerTitle={spot.bannerTitle}
-            bannerSubtitle={spot.bannerSubtitle}
-            bannerCtaLabel={spot.bannerCtaLabel}
-            bannerHref={spot.bannerHref}
-            bannerImageUrl={spot.bannerImageUrl}
-            railTitle={spot.railTitle}
-            items={spot.items}
+            key={section.id}
+            id={section.id}
+            bannerTitle={section.bannerTitle}
+            bannerSubtitle={section.bannerSubtitle}
+            bannerCtaLabel={section.bannerCtaLabel}
+            bannerHref={section.bannerHref}
+            bannerImageUrl={section.bannerImageUrl}
+            railTitle={section.railTitle}
+            items={section.items}
             loading={loading}
             error={error}
             onRetry={onReload}
@@ -570,17 +502,43 @@ export function HomeV2Sections({
           />
         ))}
 
-      {/* 11. Testimonials + UGC strip */}
-      {ugcItems.length > 0 && (
+      {newArrivalsShowcaseRail ? (
+        <ProductRail
+          title={newArrivalsShowcaseRail.title}
+          actionLabel='Shop All'
+          actionHref='/shop'
+          items={newArrivalsShowcaseRail.items}
+          autoplay={railAutoplay?.newArrivals?.enabled}
+          autoplayMs={railAutoplay?.newArrivals?.autoplayMs}
+          loading={loading}
+          error={error}
+          onRetry={onReload}
+          onPressAction={() => onNavigate?.('/shop')}
+          onSelectProduct={onSelectProduct}
+          onAddToCart={onAddToCart}
+        />
+      ) : null}
+
+      {promoBlocks.length > 0 ? (
+        <OfferBannersGrid
+          title="Today's Deals"
+          actionLabel='Shop deals'
+          blocks={promoBlocks}
+          isDesktop={isDesktop}
+          onNavigate={onNavigate}
+          onPressAction={() => onNavigate?.('/shop')}
+        />
+      ) : null}
+
+      {ugcItems.length > 0 ? (
         <TestimonialsBlock
           ugcItems={ugcItems}
           isDesktop={isDesktop}
           onNavigate={onNavigate}
         />
-      )}
+      ) : null}
 
-      {/* 12. Newsletter / loyalty CTA */}
-      {newsletterCta && (
+      {newsletterCta ? (
         <Box
           style={{
             width: '100%',
@@ -597,7 +555,7 @@ export function HomeV2Sections({
             ctaLabel={newsletterCta.ctaLabel}
           />
         </Box>
-      )}
+      ) : null}
     </Box>
   )
 }
