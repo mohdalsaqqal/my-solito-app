@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
-import { Platform, ScrollView } from 'react-native'
 import { resolveMarketingCampaign } from '@real/app/lib/campaigns'
 import { HomeV2Sections } from '@real/app/sections/home/HomeV2Sections'
+import { HomeBlocksRenderer } from '@real/app/features/home/HomeBlocksRenderer'
 import { CMSHome, Product } from '@real/app/lib/types'
 import {
   HomeBrandItem,
@@ -151,7 +151,75 @@ function createFallbackTicker(locale: 'en' | 'ar') {
   ]
 }
 
-export function HomeScreen({
+/**
+ * Thin screen for the published-blocks path.
+ * Sorts blocks, reads autoplay config, calls HomeBlocksRenderer directly.
+ * No campaign/rail/brand computation — the blocks carry all content.
+ */
+function HomeBlocksScreen({
+  cmsHome,
+  loading,
+  error,
+  onReload,
+  locale = 'en',
+  onNavigate,
+  onSelectProduct,
+  onQuickView,
+  onAddToCart,
+  onAddAllToCart,
+}: Omit<HomeScreenProps, 'products' | 'brands' | 'categories'>) {
+  const blocks = useMemo(() => {
+    const raw = cmsHome?.page?.blocks ?? []
+    return [...raw].sort((a, b) => a.position - b.position)
+  }, [cmsHome?.page?.blocks])
+
+  const railAutoplay = useMemo(() => ({
+    featured: {
+      enabled: cmsHome?.marketing?.railAutoplay?.featured?.enabled ?? false,
+      autoplayMs: cmsHome?.marketing?.railAutoplay?.featured?.autoplayMs ?? 5000,
+    },
+    brandSpotlights: {
+      enabled: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.enabled ?? false,
+      autoplayMs: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.autoplayMs ?? 5200,
+    },
+  }), [cmsHome?.marketing?.railAutoplay])
+
+  const tickerSpeedMs = cmsHome?.marketing?.ticker?.speedMs ?? 22000
+
+  return (
+    <HomeBlocksRenderer
+      blocks={blocks}
+      loading={loading}
+      error={error}
+      tickerSpeedMs={tickerSpeedMs}
+      railAutoplay={railAutoplay}
+      locale={locale}
+      onReload={onReload}
+      onNavigate={onNavigate}
+      onSelectProduct={onSelectProduct}
+      onQuickView={onQuickView}
+      onAddToCart={onAddToCart}
+      onAddAllToCart={onAddAllToCart}
+    />
+  )
+}
+
+/**
+ * Public entry point. Routes to the engine path when published blocks exist,
+ * falls back to the legacy computation path otherwise.
+ */
+export function HomeScreen(props: HomeScreenProps) {
+  const publishedHomeBlocks = props.cmsHome?.page?.blocks ?? null
+  const hasPublishedHomeBlocks = (publishedHomeBlocks?.length ?? 0) > 0
+
+  if (hasPublishedHomeBlocks) {
+    return <HomeBlocksScreen {...props} />
+  }
+
+  return <HomeLegacyScreen {...props} />
+}
+
+function HomeLegacyScreen({
   cmsHome,
   products,
   brands,
@@ -166,9 +234,6 @@ export function HomeScreen({
   onAddToCart,
   onAddAllToCart,
 }: HomeScreenProps) {
-  const publishedHomeBlocks = cmsHome?.page?.blocks ?? null
-  const hasPublishedHomeBlocks = (publishedHomeBlocks?.length ?? 0) > 0
-
   const heroCampaign = useMemo(
     () => resolveMarketingCampaign(cmsHome, locale, 'home_hero_primary'),
     [cmsHome, locale],
@@ -829,47 +894,8 @@ export function HomeScreen({
     }
   }, [cmsHome?.marketing?.newsletterCta, cmsHome?.shell?.footer, locale])
 
-  const homeSections = hasPublishedHomeBlocks ? (
-        <HomeSectionsAny
-      homeBlocks={publishedHomeBlocks}
-      tickerItems={tickerItems}
-      loading={loading}
-      error={error}
-      tickerSpeedMs={cmsHome?.marketing?.ticker?.speedMs ?? 22000}
-      heroAutoplay={cmsHome?.marketing?.hero?.autoplay ?? true}
-      heroAutoplayMs={cmsHome?.marketing?.hero?.autoplayMs ?? 4200}
-      railAutoplay={{
-        hero: {
-          enabled: cmsHome?.marketing?.railAutoplay?.hero?.enabled ?? cmsHome?.marketing?.hero?.autoplay ?? true,
-          autoplayMs: cmsHome?.marketing?.railAutoplay?.hero?.autoplayMs ?? cmsHome?.marketing?.hero?.autoplayMs ?? 4200,
-        },
-        categories: {
-          enabled: cmsHome?.marketing?.railAutoplay?.categories?.enabled ?? false,
-          autoplayMs: cmsHome?.marketing?.railAutoplay?.categories?.autoplayMs ?? 5200,
-        },
-        newArrivals: {
-          enabled: cmsHome?.marketing?.railAutoplay?.newArrivals?.enabled ?? false,
-          autoplayMs: cmsHome?.marketing?.railAutoplay?.newArrivals?.autoplayMs ?? 4800,
-        },
-        featured: {
-          enabled: cmsHome?.marketing?.railAutoplay?.featured?.enabled ?? false,
-          autoplayMs: cmsHome?.marketing?.railAutoplay?.featured?.autoplayMs ?? 5000,
-        },
-        brandSpotlights: {
-          enabled: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.enabled ?? false,
-          autoplayMs: cmsHome?.marketing?.railAutoplay?.brandSpotlights?.autoplayMs ?? 5200,
-        },
-      }}
-      locale={locale}
-      onReload={onReload}
-      onNavigate={onNavigate}
-      onSelectProduct={onSelectProduct}
-      onQuickView={onQuickView}
-      onAddToCart={onAddToCart}
-      onAddAllToCart={onAddAllToCart}
-    />
-  ) : (
-        <HomeSectionsAny
+  const homeSections = (
+    <HomeSectionsAny
       heroItems={heroItems}
       tickerItems={tickerItems}
       bestSellersRail={rails.bestSellers}
@@ -928,18 +954,6 @@ export function HomeScreen({
       onAddAllToCart={onAddAllToCart}
     />
   )
-
-  if (Platform.OS !== 'web') {
-    return (
-      <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ flexGrow: 1 }}
-        showsVerticalScrollIndicator={false}
-      >
-        {homeSections}
-      </ScrollView>
-    )
-  }
 
   return homeSections
 }
