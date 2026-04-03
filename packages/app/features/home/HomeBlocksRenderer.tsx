@@ -13,6 +13,9 @@ import { renderBrandSpotlightBlock } from './renderers/renderBrandSpotlightBlock
 import { renderFlashSaleBlock } from './renderers/renderFlashSaleBlock'
 import { renderEditorialHotspotBlock } from './renderers/renderEditorialHotspotBlock'
 import { renderMiscBlock } from './renderers/renderMiscBlock'
+import { renderRecentlyViewedBlock } from './renderers/renderRecentlyViewedBlock'
+import { renderFeatureBannerBlock } from './renderers/renderFeatureBannerBlock'
+import { renderBrandPanelBlock } from './renderers/renderBrandPanelBlock'
 import type {
   HomeBlockRendererRailAutoplaySettings,
   RegisteredHomePageBlock,
@@ -91,8 +94,24 @@ function dispatchHomeRenderer(p: DispatchProps) {
     return renderOfferBannersBlock({ slot: p.slot, isDesktop: p.isDesktop, onNavigate: p.onNavigate })
   }
 
-  // Brand family
-  if (block.type === 'brand_spotlight' || block.type === 'brand_promo') {
+  // Brand family — desktop uses two-column panel layout, mobile/tablet uses rail
+  if (block.type === 'brand_spotlight') {
+    if (p.isDesktop) {
+      return renderBrandPanelBlock({ slot: p.slot, onNavigate: p.onNavigate })
+    }
+    return renderBrandSpotlightBlock({
+      slot: p.slot,
+      loading: p.loading,
+      error: p.error,
+      railAutoplayMs: p.brandAutoplayMs,
+      onReload: p.onReload,
+      onNavigate: p.onNavigate,
+      onSelectProduct: p.onSelectProduct,
+      onAddToCart: p.onAddToCart,
+    })
+  }
+
+  if (block.type === 'brand_promo') {
     return renderBrandSpotlightBlock({
       slot: p.slot,
       loading: p.loading,
@@ -124,6 +143,21 @@ function dispatchHomeRenderer(p: DispatchProps) {
   // Misc family: newsletter_cta, top_brands, ugc_gallery
   if (block.type === 'newsletter_cta' || block.type === 'top_brands' || block.type === 'ugc_gallery') {
     return renderMiscBlock({ slot: p.slot, isDesktop: p.isDesktop, onNavigate: p.onNavigate })
+  }
+
+  // Recently viewed / upsell rail
+  if (block.type === 'cart_upsell_rail') {
+    return renderRecentlyViewedBlock({
+      slot: p.slot,
+      onNavigate: p.onNavigate,
+      onSelectProduct: p.onSelectProduct,
+      onAddToCart: p.onAddToCart,
+    })
+  }
+
+  // Feature banner (PDP offer cluster used as homepage campaign slot)
+  if (block.type === 'pdp_offer_cluster') {
+    return renderFeatureBannerBlock({ slot: p.slot, onNavigate: p.onNavigate })
   }
 
   // promo_strip as standalone (not paired) — AnnouncementTicker
