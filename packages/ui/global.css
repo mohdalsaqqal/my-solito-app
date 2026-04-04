@@ -23,17 +23,17 @@
   --color-muted-foreground:        hsl(0 0% 36.9%);
 
   /* Brand — DESIGN.md primary = hsl(356 100% 33%) — deep blood red */
-  --color-primary:              hsl(356 100% 33%);
-  --color-primary-hover:        hsl(357 100% 45%);
-  --color-primary-pressed:      hsl(356 100% 27%);
+  --color-primary:              hsl(0 0% 13%);
+  --color-primary-hover:        hsl(0 0% 20%);
+  --color-primary-pressed:      hsl(0 0% 8%);
   --color-primary-subtle:       hsl(0 100% 98%);
   --color-primary-foreground:   hsl(0 0% 100%);
-  --color-secondary:            hsl(0 0% 36.9%);
-  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-secondary:            hsl(0 0% 97.6%);
+  --color-secondary-foreground: hsl(0 0% 10.2%);
   --color-accent:               hsl(0 0% 93.3%);
   --color-accent-foreground:    hsl(0 0% 10.2%);
   --color-input:                transparent;
-  --color-ring:                 hsl(356 100% 33%);
+  --color-ring:                 hsl(0 0% 13%);
   --color-popover:              hsl(0 0% 100%);
   --color-popover-foreground:   hsl(0 0% 10.2%);
   --color-card-foreground:      hsl(0 0% 10.2%);
@@ -83,15 +83,16 @@
   --color-info:                 hsl(214 90% 42%);
   --color-info-subtle:          hsl(224 100% 95%);
 
-  /* ── Radius — DESIGN.md §4 "Roundedness Scale of 0px" — Brutalist-Luxe ── */
+  /* ── Radius — NiceOne rounded scale ── */
   --radius-none: 0px;
-  --radius-xs:   0px;
-  --radius-sm:   0px;
-  --radius-md:   0px;
-  --radius-lg:   0px;
-  --radius-xl:   0px;
-  --radius-full: 9999px;  /* pill badges / avatar crops only */
-  --radius:      0px;
+  --radius-xs:   2px;
+  --radius-sm:   2px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+  --radius-xl:   12px;
+  --radius-2xl:  16px;
+  --radius-full: 9999px;
+  --radius:      6px;
 
   /* ── Spacing — from packages/tokens/spacing.ts ── */
   --spacing-px:   1px;
@@ -112,53 +113,52 @@
   --spacing-24:   96px;
   --spacing-32:   128px;
 
-  /* ── Typography — DESIGN.md §3 "The Editorial Voice" ── */
-  /* Body/Labels: Manrope — geometric sans, modern, technical precision      */
-  /* Display/Headlines: Noto Serif — heritage, timelessness, "endless beauty" */
+  /* ── Typography — Phase 1 commercial storefront baseline ── */
+  /* Manrope leads body, headlines, and campaign UI to keep the marketplace fast to scan. */
   --font-sans:      var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading:   var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif;
-  --font-display:   var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif;
+  --font-heading:   var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display:   var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-secondary: var(--font-manrope, "Manrope"), -apple-system, system-ui, sans-serif;
-  --font-logo:      var(--font-noto-serif, "Noto Serif"), Georgia, serif;
+  --font-logo:      var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono:      Menlo, monospace;
 
   /* Figma type scale — H1 96 → Overline 10 */
-  --text-h1:       4rem;
-  --text-h2:       3rem;
-  --text-h3:       2.25rem;
-  --text-h4:       1.875rem;
-  --text-h5:       1.5rem;
-  --text-h6:       1.25rem;    /* 20px  */
-  --text-body1:    1rem;       /* 16px  */
-  --text-body2:    0.875rem;   /* 14px  */
-  --text-caption:  0.8125rem;
+  --text-h1:       0.875rem;
+  --text-h2:       0.875rem;
+  --text-h3:       0.8125rem;
+  --text-h4:       0.75rem;
+  --text-h5:       0.75rem;
+  --text-h6:       0.75rem;
+  --text-body1:    0.75rem;
+  --text-body2:    0.75rem;
+  --text-caption:  0.75rem;
   --text-overline: 0.625rem;   /* 10px  */
-  --text-button:   1rem;       /* 16px  */
+  --text-button:   0.75rem;
 
   /* Legacy aliases */
   --text-xs:   0.75rem;
   --text-sm:   0.875rem;
-  --text-base: 1rem;
-  --text-lg:   1.125rem;
-  --text-xl:   1.25rem;
-  --text-2xl:  1.5rem;
-  --text-3xl:  1.875rem;
-  --text-4xl:  2.25rem;
+  --text-base: 0.75rem;
+  --text-lg:   0.875rem;
+  --text-xl:   0.875rem;
+  --text-2xl:  0.875rem;
+  --text-3xl:  0.875rem;
+  --text-4xl:  0.875rem;
 
   /* Campaign typography — The Atelier mixed-weight contrast system */
-  --text-campaign:    4rem;
-  --text-headline:    2.125rem;
-  --text-subheadline: 1rem;
+  --text-campaign:    0.875rem;
+  --text-headline:    0.875rem;
+  --text-subheadline: 0.75rem;
 
   /* Figma line heights */
-  --leading-h1:      4.5rem;
-  --leading-h2:      3.5rem;
-  --leading-h3:      2.75rem;
-  --leading-h4:      2.25rem;
-  --leading-h5:      1.875rem;
-  --leading-h6:      1.5rem;    /* 24px  */
-  --leading-body1:   1.5rem;    /* 24px  */
-  --leading-body2:   1.25rem;   /* 20px  */
+  --leading-h1:      1.125rem;
+  --leading-h2:      1.125rem;
+  --leading-h3:      1rem;
+  --leading-h4:      1rem;
+  --leading-h5:      1rem;
+  --leading-h6:      1rem;
+  --leading-body1:   1rem;
+  --leading-body2:   1rem;
   --leading-caption: 1rem;      /* 16px  */
 
   /* Figma letter spacing */
@@ -235,10 +235,10 @@
   --card-foreground:           hsl(0 0% 10.2%);
   --popover:                   hsl(0 0% 100%);
   --popover-foreground:        hsl(0 0% 10.2%);
-  --primary:                   hsl(356 100% 33%);
+  --primary:                   hsl(0 0% 13%);
   --primary-foreground:        hsl(0 0% 100%);
-  --secondary:                 hsl(0 0% 36.9%);
-  --secondary-foreground:      hsl(0 0% 100%);
+  --secondary:                 hsl(0 0% 97.6%);
+  --secondary-foreground:      hsl(0 0% 10.2%);
   --muted:                     hsl(0 0% 93.3%);
   --muted-foreground:          hsl(0 0% 36.9%);
   --accent:                    hsl(0 0% 93.3%);
@@ -247,7 +247,7 @@
   --destructive-foreground:    hsl(0 0% 100%);
   --border:                    transparent;
   --input:                     transparent;
-  --ring:                      hsl(356 100% 33%);
+  --ring:                      hsl(0 0% 13%);
   --color-background:           hsl(0 0% 97.6%);
   --color-background-secondary: hsl(0 0% 95.3%);
   --color-foreground:           hsl(0 0% 10.2%);
@@ -261,12 +261,12 @@
   --color-warning-subtle:       hsl(48 100% 94%);
   --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info-subtle:          hsl(224 100% 95%);
-  --color-secondary:            hsl(0 0% 36.9%);
-  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-secondary:            hsl(0 0% 97.6%);
+  --color-secondary-foreground: hsl(0 0% 10.2%);
   --color-accent:               hsl(0 0% 93.3%);
   --color-accent-foreground:    hsl(0 0% 10.2%);
   --color-input:                transparent;
-  --color-ring:                 hsl(356 100% 33%);
+  --color-ring:                 hsl(0 0% 13%);
   --color-popover:              hsl(0 0% 100%);
   --color-popover-foreground:   hsl(0 0% 10.2%);
   --color-card-foreground:      hsl(0 0% 10.2%);
@@ -281,7 +281,7 @@
   --card-foreground:           hsl(0 0% 94%);
   --popover:                   hsl(0 0% 12%);
   --popover-foreground:        hsl(0 0% 94%);
-  --primary:                   hsl(356 100% 33%);
+  --primary:                   hsl(0 0% 13%);
   --primary-foreground:        hsl(0 0% 100%);
   --secondary:                 hsl(0 0% 16%);
   --secondary-foreground:      hsl(0 0% 94%);
@@ -293,7 +293,7 @@
   --destructive-foreground:    hsl(0 0% 100%);
   --border:                    hsl(0 0% 22%);
   --input:                     hsl(0 0% 16%);
-  --ring:                      hsl(356 100% 33%);
+  --ring:                      hsl(0 0% 13%);
   --color-background:           hsl(0 0% 9%);
   --color-background-secondary: hsl(0 0% 12%);
   --color-foreground:           hsl(0 0% 94%);
@@ -312,11 +312,54 @@
   --color-accent:               hsl(0 0% 16%);
   --color-accent-foreground:    hsl(0 0% 94%);
   --color-input:                hsl(0 0% 16%);
-  --color-ring:                 hsl(356 100% 33%);
+  --color-ring:                 hsl(0 0% 13%);
   --color-popover:              hsl(0 0% 12%);
   --color-popover-foreground:   hsl(0 0% 94%);
   --color-card-foreground:      hsl(0 0% 94%);
   --color-destructive-foreground: hsl(0 0% 100%);
+  /* ── Dark mode surface hierarchy ── */
+  --color-surface-lowest:         hsl(0 0% 13%);
+  --color-surface-container-low:  hsl(0 0% 11%);
+  --color-surface-container:      hsl(0 0% 14%);
+  --color-surface-dim:            hsl(0 0% 16%);
+  /* ── Dark mode ink palette ── */
+  --color-ink-black:              hsl(0 0% 90%);
+  --color-ink-deep:               hsl(0 0% 84%);
+  --color-ink-mid:                hsl(0 0% 76%);
+  --color-ink-frost:              hsl(210 10% 12%);
+  /* ── Dark mode gold palette ── */
+  --color-gold:                   hsl(42 80% 58%);
+  --color-gold-light:             hsl(42 85% 68%);
+  --color-gold-subtle:            hsl(42 30% 16%);
+  /* ── Dark mode gray scale (inverted) ── */
+  --color-gray-0:                 hsl(0 0% 9%);
+  --color-gray-5:                 hsl(0 0% 13%);
+  --color-gray-10:                hsl(0 0% 18%);
+  --color-gray-20:                hsl(0 0% 24%);
+  --color-gray-30:                hsl(0 0% 30%);
+  --color-gray-40:                hsl(0 0% 36%);
+  --color-gray-50:                hsl(0 0% 42%);
+  --color-gray-60:                hsl(0 0% 52%);
+  --color-gray-70:                hsl(0 0% 62%);
+  --color-gray-80:                hsl(0 0% 72%);
+  --color-gray-90:                hsl(0 0% 82%);
+  --color-gray-100:               hsl(0 0% 90%);
+  /* ── Dark mode tint scale ── */
+  --color-tint-0:                 hsl(0 0% 9%);
+  --color-tint-10:                hsl(0 0% 10%);
+  --color-tint-20:                hsl(0 0% 11%);
+  --color-tint-30:                hsl(0 0% 12%);
+  --color-tint-40:                hsl(0 0% 13%);
+  --color-tint-50:                hsl(0 0% 14%);
+  --color-tint-60:                hsl(0 0% 15%);
+  --color-tint-70:                hsl(0 0% 16%);
+  /* ── Dark mode status colors ── */
+  --color-success:                hsl(153 60% 45%);
+  --color-warning:                hsl(42 80% 58%);
+  --color-destructive:            hsl(344 75% 62%);
+  --color-info:                   hsl(214 80% 60%);
+  /* ── Dark mode outline variant ── */
+  --color-outline-variant:        hsl(0 40% 28%);
 }
 
 /* Uniwind themes must expose the exact same dashed variables per theme variant. */
@@ -328,10 +371,10 @@
   --card-foreground:           hsl(0 0% 10.2%);
   --popover:                   hsl(0 0% 100%);
   --popover-foreground:        hsl(0 0% 10.2%);
-  --primary:                   hsl(356 100% 33%);
+  --primary:                   hsl(0 0% 13%);
   --primary-foreground:        hsl(0 0% 100%);
-  --secondary:                 hsl(0 0% 36.9%);
-  --secondary-foreground:      hsl(0 0% 100%);
+  --secondary:                 hsl(0 0% 97.6%);
+  --secondary-foreground:      hsl(0 0% 10.2%);
   --muted:                     hsl(0 0% 93.3%);
   --muted-foreground:          hsl(0 0% 36.9%);
   --accent:                    hsl(0 0% 93.3%);
@@ -340,7 +383,7 @@
   --destructive-foreground:    hsl(0 0% 100%);
   --border:                    transparent;
   --input:                     transparent;
-  --ring:                      hsl(356 100% 33%);
+  --ring:                      hsl(0 0% 13%);
   --color-background:           hsl(0 0% 97.6%);
   --color-background-secondary: hsl(0 0% 95.3%);
   --color-foreground:           hsl(0 0% 10.2%);
@@ -354,12 +397,12 @@
   --color-warning-subtle:       hsl(48 100% 94%);
   --color-destructive-subtle:   hsl(344 80% 98%);
   --color-info-subtle:          hsl(224 100% 95%);
-  --color-secondary:            hsl(0 0% 36.9%);
-  --color-secondary-foreground: hsl(0 0% 100%);
+  --color-secondary:            hsl(0 0% 97.6%);
+  --color-secondary-foreground: hsl(0 0% 10.2%);
   --color-accent:               hsl(0 0% 93.3%);
   --color-accent-foreground:    hsl(0 0% 10.2%);
   --color-input:                transparent;
-  --color-ring:                 hsl(356 100% 33%);
+  --color-ring:                 hsl(0 0% 13%);
   --color-popover:              hsl(0 0% 100%);
   --color-popover-foreground:   hsl(0 0% 10.2%);
   --color-card-foreground:      hsl(0 0% 10.2%);
@@ -374,7 +417,7 @@
   --card-foreground:           hsl(0 0% 94%);
   --popover:                   hsl(0 0% 12%);
   --popover-foreground:        hsl(0 0% 94%);
-  --primary:                   hsl(356 100% 33%);
+  --primary:                   hsl(0 0% 13%);
   --primary-foreground:        hsl(0 0% 100%);
   --secondary:                 hsl(0 0% 16%);
   --secondary-foreground:      hsl(0 0% 94%);
@@ -386,7 +429,7 @@
   --destructive-foreground:    hsl(0 0% 100%);
   --border:                    hsl(0 0% 22%);
   --input:                     hsl(0 0% 16%);
-  --ring:                      hsl(356 100% 33%);
+  --ring:                      hsl(0 0% 13%);
   --color-background:           hsl(0 0% 9%);
   --color-background-secondary: hsl(0 0% 12%);
   --color-foreground:           hsl(0 0% 94%);
@@ -405,9 +448,52 @@
   --color-accent:               hsl(0 0% 16%);
   --color-accent-foreground:    hsl(0 0% 94%);
   --color-input:                hsl(0 0% 16%);
-  --color-ring:                 hsl(356 100% 33%);
+  --color-ring:                 hsl(0 0% 13%);
   --color-popover:              hsl(0 0% 12%);
   --color-popover-foreground:   hsl(0 0% 94%);
   --color-card-foreground:      hsl(0 0% 94%);
   --color-destructive-foreground: hsl(0 0% 100%);
+  /* ── Dark mode surface hierarchy ── */
+  --color-surface-lowest:         hsl(0 0% 13%);
+  --color-surface-container-low:  hsl(0 0% 11%);
+  --color-surface-container:      hsl(0 0% 14%);
+  --color-surface-dim:            hsl(0 0% 16%);
+  /* ── Dark mode ink palette ── */
+  --color-ink-black:              hsl(0 0% 90%);
+  --color-ink-deep:               hsl(0 0% 84%);
+  --color-ink-mid:                hsl(0 0% 76%);
+  --color-ink-frost:              hsl(210 10% 12%);
+  /* ── Dark mode gold palette ── */
+  --color-gold:                   hsl(42 80% 58%);
+  --color-gold-light:             hsl(42 85% 68%);
+  --color-gold-subtle:            hsl(42 30% 16%);
+  /* ── Dark mode gray scale (inverted) ── */
+  --color-gray-0:                 hsl(0 0% 9%);
+  --color-gray-5:                 hsl(0 0% 13%);
+  --color-gray-10:                hsl(0 0% 18%);
+  --color-gray-20:                hsl(0 0% 24%);
+  --color-gray-30:                hsl(0 0% 30%);
+  --color-gray-40:                hsl(0 0% 36%);
+  --color-gray-50:                hsl(0 0% 42%);
+  --color-gray-60:                hsl(0 0% 52%);
+  --color-gray-70:                hsl(0 0% 62%);
+  --color-gray-80:                hsl(0 0% 72%);
+  --color-gray-90:                hsl(0 0% 82%);
+  --color-gray-100:               hsl(0 0% 90%);
+  /* ── Dark mode tint scale ── */
+  --color-tint-0:                 hsl(0 0% 9%);
+  --color-tint-10:                hsl(0 0% 10%);
+  --color-tint-20:                hsl(0 0% 11%);
+  --color-tint-30:                hsl(0 0% 12%);
+  --color-tint-40:                hsl(0 0% 13%);
+  --color-tint-50:                hsl(0 0% 14%);
+  --color-tint-60:                hsl(0 0% 15%);
+  --color-tint-70:                hsl(0 0% 16%);
+  /* ── Dark mode status colors ── */
+  --color-success:                hsl(153 60% 45%);
+  --color-warning:                hsl(42 80% 58%);
+  --color-destructive:            hsl(344 75% 62%);
+  --color-info:                   hsl(214 80% 60%);
+  /* ── Dark mode outline variant ── */
+  --color-outline-variant:        hsl(0 40% 28%);
 }

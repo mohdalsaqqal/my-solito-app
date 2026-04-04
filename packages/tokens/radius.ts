@@ -1,12 +1,12 @@
-// DESIGN.md §4 — "Roundedness Scale of 0px"
-// "All containers must have hard, 90-degree angles. This conveys a Brutalist-Luxe
-// architectural feel."
+// NiceOne-derived rounded scale.
+// md (6px) is the primary card radius. xl/2xl for containers and hero banners.
 export const radius = {
-  none: 0,
-  xs:   0,
-  sm:   0,
-  md:   0,
-  lg:   0,
-  xl:   0,
-  full: 9999,   // kept only for pill badges / avatar crops — use sparingly
+  none:  0,
+  xs:    2,    // hairline rounding for tags/chips
+  sm:    2,
+  md:    6,    // primary card radius
+  lg:    8,    // modals, drawers
+  xl:    12,   // large containers, bottom sheets
+  '2xl': 16,   // hero banners, large cards
+  full:  9999, // pills and avatar crops only
 } as const
