@@ -122,44 +122,45 @@
   --font-logo:      var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono:      Menlo, monospace;
 
-  /* Figma type scale — H1 96 → Overline 10 */
-  --text-h1:       0.875rem;
-  --text-h2:       0.875rem;
-  --text-h3:       0.8125rem;
-  --text-h4:       0.75rem;
-  --text-h5:       0.75rem;
-  --text-h6:       0.75rem;
-  --text-body1:    0.75rem;
-  --text-body2:    0.75rem;
-  --text-caption:  0.75rem;
-  --text-overline: 0.625rem;   /* 10px  */
-  --text-button:   0.75rem;
+  /* ── Text scale — NiceOne expanded 10–20px ── */
+  --text-h1:        1.25rem;    /* 20px */
+  --text-h2:        1.125rem;   /* 18px */
+  --text-h3:        1rem;       /* 16px */
+  --text-h4:        0.875rem;   /* 14px */
+  --text-h5:        0.8125rem;  /* 13px */
+  --text-h6:        0.75rem;    /* 12px */
+  --text-body1:     0.875rem;   /* 14px */
+  --text-body2:     0.75rem;    /* 12px */
+  --text-caption:   0.6875rem;  /* 11px */
+  --text-overline:  0.625rem;   /* 10px */
+  --text-button:    0.875rem;   /* 14px */
+  --text-price:     1rem;       /* 16px */
 
   /* Legacy aliases */
-  --text-xs:   0.75rem;
-  --text-sm:   0.875rem;
-  --text-base: 0.75rem;
-  --text-lg:   0.875rem;
-  --text-xl:   0.875rem;
-  --text-2xl:  0.875rem;
-  --text-3xl:  0.875rem;
-  --text-4xl:  0.875rem;
+  --text-xs:    0.6875rem;
+  --text-sm:    0.75rem;
+  --text-base:  0.875rem;
+  --text-lg:    1rem;
+  --text-xl:    1.125rem;
+  --text-2xl:   1.25rem;
+  --text-3xl:   1.25rem;
+  --text-4xl:   1.25rem;
 
-  /* Campaign typography — The Atelier mixed-weight contrast system */
-  --text-campaign:    0.875rem;
-  --text-headline:    0.875rem;
-  --text-subheadline: 0.75rem;
+  /* Campaign typography */
+  --text-campaign:    1.125rem;
+  --text-headline:    1.125rem;
+  --text-subheadline: 0.875rem;
 
-  /* Figma line heights */
-  --leading-h1:      1.125rem;
-  --leading-h2:      1.125rem;
-  --leading-h3:      1rem;
-  --leading-h4:      1rem;
-  --leading-h5:      1rem;
-  --leading-h6:      1rem;
-  --leading-body1:   1rem;
-  --leading-body2:   1rem;
-  --leading-caption: 1rem;      /* 16px  */
+  /* Line heights */
+  --leading-h1:      1.75rem;
+  --leading-h2:      1.625rem;
+  --leading-h3:      1.5rem;
+  --leading-h4:      1.25rem;
+  --leading-h5:      1.125rem;
+  --leading-h6:      1.125rem;
+  --leading-body1:   1.375rem;
+  --leading-body2:   1.125rem;
+  --leading-caption: 1rem;
 
   /* Figma letter spacing */
   --tracking-h1:       -0.03em;

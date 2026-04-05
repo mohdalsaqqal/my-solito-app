@@ -1,101 +1,97 @@
 export const typography = {
-  h1: 64,
-  h2: 48,
-  h3: 36,
-  h4: 30,
-  h5: 24,
-  h6: 20,
-  subtitle1: 16,
-  subtitle2: 14,
-  body1: 16,
-  body2: 14,
-  button: 16,
-  caption: 13,
-  overline: 10,
+  // Display / Hero
+  display:   20,
+  hero:      20,
+  campaign:  18,
 
-  // ── Legacy / component aliases (keep for backward compat) ─────────────────
-  xs: 12,
-  sm: 14,
-  md: 16,
-  lg: 18,
-  xl: 20,
-  xxl: 24,
-  display: 64,
+  // Headings
+  h1:        20,
+  h2:        18,
+  h3:        16,
+  h4:        14,
+  h5:        13,
+  h6:        12,
 
-  base: 16,
-  '2xl': 24,
-  '3xl': 30,
-  '4xl': 36,
+  // Subheadings
+  headline:     18,
+  subheadline:  14,
+  subtitle1:    14,
+  subtitle2:    12,
 
-  displayTier: 64,
-  headlineTier: 34,
-  subHeadlineTier: 28,
-  bodyTier: 16,
-  captionTier: 13,
+  // Body
+  body1:     14,
+  body2:     12,
+  bodySm:    12,
+  bodyMd:    14,
+  bodyLg:    16,
+  body:      14,
 
-  heading6: 11,
-  heading7: 32,
-  heading8: 48,
-  heading9: 56,
-  heading10: 64,
+  // UI elements
+  button:    14,
+  label:     12,
+  caption:   11,
+  overline:  10,
+  meta:      11,
+  nav:       13,
+  price:     16,
+  footer:    12,
 
-  bodySm: 14,
-  bodyMd: 16,
-  bodyLg: 18,
-  body: 16,
-  hero: 56,
-  campaign: 64,
-  headline: 34,
-  subheadline: 16,
-  price: 20,
-  nav: 13,
-  label: 11,
-  meta: 12,
-  footer: 13,
+  // Legacy aliases (kept for backward compat)
+  xs:    11,
+  sm:    12,
+  md:    14,
+  lg:    16,
+  xl:    18,
+  xxl:   20,
+  base:  14,
+  '2xl': 18,
+  '3xl': 20,
+  '4xl': 20,
+
+  // Tier aliases
+  displayTier:     20,
+  headlineTier:    18,
+  subHeadlineTier: 14,
+  bodyTier:        14,
+  captionTier:     11,
+
+  // Numbered heading aliases
+  heading6:  12,
+  heading7:  14,
+  heading8:  16,
+  heading9:  18,
+  heading10: 20,
 } as const
 
 export const fontFamilies = {
-  // ── DESIGN.md §3 — "The Editorial Voice" ─────────────────────────────────
-  // Display/Headlines: Noto Serif — heritage, timelessness, "endless beauty"
-  // Body/Labels:       Manrope — geometric sans, modern, technical precision
-  sans: 'var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
-  heading: 'var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif',
-  display: 'var(--font-noto-serif, "Noto Serif"), Georgia, "Times New Roman", serif',
-  secondary: 'var(--font-manrope, "Manrope"), -apple-system, system-ui, sans-serif',
-  logo: 'var(--font-noto-serif, "Noto Serif"), Georgia, serif',
-  logoSecondary: 'var(--font-manrope, "Manrope"), sans-serif',
-  mono: 'Menlo, monospace',
+  sans:         'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  heading:      'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  display:      'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  secondary:    'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, sans-serif',
+  logo:         'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
+  logoSecondary:'var(--font-dm-sans, "DM Sans"), sans-serif',
+  arabic:       '"Tajawal", -apple-system, system-ui, sans-serif',
+  mono:         'Menlo, monospace',
 } as const
 
 export const fontWeights = {
-  ultra: '100',      // ultra-thin descriptor text in campaign contrast pairs
-  regular: '400',
-  medium: '500',
+  ultra:    '100',
+  light:    '300',
+  regular:  '400',
+  medium:   '500',
   semibold: '600',
-  bold: '700',
-  black: '900',
+  bold:     '700',
+  black:    '900',
 } as const
 
 export const lineHeights = {
-  h1: 72,
-  h2: 56,
-  h3: 44,
-  h4: 36,
-  h5: 30,
-  h6: 24,    // Figma H6 20/24
-  subtitle1: 24,
-  subtitle2: 22,
-  body1: 24,
-  body2: 22,
-  button: 20,
-  caption: 18,
-  overline: 16,
-  tight: 1.15,
-  normal: 1.35,
-  relaxed: 1.55,
-  body: 24,
-  heading: 40,
-  hero: 68,
+  h1: 28,  h2: 26,  h3: 24,
+  h4: 20,  h5: 18,  h6: 18,
+  subtitle1: 20,  subtitle2: 18,
+  body1: 22,  body2: 18,
+  button: 20,  caption: 16,  overline: 16,
+  tight: 1.15,  normal: 1.35,  relaxed: 1.55,
+  body: 22,  heading: 28,  hero: 28,
 } as const
 
 export const letterSpacing = {
@@ -111,10 +107,8 @@ export const letterSpacing = {
   body2: 0.035,
   caption: 0.06,
   button: 0,
-  // DESIGN.md §3 — editorial display tracking (wide on display-lg)
-  displayWide: 2.8,   // display-lg 3.5rem with wide tracking — "Art Pieces"
-  labelSmallCaps: 1.6, // label-md/sm in small-caps or generous spacing
-  // Legacy aliases (kept for backward compat)
+  displayWide: 2.8,
+  labelSmallCaps: 1.6,
   tight: -0.6,
   normal: 0,
   wide: 0.3,
