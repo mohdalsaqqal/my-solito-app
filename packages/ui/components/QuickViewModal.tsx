@@ -1,12 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { I18nManager, Platform, Image, useWindowDimensions } from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { I18nManager, Platform, Image } from 'react-native'
 import {
   buttonTokens,
   borderWidth,
   breakpoints,
-  colors,
   elevation,
   iconButtonTokens,
   motionDuration,
@@ -14,14 +13,17 @@ import {
   shadows,
   spacing,
 } from '@real/tokens'
-import { Box, Text, Touchable } from '../primitives'
+import { Box, Text } from '../primitives'
+import { Button as ReusableButton } from '../reusables/button'
 import { Badge } from './Badge'
 import { Icon } from './Icon'
+import { IconButton } from './IconButton'
 import { StarRating } from './StarRating'
 import { StockBadge } from './StockBadge'
 import { PriceTag } from './PriceTag'
 import { Button } from './Button'
 import { HomeProductItem } from './home/types'
+import { useBreakpoint, useThemeColors } from '../responsive'
 
 type QuickViewModalProps = {
   item: HomeProductItem | null
@@ -31,20 +33,21 @@ type QuickViewModalProps = {
   onSelectProduct: (productId: string) => void
 }
 
-export function QuickViewModal({
+export const QuickViewModal = React.memo(function QuickViewModal({
   item,
   open,
   onClose,
   onAddToCart,
   onSelectProduct,
 }: QuickViewModalProps) {
-  const { width } = useWindowDimensions()
+  const c = useThemeColors()
+  const profile = useBreakpoint()
   const dialogRef = useRef<any>(null)
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
   const [mediaIndex, setMediaIndex] = useState(0)
 
-  const isDesktop = width >= breakpoints.desktopMin
+  const isDesktop = profile.breakpoint === 'desktop'
 
   const handleAddToCart = async () => {
     if (!item || addingToCart) return
@@ -132,7 +135,8 @@ export function QuickViewModal({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: c.black,
+        opacity: 0.6,
         ...(Platform.OS === 'web'
           ? ({ position: 'fixed' as any } as const)
           : ({ position: 'absolute' } as const)),
@@ -157,7 +161,7 @@ export function QuickViewModal({
         aria-modal={Platform.OS === 'web' ? true : undefined}
         tabIndex={Platform.OS === 'web' ? -1 : undefined}
         style={{
-          backgroundColor: colors.surface,
+          backgroundColor: c.surface,
           borderRadius: radius.lg,
           maxWidth: 860,
           width: '90%',
@@ -165,7 +169,7 @@ export function QuickViewModal({
           overflow: 'hidden',
           ...(Platform.OS === 'web'
             ? ({
-                boxShadow: elevation.e08,
+                boxShadow: elevation.lg,
               } as any)
             : shadows.lg),
         }}
@@ -173,10 +177,7 @@ export function QuickViewModal({
         onTouchStart={Platform.OS !== 'web' ? (event: any) => event.stopPropagation() : undefined}
       >
         {/* Close button */}
-        <Touchable
-          onPress={onClose}
-          accessibilityRole='button'
-          accessibilityLabel='Close quick view'
+        <Box
           style={{
             position: 'absolute',
             top: spacing['12'],
@@ -184,23 +185,14 @@ export function QuickViewModal({
             zIndex: 10,
           }}
         >
-          {({ hovered, focused }) => (
-            <Box
-              style={{
-                width: spacing['32'],
-                height: spacing['32'],
-                borderRadius: radius.full,
-                backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transitionProperty: 'background-color',
-                transitionDuration: `${motionDuration.microInteraction}ms`,
-              }}
-            >
-              <Icon name='close' size={spacing['20']} color={colors.textPrimary} />
-            </Box>
-          )}
-        </Touchable>
+          <IconButton
+            icon='close'
+            label='Close quick view'
+            tone='ghost'
+            onPress={onClose}
+            size='lg'
+          />
+        </Box>
 
         <Box
           style={{
@@ -215,7 +207,7 @@ export function QuickViewModal({
               flex: isDesktop ? 1 : undefined,
               width: isDesktop ? 'auto' : '100%',
               borderEndWidth: isDesktop ? borderWidth.thin : borderWidth.none,
-              borderColor: colors.stroke,
+              borderColor: c.stroke,
               paddingEnd: isDesktop ? spacing['16'] : spacing.none,
             }}
           >
@@ -224,13 +216,14 @@ export function QuickViewModal({
                 aspectRatio: 1,
                 borderRadius: radius.lg,
                 overflow: 'hidden',
-                backgroundColor: colors.backgroundSecondary,
+                backgroundColor: c.backgroundSecondary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
               <Image
                 source={{ uri: currentMedia }}
+                alt={item.name}
                 resizeMode='contain'
                 style={{ width: '100%', height: '100%' }}
               />
@@ -241,7 +234,7 @@ export function QuickViewModal({
                     position: 'absolute',
                     top: spacing['12'],
                     end: spacing['12'],
-                    backgroundColor: colors.surface,
+                    backgroundColor: c.surface,
                   }}
                 >
                   {item.badge}
@@ -304,7 +297,7 @@ export function QuickViewModal({
               style={{
                 textTransform: 'uppercase',
                 letterSpacing: 1.4,
-                color: colors.textSecondary,
+                color: c.textSecondary,
               }}
             >
               {item.brand}
@@ -356,21 +349,26 @@ export function QuickViewModal({
               <Text variant='bodySm' tone='default'>
                 Earn <Text weight='700'>Glow Points</Text> by purchasing this product
               </Text>
-              <Touchable accessibilityRole='button' accessibilityLabel='Sign in to earn points'>
-                {({ hovered, focused }) => (
-                  <Text
-                    variant='bodySm'
-                    weight='600'
-                    tone='muted'
-                    style={{
-                      textDecorationLine: 'underline',
-                      color: hovered || focused ? colors.textPrimary : colors.textSecondary,
-                    }}
-                  >
-                    Sign In or create an account to earn points
-                  </Text>
-                )}
-              </Touchable>
+              <ReusableButton
+                accessibilityLabel='Sign in to earn points'
+                variant='link'
+                size='sm'
+                style={{
+                  paddingHorizontal: 0,
+                  paddingVertical: 0,
+                  justifyContent: 'flex-start',
+                  alignSelf: 'flex-start',
+                }}
+              >
+                <Text
+                  variant='bodySm'
+                  weight='600'
+                  tone='muted'
+                  style={{ textDecorationLine: 'underline' }}
+                >
+                  Sign In or create an account to earn points
+                </Text>
+              </ReusableButton>
             </Box>
 
             {/* Quantity Selector */}
@@ -384,8 +382,8 @@ export function QuickViewModal({
                       minWidth: spacing['80'],
                       borderRadius: radius.full,
                       borderWidth: borderWidth.thin,
-                      borderColor: colors.stroke,
-                      backgroundColor: colors.surface,
+                      borderColor: c.stroke,
+                      backgroundColor: c.surface,
                       paddingHorizontal: spacing['6'],
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -393,59 +391,55 @@ export function QuickViewModal({
                       gap: spacing['8'],
                     }}
                   >
-                    <Touchable
+                    <ReusableButton
                       onPress={() => setQuantity((current) => Math.max(1, current - 1))}
                       disabled={!canDecreaseQuantity || addingToCart}
-                      accessibilityRole='button'
                       accessibilityLabel='Decrease quantity'
+                      variant='ghost'
+                      size='icon'
+                      style={{
+                        width: spacing['24'],
+                        height: spacing['24'],
+                        minWidth: spacing['24'],
+                        minHeight: spacing['24'],
+                        paddingHorizontal: 0,
+                        paddingVertical: 0,
+                        borderRadius: radius.full,
+                        backgroundColor: c.surface,
+                      }}
                     >
-                      {({ hovered, focused }) => (
-                        <Box
-                          style={{
-                            width: spacing['24'],
-                            height: spacing['24'],
-                            borderRadius: radius.full,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: hovered || focused ? colors.surfaceMuted : colors.surface,
-                          }}
-                        >
-                          <Icon
-                            name={I18nManager.isRTL ? 'caretRight' : 'caretLeft'}
-                            size={spacing['16']}
-                            color={colors.textPrimary}
-                          />
-                        </Box>
-                      )}
-                    </Touchable>
+                      <Icon
+                        name={I18nManager.isRTL ? 'caretRight' : 'caretLeft'}
+                        size={spacing['16']}
+                        color={c.textPrimary}
+                      />
+                    </ReusableButton>
                       <Text variant='bodySm' weight='700'>
                         {quantity}
                       </Text>
-                    <Touchable
+                    <ReusableButton
                       onPress={() => setQuantity((current) => Math.min(10, current + 1))}
                       disabled={!canIncreaseQuantity || addingToCart}
-                      accessibilityRole='button'
                       accessibilityLabel='Increase quantity'
+                      variant='ghost'
+                      size='icon'
+                      style={{
+                        width: spacing['24'],
+                        height: spacing['24'],
+                        minWidth: spacing['24'],
+                        minHeight: spacing['24'],
+                        paddingHorizontal: 0,
+                        paddingVertical: 0,
+                        borderRadius: radius.full,
+                        backgroundColor: c.surface,
+                      }}
                     >
-                      {({ hovered, focused }) => (
-                        <Box
-                          style={{
-                            width: spacing['24'],
-                            height: spacing['24'],
-                            borderRadius: radius.full,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            backgroundColor: hovered || focused ? colors.surfaceMuted : colors.surface,
-                          }}
-                        >
-                          <Icon
-                            name={I18nManager.isRTL ? 'caretLeft' : 'caretRight'}
-                            size={spacing['16']}
-                            color={colors.textPrimary}
-                          />
-                        </Box>
-                      )}
-                    </Touchable>
+                      <Icon
+                        name={I18nManager.isRTL ? 'caretLeft' : 'caretRight'}
+                        size={spacing['16']}
+                        color={c.textPrimary}
+                      />
+                    </ReusableButton>
                   </Box>
                   <Box style={{ flex: isDesktop ? undefined : 1, width: isDesktop ? 220 : undefined }}>
                     <Button
@@ -467,38 +461,41 @@ export function QuickViewModal({
                 </Button>
               )}
 
-              <Touchable
+              <ReusableButton
                 onPress={() => {
                   onSelectProduct(item.id)
                   onClose()
                 }}
-                accessibilityRole='button'
                 accessibilityLabel='View full details'
+                variant='ghost'
+                size='default'
+                style={{
+                  paddingHorizontal: 0,
+                  paddingVertical: spacing['12'],
+                  justifyContent: 'center',
+                }}
               >
-                {({ hovered, focused }) => (
-                  <Box
+                <Box
+                  style={{
+                    flexDirection: 'row',
+                    gap: spacing['6'],
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text
+                    variant='bodySm'
+                    weight='600'
                     style={{
-                      paddingVertical: spacing['12'],
-                      flexDirection: 'row',
-                      gap: spacing['6'],
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      color: c.textSecondary,
+                      textDecorationLine: 'underline',
                     }}
-                  >
-                    <Text
-                      variant='bodySm'
-                      weight='600'
-                      style={{
-                        color: hovered || focused ? colors.brandPrimary : colors.textSecondary,
-                        textDecorationLine: hovered || focused ? 'underline' : 'none',
-                      }}
-                      >
-                      View Full Details
-                    </Text>
-                    <Icon name={detailArrowIcon} size={spacing['16']} color={colors.textSecondary} />
-                  </Box>
-                )}
-              </Touchable>
+                    >
+                    View Full Details
+                  </Text>
+                  <Icon name={detailArrowIcon} size={spacing['16']} color={c.textSecondary} />
+                </Box>
+              </ReusableButton>
             </Box>
             <Text variant='meta' tone='muted'>
               SKU: {item.id}
@@ -508,7 +505,7 @@ export function QuickViewModal({
       </Box>
     </Box>
   )
-}
+})
 
 const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
 
@@ -523,31 +520,29 @@ function IconCircleButton({
   onPress?: () => void
   disabled?: boolean
 }) {
+  const c = useThemeColors()
   return (
-    <Touchable onPress={onPress} disabled={disabled} accessibilityRole='button' accessibilityLabel={label}>
-      {({ hovered, focused }) => {
-        const active = hovered || focused
-        return (
-          <Box
-            style={{
-              width: iconButtonTokens.size.lg,
-              height: iconButtonTokens.size.lg,
-              borderRadius: radius.full,
-              borderWidth: borderWidth.thin,
-              borderColor: active ? colors.textPrimary : colors.stroke,
-              backgroundColor: active ? colors.surfaceMuted : colors.surface,
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: disabled ? 0.45 : 1,
-              transitionProperty: 'background-color,border-color,transform',
-              transitionDuration: `${motionDuration.microInteraction}ms`,
-              transform: [{ scale: active ? 1.02 : 1 }],
-            }}
-          >
-            <Icon name={icon} size={iconButtonTokens.icon.lg} color={colors.textPrimary} />
-          </Box>
-        )
+    <ReusableButton
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityLabel={label}
+      variant='ghost'
+      size='icon'
+      style={{
+        width: iconButtonTokens.size.lg,
+        height: iconButtonTokens.size.lg,
+        minWidth: iconButtonTokens.size.lg,
+        minHeight: iconButtonTokens.size.lg,
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+        borderRadius: radius.full,
+        borderWidth: borderWidth.thin,
+        borderColor: c.stroke,
+        backgroundColor: c.surface,
+        opacity: disabled ? 0.45 : 1,
       }}
-    </Touchable>
+    >
+      <Icon name={icon} size={iconButtonTokens.icon.lg} color={c.textPrimary} />
+    </ReusableButton>
   )
 }

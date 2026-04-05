@@ -168,22 +168,13 @@
   --tracking-label:     0.12em;
   --tracking-overline:  0.16em;   /* wide caps */
 
-  /* ── Elevation — Figma 3-layer shadow system ── */
-  --shadow-e01: 0 1px 2px rgba(15,15,17,0.04), 0 1px 4px rgba(15,15,17,0.06);
-  --shadow-e02: 0 2px 4px rgba(15,15,17,0.05), 0 4px 10px rgba(15,15,17,0.06);
-  --shadow-e03: 0 3px 6px rgba(15,15,17,0.06), 0 6px 14px rgba(15,15,17,0.07);
-  --shadow-e04: 0 4px 8px rgba(15,15,17,0.06), 0 8px 18px rgba(15,15,17,0.08);
-  --shadow-e05: 0 5px 10px rgba(15,15,17,0.07), 0 10px 20px rgba(15,15,17,0.08);
-  --shadow-e06: 0 6px 12px rgba(15,15,17,0.07), 0 12px 24px rgba(15,15,17,0.09);
-  --shadow-e08: 0 8px 16px rgba(15,15,17,0.08), 0 16px 32px rgba(15,15,17,0.10);
-  --shadow-e12: 0 12px 24px rgba(15,15,17,0.09), 0 20px 40px rgba(15,15,17,0.11);
-  --shadow-e16: 0 16px 30px rgba(15,15,17,0.10), 0 26px 52px rgba(15,15,17,0.12);
-  --shadow-e24: 0 20px 40px rgba(15,15,17,0.11), 0 36px 64px rgba(15,15,17,0.14);
-  --shadow-xs: 0 1px 2px rgba(15,15,17,0.04), 0 1px 4px rgba(15,15,17,0.06);
-  --shadow-sm: 0 2px 4px rgba(15,15,17,0.05), 0 4px 10px rgba(15,15,17,0.06);
-  --shadow-md: 0 4px 8px rgba(15,15,17,0.06), 0 8px 18px rgba(15,15,17,0.08);
-  --shadow-lg: 0 8px 24px rgba(15,15,17,0.08), 0 16px 40px rgba(15,15,17,0.10);
-  --shadow-xl: 0 16px 36px rgba(15,15,17,0.10), 0 28px 56px rgba(15,15,17,0.12);
+  /* ── Elevation — 4-level + card system ── */
+  --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
+  --shadow-sm:   0 2px 4px rgba(0,0,0,0.06);
+  --shadow-md:   0 4px 8px rgba(0,0,0,0.08);
+  --shadow-lg:   0 8px 16px rgba(0,0,0,0.10);
+  --shadow-xl:   0 12px 24px rgba(0,0,0,0.12);
+  --shadow-card: 0 0 5px rgba(0,0,6,0.14);
 
   /* ── Motion — from packages/tokens/motion.ts — §24 tokenized durations ── */
   --duration-micro:   220ms;

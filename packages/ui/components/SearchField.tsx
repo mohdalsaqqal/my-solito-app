@@ -1,7 +1,8 @@
 import { TextInputProps, View } from 'react-native'
-import { borderWidth, colors, elevation, inputTokens, spacing } from '@real/tokens'
+import { borderWidth, elevation, inputTokens, spacing } from '@real/tokens'
 import { Input } from '../primitives/Input'
 import { Icon } from './Icon'
+import { useThemeColors } from '../responsive'
 
 type SearchFieldProps = Omit<TextInputProps, 'onChange'> & {
   value: string
@@ -18,15 +19,16 @@ export function SearchField({
   style,
   ...props
 }: SearchFieldProps) {
+  const c = useThemeColors()
   const disabled = state === 'disabled' || editable === false
   const invalid = state === 'error'
 
   return (
     <View style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
       <View
-        pointerEvents='none'
         style={{
           position: 'absolute',
+          pointerEvents: 'none',
           start: spacing['16'],
           zIndex: 1,
           alignItems: 'center',
@@ -36,7 +38,7 @@ export function SearchField({
         <Icon
           name='search'
           size={16}
-          color={invalid ? colors.error : colors.textSecondary}
+          color={invalid ? c.error : c.textSecondary}
         />
       </View>
       <Input
@@ -58,9 +60,9 @@ export function SearchField({
             paddingRight: spacing['16'],
             borderRadius: inputTokens.radius.default,
             borderWidth: borderWidth.thin,
-            borderColor: invalid ? colors.error : colors.border,
-            backgroundColor: disabled ? colors.backgroundSecondary : colors.surface,
-            boxShadow: elevation.e01,
+            borderColor: invalid ? c.error : c.border,
+            backgroundColor: disabled ? c.backgroundSecondary : c.surface,
+            boxShadow: elevation.xs,
           },
           style,
         ]}

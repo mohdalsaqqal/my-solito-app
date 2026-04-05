@@ -7,7 +7,7 @@ import { Touchable } from '../primitives/Touchable'
 
 type ButtonProps = {
   children?: ReactNode
-  variant?: 'solid' | 'soft' | 'outline' | 'ghost'
+  variant?: 'solid' | 'soft' | 'outline' | 'ghost' | 'secondaryQuiet' | 'premiumAccent' | 'primaryCommerce'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   loading?: boolean
@@ -63,6 +63,24 @@ const buttonContainerStyles: Record<ButtonVariant, ViewStyle> = {
     borderColor: 'transparent',
     borderWidth: borderWidth.none,
   },
+  // Section header "see all" link — text-only with underline on hover
+  secondaryQuiet: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    borderWidth: borderWidth.none,
+  },
+  // Premium dark CTA — ink-black button for newsletter/auth
+  premiumAccent: {
+    backgroundColor: colors.inkBlack,
+    borderColor: colors.inkBlack,
+    borderWidth: borderWidth.none,
+  },
+  // Commerce buy action — deep blood red for add-to-cart
+  primaryCommerce: {
+    backgroundColor: colors.brandPrimary,
+    borderColor: colors.brandPrimary,
+    borderWidth: borderWidth.none,
+  },
 }
 
 const buttonTextTone: Record<ButtonVariant, 'inverse' | 'primary' | 'default'> = {
@@ -70,6 +88,9 @@ const buttonTextTone: Record<ButtonVariant, 'inverse' | 'primary' | 'default'> =
   soft: 'default',
   outline: 'primary',
   ghost: 'primary',
+  secondaryQuiet: 'primary',
+  premiumAccent: 'inverse',
+  primaryCommerce: 'inverse',
 }
 
 const spinnerColor: Record<ButtonVariant, string> = {
@@ -77,6 +98,9 @@ const spinnerColor: Record<ButtonVariant, string> = {
   soft: colors.textPrimary,
   outline: colors.brandPrimary,
   ghost: colors.brandPrimary,
+  secondaryQuiet: colors.textPrimary,
+  premiumAccent: colors.white,
+  primaryCommerce: colors.white,
 }
 
 export function Button({
@@ -111,6 +135,14 @@ export function Button({
             ? interactive
               ? colors.brandPrimaryHover
               : colors.brandPrimary
+          : variant === 'primaryCommerce'
+            ? interactive
+              ? colors.brandPrimaryHover
+              : colors.brandPrimary
+          : variant === 'premiumAccent'
+            ? interactive
+              ? colors.inkMid
+              : colors.inkBlack
             : variantStyle.backgroundColor
 
         return {
@@ -131,18 +163,23 @@ export function Button({
               ? interactive
                 ? colors.brandPrimaryHover
                 : colors.brandPrimary
-              : variant === 'soft'
-                ? interactive
-                  ? colors.textPrimary
-                  : colors.border
-                : variantStyle.borderColor,
+            : variant === 'soft'
+              ? interactive
+                ? colors.textPrimary
+                : colors.border
+              : variantStyle.borderColor,
           borderWidth: variantStyle.borderWidth,
-          ...(variant === 'solid'
+          ...(variant === 'solid' || variant === 'primaryCommerce'
             ? isWeb
-              ? { boxShadow: interactive ? elevation.e01 : elevation.none }
+              ? { boxShadow: interactive ? elevation.xs : elevation.none }
               : interactive
                 ? shadows.xs
                 : shadows.none
+            : null),
+          ...(variant === 'secondaryQuiet'
+            ? {
+                textDecorationLine: interactive ? 'underline' : 'none' as const,
+              }
             : null),
         }
       }}
