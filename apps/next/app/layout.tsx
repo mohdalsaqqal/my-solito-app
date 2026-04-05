@@ -1,24 +1,15 @@
 import { StylesProvider } from './styles-provider'
 import './globals.css'
-import { Almarai, Cairo, Manrope, Noto_Serif, Tajawal } from 'next/font/google'
+import { Almarai, Cairo, Manrope, Tajawal } from 'next/font/google'
 import { colors } from '@real/tokens'
 import { ChunkErrorRecovery } from './_components/ChunkErrorRecovery'
 import { Providers } from './_components/Providers'
 
-// DESIGN.md §3 "The Editorial Voice"
-// Body/Labels: Manrope — geometric sans, modern, technical precision
+// Phase 1 storefront typography: sans-led, campaign-first, high-scan commerce UI.
 const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-manrope',
-  weight: ['400', '500', '600', '700'],
-})
-
-// Display/Headlines: Noto Serif — heritage, timelessness, "endless beauty"
-const notoSerif = Noto_Serif({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-noto-serif',
   weight: ['400', '500', '600', '700'],
 })
 
@@ -93,7 +84,7 @@ export default function RootLayout({
       lang={DEFAULT_LOCALE}
       dir={DEFAULT_DIRECTION}
       suppressHydrationWarning
-      className={`${manrope.variable} ${notoSerif.variable} ${cairo.variable} ${tajawal.variable} ${almarai.variable}`}
+      className={`${manrope.variable} ${cairo.variable} ${tajawal.variable} ${almarai.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: ROOT_LOCALE_SCRIPT }} />
