@@ -113,13 +113,13 @@
   --spacing-24:   96px;
   --spacing-32:   128px;
 
-  /* ── Typography — Phase 1 commercial storefront baseline ── */
-  /* Manrope leads body, headlines, and campaign UI to keep the marketplace fast to scan. */
-  --font-sans:      var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading:   var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display:   var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-secondary: var(--font-manrope, "Manrope"), -apple-system, system-ui, sans-serif;
-  --font-logo:      var(--font-manrope, "Manrope"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  /* ── Typography — DM Sans (EN) + Tajawal (AR) ── */
+  --font-sans:      var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading:   var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display:   var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-secondary: var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, sans-serif;
+  --font-logo:      var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-arabic:    var(--font-tajawal, "Tajawal"), -apple-system, system-ui, sans-serif;
   --font-mono:      Menlo, monospace;
 
   /* ── Text scale — NiceOne expanded 10–20px ── */
@@ -488,4 +488,9 @@
   --color-info:                   hsl(214 80% 60%);
   /* ── Dark mode outline variant ── */
   --color-outline-variant:        hsl(0 40% 28%);
+}
+
+/* ── RTL font switching ── */
+[dir="rtl"] {
+  font-family: var(--font-arabic);
 }
