@@ -28,14 +28,15 @@ test('guard-hygiene - staged AUDIT_REPORT.md fails (failure path)', async () => 
 
 test('guard-hygiene - missing vendor dir in gitignore fails (failure path)', async () => {
   const original = readFileSync('.gitignore', 'utf8')
-  // Remove .cline/ from gitignore temporarily
-  const broken = original.replace('.cline/', '#.cline/')
+  // Remove ALL lines containing .cline from gitignore temporarily
+  const broken = original.split('\n').filter(line => !line.includes('.cline')).join('\n')
   writeFileSync('.gitignore', broken)
   try {
     execSync(SCRIPT, { encoding: 'utf8', env: { ...process.env } })
     assert.fail('Should have exited non-zero')
   } catch (e) {
-    assert.ok(e.stdout?.includes('HY-001') || e.stdout?.includes('FAIL'), 'Should report HY-001')
+    const output = (e.stdout || '') + (e.stderr || '')
+    assert.ok(output.includes('HY-001') || output.includes('FAIL'), 'Should report HY-001')
     assert.ok(e.status !== 0, 'Should exit non-zero')
   } finally {
     writeFileSync('.gitignore', original)
