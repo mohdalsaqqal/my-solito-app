@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { getAdminCacheAudit, runAdminCacheAction } from './admin-cache.service.ts'
+import { getAdminCacheAudit, runAdminCacheAction } from './admin-cache.service'
 
 test('admin-cache - happy path returns expected shape', async () => {
   try {

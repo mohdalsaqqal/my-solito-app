@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { getCartPageInitialData } from './cart-page.service.ts'
+import { getCartPageInitialData } from './cart-page.service'
 
 test('getCartPageInitialData - happy path returns expected shape', async () => {
   try {

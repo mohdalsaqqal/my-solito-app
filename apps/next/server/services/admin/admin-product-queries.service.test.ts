@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { listAdminProductQueries, createAdminProductQuery, getAdminProductQuery, updateAdminProductQuery, deleteAdminProductQuery } from './admin-product-queries.service.ts'
+import { listAdminProductQueries, createAdminProductQuery, getAdminProductQuery, updateAdminProductQuery, deleteAdminProductQuery } from './admin-product-queries.service'
 
 test('admin-product-queries - happy path returns expected shape', async () => {
   try {

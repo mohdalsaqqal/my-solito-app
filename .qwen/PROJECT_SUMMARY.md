@@ -24,5 +24,5 @@ Solito v5 premium cosmetics commerce platform — cross-platform monorepo (Next.
 ## Key Architecture Reminders
 
 - Server layer owns data access (`apps/next/server/services/`)
-- Tokens over hardcoded values (import from `@real/tokens`)
+- All design values flow through `@real/tokens` — never hardcode
 - See AGENTS.md for full architecture rules.

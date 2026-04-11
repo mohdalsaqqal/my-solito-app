@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { listAdminMenus, getAdminMenu, createAdminMenu, updateAdminMenu, deleteAdminMenu } from './admin-menus.service.ts'
+import { listAdminMenus, getAdminMenu, createAdminMenu, updateAdminMenu, deleteAdminMenu } from './admin-menus.service'
 
 test('admin-menus - happy path returns expected shape', async () => {
   try {

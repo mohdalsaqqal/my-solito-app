@@ -23,7 +23,7 @@ test('getHomePageInitialData - happy path returns expected shape', async () => {
 
 test('getHomePageInitialData - failure path surfaces a typed error', async () => {
   try {
-    // Calling without mock infrastructure — Promise.allSettled prevents throws,
+    // Calling without any mock infrastructure — Promise.allSettled prevents throws,
     // so error field should be populated if any upstream call fails
     const result = await getHomePageInitialData()
     assert.ok('error' in result, 'returns error field even when upstream fails')

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { listAdminOrders, getAdminOrderDetail, updateAdminOrder, runAdminOrderAction, updateAdminOrderStatus } from './admin-orders.service.ts'
+import { listAdminOrders, getAdminOrderDetail, updateAdminOrder, runAdminOrderAction, updateAdminOrderStatus } from './admin-orders.service'
 
 test('admin-orders - happy path returns expected shape', async () => {
   try {

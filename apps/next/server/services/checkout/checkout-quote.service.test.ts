@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createCheckoutQuote } from './checkout-quote.service.ts'
+import { createCheckoutQuote } from './checkout-quote.service'
 
 test('createCheckoutQuote - happy path returns expected shape', async () => {
   try {
@@ -36,6 +36,6 @@ test('createCheckoutQuote - failure path surfaces a typed error', async () => {
     assert.ok(true, 'may handle gracefully if mock returns valid data')
   }
   catch (err) {
-    assert.ok(err instanceof Error, 'failure path throwss an Error')
+    assert.ok(err instanceof Error, 'failure path throws an Error')
   }
 })

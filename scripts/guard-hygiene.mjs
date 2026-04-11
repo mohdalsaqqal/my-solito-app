@@ -307,12 +307,23 @@ function checkPlanFiles() {
 
 function findPackageJsonFiles(root) {
   const results = []
+  const EXCLUDE_DIRS = new Set([
+    'node_modules',
+    '.claude',
+    '.agent',
+    '.agents',
+    'my-clone',
+    'real-cosmetics-admin',
+    'src',
+    'luxeglow-market',
+    'strapi',
+  ])
   function walk(dir) {
     let entries
     try { entries = readdirSync(dir, { withFileTypes: true }) } catch { return }
     for (const entry of entries) {
+      if (EXCLUDE_DIRS.has(entry.name)) continue
       const full = join(dir, entry.name)
-      if (entry.name === 'node_modules') continue
       if (entry.isDirectory()) { walk(full); continue }
       if (entry.name === 'package.json') results.push(full)
     }
