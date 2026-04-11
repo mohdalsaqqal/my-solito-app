@@ -79,3 +79,53 @@ build/**
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+.aidesigner/*
+!.aidesigner/.gitkeep
+.ace-tool/
+
+# Environment variables (NEVER commit real credentials)
+.env
+.env.*
+!.env.example
+
+# Coverage reports
+coverage/
+
+# AI tool vendor directories (Constitution Principle XV)
+.adal/
+.augment/
+.cline/
+.codebuddy/
+.commandcode/
+.continue/
+.crush/
+.cursor/
+.factory/
+.goose/
+.iflow/
+.junie/
+.kilocode/
+.kiro/
+.kode/
+.mcpjam/
+.mux/
+.neovate/
+.openhands/
+.pi/
+.pochi/
+.qoder/
+.roo/
+.trae/
+.vibe/
+.windsurf/
+.zencoder/
+
+# Build artifacts
+.next/
+dist/
+.turbo/

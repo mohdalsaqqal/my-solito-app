@@ -1,7 +1,24 @@
-# AGENTS VERSION
-- Version: `v4.0`
-- Last updated: `2026-03-31`
-- This file defines the architecture and execution rules for the premium commerce platform using Next.js App Router, server-first services, and the active full-RNR shared UI system.
+﻿# AGENTS VERSION
+- Version: `v4.2`
+- Last updated: `2026-04-11`
+- This file is the **sole source of truth** for architecture rules, platform operating model, and non-negotiables.
+
+## Source of Truth
+
+**AGENTS.md is the source of truth.** All architecture rules, data-flow principles, and UI contracts live here.
+
+The following files exist as **support shims only** — they contain tool-specific operational notes and MUST NOT duplicate any architecture rule from this file. Each opens with a pointer back to AGENTS.md:
+
+| Shim File | Allowed Scope |
+|---|---|
+| `CLAUDE.md` | Claude Code skill invocation, memory paths, shortcuts |
+| `GEMINI.md` | Gemini CLI-specific notes |
+| `.github/copilot-instructions.md` | GitHub Copilot-specific notes |
+| `.codex/context.md` | Codex CLI-specific notes |
+| `.qwen/PROJECT_SUMMARY.md` | Qwen-specific notes |
+| `.impeccable.md` | Impeccable-specific notes |
+
+Any architecture rule duplicated in a shim file is a violation enforced by `yarn guard:agent-docs`.
 
 ---
 
@@ -283,6 +300,52 @@ After every substantial update, agents must sync the repo memory.
 
 ---
 
+# Agent Source Of Truth (P0)
+
+## Mandatory Startup Protocol
+
+At the start of every new conversation, before searching the repo or opening arbitrary files, agents must:
+
+1. **Check memory files** — read `SESSION-STATE.md`, `RECENT_CONTEXT.md`, and `MEMORY.md` for current working context, open questions, and recent decisions
+2. Read `AGENTS.md`
+3. Read `docs/architecture-index.md`
+4. Read `graphify-out/GRAPH_REPORT.md`
+5. Choose the smallest matching bounded-context graph under `graphify-out/contexts/`
+6. Read that context's `GRAPH_REPORT.md` or `wiki/index.md`
+7. Only then search raw files inside that narrowed context
+
+This startup protocol is mandatory unless the user explicitly asks to ignore repo guidance.
+
+## Navigation Order
+
+All agents should build context in this order:
+
+1. **Memory files** (`SESSION-STATE.md`, `RECENT_CONTEXT.md`, `MEMORY.md`)
+2. `AGENTS.md`
+3. `docs/architecture-index.md`
+4. `graphify-out/GRAPH_REPORT.md`
+5. The smallest matching bounded-context graph under `graphify-out/contexts/`
+6. Raw files inside that narrowed context only
+
+## Bounded Context Graphs
+
+| Context | Path | Start Here When |
+|---|---|---|
+| `apps-next-api` | `graphify-out/contexts/apps-next-api/` | exploring route handlers, auth/session, admin APIs, BFF entry points |
+| `apps-next-services` | `graphify-out/contexts/apps-next-services/` | exploring server services, orchestration, provider-backed business logic |
+| `packages-providers` | `graphify-out/contexts/packages-providers/` | exploring contracts, registry, provider boundaries |
+| `packages-adapters` | `graphify-out/contexts/packages-adapters/` | exploring external integrations and mock implementations |
+| `packages-app` | `graphify-out/contexts/packages-app/` | exploring shared screens, flows, block renderers |
+| `packages-ui` | `graphify-out/contexts/packages-ui/` | exploring shared UI, reusables, responsive helpers |
+
+## Rules
+
+- Do not start with whole-repo grep if a matching bounded-context graph exists.
+- Use `GRAPH_REPORT.md` and `wiki/index.md` inside the selected context before opening raw files.
+- Rebuild bounded-context graphs after substantial architecture changes with `py -3 scripts/build_graphify_contexts.py`.
+
+---
+
 # Verification
 
 Minimum:
@@ -334,3 +397,12 @@ Each sub-agent's token usage is isolated from the main context. Parallel dispatc
 ---
 
 # END
+
+## graphify
+
+This project has graphify bounded-context graphs under `graphify-out/contexts/`.
+
+Rules:
+- Before answering architecture or codebase questions, read `graphify-out/GRAPH_REPORT.md` to choose the correct bounded context
+- Then read the selected context's `GRAPH_REPORT.md` or `wiki/index.md` before searching raw files
+- After substantial architecture changes, run `py -3 scripts/build_graphify_contexts.py` to refresh the graph set

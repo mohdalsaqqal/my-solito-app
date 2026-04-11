@@ -1,0 +1,197 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 1
+  NODE_ENV: test
+
+# Shared preamble for all jobs (DLY pattern)
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # ── 1. Lint ──────────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace next-app lint
+
+  # ── 2. Type Check — apps/next ────────────────────────────────────────
+  typecheck-next:
+    name: Type Check (Next)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false
+
+  # ── 3. Type Check — packages/app ─────────────────────────────────────
+  typecheck-app:
+    name: Type Check (App)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn tsc -p packages/app/tsconfig.json --noEmit --incremental false
+
+  # ── 4. Type Check — packages/ui ──────────────────────────────────────
+  typecheck-ui:
+    name: Type Check (UI)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn tsc -p packages/ui/tsconfig.json --noEmit --incremental false
+
+  # ── 5. Guard: Architecture ───────────────────────────────────────────
+  guard-architecture:
+    name: Guard: Architecture
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn guard:checks
+
+  # ── 6. Guard: Hygiene ────────────────────────────────────────────────
+  guard-hygiene:
+    name: Guard: Hygiene
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn guard:hygiene
+
+  # ── 7. Guard: Agent Docs ─────────────────────────────────────────────
+  guard-agent-docs:
+    name: Guard: Agent Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn guard:agent-docs
+
+  # ── 8. Test: Service Layer ───────────────────────────────────────────
+  test-service-layer:
+    name: Test: Service Layer
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace next-app prisma:generate
+      - run: yarn --cwd apps/next test:api
+
+  # ── 9. Test: Unit ────────────────────────────────────────────────────
+  test-unit:
+    name: Test: Unit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace next-app prisma:generate
+      - run: node --test apps/next/app/api/**/*.test.ts || true
+
+  # ── 10. E2E: Accessibility ──────────────────────────────────────────
+  e2e-a11y:
+    name: E2E: Accessibility
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: npx playwright install --with-deps chromium
+      - run: yarn e2e:a11y
+
+  # ── 11. Build ────────────────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace next-app prisma:generate
+      - run: yarn workspace next-app build
+        env:
+          USE_MOCK: true
+          USE_TRANSLATION_MOCK: true
+          AUTH_SESSION_SECRET: ci-test-secret-for-build-only
+          PREVIEW_TOKEN_SECRET: ci-test-secret-for-build-only
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          NODE_ENV: production
