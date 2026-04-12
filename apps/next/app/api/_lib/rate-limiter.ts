@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto'
+import { prisma } from '../../../server/lib/prisma'
 
 /**
  * In-memory sliding-window rate limiter for Next.js route handlers.
@@ -18,11 +19,10 @@ interface BucketEntry {
 }
 
 export interface RateLimitStore {
-  get(key: string): BucketEntry | undefined
-  set(key: string, entry: BucketEntry): void
-  delete(key: string): void
-  prune(now: number): number
-  size(): number
+  consume(key: string, windowMs: number): Promise<BucketEntry>
+  delete(key: string): Promise<void>
+  prune(now: number): Promise<number>
+  size(): Promise<number>
 }
 
 export interface RateLimiterConfig {
@@ -45,19 +45,28 @@ export interface RateLimitResult {
 export class MemoryRateLimitStore implements RateLimitStore {
   private buckets = new Map<string, BucketEntry>()
 
-  get(key: string) {
-    return this.buckets.get(key)
+  async consume(key: string, windowMs: number) {
+    const now = Date.now()
+    const entry = this.buckets.get(key)
+
+    if (!entry || now >= entry.resetAt) {
+      const newEntry: BucketEntry = {
+        count: 1,
+        resetAt: now + windowMs,
+      }
+      this.buckets.set(key, newEntry)
+      return newEntry
+    }
+
+    entry.count += 1
+    return entry
   }
 
-  set(key: string, entry: BucketEntry) {
-    this.buckets.set(key, entry)
-  }
-
-  delete(key: string) {
+  async delete(key: string) {
     this.buckets.delete(key)
   }
 
-  prune(now: number) {
+  async prune(now: number) {
     let pruned = 0
     this.buckets.forEach((entry, key) => {
       if (now >= entry.resetAt) {
@@ -68,79 +77,170 @@ export class MemoryRateLimitStore implements RateLimitStore {
     return pruned
   }
 
-  size() {
+  async size() {
     return this.buckets.size
   }
+}
+
+class PrismaRateLimitStore implements RateLimitStore {
+  async consume(key: string, windowMs: number) {
+    const resetAt = new Date(Date.now() + windowMs)
+    const rows = await prisma.$queryRawUnsafe<Array<{ count: number; resetAt: Date }>>(
+      `
+        INSERT INTO "RateLimitBucket" ("key", "count", "resetAt", "updatedAt")
+        VALUES ($1, 1, $2, NOW())
+        ON CONFLICT ("key") DO UPDATE
+        SET
+          "count" = CASE
+            WHEN "RateLimitBucket"."resetAt" <= NOW() THEN 1
+            ELSE "RateLimitBucket"."count" + 1
+          END,
+          "resetAt" = CASE
+            WHEN "RateLimitBucket"."resetAt" <= NOW() THEN $2
+            ELSE "RateLimitBucket"."resetAt"
+          END,
+          "updatedAt" = NOW()
+        RETURNING "count", "resetAt"
+      `,
+      key,
+      resetAt,
+    )
+
+    const row = rows[0]
+    if (!row) {
+      throw new Error('Prisma rate limiter did not return a bucket row.')
+    }
+
+    return {
+      count: Number(row.count),
+      resetAt: new Date(row.resetAt).getTime(),
+    }
+  }
+
+  async delete(key: string) {
+    await prisma.$executeRawUnsafe(`DELETE FROM "RateLimitBucket" WHERE "key" = $1`, key)
+  }
+
+  async prune(now: number) {
+    return prisma.$executeRawUnsafe(
+      `DELETE FROM "RateLimitBucket" WHERE "resetAt" <= $1`,
+      new Date(now),
+    )
+  }
+
+  async size() {
+    const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint | number }>>(
+      `SELECT COUNT(*)::bigint AS "count" FROM "RateLimitBucket"`,
+    )
+    const value = rows[0]?.count ?? 0
+    return typeof value === 'bigint' ? Number(value) : Number(value)
+  }
+}
+
+type RateLimitStoreBackend = 'memory' | 'prisma'
+
+function resolveRateLimitStoreBackend(): RateLimitStoreBackend {
+  const configured = process.env.RATE_LIMIT_STORE?.trim().toLowerCase()
+  if (configured === 'prisma') {
+    return 'prisma'
+  }
+  return 'memory'
+}
+
+let sharedRateLimitStore: RateLimitStore | null = null
+let prismaRateLimitFallbackWarned = false
+
+async function getConfiguredRateLimitStore() {
+  if (sharedRateLimitStore) {
+    return sharedRateLimitStore
+  }
+
+  if (resolveRateLimitStoreBackend() === 'prisma') {
+    sharedRateLimitStore = new PrismaRateLimitStore()
+    return sharedRateLimitStore
+  }
+
+  sharedRateLimitStore = new MemoryRateLimitStore()
+  return sharedRateLimitStore
 }
 
 export class RateLimiter {
   private readonly windowMs: number
   private readonly maxRequests: number
   private readonly prefix: string
-  private readonly store: RateLimitStore
 
-  constructor(config: RateLimiterConfig, store: RateLimitStore = new MemoryRateLimitStore()) {
+  constructor(config: RateLimiterConfig) {
     this.windowMs = config.windowMs
     this.maxRequests = config.maxRequests
     this.prefix = config.prefix ?? 'rl'
-    this.store = store
   }
 
-  consume(key: string): RateLimitResult {
-    const now = Date.now()
+  async consume(key: string): Promise<RateLimitResult> {
     const fullKey = `${this.prefix}:${key}`
-    const entry = this.store.get(fullKey)
-
-    if (!entry || now >= entry.resetAt) {
-      // New window
-      const newEntry: BucketEntry = {
-        count: 1,
-        resetAt: now + this.windowMs,
+    const now = Date.now()
+    try {
+      const store = await getConfiguredRateLimitStore()
+      const entry = await store.consume(fullKey, this.windowMs)
+      if (entry.count > this.maxRequests) {
+        return {
+          allowed: false,
+          remaining: 0,
+          limit: this.maxRequests,
+          resetAt: entry.resetAt,
+          retryAfterMs: entry.resetAt - now,
+        }
       }
-      this.store.set(fullKey, newEntry)
+
       return {
         allowed: true,
-        remaining: this.maxRequests - 1,
-        limit: this.maxRequests,
-        resetAt: newEntry.resetAt,
-      }
-    }
-
-    // Existing window
-    entry.count += 1
-
-    if (entry.count > this.maxRequests) {
-      return {
-        allowed: false,
-        remaining: 0,
+        remaining: this.maxRequests - entry.count,
         limit: this.maxRequests,
         resetAt: entry.resetAt,
-        retryAfterMs: entry.resetAt - now,
       }
-    }
+    } catch (error) {
+      if (!prismaRateLimitFallbackWarned && resolveRateLimitStoreBackend() === 'prisma') {
+        prismaRateLimitFallbackWarned = true
+        console.warn('[rate-limiter] Falling back to in-memory store after Prisma failure.', error)
+      }
 
-    return {
-      allowed: true,
-      remaining: this.maxRequests - entry.count,
-      limit: this.maxRequests,
-      resetAt: entry.resetAt,
+      sharedRateLimitStore = new MemoryRateLimitStore()
+      const entry = await sharedRateLimitStore.consume(fullKey, this.windowMs)
+      if (entry.count > this.maxRequests) {
+        return {
+          allowed: false,
+          remaining: 0,
+          limit: this.maxRequests,
+          resetAt: entry.resetAt,
+          retryAfterMs: entry.resetAt - now,
+        }
+      }
+
+      return {
+        allowed: true,
+        remaining: this.maxRequests - entry.count,
+        limit: this.maxRequests,
+        resetAt: entry.resetAt,
+      }
     }
   }
 
   /** Reset counters for a specific key (e.g. after successful login) */
-  reset(key: string): void {
+  async reset(key: string): Promise<void> {
     const fullKey = `${this.prefix}:${key}`
-    this.store.delete(fullKey)
+    const store = await getConfiguredRateLimitStore()
+    await store.delete(fullKey)
   }
 
   /** Remove expired buckets (call periodically or on a timer) */
-  prune(): number {
-    return this.store.prune(Date.now())
+  async prune(): Promise<number> {
+    const store = await getConfiguredRateLimitStore()
+    return store.prune(Date.now())
   }
 
   /** Total active buckets (for monitoring) */
-  get size(): number {
-    return this.store.size()
+  async size(): Promise<number> {
+    const store = await getConfiguredRateLimitStore()
+    return store.size()
   }
 }
 
@@ -270,16 +370,17 @@ let pruneStarted = false
 export function startAutoPrune(): void {
   if (pruneStarted) return
   pruneStarted = true
-  setInterval(() => {
-    const total =
-      authLimiter.prune() +
-      registrationLimiter.prune() +
-      passwordResetLimiter.prune() +
-      publicReadLimiter.prune() +
-      generalLimiter.prune() +
-      cartMutationLimiter.prune()
+  setInterval(async () => {
+    const totals = await Promise.all([
+      authLimiter.prune(),
+      registrationLimiter.prune(),
+      passwordResetLimiter.prune(),
+      publicReadLimiter.prune(),
+      generalLimiter.prune(),
+      cartMutationLimiter.prune(),
+    ])
+    const total = totals.reduce((sum, value) => sum + value, 0)
     if (total > 0 && process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
       console.log(`[rate-limiter] Pruned ${total} expired buckets`)
     }
   }, 60_000)

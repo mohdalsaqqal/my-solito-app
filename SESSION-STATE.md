@@ -87,3 +87,18 @@
   - `yarn guard:checks` ✅
   - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
   - `yarn --cwd apps/next test:api` ✅ (`122/122`)
+
+## 2026-04-12 Sprint 2 Shared Rate-Limit Backend
+- Added explicit backend switch via `RATE_LIMIT_STORE=memory|prisma` in `.env.example`.
+- Implemented Prisma-backed rate limiting using the existing Postgres/Prisma stack with a dedicated `RateLimitBucket` table.
+- Added migration: `apps/next/prisma/migrations/20260412073000_rate_limit_buckets/migration.sql`.
+- Added `RateLimitBucket` model to `apps/next/prisma/schema.prisma`.
+- `apps/next/app/api/_lib/rate-limiter.ts` now supports:
+  - `MemoryRateLimitStore`
+  - Prisma-backed shared storage when `RATE_LIMIT_STORE=prisma`
+  - safe fallback to memory with a warning if Prisma store access fails
+- Auth routes continue to use the same API surface while now awaiting async limiter operations.
+- Verification:
+  - `yarn guard:checks` ✅
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn --cwd apps/next test:api` ✅ (`123/123`)

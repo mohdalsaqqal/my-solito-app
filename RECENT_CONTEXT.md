@@ -52,3 +52,8 @@ The feature landed with the main guard/test/service-parity work, but later audit
 - Auth cookies now use encrypted stateless payloads instead of readable signed JSON.
 - Legacy signed cookie parsing remains temporarily supported for rollout compatibility.
 - Rate limiting now supports injected stores and better request keying when proxy IP headers are missing or machine traffic is present.
+
+## 2026-04-12 - Shared Rate-Limit Backend
+- Added Prisma-backed rate-limit storage behind `RATE_LIMIT_STORE=prisma`.
+- Default remains `memory` so local/test behavior stays stable.
+- Added `RateLimitBucket` Prisma model and migration for rollout.

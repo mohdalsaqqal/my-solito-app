@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const rateLimitKey = buildRateLimitKey(request)
-    const limitResult = authLimiter.consume(rateLimitKey)
+    const limitResult = await authLimiter.consume(rateLimitKey)
     if (!limitResult.allowed) {
       return fail('AUTH_LOGIN_RATE_LIMITED', 'Too many login attempts. Please try again later.', 429, undefined, buildRateLimitHeaders(limitResult))
     }
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     }
 
     // Reset rate limit on successful login
-    authLimiter.reset(rateLimitKey)
+    await authLimiter.reset(rateLimitKey)
 
     return jsonOk(result.data, 200, buildAuthSessionCookieHeader(result.data))
   } catch (cause) {

@@ -4,6 +4,7 @@ import {
   buildRateLimitKey,
   MemoryRateLimitStore,
   RateLimiter,
+  buildRateLimitHeaders,
 } from './rate-limiter'
 
 test('buildRateLimitKey prefers explicit actor identity when present', () => {
@@ -30,20 +31,26 @@ test('buildRateLimitKey falls back to request fingerprint when proxy IP headers 
   assert.match(key, /^fingerprint:/)
 })
 
-test('RateLimiter accepts an injected store and prunes expired entries', () => {
-  const limiter = new RateLimiter(
-    {
-      windowMs: 1,
-      maxRequests: 1,
-      prefix: 'test',
-    },
-    new MemoryRateLimitStore(),
-  )
+test('MemoryRateLimitStore tracks counts inside a window', async () => {
+  const store = new MemoryRateLimitStore()
+  const key = 'ip:127.0.0.1'
+  const first = await store.consume(key, 60_000)
+  assert.equal(first.count, 1)
+  const second = await store.consume(key, 60_000)
+  assert.equal(second.count, 2)
+})
+
+test('RateLimiter enforces the configured limit', async () => {
+  const limiter = new RateLimiter({
+    windowMs: 60_000,
+    maxRequests: 1,
+    prefix: `test-${Date.now()}`,
+  })
 
   const key = 'ip:127.0.0.1'
-  const first = limiter.consume(key)
+  const first = await limiter.consume(key)
   assert.equal(first.allowed, true)
-  const second = limiter.consume(key)
+  const second = await limiter.consume(key)
   assert.equal(second.allowed, false)
-  assert.ok(limiter.prune() >= 0)
+  assert.match(buildRateLimitHeaders(second)['Retry-After'] ?? '', /^[0-9]+$/)
 })

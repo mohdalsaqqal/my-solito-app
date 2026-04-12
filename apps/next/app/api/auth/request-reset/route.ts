@@ -7,7 +7,7 @@ import { RequestResetBodySchema } from '../../_lib/validation-schemas'
 export async function POST(request: Request) {
   try {
     const rateLimitKey = buildRateLimitKey(request)
-    const limitResult = passwordResetLimiter.consume(rateLimitKey)
+    const limitResult = await passwordResetLimiter.consume(rateLimitKey)
     if (!limitResult.allowed) {
       return fail('AUTH_REQUEST_RESET_RATE_LIMITED', 'Too many reset requests. Please try again later.', 429, undefined, buildRateLimitHeaders(limitResult))
     }

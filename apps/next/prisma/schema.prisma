@@ -122,3 +122,136 @@ model PricingQuote {
   @@index([userId])
   @@index([expiresAt])
 }
+
+// ============================================================================
+// CMS Entities — replaces JSON file stores in .data/
+// ============================================================================
+
+// Site-wide configuration (singleton: id = "default")
+model CmsSiteConfig {
+  id                      String   @id @default("default")
+  brandingEnLogoUrl       String   @default("")
+  brandingEnLogoAlt       String   @default("Real Cosmetics")
+  brandingEnLogoSize      String   @default("md")
+  brandingArLogoUrl       String   @default("")
+  brandingArLogoAlt       String   @default("ريال كوزمتكس")
+  brandingArLogoSize      String   @default("md")
+  topBarMessageEn         String   @default("")
+  topBarMessageAr         String   @default("")
+  topBarCtaLabelEn        String   @default("")
+  topBarCtaLabelAr        String   @default("")
+  topBarCtaHref           String   @default("")
+  footerNewsletterTitleEn String   @default("")
+  footerNewsletterTitleAr String   @default("")
+  footerLegalEn           String   @default("")
+  footerLegalAr           String   @default("")
+  searchPanelTitleEn      String   @default("")
+  searchPanelTitleAr      String   @default("")
+  updatedAt               DateTime @updatedAt
+}
+
+// Ticker settings (singleton: id = "default")
+model CmsTickerSettings {
+  id        String   @id @default("default")
+  speedMs   Int      @default(4000)
+  updatedAt DateTime @updatedAt
+}
+
+// Scrolling ticker messages
+model CmsTickerItem {
+  id        String   @id @default(cuid())
+  messageEn String
+  messageAr String
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+// Education banners
+model CmsEducationBanner {
+  id         String   @id @default(cuid())
+  titleEn    String   @default("")
+  titleAr    String   @default("")
+  bodyEn     String   @default("")
+  bodyAr     String   @default("")
+  targetPage String   @default("")
+  active     Boolean  @default(true)
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([order])
+}
+
+// User-generated content gallery items
+model CmsUgcItem {
+  id           String   @id @default(cuid())
+  imageUrl     String
+  caption      String
+  sourceHandle String   @default("")
+  active       Boolean  @default(true)
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([order])
+}
+
+// Toggle overrides (admin control toggles)
+model CmsToggleOverride {
+  id               String   @id // toggle id like "free_shipping", "loyalty_program"
+  enabled          Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+  updatedByUserId  String   @default("")
+  updatedByEmail   String   @default("")
+}
+
+// Brand spotlights (homepage marketing blocks)
+model CmsBrandSpotlight {
+  id              String   @id @default(cuid())
+  position        Int      @default(0)
+  spotlightJson   Json     // Full CMS spotlight object
+  updatedAt       DateTime @updatedAt
+  updatedByUserId String   @default("")
+  updatedByEmail  String   @default("")
+
+  @@index([position])
+}
+
+// Offer banners (homepage promo banners)
+model CmsOfferBanner {
+  id              String   @id @default(cuid())
+  position        Int      @default(0)
+  bannerJson      Json     // Full CMS banner object
+  updatedAt       DateTime @updatedAt
+  updatedByUserId String   @default("")
+  updatedByEmail  String   @default("")
+
+  @@index([position])
+}
+
+// Audit log for admin operations
+model CmsAuditLog {
+  id           String   @id @default(cuid())
+  type         String   // "TOGGLE_CHANGED", "BRAND_SPOTLIGHT_CREATED", etc.
+  targetId     String
+  actorUserId  String   @default("")
+  actorEmail   String   @default("")
+  changes      Json     // { field: { from, to } }
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt(sort: Desc)])
+  @@index([type])
+}
+
+model RateLimitBucket {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+}

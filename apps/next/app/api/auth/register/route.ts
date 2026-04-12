@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const rateLimitKey = buildRateLimitKey(request)
-    const limitResult = registrationLimiter.consume(rateLimitKey)
+    const limitResult = await registrationLimiter.consume(rateLimitKey)
     if (!limitResult.allowed) {
       return fail('AUTH_REGISTER_RATE_LIMITED', 'Too many registration attempts. Please try again later.', 429, undefined, buildRateLimitHeaders(limitResult))
     }

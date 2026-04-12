@@ -225,3 +225,20 @@ Verification:
 Follow-up:
 - The limiter is still backed by memory by default; moving to a truly shared distributed store remains the next step if production deployment is horizontally scaled.
 - Cookie parsing logic is aligned by format across Node and proxy runtimes, but it still exists in two runtime-specific implementations because Edge and Node crypto APIs differ.
+
+## 2026-04-12 - Shared Rate-Limit Store Rollout Contract
+Implementation:
+- `RATE_LIMIT_STORE=prisma` enables a Prisma/Postgres-backed rate-limit store using raw SQL against `RateLimitBucket`.
+- Default backend remains `memory`.
+- Auth routes now await async limiter operations, but their external response contract is unchanged.
+- If the Prisma backend is enabled and store access fails, the limiter falls back to memory and emits a warning.
+
+Rollout steps:
+1. Apply Prisma migration `20260412073000_rate_limit_buckets`
+2. Deploy with `RATE_LIMIT_STORE=prisma`
+3. Monitor for `[rate-limiter]` fallback warnings
+
+Verification:
+- `yarn guard:checks`
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- `yarn --cwd apps/next test:api`
