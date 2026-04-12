@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { AUTH_SESSION_COOKIE, getAuthSessionSecret } from './app/api/_lib/security-policy'
 
 type Role =
   | 'customer'
@@ -16,9 +17,7 @@ type SessionPayload = {
   role: Role
 }
 
-const AUTH_SESSION_COOKIE = 'rc_auth_session'
 const LOCALE_COOKIE = 'rc_locale'
-const AUTH_SESSION_FALLBACK_SECRET = 'dev-auth-secret-change-me'
 const SUPPORTED_LOCALES = ['en', 'ar'] as const
 
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
@@ -55,6 +54,10 @@ function toBase64Url(bytes: Uint8Array) {
     binary += String.fromCharCode(bytes[index] as number)
   }
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+}
+
+function decodeBase64UrlBytes(input: string) {
+  return Uint8Array.from(atob(base64UrlToBase64(input)), (char) => char.charCodeAt(0))
 }
 
 function normalizeLocale(input: string | null | undefined): SupportedLocale | null {
@@ -118,25 +121,68 @@ async function signPayload(payloadBase64: string, secret: string) {
   return toBase64Url(new Uint8Array(signature))
 }
 
+async function deriveEncryptionKey(secret: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(secret))
+  return crypto.subtle.importKey('raw', digest, { name: 'AES-GCM' }, false, ['decrypt'])
+}
+
+async function decryptEncryptedPayload(raw: string, secret: string) {
+  const [version, ivBase64, ciphertextBase64, tagBase64] = raw.split('.')
+  if (version !== 'v1' || !ivBase64 || !ciphertextBase64 || !tagBase64) {
+    return null
+  }
+
+  try {
+    const iv = decodeBase64UrlBytes(ivBase64)
+    const ciphertext = decodeBase64UrlBytes(ciphertextBase64)
+    const tag = decodeBase64UrlBytes(tagBase64)
+    const encrypted = new Uint8Array(ciphertext.length + tag.length)
+    encrypted.set(ciphertext, 0)
+    encrypted.set(tag, ciphertext.length)
+    const key = await deriveEncryptionKey(secret)
+    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, encrypted)
+    return JSON.parse(new TextDecoder().decode(new Uint8Array(decrypted))) as Partial<SessionPayload>
+  } catch {
+    return null
+  }
+}
+
+async function parseLegacySignedPayload(raw: string, secret: string) {
+  const [payloadBase64, signature] = raw.split('.')
+  if (!payloadBase64 || !signature) {
+    return null
+  }
+
+  const expected = await signPayload(payloadBase64, secret)
+  if (signature !== expected) {
+    return null
+  }
+
+  try {
+    const decoded = decodeBase64Url(payloadBase64)
+    return JSON.parse(decoded) as Partial<SessionPayload>
+  } catch {
+    return null
+  }
+}
+
 async function parseSessionCookie(raw: string | undefined): Promise<SessionPayload | null> {
   if (!raw) {
     return null
   }
 
   try {
-    const [payloadBase64, signature] = raw.split('.')
-    if (!payloadBase64 || !signature) {
+    const secret = getAuthSessionSecret()
+    if (!secret) {
       return null
     }
 
-    const secret = process.env.AUTH_SESSION_SECRET || AUTH_SESSION_FALLBACK_SECRET
-    const expected = await signPayload(payloadBase64, secret)
-    if (signature !== expected) {
+    const parsed = raw.startsWith('v1.')
+      ? await decryptEncryptedPayload(raw, secret)
+      : await parseLegacySignedPayload(raw, secret)
+    if (!parsed) {
       return null
     }
-
-    const decoded = decodeBase64Url(payloadBase64)
-    const parsed = JSON.parse(decoded) as Partial<SessionPayload>
     if (
       typeof parsed.userId !== 'string' ||
       typeof parsed.email !== 'string' ||
@@ -171,7 +217,9 @@ function redirectTo(
   if (nextPath) {
     url.searchParams.set('next', nextPath)
   }
-  return NextResponse.redirect(url)
+  const response = NextResponse.redirect(url)
+  response.cookies.set(LOCALE_COOKIE, locale, { path: '/', sameSite: 'lax', maxAge: 31536000 })
+  return response
 }
 
 export async function proxy(request: NextRequest) {
@@ -197,7 +245,9 @@ export async function proxy(request: NextRequest) {
   if (!extracted.locale) {
     const nextUrl = request.nextUrl.clone()
     nextUrl.pathname = localizePath(pathname, locale)
-    return NextResponse.redirect(nextUrl)
+    const response = NextResponse.redirect(nextUrl)
+    response.cookies.set(LOCALE_COOKIE, locale, { path: '/', sameSite: 'lax', maxAge: 31536000 })
+    return response
   }
 
   const session = await parseSessionCookie(request.cookies.get(AUTH_SESSION_COOKIE)?.value)

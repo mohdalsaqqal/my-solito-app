@@ -1,19 +1,25 @@
 import { authProvider } from '@real/providers'
 import { matchProviderResult } from '@real/providers/contracts'
 import { fail, ok } from '../../_lib/response'
+import { passwordResetLimiter, buildRateLimitHeaders, buildRateLimitKey } from '../../_lib/rate-limiter'
+import { RequestResetBodySchema } from '../../_lib/validation-schemas'
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      email?: string
+    const rateLimitKey = buildRateLimitKey(request)
+    const limitResult = passwordResetLimiter.consume(rateLimitKey)
+    if (!limitResult.allowed) {
+      return fail('AUTH_REQUEST_RESET_RATE_LIMITED', 'Too many reset requests. Please try again later.', 429, undefined, buildRateLimitHeaders(limitResult))
     }
 
-    if (!body.email) {
-      return fail('AUTH_REQUEST_RESET_INVALID_PAYLOAD', 'email is required.', 400)
+    const body = await request.json()
+    const parsed = RequestResetBodySchema.safeParse(body)
+    if (!parsed.success) {
+      return fail('AUTH_REQUEST_RESET_INVALID', parsed.error.issues[0].message, 400)
     }
 
     const result = await authProvider.requestPasswordReset({
-      email: body.email,
+      email: parsed.data.email,
     })
 
     return matchProviderResult(result, {

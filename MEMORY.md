@@ -203,3 +203,25 @@ Verification:
 
 Open follow-up:
 - If the team still wants package-level shared typecheck jobs later, treat that as a separate hardening initiative with real package boundaries and dedicated green compile targets.
+
+## 2026-04-12 - Sprint 2 Security Hardening Slice
+Context:
+- Sprint 2 from the remediation plan targeted session architecture and rate-limiting hardening.
+
+Implementation:
+- Replaced signed-readable auth cookies with encrypted stateless cookies in `apps/next/app/api/_lib/auth-session.ts`.
+- Kept backward-compatible parsing for legacy signed cookies during transition.
+- Reused a shared cookie reader across API/session and service code paths.
+- Updated `apps/next/proxy.ts` to parse the encrypted cookie format for locale/auth routing.
+- Introduced `RateLimitStore` and `MemoryRateLimitStore` to decouple limiter behavior from one hardcoded in-memory map implementation.
+- Added `buildRateLimitKey(...)` so callers can prefer actor identity, then trusted proxy IP, then a stable request fingerprint.
+- Updated auth routes to use the stronger rate-limit keying.
+
+Verification:
+- `yarn guard:checks`
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- `yarn --cwd apps/next test:api`
+
+Follow-up:
+- The limiter is still backed by memory by default; moving to a truly shared distributed store remains the next step if production deployment is horizontally scaled.
+- Cookie parsing logic is aligned by format across Node and proxy runtimes, but it still exists in two runtime-specific implementations because Edge and Node crypto APIs differ.

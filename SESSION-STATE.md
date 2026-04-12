@@ -69,3 +69,21 @@
   - `yarn --cwd apps/next test:api` ✅ (`118/118`)
   - `yarn e2e:a11y` ✅
 - Follow-up note: package-level shared TypeScript boundaries remain a future hardening track; branch protection should stay aligned to the 9 credible hosted checks until those compile targets are designed and made green.
+
+## 2026-04-12 Sprint 2 Security Hardening
+- Upgraded auth session cookies from signed-readable payloads to encrypted stateless payloads using AES-256-GCM.
+- Added compatibility parsing for legacy signed cookies so existing sessions do not fail immediately during rollout.
+- Centralized cookie extraction with `readAuthSessionCookieValue(...)` and reused it across API/session/service callsites.
+- Updated `apps/next/proxy.ts` to understand the encrypted cookie format for route gating.
+- Hardened rate-limit keying:
+  - explicit actor keys when available
+  - stronger proxy IP resolution (`cf-connecting-ip`, `x-vercel-forwarded-for`, `x-forwarded-for`, `x-real-ip`)
+  - stable fingerprint fallback when IP is unavailable
+- Refactored rate limiting to accept an injected store via `RateLimitStore` / `MemoryRateLimitStore`, preserving current route contracts while opening a path to shared backing stores later.
+- Added coverage in:
+  - `apps/next/app/api/_lib/auth-session.test.ts`
+  - `apps/next/app/api/_lib/rate-limiter.test.ts`
+- Verification:
+  - `yarn guard:checks` ✅
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn --cwd apps/next test:api` ✅ (`122/122`)

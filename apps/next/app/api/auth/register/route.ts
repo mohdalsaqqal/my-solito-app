@@ -1,23 +1,35 @@
 import { authProvider } from '@real/providers'
 import { fail } from '../../_lib/response'
-import { buildAuthSessionCookieHeader, jsonOk } from '../../_lib/auth-session'
+import { buildAuthSessionCookieHeader, isAuthSessionConfigValid, jsonOk } from '../../_lib/auth-session'
+import { requireTrustedMutationRequest } from '../../_lib/request-auth'
+import { registrationLimiter, buildRateLimitHeaders, buildRateLimitKey } from '../../_lib/rate-limiter'
+import { RegisterBodySchema } from '../../_lib/validation-schemas'
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      name?: string
-      email?: string
-      password?: string
+    const trustedError = requireTrustedMutationRequest(request)
+    if (trustedError) return trustedError
+
+    if (!isAuthSessionConfigValid()) {
+      return fail('AUTH_SESSION_CONFIG_INVALID', 'Authentication session configuration is missing.', 503)
     }
 
-    if (!body.email || !body.password || !body.name) {
-      return fail('AUTH_REGISTER_INVALID_PAYLOAD', 'name, email, and password are required.', 400)
+    const rateLimitKey = buildRateLimitKey(request)
+    const limitResult = registrationLimiter.consume(rateLimitKey)
+    if (!limitResult.allowed) {
+      return fail('AUTH_REGISTER_RATE_LIMITED', 'Too many registration attempts. Please try again later.', 429, undefined, buildRateLimitHeaders(limitResult))
+    }
+
+    const body = await request.json()
+    const parsed = RegisterBodySchema.safeParse(body)
+    if (!parsed.success) {
+      return fail('AUTH_REGISTER_INVALID', parsed.error.issues[0].message, 400)
     }
 
     const result = await authProvider.register({
-      name: body.name,
-      email: body.email,
-      password: body.password,
+      name: parsed.data.name,
+      email: parsed.data.email,
+      password: parsed.data.password,
     })
 
     if (!result.ok) {

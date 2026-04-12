@@ -47,3 +47,8 @@ The feature landed with the main guard/test/service-parity work, but later audit
 - Active CI now uses 9 trustworthy jobs; branch-protection documentation was updated to match.
 - Restored `apps/next` typecheck by fixing `getCachedHomeCmsResponseData` callsites to pass `request.url` instead of `Request`.
 - Shared package standalone `tsconfig` experiment was intentionally discarded because it surfaced broad real type debt and would have made Sprint 1 much larger.
+
+## 2026-04-12 - Sprint 2 Security Slice
+- Auth cookies now use encrypted stateless payloads instead of readable signed JSON.
+- Legacy signed cookie parsing remains temporarily supported for rollout compatibility.
+- Rate limiting now supports injected stores and better request keying when proxy IP headers are missing or machine traffic is present.

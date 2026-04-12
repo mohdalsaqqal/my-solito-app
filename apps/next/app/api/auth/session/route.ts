@@ -1,20 +1,13 @@
 import { fail } from '../../_lib/response'
 import {
-  AUTH_SESSION_COOKIE,
   jsonOk,
   parseAuthSessionCookie,
+  readAuthSessionCookieValue,
 } from '../../_lib/auth-session'
 
 export async function GET(request: Request) {
   try {
-    const rawCookie = request.headers.get('cookie')
-    const cookieValue = rawCookie
-      ?.split(';')
-      .map((part) => part.trim())
-      .find((part) => part.startsWith(`${AUTH_SESSION_COOKIE}=`))
-      ?.split('=')
-      .slice(1)
-      .join('=')
+    const cookieValue = readAuthSessionCookieValue(request.headers.get('cookie'))
 
     const cookieSession = parseAuthSessionCookie(cookieValue)
     if (cookieSession) {
