@@ -48,3 +48,24 @@
 - `scripts/guard-hygiene.mjs`
 - `scripts/check-agent-docs.mjs`
 - `scripts/list-service-files.mjs`
+
+### Audit Artifact
+- Full repo audit report: docs/reports/repo-audit-2026-04-12.md
+
+## 2026-04-12 Sprint 1 CI Trust Repair
+- Removed unsupported standalone CI jobs `typecheck-app` and `typecheck-ui` from `.github/workflows/ci.yml`.
+- Rewrote `docs/BRANCH_PROTECTION.md` to match the real hosted CI surface: 9 required checks instead of the stale 11-check narrative.
+- Deleted exploratory `packages/app/tsconfig.json` and `packages/ui/tsconfig.json` additions after they exposed substantial genuine type debt rather than a safe CI fix.
+- Fixed service callsites to pass `request.url` into `getCachedHomeCmsResponseData(...)` in:
+  - `apps/next/server/services/orders/order-detail.service.ts`
+  - `apps/next/server/services/pharmacist/pharmacist-bootstrap.service.ts`
+  - `apps/next/server/services/product/product-page.service.ts`
+  - `apps/next/server/services/search/search.service.ts`
+- Verification after the fix:
+  - `yarn guard:checks` ✅
+  - `yarn guard:hygiene` ✅
+  - `yarn guard:agent-docs` ✅
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn --cwd apps/next test:api` ✅ (`118/118`)
+  - `yarn e2e:a11y` ✅
+- Follow-up note: package-level shared TypeScript boundaries remain a future hardening track; branch protection should stay aligned to the 9 credible hosted checks until those compile targets are designed and made green.

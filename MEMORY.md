@@ -170,3 +170,36 @@ Durable rule:
 - If shell helpers remain, treat them as legacy compatibility artifacts, not the required invocation path.
 
 
+
+## 2026-04-12 - Full Repo Audit Artifact
+- Full professional repo review captured in docs/reports/repo-audit-2026-04-12.md.
+- Top risks identified: hosted CI typecheck drift, in-memory per-process rate limiting, signed-but-readable auth cookie payload, service-layer HTTP coupling, and shared-UI i18n/a11y debt.
+
+## 2026-04-12 - Sprint 1 CI Trust Repair
+Context:
+- Audit remediation Sprint 1 targeted CI trust first.
+- The repo's workflow still claimed two standalone package typecheck jobs (`packages/app`, `packages/ui`) that were not backed by credible package-local compile targets.
+
+Decision:
+- Prefer truthful hosted CI over preserving the stale 11-job shape.
+- Keep `typecheck-next` as the only TypeScript gate in CI for now, and document 9 required hosted checks in `docs/BRANCH_PROTECTION.md`.
+
+Implementation:
+- Removed `typecheck-app` and `typecheck-ui` from `.github/workflows/ci.yml`.
+- Rewrote the branch-protection guide to describe the actual 9-check policy and why the package-local gates are deferred.
+- Fixed four service files after a signature drift surfaced in `typecheck-next`:
+  - `apps/next/server/services/orders/order-detail.service.ts`
+  - `apps/next/server/services/pharmacist/pharmacist-bootstrap.service.ts`
+  - `apps/next/server/services/product/product-page.service.ts`
+  - `apps/next/server/services/search/search.service.ts`
+
+Verification:
+- `yarn guard:checks`
+- `yarn guard:hygiene`
+- `yarn guard:agent-docs`
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- `yarn --cwd apps/next test:api`
+- `yarn e2e:a11y`
+
+Open follow-up:
+- If the team still wants package-level shared typecheck jobs later, treat that as a separate hardening initiative with real package boundaries and dedicated green compile targets.
