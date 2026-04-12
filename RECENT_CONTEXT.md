@@ -1,7 +1,32 @@
 ﻿# RECENT_CONTEXT.md - Auto-Updated Highlights
 
-## 2026-04-12 - 003 Audit Cleanup
+## 2026-04-12 - Sprint 3 Service Boundary Cleanup
 
+**Status**: First storefront boundary pass completed and verified.
+
+### What changed
+- Added `storefront-service-context.ts` under `apps/next/server/services/_lib/`.
+- Introduced one typed context carrying:
+  - `requestUrl`
+  - `locale`
+  - `storeId`
+  - `previewToken`
+- Moved request parsing to the page/route edge for:
+  - order detail
+  - pharmacist bootstrap
+  - product page
+  - search page
+- Kept the search route backward-compatible by wrapping the incoming `Request` into the new context before calling shared search logic.
+
+### Verification Results
+- `yarn guard:checks` - passed
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` - passed
+- `yarn --cwd apps/next test:api` - passed (124/124)
+
+### Important note
+- This pass reduced service-layer HTTP coupling, but it did not yet move CMS locale/store derivation off `requestUrl`. That behavior was preserved intentionally to keep this slice production-safe.
+
+## 2026-04-12 - 003 Audit Cleanup
 **Status**: The broken `003-platform-hygiene-remediation` items were reconciled, the full local verification story is green, and draft PR `#1` is open.
 
 ### Repair Summary
@@ -57,3 +82,5 @@ The feature landed with the main guard/test/service-parity work, but later audit
 - Added Prisma-backed rate-limit storage behind `RATE_LIMIT_STORE=prisma`.
 - Default remains `memory` so local/test behavior stays stable.
 - Added `RateLimitBucket` Prisma model and migration for rollout.
+
+

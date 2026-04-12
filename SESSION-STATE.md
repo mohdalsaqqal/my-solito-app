@@ -1,10 +1,29 @@
 ﻿# SESSION-STATE.md - Active Working Memory
 
-## Current State: 003 Platform Hygiene Remediation - Awaiting Hosted CI
+## Current State: 003 Platform Hygiene Remediation + Sprint 3 Service Boundary Cleanup
 
 **Last Updated**: 2026-04-12
 
-**State**: The broken `003-platform-hygiene-remediation` items were repaired, the full local verification flow is green, and draft PR `#1` is open. Only hosted CI confirmation remains open.
+**State**: The broken `003-platform-hygiene-remediation` items were repaired, Sprint 1 and Sprint 2 remediation slices are landed, and Sprint 3 completed a first-pass storefront service boundary cleanup. Local verification is green and draft PR `#1` is open. Hosted CI confirmation still remains open.
+
+## 2026-04-12 Sprint 3 Service Boundary Cleanup
+- Added `apps/next/server/services/_lib/storefront-service-context.ts` as the first typed request-context helper for storefront read services.
+- The helper now owns request-derived locale/store/preview/requestUrl derivation at the page or route boundary instead of inside the affected services.
+- Migrated the approved storefront read slice:
+  - `apps/next/server/services/orders/order-detail.service.ts`
+  - `apps/next/server/services/pharmacist/pharmacist-bootstrap.service.ts`
+  - `apps/next/server/services/product/product-page.service.ts`
+  - `apps/next/server/services/search/search.service.ts`
+- Updated page-boundary callers to construct context once and pass plain data into services:
+  - `apps/next/app/orders/[id]/page.tsx`
+  - `apps/next/app/product/[id]/page.tsx`
+  - `apps/next/app/search/page.tsx`
+  - `apps/next/app/pharmacist/_components/pharmacist-route-shell-data.ts`
+- Important behavior note: this refactor intentionally preserved current CMS behavior. `getCachedHomeCmsResponseData(...)` still receives only `requestUrl`, so CMS locale/store semantics were not widened in this pass.
+- Verification after Sprint 3:
+  - `yarn guard:checks` ✅
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn --cwd apps/next test:api` ✅ (`124/124`)
 
 ## 003 Platform Hygiene Remediation - Current Summary
 

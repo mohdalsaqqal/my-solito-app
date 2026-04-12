@@ -1,5 +1,12 @@
 ﻿# MEMORY.md - Long-Term Decisions & Conventions
 
+## 2026-04-12 - Storefront Service Context Boundary
+
+- **First storefront request-context contract**: `apps/next/server/services/_lib/storefront-service-context.ts` is now the shared helper for deriving `requestUrl`, `locale`, `storeId`, and `previewToken` at the page or route edge.
+- **Preferred service boundary pattern for storefront reads**: page and route layers should build `StorefrontServiceContext` once, then pass plain typed context into services instead of having services call `headers()` or synthesize internal `Request` objects for request-state derivation.
+- **Current migrated slice**: the first production-safe pass covers order detail, pharmacist bootstrap, product page, and search page services.
+- **Search route compatibility rule**: route handlers may still accept a raw `Request`, but they should adapt it immediately into `StorefrontServiceContext` and keep the request-aware wrapper thin.
+- **Preserve CMS semantics until dedicated follow-up**: `getCachedHomeCmsResponseData(...)` still keys off `requestUrl` only. Do not silently widen locale/store behavior for CMS reads inside a boundary-cleanup refactor without a separate verification pass.
 ## 2026-04-12 - 003 Platform Hygiene Audit Cleanup
 
 - **Canonical `003` enforcement scripts**: the durable hygiene surface for this feature is `scripts/guard-hygiene.mjs`, `scripts/check-agent-docs.mjs`, and `scripts/list-service-files.mjs`.
@@ -242,3 +249,4 @@ Verification:
 - `yarn guard:checks`
 - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
 - `yarn --cwd apps/next test:api`
+

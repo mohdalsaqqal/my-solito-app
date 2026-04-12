@@ -3,10 +3,12 @@ import { passThroughPricingService } from '@real/app/lib/pricing'
 import { createPagePayload } from '@real/app/lib/layout/page-schema'
 import { SEARCH_PAGE_SLUG, SEARCH_PAGE_TYPE } from '@real/app/lib/layout/page-types'
 import type { CMSHomeBlock, SearchResult } from '@real/app/lib/types'
-import { resolveStoreId } from '../../../app/api/_lib/release-env'
-import { resolveRequestLocale } from '../../../app/api/_lib/request-locale'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
-import { createInternalServiceRequest, getPublicCatalogCollections } from '../_lib/public-discovery'
+import { getPublicCatalogCollections } from '../_lib/public-discovery'
+import {
+  createStorefrontServiceContextFromRequest,
+  type StorefrontServiceContext,
+} from '../_lib/storefront-service-context'
 
 type SearchItem = SearchResult['suggestions'][number]
 type SearchDiscoveryResult = {
@@ -228,27 +230,24 @@ export async function getSearchPayload(
   queryOverride?: string,
   productsOverride?: Array<{ id: string; name: string; description?: string; price: number; currency: string; image?: string }>,
 ): Promise<SearchResult> {
-  const locale = resolveRequestLocale(request)
-  const storeId = resolveStoreId(request)
-  const { searchParams } = new URL(request.url)
+  const context = createStorefrontServiceContextFromRequest(request)
+  const { searchParams } = new URL(context.requestUrl)
   const query = queryOverride ?? searchParams.get('q') ?? ''
   if (productsOverride) {
-    return buildSearchPayload(storeId, locale, query, productsOverride)
+    return buildSearchPayload(context.storeId, context.locale, query, productsOverride)
   }
 
-  const discovery = await getCachedSearchDiscovery(storeId, locale, query)
+  const discovery = await getCachedSearchDiscovery(context.storeId, context.locale, query)
   return discovery.result
 }
 
-export async function getSearchPageInitialData(query: string) {
-  const baseRequest = new Request('http://internal.local/api/search')
-  const request = await createInternalServiceRequest('/api/search', baseRequest, query ? { q: query } : undefined)
-  const locale = resolveRequestLocale(request)
-  const storeId = resolveStoreId(request)
-
+export async function getSearchPageInitialData(
+  query: string,
+  context: Pick<StorefrontServiceContext, 'locale' | 'requestUrl' | 'storeId'>,
+) {
   const [discoveryResult, cmsResult] = await Promise.allSettled([
-    getCachedSearchDiscovery(storeId, locale, query),
-    getCachedHomeCmsResponseData(request.url),
+    getCachedSearchDiscovery(context.storeId, context.locale, query),
+    getCachedHomeCmsResponseData(context.requestUrl),
   ])
 
   const products = discoveryResult.status === 'fulfilled' ? discoveryResult.value.products : []
@@ -256,7 +255,7 @@ export async function getSearchPageInitialData(query: string) {
   const result =
     discoveryResult.status === 'fulfilled'
       ? discoveryResult.value.result
-      : buildSearchPayload(storeId, locale, query, products)
+      : buildSearchPayload(context.storeId, context.locale, query, products)
 
   let error: string | null = null
   if (cmsResult.status === 'rejected') {

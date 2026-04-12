@@ -1,4 +1,5 @@
 import { getProductPageInitialData } from '../../../server/services/product/product-page.service'
+import { createStorefrontServiceContext } from '../../../server/services/_lib/storefront-service-context'
 import { ProductPageClient } from './ProductPageClient'
 
 type ProductPageParams = {
@@ -11,6 +12,9 @@ export default async function ProductPage({
   params: Promise<ProductPageParams>
 }) {
   const { id } = await params
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+  })
   const {
     product,
     products,
@@ -18,7 +22,7 @@ export default async function ProductPage({
     reviews,
     error,
     reviewsError,
-  } = await getProductPageInitialData(id)
+  } = await getProductPageInitialData(id, context)
 
   return (
     <ProductPageClient

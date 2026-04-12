@@ -1,23 +1,20 @@
-import { headers } from 'next/headers'
 import { authProvider } from '@real/providers'
 import type { AuthSession } from '@real/providers/contracts'
 import type { CMSHome } from '@real/app/lib/types'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 export type PharmacistBootstrapData = {
   session: AuthSession | null
   cmsHome: CMSHome | null
 }
 
-export async function getPharmacistBootstrapData() {
-  const requestHeaders = new Headers(await headers())
-  const request = new Request('http://internal.local/api/cms/home', {
-    headers: requestHeaders,
-  })
-
+export async function getPharmacistBootstrapData(
+  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+) {
   const [sessionResult, cmsResult] = await Promise.allSettled([
     authProvider.getSession(),
-    getCachedHomeCmsResponseData(request.url),
+    getCachedHomeCmsResponseData(context.requestUrl),
   ])
 
   const session =

@@ -1,4 +1,5 @@
 import { getSearchPageInitialData } from '../../server/services/search/search.service'
+import { createStorefrontServiceContext } from '../../server/services/_lib/storefront-service-context'
 import { SearchPageClient } from './SearchPageClient'
 
 export default async function SearchPage({
@@ -8,7 +9,11 @@ export default async function SearchPage({
 }) {
   const params = await searchParams
   const query = (params.q ?? '').trim()
-  const { products, cmsHome, searchResult, error } = await getSearchPageInitialData(query)
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/search',
+    searchParams: query ? { q: query } : undefined,
+  })
+  const { products, cmsHome, searchResult, error } = await getSearchPageInitialData(query, context)
 
   return (
     <SearchPageClient

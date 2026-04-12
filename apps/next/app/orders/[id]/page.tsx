@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { connection } from 'next/server'
 import { getOrderDetailPageInitialData } from '../../../server/services/orders/order-detail.service'
+import { createStorefrontServiceContext } from '../../../server/services/_lib/storefront-service-context'
 import { OrderDetailPageClient } from './OrderDetailPageClient'
 
 type OrderDetailPageProps = {
@@ -22,6 +23,9 @@ async function OrderDetailPageContent({
 }: OrderDetailPageProps) {
   await connection()
   const { id } = await params
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+  })
   const {
     session,
     cmsHome,
@@ -29,7 +33,7 @@ async function OrderDetailPageContent({
     cart,
     order,
     error,
-  } = await getOrderDetailPageInitialData(id)
+  } = await getOrderDetailPageInitialData(id, context)
 
   return (
     <OrderDetailPageClient

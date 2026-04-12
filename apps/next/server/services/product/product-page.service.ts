@@ -1,7 +1,8 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { productProvider, reviewProvider } from '@real/providers'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
-import { createInternalServiceRequest, getPublicCatalogCollections } from '../_lib/public-discovery'
+import { getPublicCatalogCollections } from '../_lib/public-discovery'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
@@ -56,17 +57,13 @@ async function getCachedPublicProductData(productId: string) {
   }
 }
 
-export async function getProductPageInitialData(productId: string, previewToken?: string) {
-  const baseRequest = new Request('http://internal.local/api/cms/home')
-  const request = await createInternalServiceRequest(
-    '/api/cms/home',
-    baseRequest,
-    previewToken ? { previewToken } : undefined,
-  )
-
+export async function getProductPageInitialData(
+  productId: string,
+  context: Pick<StorefrontServiceContext, 'previewToken' | 'requestUrl'>,
+) {
   const [cmsResult, productDataResult] = await Promise.allSettled([
-    getCachedHomeCmsResponseData(request.url),
-    previewToken
+    getCachedHomeCmsResponseData(context.requestUrl),
+    context.previewToken
       ? Promise.allSettled([
           productProvider.get(productId),
           getPublicCatalogCollections({ includeProducts: true, preview: true }),
