@@ -2,7 +2,7 @@
 
 ## 2026-04-12 - 003 Audit Cleanup
 
-**Status**: The broken `003-platform-hygiene-remediation` items were reconciled and the full local verification story is now green.
+**Status**: The broken `003-platform-hygiene-remediation` items were reconciled, the full local verification story is green, and draft PR `#1` is open.
 
 ### Repair Summary
 - Tightened `guard:agent-docs` so AD-000 requires a real `## Source of Truth` heading near the top of `AGENTS.md`.
@@ -14,6 +14,7 @@
 - Realigned stale API tests and route shape tests to current service-layer ownership.
 - Removed root `AUDIT_REPORT.md`.
 - Removed duplicate `apps/next/middleware.ts` so Next boots through `apps/next/proxy.ts` only.
+- Pushed branch `003-platform-hygiene-remediation` and opened draft PR `#1`.
 
 ### Verification Results
 - `yarn guard:checks` - passed
@@ -28,8 +29,8 @@
 - `yarn e2e:a11y` - passed
 
 ### Still Open
-- The old `T086` verification line referenced nonexistent `packages/app/tsconfig.json` and `packages/ui/tsconfig.json`; the audited docs now point at the real verification flow.
-- `T072`, `T090`, and `T091` remain operational follow-up items rather than completed local verification.
+- Hosted CI for draft PR `#1` still needs to finish and be confirmed green.
+- `T072` remains an operational follow-up because the deliberate PR typecheck experiment was not replayed.
 
 ---
 
