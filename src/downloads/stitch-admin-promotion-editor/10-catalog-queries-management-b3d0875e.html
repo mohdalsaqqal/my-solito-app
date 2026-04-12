@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Catalog Queries Management - Real Cosmetics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#000000",
+                        "background-light": "#f7f7f7",
+                        "background-dark": "#191919",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar (260px) -->
+<aside class="w-[260px] border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 fixed h-full z-20">
+<div class="flex flex-col h-full p-4 gap-6">
+<!-- Brand -->
+<div class="flex items-center gap-3 px-2">
+<div class="size-10 rounded-full bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div class="flex flex-col">
+<h1 class="text-sm font-bold leading-none">Real Cosmetics</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Admin System</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<div class="flex flex-col gap-1">
+<button class="flex items-center justify-between px-3 py-2 rounded-lg bg-primary/10 text-primary dark:bg-primary/20 dark:text-white transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px]">package_2</span>
+<span class="text-sm font-medium">Catalog</span>
+</div>
+<span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+<div class="pl-9 flex flex-col gap-1 mt-1">
+<a class="text-sm py-1.5 text-primary font-semibold" href="#">Queries</a>
+<a class="text-sm py-1.5 text-slate-500 hover:text-primary transition-colors" href="#">Products</a>
+<a class="text-sm py-1.5 text-slate-500 hover:text-primary transition-colors" href="#">Inventory</a>
+</div>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="text-sm font-medium">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">monitoring</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+</nav>
+<!-- Bottom Sidebar -->
+<div class="mt-auto border-t border-slate-100 dark:border-slate-800 pt-4">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[260px]">
+<!-- Sticky AdminHeader -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-3">
+<div class="max-w-[1120px] mx-auto flex items-center justify-between">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+<span>Catalog</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Queries</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/20" placeholder="Global Search..." type="text"/>
+</div>
+<button class="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-400">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:bg-slate-700 mx-1"></div>
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="User avatar placeholder with abstract pattern" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjyd3PO8gw8mJ-aP9Da7tKIpC0PT9YSoRhhDO5gKqoNTNhvwQeHJfh9_J8LBiNQgwjepL-eWaJtCMli-GH6EYELdpvlO4L1yLiplJ8EZEhJZ7jThngcug6ke7Nzf7KbvnVD9ZGjDd5djOFK0-N_jX0O7WMwTTOTohLXJebqNO6rAXL4dCf6V5C35GAexLuLnYvDTnGH1vhgv0UXcL25kblUZ-QjrpoaEMJRf77Vdq5aAMS2lUL8ocAXrSw9JI_WrpLjwzTo3JvvOY"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Page Container -->
+<div class="max-w-[1120px] mx-auto p-8">
+<!-- Page Header -->
+<div class="flex items-center justify-between mb-8">
+<div>
+<h2 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Catalog Queries</h2>
+<p class="text-slate-500 dark:text-slate-400 mt-1">Create and manage dynamic filters to segment your product inventory.</p>
+</div>
+<button class="bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-slate-800 transition-all shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Create Query
+                    </button>
+</div>
+<!-- Table + Filters Content (Section 8.1) -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<!-- ActionRow: Filters & Search -->
+<div class="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap gap-4 items-center justify-between">
+<div class="flex gap-2 flex-1 min-w-[300px]">
+<div class="relative flex-1">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">filter_list</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-background-light dark:bg-background-dark border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/10" placeholder="Filter queries by name, type, or tags..." type="text"/>
+</div>
+<button class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-slate-200 dark:hover:bg-slate-700">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+                                Advanced
+                            </button>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Sorted by:</span>
+<select class="bg-transparent border-none text-sm font-semibold text-slate-700 dark:text-slate-300 focus:ring-0 cursor-pointer">
+<option>Last Updated</option>
+<option>Query Name</option>
+<option>Result Count</option>
+</select>
+</div>
+</div>
+<!-- Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+<tr>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-12">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary/20" type="checkbox"/>
+</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Query Name</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Type</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Result Count</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Last Updated</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">search_check</span>
+</div>
+<div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Cruelty-Free Skincare</span>
+<div class="flex gap-1 mt-0.5">
+<span class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold dark:bg-emerald-900/30 dark:text-emerald-400">active</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Dynamic Filter</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">1,248</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                        Oct 24, 2023 · 14:32
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">warning</span>
+</div>
+<div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Low Stock Essentials</span>
+<div class="flex gap-1 mt-0.5">
+<span class="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold dark:bg-amber-900/30 dark:text-amber-400">inventory</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Inventory Warning</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">42</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                        Oct 23, 2023 · 09:15
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">stars</span>
+</div>
+<div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Best Selling Fragrances</span>
+<div class="flex gap-1 mt-0.5">
+<span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-bold dark:bg-blue-900/30 dark:text-blue-400">seasonal</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Sales Trend</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">850</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                        Oct 20, 2023 · 18:00
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<input class="rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary/20" type="checkbox"/>
+</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-8 rounded bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[20px]">sell</span>
+</div>
+<div>
+<span class="text-sm font-bold text-slate-900 dark:text-white">Holiday Collection Filters</span>
+<div class="flex gap-1 mt-0.5">
+<span class="text-[10px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-full font-bold dark:bg-purple-900/30 dark:text-purple-400">campaign</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm text-slate-600 dark:text-slate-400">Promotion Query</span>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-semibold text-slate-900 dark:text-white">192</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
+                                        Oct 15, 2023 · 11:45
+                                    </td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors">
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
+<span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Showing 1-4 of 32 queries</span>
+<div class="flex items-center gap-1">
+<button class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="size-8 rounded-lg bg-primary text-white text-xs font-bold">1</button>
+<button class="size-8 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold">2</button>
+<button class="size-8 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold">3</button>
+<span class="px-2 text-slate-400">...</span>
+<button class="size-8 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold">8</button>
+<button class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Stats (Additional UI context) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Total Queries</span>
+<span class="material-symbols-outlined text-primary text-[20px]">database</span>
+</div>
+<div class="text-2xl font-black">32</div>
+<div class="mt-2 flex items-center text-xs text-emerald-600 font-bold">
+<span class="material-symbols-outlined text-[14px] mr-1">trending_up</span>
+                            +4 this month
+                        </div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Global Reach</span>
+<span class="material-symbols-outlined text-primary text-[20px]">public</span>
+</div>
+<div class="text-2xl font-black">18.5k</div>
+<div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Products covered by queries</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Query Performance</span>
+<span class="material-symbols-outlined text-primary text-[20px]">bolt</span>
+</div>
+<div class="text-2xl font-black">45ms</div>
+<div class="mt-2 text-xs text-slate-500 dark:text-slate-400">Avg. execution time</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

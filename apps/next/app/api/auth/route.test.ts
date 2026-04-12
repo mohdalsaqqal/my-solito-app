@@ -7,6 +7,7 @@ import { GET as sessionGET } from './session/route'
 import { POST as loginPOST } from './login/route'
 import { POST as registerPOST } from './register/route'
 import { POST as logoutPOST } from './logout/route'
+import { withEnv } from '../_lib/security-test-helpers'
 
 async function toWebRequest(req: http.IncomingMessage) {
   const chunks: Uint8Array[] = []
@@ -15,9 +16,18 @@ async function toWebRequest(req: http.IncomingMessage) {
   }
   const body = chunks.length > 0 ? Buffer.concat(chunks).toString('utf8') : undefined
   const url = `http://localhost${req.url || '/'}`
+  const headers = new Headers(req.headers as Record<string, string>)
+  if ((req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE')) {
+    if (!headers.has('origin')) {
+      headers.set('origin', 'http://localhost')
+    }
+    if (!headers.has('sec-fetch-site')) {
+      headers.set('sec-fetch-site', 'same-origin')
+    }
+  }
   return new Request(url, {
     method: req.method,
-    headers: req.headers as Record<string, string>,
+    headers,
     body: body && req.method !== 'GET' && req.method !== 'HEAD' ? body : undefined,
   })
 }
@@ -116,17 +126,68 @@ test('POST /api/auth/login returns failure for invalid credentials', async () =>
   assert.equal(response.body.error.code, 'AUTH_INVALID_CREDENTIALS')
 })
 
-test('POST /api/auth/login accepts seeded shorthand users', async () => {
+test('POST /api/auth/login accepts seeded mock users with full email credentials', async () => {
   const server = createAuthServer()
 
   const response = await request(server)
     .post('/api/auth/login')
     .send({
-      email: 'admin',
+      email: 'admin@realcosmetics.local',
       password: 'admin',
     })
 
   assert.equal(response.status, 200)
   assert.equal(response.body.success, true)
   assert.equal(response.body.data.role, 'admin')
+})
+
+test('auth routes issue hardened session cookies', async () => {
+  const server = createAuthServer()
+
+  await withEnv(
+    {
+      AUTH_SESSION_SECRET: 'test-auth-secret',
+      REQUIRE_PRODUCTION_AUTH: 'false',
+      NODE_ENV: 'development',
+    },
+    async () => {
+      const response = await request(server)
+        .post('/api/auth/login')
+        .send({
+          email: 'admin@realcosmetics.local',
+          password: 'admin',
+        })
+
+      assert.equal(response.status, 200)
+      const setCookie = response.headers['set-cookie']?.[0] ?? ''
+      assert.equal(setCookie.includes('HttpOnly'), true)
+      assert.equal(setCookie.includes('SameSite=Lax'), true)
+      assert.equal(setCookie.includes('Path=/'), true)
+      assert.equal(setCookie.includes('Max-Age=604800'), true)
+    }
+  )
+})
+
+test('auth routes fail closed when session configuration is missing in release mode', async () => {
+  const server = createAuthServer()
+
+  await withEnv(
+    {
+      AUTH_SESSION_SECRET: undefined,
+      REQUIRE_PRODUCTION_AUTH: 'true',
+      NODE_ENV: 'production',
+    },
+    async () => {
+      const response = await request(server)
+        .post('/api/auth/login')
+        .send({
+          email: 'admin@realcosmetics.local',
+          password: 'admin',
+        })
+
+      assert.equal(response.status, 503)
+      assert.equal(response.body.success, false)
+      assert.equal(response.body.error.code, 'AUTH_SESSION_CONFIG_INVALID')
+    }
+  )
 })

@@ -1,4 +1,4 @@
-import { promises as fs } from 'node:fs'
+import { existsSync, promises as fs } from 'node:fs'
 import path from 'node:path'
 import {
   PrefillResult,
@@ -8,9 +8,18 @@ import {
   TranslationStatus,
 } from '@real/providers/contracts'
 
-const LOCALES_DIR = path.join(process.cwd(), 'packages', 'app', 'lib', 'i18n', 'locales')
 const SOURCE_LOCALE: TranslationLocale = 'en'
 const TARGET_LOCALE: TranslationLocale = 'ar'
+
+function resolveLocalesDir() {
+  const candidates = [
+    path.join(process.cwd(), 'packages', 'app', 'lib', 'i18n', 'locales'),
+    path.join(process.cwd(), '..', 'packages', 'app', 'lib', 'i18n', 'locales'),
+    path.join(process.cwd(), '..', '..', 'packages', 'app', 'lib', 'i18n', 'locales'),
+  ]
+
+  return candidates.find((candidate) => existsSync(candidate)) ?? candidates[0]
+}
 
 function flattenKeys(value: unknown, prefix = ''): string[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
@@ -60,7 +69,7 @@ function setByPath(root: Record<string, unknown>, keyPath: string, value: unknow
 
 async function listNamespaces(): Promise<string[]> {
   try {
-    const sourceDir = path.join(LOCALES_DIR, SOURCE_LOCALE)
+    const sourceDir = path.join(resolveLocalesDir(), SOURCE_LOCALE)
     const entries = await fs.readdir(sourceDir, { withFileTypes: true })
     return entries
       .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
@@ -72,7 +81,7 @@ async function listNamespaces(): Promise<string[]> {
 }
 
 async function readLocaleNamespace(locale: TranslationLocale, namespace: string): Promise<Record<string, unknown>> {
-  const filePath = path.join(LOCALES_DIR, locale, `${namespace}.json`)
+  const filePath = path.join(resolveLocalesDir(), locale, `${namespace}.json`)
   try {
     const raw = await fs.readFile(filePath, 'utf8')
     const parsed = JSON.parse(raw)
@@ -86,7 +95,7 @@ async function readLocaleNamespace(locale: TranslationLocale, namespace: string)
 }
 
 async function writeLocaleNamespace(locale: TranslationLocale, namespace: string, value: Record<string, unknown>) {
-  const filePath = path.join(LOCALES_DIR, locale, `${namespace}.json`)
+  const filePath = path.join(resolveLocalesDir(), locale, `${namespace}.json`)
   await fs.mkdir(path.dirname(filePath), { recursive: true })
   await fs.writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
 }

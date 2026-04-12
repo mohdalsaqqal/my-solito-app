@@ -2,7 +2,16 @@ import { useState } from 'react'
 import { spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Button, Card } from '@real/ui/components'
-import { Box, Input, Text, Touchable } from '@real/ui/primitives'
+import { Box, Input, Text } from '@real/ui/primitives'
+
+const authRegisterCopy = {
+  title: 'Create Account',
+  subtitle: 'Register once and keep your checkout history synced.',
+  fullNamePlaceholder: 'Full name',
+  emailPlaceholder: 'Email',
+  passwordPlaceholder: 'Password',
+  goToLogin: 'Already have an account? Sign in',
+}
 
 type AuthRegisterScreenProps = {
   loading?: boolean
@@ -52,18 +61,20 @@ export function AuthRegisterScreen({
       <PageScaffold.Body>
         <Section>
           <Card variant='raised' style={{ gap: spacing.md }}>
-            <Text variant='headline'>Create Account</Text>
-            <Text tone='muted'>Register once and keep your checkout history synced.</Text>
+            <Text variant='headline'>{authRegisterCopy.title}</Text>
+            <Text tone='muted'>{authRegisterCopy.subtitle}</Text>
 
             <Box style={{ gap: spacing.sm }}>
               <Input
-                placeholder='Full name'
+                placeholder={authRegisterCopy.fullNamePlaceholder}
+                accessibilityLabel='Full name'
                 value={name}
                 onChangeText={setName}
                 readOnly={loading}
               />
               <Input
-                placeholder='Email'
+                placeholder={authRegisterCopy.emailPlaceholder}
+                accessibilityLabel='Email address'
                 keyboardType='email-address'
                 autoCapitalize='none'
                 value={email}
@@ -71,7 +82,8 @@ export function AuthRegisterScreen({
                 readOnly={loading}
               />
               <Input
-                placeholder='Password'
+                placeholder={authRegisterCopy.passwordPlaceholder}
+                accessibilityLabel='Password'
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
@@ -86,9 +98,9 @@ export function AuthRegisterScreen({
               {loading ? 'Creating...' : 'Create Account'}
             </Button>
 
-            <Touchable onPress={onGoToLogin}>
-              <Text variant='caption' tone='primary'>Already have an account? Sign in</Text>
-            </Touchable>
+            <Box style={{ alignSelf: 'flex-start' }}>
+              <Button size='sm' variant='ghost' onPress={onGoToLogin}>{authRegisterCopy.goToLogin}</Button>
+            </Box>
           </Card>
         </Section>
       </PageScaffold.Body>

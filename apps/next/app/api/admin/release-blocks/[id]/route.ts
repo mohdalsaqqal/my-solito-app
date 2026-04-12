@@ -23,6 +23,7 @@ type BlockType =
   | 'newsletter_cta'
   | 'top_brands'
   | 'ugc_gallery'
+  | 'editorial_hotspot'
   | 'personalized_rail'
   | 'pdp_offer_cluster'
   | 'cart_upsell_rail'

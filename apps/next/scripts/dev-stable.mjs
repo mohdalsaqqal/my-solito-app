@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { createRequire } from 'node:module'
 
 const env = {
   ...process.env,
@@ -7,11 +8,13 @@ const env = {
   CHOKIDAR_INTERVAL: process.env.CHOKIDAR_INTERVAL ?? '300',
 }
 
-const args = ['dev', '--webpack', '--hostname', '0.0.0.0', '--port', process.env.PORT ?? '3000']
-const child = spawn('next', args, {
+const require = createRequire(import.meta.url)
+const nextBin = require.resolve('next/dist/bin/next')
+const args = [nextBin, 'dev', '--webpack', '--hostname', '0.0.0.0', '--port', process.env.PORT ?? '3000']
+
+const child = spawn(process.execPath, args, {
   stdio: 'inherit',
   env,
-  shell: true,
 })
 
 child.on('exit', (code, signal) => {

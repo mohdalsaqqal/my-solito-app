@@ -1,0 +1,22 @@
+{
+  "empty": {
+    "title": "Search",
+    "subtitle": "Enter a product name, category, or brand."
+  },
+  "actions": {
+    "browseShop": "Browse Shop"
+  },
+  "results": {
+    "title": "Results for \"{{query}}\"",
+    "loadError": "Unable to load search results.",
+    "retry": "Retry",
+    "noResults": "No results for \"{{query}}\"",
+    "noResultsSubtitle": "Try another keyword or browse the shop categories.",
+    "productsFound": "{{count}} products found",
+    "productsFoundMeta": "Continuous browse"
+  },
+  "promo": {
+    "badge": "Search deals",
+    "subtitle": "Dense discovery view with offer-first ranking"
+  }
+}

@@ -1,8 +1,32 @@
 {
+  "title": "Cart",
+  "error": {
+    "loadFailed": "Unable to load cart"
+  },
+  "empty": {
+    "title": "Your cart is empty",
+    "subtitle": "Add products to start checkout."
+  },
   "actions": {
+    "retry": "Retry",
+    "checkout": "Checkout",
     "save": "Save",
     "cancel": "Cancel",
-    "apply": "Apply"
+    "apply": "Apply",
+    "startShopping": "Start Shopping"
+  },
+  "item": {
+    "remove": "Remove",
+    "removing": "Removing...",
+    "updating": "Updating...",
+    "updateError": "Unable to update cart item."
+  },
+  "summary": {
+    "title": "Order summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "notice": "Secure checkout. Final shipping and promotions are confirmed at checkout."
   },
   "state": {
     "loading": "Loading...",

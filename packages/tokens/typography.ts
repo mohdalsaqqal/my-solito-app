@@ -70,6 +70,7 @@ export const fontFamilies = {
   secondary:    'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, sans-serif',
   logo:         'var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif',
   logoSecondary:'var(--font-dm-sans, "DM Sans"), sans-serif',
+  serif:        'var(--font-playfair, "Playfair Display"), Georgia, "Times New Roman", serif',
   arabic:       '"Tajawal", -apple-system, system-ui, sans-serif',
   mono:         'Menlo, monospace',
 } as const

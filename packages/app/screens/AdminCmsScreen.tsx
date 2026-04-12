@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useWindowDimensions } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { spacing } from '@real/tokens'
 import { breakpoints } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
@@ -72,7 +73,7 @@ type AdminCmsScreenProps = {
 
 type CmsTabKey = 'toggles' | 'spotlights' | 'preview'
 
-export function AdminCmsScreen({
+export const AdminCmsScreen = React.memo(function AdminCmsScreen({
   title = 'CMS Controls',
   notice = 'Manage storefront content controls and spotlight blocks.',
   controlToggles = [],
@@ -90,6 +91,7 @@ export function AdminCmsScreen({
 }: AdminCmsScreenProps) {
   const { width } = useWindowDimensions()
   const isCompact = width > 0 && width < breakpoints.tabletMin
+  const { t } = useTranslation('admin')
   const [activeTab, setActiveTab] = useState<CmsTabKey>('toggles')
   const [newSpotlightId, setNewSpotlightId] = useState('')
   const [newSpotlightBannerTitleEn, setNewSpotlightBannerTitleEn] = useState('')
@@ -118,10 +120,10 @@ export function AdminCmsScreen({
     key: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
     label: string
   }> = [
-    { key: 'best_sellers', label: 'Best sellers' },
-    { key: 'new_arrivals', label: 'New arrivals' },
-    { key: 'bundle_only', label: 'Bundle only' },
-    { key: 'manual_ids', label: 'Manual ids' },
+    { key: 'best_sellers', label: t('sourceOptions.bestSellers') },
+    { key: 'new_arrivals', label: t('sourceOptions.newArrivals') },
+    { key: 'bundle_only', label: t('sourceOptions.bundleOnly') },
+    { key: 'manual_ids', label: t('sourceOptions.manualIds') },
   ]
 
   return (
@@ -130,18 +132,18 @@ export function AdminCmsScreen({
         <Section>
           <Box gap='24'>
       <Card variant='raised' style={{ gap: spacing['8'] }}>
-        <Text variant='h2'>{title}</Text>
+        <Text variant='h1'>{title}</Text>
         <Text tone='muted'>{notice}</Text>
       </Card>
 
       <Card variant='raised' style={{ gap: spacing['12'] }}>
-        <Text variant='label'>CMS tabs</Text>
+        <Text variant='label'>{t('cms.tabs')}</Text>
         <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
           <Button variant={activeTab === 'toggles' ? 'solid' : 'outline'} size='sm' onPress={() => setActiveTab('toggles')}>
-            Toggles
+            {t('cms.toggles.title')}
           </Button>
           <Button variant={activeTab === 'spotlights' ? 'solid' : 'outline'} size='sm' onPress={() => setActiveTab('spotlights')}>
-            Brand spotlights
+            {t('cms.spotlights.title')}
           </Button>
           <Button variant={activeTab === 'preview' ? 'solid' : 'outline'} size='sm' onPress={() => setActiveTab('preview')}>
             Preview
@@ -159,13 +161,13 @@ export function AdminCmsScreen({
               gap: spacing['8'],
             }}
           >
-            <Text variant='title'>CMS toggles</Text>
+            <Text variant='title'>{t('cms.toggles.title')}</Text>
             <Badge tone='outline'>
               {controlToggles.filter((item) => item.enabled).length}/{controlToggles.length || 0} active
             </Badge>
           </Box>
           {controlToggles.length === 0 ? (
-            <Text tone='muted'>No toggle configuration loaded.</Text>
+            <Text tone='muted'>{t('cms.toggles.empty')}</Text>
           ) : (
             <Box style={{ gap: spacing['8'] }}>
               {controlToggles.map((toggle) => (
@@ -173,7 +175,7 @@ export function AdminCmsScreen({
                   <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'] }}>
                     <Text variant='label'>{toggle.label}</Text>
                     <Badge tone={toggle.enabled ? 'accent' : 'outline'}>
-                      {toggle.enabled ? 'Enabled' : 'Disabled'}
+                      {toggle.enabled ? t('cms.toggles.enabled') : t('cms.toggles.disabled')}
                     </Badge>
                   </Box>
                   {toggle.description ? (
@@ -182,7 +184,7 @@ export function AdminCmsScreen({
                     </Text>
                   ) : null}
                   <Text variant='caption' tone='muted'>
-                    Surface: {toggle.surface}
+                    {t('cms.toggles.surface', { surface: toggle.surface })}
                   </Text>
                   <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
                     <Button
@@ -191,7 +193,7 @@ export function AdminCmsScreen({
                       disabled={updatingToggleId === toggle.id || toggle.enabled}
                       onPress={() => onToggleControl?.(toggle.id, true)}
                     >
-                      Enable
+                      {t('cms.toggles.enable')}
                     </Button>
                     <Button
                       size='sm'
@@ -199,7 +201,7 @@ export function AdminCmsScreen({
                       disabled={updatingToggleId === toggle.id || !toggle.enabled}
                       onPress={() => onToggleControl?.(toggle.id, false)}
                     >
-                      Disable
+                      {t('cms.toggles.disable')}
                     </Button>
                   </Box>
                 </Card>
@@ -219,23 +221,23 @@ export function AdminCmsScreen({
               gap: spacing['8'],
             }}
           >
-            <Text variant='title'>Brand spotlight manager</Text>
+            <Text variant='title'>{t('cms.spotlights.title')}</Text>
             <Box style={isCompact ? { width: '100%' as const } : undefined}>
               <Button size='sm' variant='outline' onPress={onReloadBrandSpotlights}>
-                Refresh
+                {t('cms.spotlights.refresh')}
               </Button>
             </Box>
           </Box>
           <Card tone='subtle' style={{ gap: spacing['8'] }}>
-            <Text variant='label'>Add spotlight</Text>
-            <Input value={newSpotlightId} onChangeText={setNewSpotlightId} placeholder='Optional id (e.g. spotlight-new)' />
-            <Input value={newSpotlightBannerTitleEn} onChangeText={setNewSpotlightBannerTitleEn} placeholder='Banner title (EN)' />
-            <Input value={newSpotlightBannerTitleAr} onChangeText={setNewSpotlightBannerTitleAr} placeholder='Banner title (AR)' />
-            <Input value={newSpotlightRailTitleEn} onChangeText={setNewSpotlightRailTitleEn} placeholder='Rail title (EN)' />
-            <Input value={newSpotlightRailTitleAr} onChangeText={setNewSpotlightRailTitleAr} placeholder='Rail title (AR)' />
-            <Input value={newSpotlightBrandNames} onChangeText={setNewSpotlightBrandNames} placeholder='Brand names CSV (e.g. Fenty Beauty, Huda Beauty)' />
-            <Input value={newSpotlightImageUrl} onChangeText={setNewSpotlightImageUrl} placeholder='Banner image URL' />
-            <Input value={newSpotlightHref} onChangeText={setNewSpotlightHref} placeholder='Banner href (e.g. /shop)' />
+            <Text variant='label'>{t('cms.spotlights.add')}</Text>
+            <Input value={newSpotlightId} onChangeText={setNewSpotlightId} placeholder={t('cms.placeholders.spotlightId')} />
+            <Input value={newSpotlightBannerTitleEn} onChangeText={setNewSpotlightBannerTitleEn} placeholder={t('cms.placeholders.bannerTitleEn')} />
+            <Input value={newSpotlightBannerTitleAr} onChangeText={setNewSpotlightBannerTitleAr} placeholder={t('cms.placeholders.bannerTitleAr')} />
+            <Input value={newSpotlightRailTitleEn} onChangeText={setNewSpotlightRailTitleEn} placeholder={t('cms.placeholders.railTitleEn')} />
+            <Input value={newSpotlightRailTitleAr} onChangeText={setNewSpotlightRailTitleAr} placeholder={t('cms.placeholders.railTitleAr')} />
+            <Input value={newSpotlightBrandNames} onChangeText={setNewSpotlightBrandNames} placeholder={t('cms.placeholders.brandNamesCsv')} />
+            <Input value={newSpotlightImageUrl} onChangeText={setNewSpotlightImageUrl} placeholder={t('cms.placeholders.bannerImageUrl')} />
+            <Input value={newSpotlightHref} onChangeText={setNewSpotlightHref} placeholder={t('cms.placeholders.bannerHref')} />
             <Box style={isCompact ? { width: '100%' as const } : { flexDirection: 'row', gap: spacing['8'] }}>
               <Button
                 size='sm'
@@ -273,7 +275,7 @@ export function AdminCmsScreen({
                   })
                 }}
               >
-                {updatingBrandSpotlightId === 'new' ? 'Adding...' : 'Add spotlight'}
+                {updatingBrandSpotlightId === 'new' ? t('cms.spotlights.adding') : t('cms.spotlights.add')}
               </Button>
             </Box>
           </Card>
@@ -281,7 +283,7 @@ export function AdminCmsScreen({
           {loadingBrandSpotlights ? (
             <Card tone='subtle' style={{ minHeight: spacing['80'] }} />
           ) : brandSpotlights.length === 0 ? (
-            <Text tone='muted'>No spotlight records yet.</Text>
+            <Text tone='muted'>{t('cms.spotlights.noRecords')}</Text>
           ) : (
             <Box style={{ gap: spacing['8'] }}>
               {brandSpotlights.map((spotlight, index) => {
@@ -308,16 +310,16 @@ export function AdminCmsScreen({
                     <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'] }}>
                       <Text variant='label'>{spotlight.id}</Text>
                       <Badge tone={spotlight.enabled ? 'accent' : 'outline'}>
-                        {spotlight.enabled ? 'Enabled' : 'Disabled'}
+                        {spotlight.enabled ? t('cms.toggles.enabled') : t('cms.toggles.disabled')}
                       </Badge>
                     </Box>
-                    <Input value={draft.bannerTitleEn} onChangeText={(value) => setDraft({ bannerTitleEn: value })} placeholder='Banner title (EN)' />
-                    <Input value={draft.bannerTitleAr} onChangeText={(value) => setDraft({ bannerTitleAr: value })} placeholder='Banner title (AR)' />
-                    <Input value={draft.railTitleEn} onChangeText={(value) => setDraft({ railTitleEn: value })} placeholder='Rail title (EN)' />
-                    <Input value={draft.railTitleAr} onChangeText={(value) => setDraft({ railTitleAr: value })} placeholder='Rail title (AR)' />
-                    <Input value={draft.brandNamesCsv} onChangeText={(value) => setDraft({ brandNamesCsv: value })} placeholder='Brand names CSV' />
-                    <Input value={draft.imageUrl} onChangeText={(value) => setDraft({ imageUrl: value })} placeholder='Banner image URL' />
-                    <Input value={draft.href} onChangeText={(value) => setDraft({ href: value })} placeholder='Banner href' />
+                    <Input value={draft.bannerTitleEn} onChangeText={(value) => setDraft({ bannerTitleEn: value })} placeholder={t('cms.placeholders.bannerTitleEn')} />
+                    <Input value={draft.bannerTitleAr} onChangeText={(value) => setDraft({ bannerTitleAr: value })} placeholder={t('cms.placeholders.bannerTitleAr')} />
+                    <Input value={draft.railTitleEn} onChangeText={(value) => setDraft({ railTitleEn: value })} placeholder={t('cms.placeholders.railTitleEn')} />
+                    <Input value={draft.railTitleAr} onChangeText={(value) => setDraft({ railTitleAr: value })} placeholder={t('cms.placeholders.railTitleAr')} />
+                    <Input value={draft.brandNamesCsv} onChangeText={(value) => setDraft({ brandNamesCsv: value })} placeholder={t('cms.placeholders.brandNamesCsvShort')} />
+                    <Input value={draft.imageUrl} onChangeText={(value) => setDraft({ imageUrl: value })} placeholder={t('cms.placeholders.bannerImageUrl')} />
+                    <Input value={draft.href} onChangeText={(value) => setDraft({ href: value })} placeholder={t('cms.placeholders.bannerHrefShort')} />
                     {spotlight.updatedAt ? (
                       <Text variant='caption' tone='muted'>
                         Updated: {new Date(spotlight.updatedAt).toLocaleString()}
@@ -330,7 +332,7 @@ export function AdminCmsScreen({
                         disabled={updatingBrandSpotlightId === spotlight.id || spotlight.enabled}
                         onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { enabled: true })}
                       >
-                        Enable
+                        {t('cms.toggles.enable')}
                       </Button>
                       <Button
                         size='sm'
@@ -338,7 +340,7 @@ export function AdminCmsScreen({
                         disabled={updatingBrandSpotlightId === spotlight.id || !spotlight.enabled}
                         onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { enabled: false })}
                       >
-                        Disable
+                        {t('cms.toggles.disable')}
                       </Button>
                       <Button
                         size='sm'
@@ -346,7 +348,7 @@ export function AdminCmsScreen({
                         disabled={updatingBrandSpotlightId === spotlight.id || index === 0}
                         onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { position: index - 1 })}
                       >
-                        Move up
+                        {t('cms.spotlights.moveUp')}
                       </Button>
                       <Button
                         size='sm'
@@ -354,7 +356,7 @@ export function AdminCmsScreen({
                         disabled={updatingBrandSpotlightId === spotlight.id || index === brandSpotlights.length - 1}
                         onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { position: index + 1 })}
                       >
-                        Move down
+                        {t('cms.spotlights.moveDown')}
                       </Button>
                       <Button
                         size='sm'
@@ -386,7 +388,7 @@ export function AdminCmsScreen({
                           })
                         }}
                       >
-                        {updatingBrandSpotlightId === spotlight.id ? 'Saving...' : 'Save'}
+                        {updatingBrandSpotlightId === spotlight.id ? t('cms.spotlights.saving') : t('actions.save')}
                       </Button>
                       <Button
                         size='sm'
@@ -394,7 +396,7 @@ export function AdminCmsScreen({
                         disabled={updatingBrandSpotlightId === spotlight.id}
                         onPress={() => onDeleteBrandSpotlight?.(spotlight.id)}
                       >
-                        Delete
+                        {t('cms.spotlights.delete')}
                       </Button>
                     </Box>
                     <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
@@ -432,11 +434,11 @@ export function AdminCmsScreen({
 
       {activeTab === 'preview' ? (
         <Card variant='raised' style={{ gap: spacing['12'] }}>
-          <Text variant='title'>Home marketing preview</Text>
+          <Text variant='title'>{t('cms.preview.title')}</Text>
           <Box style={{ gap: spacing['8'] }}>
             <Text variant='label'>Rails ({homeMarketingPreview?.rails.length ?? 0})</Text>
             {(homeMarketingPreview?.rails.length ?? 0) === 0 ? (
-              <Text tone='muted'>No rails configured.</Text>
+              <Text tone='muted'>{t('cms.preview.noRails')}</Text>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
                 {homeMarketingPreview?.rails.map((rail) => (
@@ -456,7 +458,7 @@ export function AdminCmsScreen({
           <Box style={{ gap: spacing['8'] }}>
             <Text variant='label'>Brand spotlights ({homeMarketingPreview?.brandSpotlights.length ?? 0})</Text>
             {(homeMarketingPreview?.brandSpotlights.length ?? 0) === 0 ? (
-              <Text tone='muted'>No brand spotlights configured.</Text>
+              <Text tone='muted'>{t('cms.preview.noSpotlights')}</Text>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
                 {homeMarketingPreview?.brandSpotlights.map((spotlight) => (
@@ -481,4 +483,4 @@ export function AdminCmsScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

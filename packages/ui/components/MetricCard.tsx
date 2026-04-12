@@ -22,7 +22,7 @@ export function MetricCard({ label, value, delta }: MetricCardProps) {
         {label}
       </Text>
       <View style={{ gap: spacing.xs }}>
-        <Text variant='h2'>{value}</Text>
+        <Text variant='subtitle'>{value}</Text>
         {delta ? (
           <Text variant='overline' tone='primary' style={{ textTransform: 'uppercase' }}>
             {delta}

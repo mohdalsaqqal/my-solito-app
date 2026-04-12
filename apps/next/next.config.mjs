@@ -1,0 +1,153 @@
+import path from 'path'
+import { createRequire } from 'module'
+import fs from 'fs'
+
+const require = createRequire(import.meta.url)
+const reactNativeWebEntry = require.resolve('react-native-web')
+
+// Read webpack cache toggle from admin store (defaults to disabled for memory safety)
+function readWebpackCacheEnabled() {
+  try {
+    const file = path.join(process.cwd(), '.data', 'admin-cache.json')
+    const raw = fs.readFileSync(file, 'utf8')
+    const parsed = JSON.parse(raw)
+    return parsed.enabled === true
+  } catch {
+    return false
+  }
+}
+const webpackCacheEnabled = readWebpackCacheEnabled()
+
+/**
+ * @type {import('next').NextConfig}
+ */
+const withWebpack = {
+  webpack(config) {
+    config.cache = webpackCacheEnabled ? undefined : false
+
+    if (!config.resolve) {
+      config.resolve = {}
+    }
+
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      'react-native': reactNativeWebEntry,
+      'react-native$': reactNativeWebEntry,
+      '@rn-primitives/slot$': path.resolve(import.meta.dirname, '../../packages/ui/reusables/lib/rn-slot.tsx'),
+      'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
+        'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
+      'react-native/Libraries/vendor/emitter/EventEmitter$':
+        'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
+      'react-native/Libraries/EventEmitter/NativeEventEmitter$':
+        'react-native-web/dist/vendor/react-native/NativeEventEmitter',
+    }
+
+    config.resolve.extensions = [
+      '.web.js',
+      '.web.jsx',
+      '.web.ts',
+      '.web.tsx',
+      ...(config.resolve?.extensions ?? []),
+    ]
+
+    return config
+  },
+}
+
+/**
+ * @type {import('next').NextConfig}
+ */
+const withTurbopack = {
+  turbopack: {
+    resolveAlias: {
+      'react-native': 'react-native-web',
+      '@rn-primitives/slot': path.resolve(import.meta.dirname, '../../packages/ui/reusables/lib/rn-slot.tsx'),
+      'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
+        'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
+      'react-native/Libraries/vendor/emitter/EventEmitter$':
+        'react-native-web/dist/vendor/react-native/emitter/EventEmitter',
+      'react-native/Libraries/EventEmitter/NativeEventEmitter$':
+        'react-native-web/dist/vendor/react-native/NativeEventEmitter',
+    },
+    resolveExtensions: [
+      '.web.js',
+      '.web.jsx',
+      '.web.ts',
+      '.web.tsx',
+      '.js',
+      '.mjs',
+      '.tsx',
+      '.ts',
+      '.jsx',
+      '.json',
+      '.wasm',
+    ],
+    root: path.resolve(import.meta.dirname, '../..'),
+  },
+}
+
+/**
+ * @type {import('next').NextConfig}
+ */
+const nextConfig = {
+  cacheComponents: true,
+  transpilePackages: [
+    '@real/app',
+    '@real/ui',
+    '@real/tokens',
+    '@real/providers',
+    '@real/adapters',
+    'react-native',
+    'react-native-web',
+    'solito',
+    'react-native-reanimated',
+    'moti',
+    'react-native-gesture-handler',
+  ],
+  compiler: {
+    define: {
+      __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
+    },
+  },
+  reactStrictMode: true,
+  // ── Security Headers ──────────────────────────────────────────────────
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ]
+  },
+  ...withWebpack,
+  ...withTurbopack,
+}
+
+// ── Bundle Analyzer (enabled via ANALYZE=true env var) ─────────────────
+let finalConfig = nextConfig
+
+if (process.env.ANALYZE === 'true') {
+  const withBundleAnalyzer = await import('@next/bundle-analyzer')
+  finalConfig = withBundleAnalyzer.default({
+    enabled: true,
+  })(nextConfig)
+}
+
+export default finalConfig

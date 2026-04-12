@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Order Management List - Real Cosmetics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#000000", "background-light": "#f7f7f7", "background-dark": "#191919"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Admin Sidebar (260px) -->
+<aside class="w-[260px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-30">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined !text-2xl">spa</span>
+</div>
+<div>
+<h1 class="font-bold text-slate-900 dark:text-white leading-tight">Real Cosmetics</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">Admin System</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm font-medium">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Products</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-sm font-medium">Analytics</span>
+</a>
+</nav>
+<div class="p-4 mt-auto border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Section -->
+<main class="flex-1 ml-[260px]">
+<!-- Sticky AdminHeader -->
+<header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-8 py-3">
+<div class="max-w-[1280px] mx-auto flex items-center justify-between">
+<div class="flex flex-col">
+<div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+<a class="hover:text-primary transition-colors" href="#">Dashboard</a>
+<span class="material-symbols-outlined !text-[14px]">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-200 font-medium">Orders</span>
+</div>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white">Order Management</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 dark:border-slate-700 mx-1"></div>
+<div class="flex items-center gap-3">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold text-slate-900 dark:text-white leading-none">Alex Rivera</p>
+<p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Store Admin</p>
+</div>
+<div class="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center ring-2 ring-primary/20" data-alt="Admin user profile avatar thumbnail" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD2DBag2Kjpd2UhonxQp2Z5RowWy-7Q8XnjCb4E3Ejf0lQUNyeM4vrMs5f6XoUJdfkLSSox3dkJzq_3DXjQia-dV_A5nnAPqyPUJ4ZByzFg3XBlmDHQkdeh_BTt-XHpFTQkrmbMNQix6mNVwXog5OA1Ba2aXFbOHJGvfGFQtMYs5oAQdurIaOZxoyt36M5oYaukQPFRdU5dCkwDdFRIz1evmvup6G197fM72_c-Yaz43LbimdbI45GgkoQNTK1GnBlarQTsNfRwFmI')"></div>
+</div>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-[1280px] mx-auto">
+<!-- ActionRow: Search and Filters -->
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-4 mb-6">
+<div class="flex flex-wrap items-center gap-4">
+<!-- Search -->
+<div class="relative flex-1 min-w-[300px]">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-sm transition-all" placeholder="Search Order ID, customer, or status..." type="text"/>
+</div>
+<!-- Filters -->
+<div class="flex items-center gap-3">
+<select class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm px-4 py-2 focus:ring-2 focus:ring-primary">
+<option>Status: All</option>
+<option>Paid</option>
+<option>Pending</option>
+<option>Refunded</option>
+</select>
+<select class="bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm px-4 py-2 focus:ring-2 focus:ring-primary">
+<option>Payment: All</option>
+<option>Credit Card</option>
+<option>PayPal</option>
+<option>Bank Transfer</option>
+</select>
+<button class="flex items-center gap-2 px-4 py-2 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors border border-slate-200 dark:border-slate-700">
+<span class="material-symbols-outlined">calendar_today</span>
+                                Date Range
+                            </button>
+</div>
+<div class="flex items-center gap-2 ml-auto">
+<button class="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-bold transition-colors">
+<span class="material-symbols-outlined">file_download</span>
+                                Export
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold transition-colors hover:bg-primary/90">
+<span class="material-symbols-outlined">add</span>
+                                Create Order
+                            </button>
+</div>
+</div>
+</div>
+<!-- Data Table Section -->
+<div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Order ID</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Customer Name</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Payment Status</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Fulfillment</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 font-semibold text-primary text-sm">#ORD-2849</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">SK</div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Sarah Jenkins</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">Oct 24, 2023</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">$142.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                            Paid
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<span class="text-slate-600 dark:text-slate-400">Shipped</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 font-semibold text-primary text-sm">#ORD-2850</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">MT</div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Marcus Thorne</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">Oct 24, 2023</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">$89.50</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                            Pending
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"></div>
+<span class="text-slate-600 dark:text-slate-400">Unfulfilled</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 font-semibold text-primary text-sm">#ORD-2851</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">EL</div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Elena Lopez</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">Oct 23, 2023</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">$210.20</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                            Paid
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-green-500"></div>
+<span class="text-slate-600 dark:text-slate-400">Delivered</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 font-semibold text-primary text-sm">#ORD-2852</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">DB</div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">David Byrne</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">Oct 23, 2023</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">$55.00</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                                            Refunded
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-red-500"></div>
+<span class="text-slate-600 dark:text-slate-400">Cancelled</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
+<td class="px-6 py-4 font-semibold text-primary text-sm">#ORD-2853</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">AJ</div>
+<div class="text-sm font-medium text-slate-900 dark:text-white">Alice Johnson</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">Oct 22, 2023</td>
+<td class="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">$325.40</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                                            Paid
+                                        </span>
+</td>
+<td class="px-6 py-4 text-sm">
+<div class="flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<span class="text-slate-600 dark:text-slate-400">Processing</span>
+</div>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+<div class="text-sm text-slate-500 dark:text-slate-400 font-medium">
+                            Showing <span class="text-slate-900 dark:text-white">1</span> to <span class="text-slate-900 dark:text-white">10</span> of <span class="text-slate-900 dark:text-white">2,485</span> orders
+                        </div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-colors disabled:opacity-50" disabled="">
+                                Previous
+                            </button>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center bg-primary text-white rounded-lg text-sm font-bold">1</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">2</button>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">3</button>
+<span class="text-slate-400 px-1">...</span>
+<button class="w-8 h-8 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg text-sm font-medium">249</button>
+</div>
+<button class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-colors">
+                                Next
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -7,5 +7,156 @@
   "state": {
     "loading": "Loading...",
     "empty": "No data available"
+  },
+  "audit": {
+    "title": "Audit trail",
+    "loadError": "Unable to load cache audit.",
+    "empty": "No cache operations recorded yet."
+  },
+  "opsAudit": {
+    "title": "Admin operations audit",
+    "loadError": "Unable to load operations audit.",
+    "empty": "No admin operation audit entries yet."
+  },
+  "navigation": {
+    "title": "Admin navigation",
+    "quickActions": "Quick actions",
+    "goToOrders": "Go to Orders",
+    "goToCms": "Go to CMS controls",
+    "goToUsers": "Go to Users & roles",
+    "goToCache": "Go to Cache & revalidation"
+  },
+  "orders": {
+    "title": "Order operations",
+    "loadError": "Unable to load orders.",
+    "empty": "No orders found.",
+    "markAs": "Mark as {{status}}",
+    "terminalStatus": "Terminal status. No further transitions."
+  },
+  "cms": {
+    "tabs": "CMS tabs",
+    "toggles": {
+      "title": "CMS toggles",
+      "empty": "No toggle configuration loaded.",
+      "active": "{{active}}/{{total}} active",
+      "enable": "Enable",
+      "disable": "Disable",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "surface": "Surface: {{surface}}"
+    },
+    "spotlights": {
+      "title": "Brand spotlight manager",
+      "add": "Add spotlight",
+      "adding": "Adding...",
+      "noRecords": "No spotlight records yet.",
+      "refresh": "Refresh",
+      "saving": "Saving...",
+      "delete": "Delete",
+      "moveUp": "Move up",
+      "moveDown": "Move down"
+    },
+    "preview": {
+      "title": "Home marketing preview",
+      "noRails": "No rails configured.",
+      "noSpotlights": "No brand spotlights configured."
+    },
+    "marketingBlocks": {
+      "title": "Home marketing blocks",
+      "noRails": "No rails configured.",
+      "noSpotlights": "No brand spotlights configured."
+    },
+    "placeholders": {
+      "spotlightId": "Optional id (e.g. spotlight-new)",
+      "bannerTitleEn": "Banner title (EN)",
+      "bannerTitleAr": "Banner title (AR)",
+      "railTitleEn": "Rail title (EN)",
+      "railTitleAr": "Rail title (AR)",
+      "brandNamesCsv": "Brand names CSV (e.g. Fenty Beauty, Huda Beauty)",
+      "bannerImageUrl": "Banner image URL",
+      "bannerHref": "Banner href (e.g. /shop)",
+      "brandNamesCsvShort": "Brand names CSV",
+      "bannerHrefShort": "Banner href"
+    }
+  },
+  "sourceOptions": {
+    "bestSellers": "Best sellers",
+    "newArrivals": "New arrivals",
+    "bundleOnly": "Bundle only",
+    "manualIds": "Manual ids"
+  },
+  "users": {
+    "permissionsMatrix": "Permissions matrix",
+    "permissionsHint": "Updates apply immediately per click. Use filters to narrow users.",
+    "noUsersMatchFilter": "No users match this filter.",
+    "cmsToggles": "CMS Toggles",
+    "usersLabel": "Users",
+    "cacheOps": "Cache Ops",
+    "usersRolePreview": "Users & role preview",
+    "allow": "Allow",
+    "deny": "Deny",
+    "setActive": "Set active",
+    "setInvited": "Set invited",
+    "setDisabled": "Set disabled",
+    "role": {
+      "customer": "Customer",
+      "pharmacist": "Pharmacist",
+      "admin": "Admin"
+    }
+  },
+  "cache": {
+    "title": "Cache & revalidation operations",
+    "flushHint": "Type FLUSH, then execute. A cooldown is enforced server-side per admin user.",
+    "flushConfirmationPlaceholder": "Type FLUSH to confirm",
+    "runOperation": "Run operation",
+    "running": "Running...",
+    "refreshAudit": "Refresh audit"
+  },
+  "menus": {
+    "title": "CMS Menus",
+    "subtitle": "Create header menus, assign locations, and manage navigation plus merchandising metadata.",
+    "createMenu": "Create Menu",
+    "saveMenu": "Save Menu",
+    "deleteMenu": "Delete Menu",
+    "saving": "Saving...",
+    "emptyTitle": "No menus yet",
+    "emptyDescription": "Create the first menu for header navigation or mega menu merchandising.",
+    "menuDetails": "Menu Details",
+    "menuStructure": "Menu Structure",
+    "megaConfig": "Mega Menu Config",
+    "validationHint": "Mega menus are capped at depth 3. Save-time validation enforces depth, featured-slot placement, and brand-rail rules.",
+    "listTitle": "Menus",
+    "noSelectionTitle": "Select or create a menu",
+    "noSelectionDescription": "Choose a menu from the list or create a new one to configure its items.",
+    "loadingMenus": "Loading menus...",
+    "menuId": "Menu ID",
+    "name": "Name",
+    "slug": "Slug",
+    "location": "Location",
+    "displayStyle": "Display Style",
+    "impressionAnalyticsKey": "Impression Analytics Key",
+    "clickAnalyticsKey": "Click Analytics Key",
+    "enabled": "Enabled",
+    "itemsJson": "Items JSON",
+    "megaMenuConfigJson": "Mega Menu Config JSON",
+    "deleteConfirm": "Delete menu \"{{name}}\"?",
+    "menuCreated": "Menu created.",
+    "menuSaved": "Menu saved.",
+    "itemsJsonInvalid": "Items JSON or mega config JSON is invalid.",
+    "locationOptions": {
+      "headerPrimary": "header_primary",
+      "headerMegaCategories": "header_mega_categories"
+    },
+    "displayStyleOptions": {
+      "default": "default",
+      "megaCategory": "mega_category"
+    },
+    "placeholders": {
+      "menuId": "menu-header-mega",
+      "name": "Header Mega Categories",
+      "slug": "header-mega-categories",
+      "impressionKey": "menu.header_mega_categories.impression",
+      "clickKey": "menu.header_mega_categories.click"
+    }
   }
 }

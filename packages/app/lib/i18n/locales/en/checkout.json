@@ -1,8 +1,102 @@
 {
+  "title": "Checkout",
+  "error": {
+    "loadFailed": "Unable to load checkout"
+  },
+  "empty": {
+    "title": "Your cart is empty",
+    "subtitle": "Add products before checkout."
+  },
+  "contact": {
+    "title": "Contact",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Your full name",
+    "phone": "Phone",
+    "phonePlaceholder": "Phone number"
+  },
+  "fulfillment": {
+    "title": "Fulfillment",
+    "noStockedBranches": "No stocked branches are available right now.",
+    "selectedBranchOut": "Selected branch is no longer in stock.",
+    "delivery": "Delivery",
+    "branchPickup": "Branch pickup",
+    "switchTo": "Switch to {{name}}",
+    "selectedBranchOutOfStock": "Selected branch is out of stock. Choose another branch.",
+    "deliveryAddress": "Delivery address",
+    "savedAddresses": "Saved addresses",
+    "selectBranch": "Please select a pickup branch.",
+    "selectPayment": "Please select a payment method."
+  },
+  "address": {
+    "city": "City",
+    "area": "Area",
+    "cityPlaceholder": "City",
+    "areaPlaceholder": "Area",
+    "building": "Building",
+    "buildingPlaceholder": "Building and street",
+    "floor": "Floor (optional)",
+    "floorPlaceholder": "Floor",
+    "apartment": "Apartment (optional)",
+    "apartmentPlaceholder": "Apartment",
+    "deliveryNotes": "Delivery notes (optional)",
+    "deliveryNotesPlaceholder": "Any instructions for delivery",
+    "addressBook": "Address book",
+    "saveAsNew": "Save as new",
+    "reuseMatched": "Reuse matched/default"
+  },
+  "payment": {
+    "title": "Payment",
+    "noMethods": "No payment methods are currently available for this fulfillment mode.",
+    "cashOnDelivery": "Cash on delivery",
+    "cardOnDelivery": "Card on delivery (POS)",
+    "onlineCard": "Online card",
+    "payAtBranch": "Pay at branch",
+    "payNow": "Pay now (online card)"
+  },
+  "promotion": {
+    "title": "Promotion code",
+    "coupon": "Coupon code (optional)",
+    "couponPlaceholder": "Enter coupon code",
+    "removeCoupon": "Remove coupon",
+    "refreshingQuote": "Refreshing quote..."
+  },
+  "loyalty": {
+    "title": "Loyalty redemption",
+    "noRedemption": "No redemption",
+    "estimatedDiscount": "Estimated discount: {{amount}}",
+    "pointsRedeemable": "Points: {{points}} | Redeemable: {{value}}"
+  },
+  "summary": {
+    "title": "Order summary",
+    "quoteRequired": "Checkout quote is required. Refresh quote before placing order.",
+    "subtotal": "Subtotal",
+    "promotionDiscount": "Promotion discount",
+    "shipping": "Shipping",
+    "loyaltyDiscount": "Loyalty discount",
+    "total": "Total",
+    "appliedPromotion": "Applied: {{name}}"
+  },
+  "validation": {
+    "emptyCart": "Your cart is empty.",
+    "fullNameRequired": "Full name is required.",
+    "phoneRequired": "Phone is required.",
+    "cityRequired": "City is required for delivery.",
+    "areaRequired": "Area is required for delivery.",
+    "buildingRequired": "Building is required for delivery.",
+    "noPaymentMethods": "No payment methods are available.",
+    "quoteError": "Unable to create pricing quote.",
+    "placeOrderError": "Unable to place order right now."
+  },
   "actions": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "apply": "Apply"
+    "retry": "Retry",
+    "placingOrder": "Placing order...",
+    "placeOrder": "Place order"
+  },
+  "steps": {
+    "contact": "1. Contact",
+    "fulfillment": "2. {{mode}}",
+    "payment": "3. Payment",
+    "review": "4. Review"
   },
   "state": {
     "loading": "Loading...",

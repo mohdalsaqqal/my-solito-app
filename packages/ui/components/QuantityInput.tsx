@@ -1,3 +1,4 @@
+import React from 'react'
 import { Pressable, View, ViewStyle } from 'react-native'
 import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
 import { Text } from '../primitives/Text'
@@ -13,7 +14,7 @@ type QuantityInputProps = {
   style?: ViewStyle
 }
 
-export function QuantityInput({
+export const QuantityInput = React.memo(function QuantityInput({
   value,
   min = 1,
   max = 99,
@@ -93,4 +94,4 @@ export function QuantityInput({
       </Pressable>
     </View>
   )
-}
+})

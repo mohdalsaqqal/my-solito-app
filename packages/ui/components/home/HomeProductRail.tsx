@@ -1,18 +1,19 @@
-import { borderWidth, colors, spacing } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { spacing } from '@real/tokens'
+import { Box } from '../../primitives'
 import { HorizontalRailState } from '../HorizontalRailState'
-import { ProductCard } from '../ProductCard'
-import { HomeProductItem } from './types'
+import { MarketplaceSectionHeader } from '../MarketplaceSectionHeader'
+import { ProductCard, ProductCardSkeleton } from '../ProductCard'
+import type { ProductCardModel } from '../ProductCard.types'
 
 type HomeProductRailProps = {
   title: string
-  items: HomeProductItem[]
+  items: ProductCardModel[]
   loading?: boolean
   error?: string | null
   onRetry?: () => void
   onPressViewAll?: () => void
-  onPressProduct?: (item: HomeProductItem) => void
-  onAddToCart?: (item: HomeProductItem) => void
+  onPressProduct?: (item: ProductCardModel) => void
+  onAddToCart?: (item: ProductCardModel) => void
 }
 
 export function HomeProductRail({
@@ -37,46 +38,14 @@ export function HomeProductRail({
   const cardWidth = spacing.xxl * 5
 
   return (
-    <Box
-      style={{
-        gap: spacing.sm,
-        padding: spacing.sm,
-        borderWidth: isFlash ? borderWidth.thick : borderWidth.thin,
-        borderColor: isFlash ? colors.primary : colors.border,
-        backgroundColor: isFlash ? colors.brandPrimarySubtle : colors.surface,
-      }}
-    >
-      <Box style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-        <Box style={{ gap: spacing.xs }}>
-          {urgencyLabel ? (
-            <Box
-              style={{
-                alignSelf: 'flex-start',
-                borderWidth: isFlash ? borderWidth.thick : borderWidth.thin,
-                borderColor: colors.primary,
-                backgroundColor: isFlash ? colors.primary : colors.surface,
-                paddingHorizontal: spacing.xs,
-                paddingVertical: spacing.xxs,
-              }}
-            >
-              <Text variant='caption' tone={isFlash ? 'inverse' : 'danger'} style={{ textTransform: 'uppercase' }}>
-                {urgencyLabel}
-              </Text>
-            </Box>
-          ) : null}
-          <Text variant='title'>{title}</Text>
-          {sectionSubtitle ? (
-            <Text variant='caption' tone={isFlash ? 'danger' : 'muted'} style={{ textTransform: 'uppercase' }}>
-              {sectionSubtitle}
-            </Text>
-          ) : null}
-        </Box>
-        <Touchable onPress={onPressViewAll}>
-          <Text variant='label' tone='primary' style={{ textTransform: 'uppercase' }}>
-            View all
-          </Text>
-        </Touchable>
-      </Box>
+    <Box style={{ gap: spacing['8'], paddingTop: spacing['4'] }}>
+      <MarketplaceSectionHeader
+        title={title}
+        eyebrow={urgencyLabel}
+        meta={sectionSubtitle}
+        actionLabel='View all'
+        onPressAction={onPressViewAll}
+      />
 
       <HorizontalRailState
         loading={loading}
@@ -85,7 +54,7 @@ export function HomeProductRail({
         onRetry={onRetry}
         emptyMessage='No products available right now.'
         loadingCount={4}
-        loadingItem={(key) => <ProductCard key={key} state='loading' width={cardWidth} />}
+        loadingItem={(key) => <ProductCardSkeleton key={key} width={cardWidth} variant='compact' />}
       >
         <>
           {items.map((item) => (
@@ -93,9 +62,9 @@ export function HomeProductRail({
               key={item.id}
               item={item}
               width={cardWidth}
-              contentPadding='md'
-              onPress={onPressProduct}
-              onAddToCart={onAddToCart}
+              variant='compact'
+              onPress={() => onPressProduct?.(item)}
+              onPressAdd={() => onAddToCart?.(item)}
             />
           ))}
         </>

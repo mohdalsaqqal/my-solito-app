@@ -13,8 +13,8 @@ const Input = forwardRef<TextInput, InputProps>(function Input({ className, plac
   const inputProps = {
     ...props,
     className: cn(
-      // DESIGN.md — bottom-border only, no box, no radius (Brutalist-Luxe editorial)
-      'bg-transparent text-foreground flex h-10 w-full min-w-0 flex-row items-center rounded-none border-0 border-b border-foreground/20 px-0 py-1 text-base leading-5 shadow-none sm:h-9',
+      // Compact input field: transparent background, square corners, small text.
+      'bg-transparent text-foreground flex h-10 w-full min-w-0 flex-row items-center rounded-none border-0 border-b border-foreground/20 px-0 py-1 text-xs leading-4 shadow-none sm:h-9',
       props.editable === false &&
         cn('opacity-50', Platform.select({ web: 'disabled:pointer-events-none disabled:cursor-not-allowed' })),
       Platform.select({

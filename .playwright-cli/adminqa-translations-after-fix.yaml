@@ -1,0 +1,290 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: R
+        - generic [ref=e8]: Real Cosmetics
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - generic [ref=e13]:
+            - img [ref=e14]
+            - generic [ref=e19]: Dashboard
+        - generic [ref=e20]:
+          - button "Catalog" [ref=e21] [cursor=pointer]:
+            - generic [ref=e22]:
+              - img [ref=e23]
+              - generic [ref=e26]: Catalog
+            - img [ref=e28]
+          - generic [ref=e30]:
+            - link "Products" [ref=e31] [cursor=pointer]:
+              - /url: /admin/catalog/products
+              - generic [ref=e33]:
+                - img [ref=e34]
+                - generic [ref=e38]: Products
+            - link "Categories" [ref=e39] [cursor=pointer]:
+              - /url: /admin/catalog/categories
+              - generic [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e46]: Categories
+            - link "Brands" [ref=e47] [cursor=pointer]:
+              - /url: /admin/catalog/brands
+              - generic [ref=e49]:
+                - img [ref=e50]
+                - generic [ref=e54]: Brands
+            - link "Queries" [ref=e55] [cursor=pointer]:
+              - /url: /admin/catalog/queries
+              - generic [ref=e57]:
+                - img [ref=e58]
+                - generic [ref=e61]: Queries
+        - generic [ref=e62]:
+          - button "Marketing" [ref=e63] [cursor=pointer]:
+            - generic [ref=e64]:
+              - img [ref=e65]
+              - generic [ref=e68]: Marketing
+            - img [ref=e70]
+          - generic [ref=e72]:
+            - link "Promotions" [ref=e73] [cursor=pointer]:
+              - /url: /admin/marketing/promotions
+              - generic [ref=e75]:
+                - img [ref=e76]
+                - generic [ref=e79]: Promotions
+            - generic [ref=e80]:
+              - button "CMS" [ref=e81] [cursor=pointer]:
+                - generic [ref=e82]:
+                  - img [ref=e83]
+                  - generic [ref=e86]: CMS
+                - img [ref=e88]
+              - generic [ref=e90]:
+                - link "Releases" [ref=e91] [cursor=pointer]:
+                  - /url: /admin/marketing/cms/releases
+                  - generic [ref=e93]:
+                    - img [ref=e94]
+                    - generic [ref=e97]: Releases
+                - link "Blocks" [ref=e98] [cursor=pointer]:
+                  - /url: /admin/marketing/cms/blocks
+                  - generic [ref=e100]:
+                    - img [ref=e101]
+                    - generic [ref=e104]: Blocks
+                - link "Queries" [ref=e105] [cursor=pointer]:
+                  - /url: /admin/marketing/cms/queries
+                  - generic [ref=e107]:
+                    - img [ref=e108]
+                    - generic [ref=e111]: Queries
+        - link "Orders" [ref=e112] [cursor=pointer]:
+          - /url: /admin/orders
+          - generic [ref=e114]:
+            - img [ref=e115]
+            - generic [ref=e119]: Orders
+        - link "Customers" [ref=e120] [cursor=pointer]:
+          - /url: /admin/customers
+          - generic [ref=e122]:
+            - img [ref=e123]
+            - generic [ref=e128]: Customers
+        - generic [ref=e129]:
+          - button "Operations" [ref=e130] [cursor=pointer]:
+            - generic [ref=e131]:
+              - img [ref=e132]
+              - generic [ref=e135]: Operations
+            - img [ref=e137]
+          - generic [ref=e139]:
+            - link "Cache" [ref=e140] [cursor=pointer]:
+              - /url: /admin/operations/cache
+              - generic [ref=e142]:
+                - img [ref=e143]
+                - generic [ref=e146]: Cache
+            - link "Audit" [ref=e147] [cursor=pointer]:
+              - /url: /admin/operations/audit
+              - generic [ref=e149]:
+                - img [ref=e150]
+                - generic [ref=e152]: Audit
+            - link "Translations" [ref=e153] [cursor=pointer]:
+              - /url: /admin/operations/translations
+              - generic [ref=e155]:
+                - img [ref=e156]
+                - generic [ref=e160]: Translations
+      - generic [ref=e161]:
+        - generic [ref=e164]: "Environment: production"
+        - generic [ref=e165]:
+          - img [ref=e167]
+          - generic [ref=e170]:
+            - generic [ref=e171]: Admin User
+            - generic [ref=e172]: admin@realcosmetics.local
+          - button "Logout" [ref=e173] [cursor=pointer]:
+            - img [ref=e174]
+    - generic [ref=e177]:
+      - banner [ref=e178]:
+        - generic [ref=e179]:
+          - button "Toggle sidebar" [ref=e180] [cursor=pointer]:
+            - img [ref=e181]
+          - navigation "Breadcrumb" [ref=e182]:
+            - list [ref=e183]:
+              - listitem [ref=e184]:
+                - generic [ref=e185]: en
+              - listitem [ref=e186]:
+                - generic [ref=e187]: /
+                - generic [ref=e188]: admin
+              - listitem [ref=e189]:
+                - generic [ref=e190]: /
+                - generic [ref=e191]: operations
+              - listitem [ref=e192]:
+                - generic [ref=e193]: /
+                - generic [ref=e194]: translations
+        - generic [ref=e195]:
+          - generic [ref=e196]:
+            - img [ref=e197]
+            - searchbox "Search..." [ref=e200]
+          - button "Notifications" [ref=e201] [cursor=pointer]:
+            - img [ref=e202]
+          - button "AD" [ref=e206] [cursor=pointer]
+      - main [ref=e207]:
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - generic [ref=e210]:
+              - heading "Translations" [level=1] [ref=e211]
+              - paragraph [ref=e212]: Monitor missing keys and run machine prefill workflows.
+            - generic [ref=e213]:
+              - button "Refresh" [ref=e214] [cursor=pointer]:
+                - generic [ref=e215]:
+                  - img [ref=e216]
+                  - text: Refresh
+              - button "Export JSON" [ref=e221] [cursor=pointer]
+              - button "Dry Run Prefill" [ref=e222] [cursor=pointer]
+              - button "Run Prefill" [ref=e223] [cursor=pointer]
+          - generic [ref=e225]:
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - img [ref=e228]
+                - heading "Provider" [level=3] [ref=e232]
+              - paragraph [ref=e233]: crowdin
+              - generic [ref=e235]: Offline
+            - generic [ref=e236]:
+              - heading "Locale Gaps" [level=3] [ref=e237]
+              - paragraph [ref=e238]: EN missing / total
+              - paragraph [ref=e239]: 0 / 55
+              - paragraph [ref=e240]: AR missing / total
+              - paragraph [ref=e241]: 0 / 55
+            - generic [ref=e242]:
+              - heading "Last Prefill" [level=3] [ref=e243]
+              - paragraph [ref=e244]: No prefill run yet.
+          - generic [ref=e246]:
+            - heading "Missing Keys by Namespace" [level=3] [ref=e247]
+            - table [ref=e251]:
+              - rowgroup [ref=e252]:
+                - row "Locale Namespace Missing Total" [ref=e253]:
+                  - columnheader "Locale" [ref=e254]
+                  - columnheader "Namespace" [ref=e255]
+                  - columnheader "Missing" [ref=e256]
+                  - columnheader "Total" [ref=e257]
+              - rowgroup [ref=e258]:
+                - row "EN account 0 5" [ref=e259]:
+                  - cell "EN" [ref=e260]
+                  - cell "account" [ref=e261]
+                  - cell "0" [ref=e262]
+                  - cell "5" [ref=e263]
+                - row "EN admin 0 5" [ref=e264]:
+                  - cell "EN" [ref=e265]
+                  - cell "admin" [ref=e266]
+                  - cell "0" [ref=e267]
+                  - cell "5" [ref=e268]
+                - row "EN auth 0 5" [ref=e269]:
+                  - cell "EN" [ref=e270]
+                  - cell "auth" [ref=e271]
+                  - cell "0" [ref=e272]
+                  - cell "5" [ref=e273]
+                - row "EN cart 0 5" [ref=e274]:
+                  - cell "EN" [ref=e275]
+                  - cell "cart" [ref=e276]
+                  - cell "0" [ref=e277]
+                  - cell "5" [ref=e278]
+                - row "EN checkout 0 5" [ref=e279]:
+                  - cell "EN" [ref=e280]
+                  - cell "checkout" [ref=e281]
+                  - cell "0" [ref=e282]
+                  - cell "5" [ref=e283]
+                - row "EN common 0 5" [ref=e284]:
+                  - cell "EN" [ref=e285]
+                  - cell "common" [ref=e286]
+                  - cell "0" [ref=e287]
+                  - cell "5" [ref=e288]
+                - row "EN errors 0 5" [ref=e289]:
+                  - cell "EN" [ref=e290]
+                  - cell "errors" [ref=e291]
+                  - cell "0" [ref=e292]
+                  - cell "5" [ref=e293]
+                - row "EN navigation 0 5" [ref=e294]:
+                  - cell "EN" [ref=e295]
+                  - cell "navigation" [ref=e296]
+                  - cell "0" [ref=e297]
+                  - cell "5" [ref=e298]
+                - row "EN orders 0 5" [ref=e299]:
+                  - cell "EN" [ref=e300]
+                  - cell "orders" [ref=e301]
+                  - cell "0" [ref=e302]
+                  - cell "5" [ref=e303]
+                - row "EN product 0 5" [ref=e304]:
+                  - cell "EN" [ref=e305]
+                  - cell "product" [ref=e306]
+                  - cell "0" [ref=e307]
+                  - cell "5" [ref=e308]
+                - row "EN validation 0 5" [ref=e309]:
+                  - cell "EN" [ref=e310]
+                  - cell "validation" [ref=e311]
+                  - cell "0" [ref=e312]
+                  - cell "5" [ref=e313]
+                - row "AR account 0 5" [ref=e314]:
+                  - cell "AR" [ref=e315]
+                  - cell "account" [ref=e316]
+                  - cell "0" [ref=e317]
+                  - cell "5" [ref=e318]
+                - row "AR admin 0 5" [ref=e319]:
+                  - cell "AR" [ref=e320]
+                  - cell "admin" [ref=e321]
+                  - cell "0" [ref=e322]
+                  - cell "5" [ref=e323]
+                - row "AR auth 0 5" [ref=e324]:
+                  - cell "AR" [ref=e325]
+                  - cell "auth" [ref=e326]
+                  - cell "0" [ref=e327]
+                  - cell "5" [ref=e328]
+                - row "AR cart 0 5" [ref=e329]:
+                  - cell "AR" [ref=e330]
+                  - cell "cart" [ref=e331]
+                  - cell "0" [ref=e332]
+                  - cell "5" [ref=e333]
+                - row "AR checkout 0 5" [ref=e334]:
+                  - cell "AR" [ref=e335]
+                  - cell "checkout" [ref=e336]
+                  - cell "0" [ref=e337]
+                  - cell "5" [ref=e338]
+                - row "AR common 0 5" [ref=e339]:
+                  - cell "AR" [ref=e340]
+                  - cell "common" [ref=e341]
+                  - cell "0" [ref=e342]
+                  - cell "5" [ref=e343]
+                - row "AR errors 0 5" [ref=e344]:
+                  - cell "AR" [ref=e345]
+                  - cell "errors" [ref=e346]
+                  - cell "0" [ref=e347]
+                  - cell "5" [ref=e348]
+                - row "AR navigation 0 5" [ref=e349]:
+                  - cell "AR" [ref=e350]
+                  - cell "navigation" [ref=e351]
+                  - cell "0" [ref=e352]
+                  - cell "5" [ref=e353]
+                - row "AR orders 0 5" [ref=e354]:
+                  - cell "AR" [ref=e355]
+                  - cell "orders" [ref=e356]
+                  - cell "0" [ref=e357]
+                  - cell "5" [ref=e358]
+                - row "AR product 0 5" [ref=e359]:
+                  - cell "AR" [ref=e360]
+                  - cell "product" [ref=e361]
+                  - cell "0" [ref=e362]
+                  - cell "5" [ref=e363]
+                - row "AR validation 0 5" [ref=e364]:
+                  - cell "AR" [ref=e365]
+                  - cell "validation" [ref=e366]
+                  - cell "0" [ref=e367]
+                  - cell "5" [ref=e368]
+  - alert [ref=e249]

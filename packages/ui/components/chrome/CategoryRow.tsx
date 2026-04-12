@@ -1,7 +1,9 @@
-import { ScrollView } from 'react-native'
-import { borderWidth, colors, layout, motionDuration, radius, spacing } from '@real/tokens'
-import { Box, Container, Text, Touchable } from '../../primitives'
+import React from 'react'
+import { Pressable, ScrollView } from 'react-native'
+import { borderWidth, layout, motionDuration, radius, spacing } from '@real/tokens'
+import { Box, Container, Text } from '../../primitives'
 import { Badge } from '../Badge'
+import { useThemeColors } from '../../responsive'
 
 type CategoryItem = {
   id: string
@@ -17,7 +19,7 @@ type CategoryRowProps = {
   state?: 'loading' | 'empty' | 'error' | 'disabled' | 'default'
 }
 
-export function CategoryRow({
+export const CategoryRow = React.memo(function CategoryRow({
   items,
   activeId,
   scopeLabel,
@@ -25,6 +27,7 @@ export function CategoryRow({
   mobile = false,
   state = 'default',
 }: CategoryRowProps) {
+  const c = useThemeColors()
   if (state === 'loading') {
     return (
       <Container>
@@ -88,8 +91,8 @@ export function CategoryRow({
                 paddingVertical: spacing.xs,
                 borderRadius: radius.md,
                 borderWidth: borderWidth.thin,
-                borderColor: colors.border,
-                backgroundColor: colors.backgroundSecondary,
+                borderColor: c.border,
+                backgroundColor: c.backgroundSecondary,
               }}
             >
               <Text variant='caption' tone='muted'>
@@ -101,14 +104,14 @@ export function CategoryRow({
             const active = item.id === activeId
             if (mobile) {
               return (
-                <Touchable key={item.id} disabled={state === 'disabled'} onPress={() => onSelect?.(item.id)}>
+                <Pressable key={item.id} disabled={state === 'disabled'} onPress={() => onSelect?.(item.id)} accessibilityLabel={item.label}>
                   <Badge tone={active ? 'accent' : 'outline'}>{item.label}</Badge>
-                </Touchable>
+                </Pressable>
               )
             }
 
             return (
-              <Touchable key={item.id} disabled={state === 'disabled'} onPress={() => onSelect?.(item.id)}>
+              <Pressable key={item.id} disabled={state === 'disabled'} onPress={() => onSelect?.(item.id)} accessibilityLabel={item.label}>
                 {({ hovered, focused }) => {
                   const flashSale = item.id.includes('flash-sale') || item.label.includes('%')
                   const luxury = item.id.includes('luxury')
@@ -137,7 +140,7 @@ export function CategoryRow({
                           height: 2,
                           width: underlineVisible ? spacing['24'] : 0,
                           borderRadius: 2,
-                          backgroundColor: colors.brandPrimary,
+                          backgroundColor: c.brandPrimary,
                           transitionProperty: 'width',
                           transitionDuration: `${motionDuration.normal}ms`,
                         }}
@@ -145,11 +148,11 @@ export function CategoryRow({
                     </Box>
                   )
                 }}
-              </Touchable>
+              </Pressable>
             )
           })}
         </ScrollView>
       </Container>
     </Box>
   )
-}
+})

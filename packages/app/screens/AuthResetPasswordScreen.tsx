@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Button, Card } from '@real/ui/components'
-import { Box, Input, Text, Touchable } from '@real/ui/primitives'
+import { Box, Input, Text } from '@real/ui/primitives'
+
+const authResetCopy = {
+  title: 'Set New Password',
+  subtitle: 'Enter your reset token and choose a new password.',
+  resetTokenPlaceholder: 'Reset token',
+  newPasswordPlaceholder: 'New password',
+  backToSignIn: 'Back to sign in',
+}
 
 type AuthResetPasswordScreenProps = {
   defaultToken?: string
@@ -45,19 +53,21 @@ export function AuthResetPasswordScreen({
       <PageScaffold.Body>
         <Section>
           <Card variant='raised' style={{ gap: spacing.md }}>
-            <Text variant='headline'>Set New Password</Text>
-            <Text tone='muted'>Enter your reset token and choose a new password.</Text>
+            <Text variant='headline'>{authResetCopy.title}</Text>
+            <Text tone='muted'>{authResetCopy.subtitle}</Text>
 
             <Box style={{ gap: spacing.sm }}>
               <Input
-                placeholder='Reset token'
+                placeholder={authResetCopy.resetTokenPlaceholder}
+                accessibilityLabel='Reset token'
                 autoCapitalize='none'
                 value={token}
                 onChangeText={setToken}
                 readOnly={loading}
               />
               <Input
-                placeholder='New password'
+                placeholder={authResetCopy.newPasswordPlaceholder}
+                accessibilityLabel='New password'
                 secureTextEntry
                 value={newPassword}
                 onChangeText={setNewPassword}
@@ -73,9 +83,9 @@ export function AuthResetPasswordScreen({
               {loading ? 'Updating...' : 'Update Password'}
             </Button>
 
-            <Touchable onPress={onGoToLogin}>
-              <Text variant='caption' tone='primary'>Back to sign in</Text>
-            </Touchable>
+            <Box style={{ alignSelf: 'flex-start' }}>
+              <Button size='sm' variant='ghost' onPress={onGoToLogin}>{authResetCopy.backToSignIn}</Button>
+            </Box>
           </Card>
         </Section>
       </PageScaffold.Body>

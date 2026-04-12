@@ -1,4 +1,125 @@
 {
+  "title": "Account",
+  "welcome": "Welcome, {{name}}",
+  "tabs": {
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "tests": "Tests",
+    "addresses": "Addresses",
+    "loyalty": "Loyalty",
+    "wishlist": "Wishlist",
+    "settings": "Settings"
+  },
+  "signOut": {
+    "label": "Sign out",
+    "signingOut": "Signing out..."
+  },
+  "promo": {
+    "title": "Loyalty unlocks better routines",
+    "subtitle": "Earn points on every checkout and redeem on essentials."
+  },
+  "error": {
+    "loadFailed": "Unable to load account data."
+  },
+  "metrics": {
+    "tier": "Tier",
+    "points": "Points",
+    "redeemable": "Redeemable",
+    "lastOrder": "Last order",
+    "noOrders": "No orders"
+  },
+  "orders": {
+    "title": "Orders",
+    "empty": "No orders yet.",
+    "viewAll": "View all",
+    "viewOrder": "View order",
+    "orderLabel": "Order {{id}}",
+    "accessibilityLabel": "Open order {{id}}"
+  },
+  "tests": {
+    "title": "Diagnostics tests",
+    "empty": "No tests recorded yet.",
+    "openTests": "Open tests",
+    "viewResult": "View result",
+    "recommendations": "{{count}} recommendations",
+    "purchasedFromRecommendations": "Purchased from recommendations: {{count}}",
+    "qr": {
+      "title": "My QR code",
+      "subtitle": "Pharmacist can scan this code to open your profile instantly."
+    }
+  },
+  "addresses": {
+    "title": "Addresses",
+    "empty": "No addresses saved yet.",
+    "add": "Add address",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Confirm delete",
+    "cancelDelete": "Cancel",
+    "setAsDefault": "Set default",
+    "default": "Default",
+    "deleteWarning": "This action cannot be undone.",
+    "form": {
+      "addTitle": "Add a new address",
+      "editTitle": "Edit address",
+      "closeForm": "Close form",
+      "label": "Label (Home, Work, etc.)",
+      "city": "City",
+      "area": "Area",
+      "building": "Building",
+      "floor": "Floor (optional)",
+      "apartment": "Apartment (optional)",
+      "save": "Save address",
+      "saving": "Saving...",
+      "update": "Update address",
+      "cancel": "Cancel",
+      "validationError": "Label, city, area, and building are required.",
+      "saveError": "Unable to save address."
+    }
+  },
+  "loyalty": {
+    "title": "Loyalty wallet",
+    "notAvailable": "Loyalty is not available for this account yet.",
+    "tier": "Tier: {{tier}}",
+    "pointsBalance": "Points balance: {{points}}",
+    "redeemableValue": "Redeemable value: {{value}}",
+    "history": {
+      "title": "History",
+      "empty": "No loyalty activity yet."
+    },
+    "tierProgress": {
+      "current": "Current: {{tier}}",
+      "next": "Next: {{tier}}",
+      "topTier": "Top tier reached",
+      "pointsToNext": "{{points}} points to reach {{tier}}"
+    },
+    "expiringSoon": "Expiring soon: {{points}} points{{date, select, other { by {{date}}}}}",
+    "inStoreBarcode": "In-store barcode: {{code}} (expires {{date}})",
+    "redeemOptions": {
+      "title": "Available redeem options",
+      "option": "{{percent}}% ({{points}} pts)"
+    }
+  },
+  "wishlist": {
+    "title": "Wishlist",
+    "empty": "No saved items yet.",
+    "addToCart": "Add to cart",
+    "accessibilityLabel": "Open product {{name}}",
+    "imgPlaceholder": "IMG"
+  },
+  "settings": {
+    "title": "Settings",
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Email and campaign preferences.",
+      "manage": "Manage notifications"
+    },
+    "password": {
+      "title": "Password",
+      "subtitle": "Update your account password and security.",
+      "change": "Change password"
+    }
+  },
   "actions": {
     "save": "Save",
     "cancel": "Cancel",
@@ -7,5 +128,27 @@
   "state": {
     "loading": "Loading...",
     "empty": "No data available"
+  },
+  "testDetail": {
+    "notFound": "Test not found.",
+    "loadError": "Unable to load test details.",
+    "retry": "Retry",
+    "title": "Test details",
+    "backToTests": "Back to tests",
+    "resultSummary": "Result summary",
+    "recommendedProducts": "Recommended products",
+    "noRecommendedProducts": "No recommended products for this test.",
+    "outOfStock": "Out of stock",
+    "adding": "Adding...",
+    "added": "Added",
+    "addToCart": "Add to cart",
+    "addAll": "Add all",
+    "viewProduct": "View product",
+    "testId": "Test ID: {{id}}",
+    "date": "Date: {{date}}",
+    "pharmacist": "Pharmacist: {{name}}",
+    "branch": "Branch: {{name}}",
+    "status": "Status: {{status}}",
+    "notes": "Notes: {{notes}}"
   }
 }

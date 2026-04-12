@@ -1,9 +1,8 @@
 import { ReactNode } from 'react'
-import { ActivityIndicator, Platform, ViewStyle } from 'react-native'
+import { ActivityIndicator, Platform, Pressable, ViewStyle } from 'react-native'
 import { borderWidth, buttonTokens, colors, elevation, fontWeights, motionDuration, opacity, shadows, spacing } from '@real/tokens'
 import { Box } from '../primitives/Box'
 import { Text } from '../primitives/Text'
-import { Touchable } from '../primitives/Touchable'
 
 type ButtonProps = {
   children?: ReactNode
@@ -121,12 +120,14 @@ export function Button({
   const isWeb = Platform.OS === 'web'
 
   return (
-    <Touchable
+    <Pressable
       accessibilityRole='button'
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={onPress}
-      style={({ hovered, focused }) => {
+      style={(state: any) => {
+        const hovered = Boolean(state.hovered)
+        const focused = Boolean(state.focused)
         const interactive = hovered || focused
         const resolvedShape = shape === 'default' ? 'pill' : shape
         const radius = resolvedShape === 'pill' ? buttonTokens.radius.pill : buttonTokens.radius.default
@@ -195,6 +196,6 @@ export function Button({
           {rightIcon ? rightIcon : null}
         </Box>
       )}
-    </Touchable>
+    </Pressable>
   )
 }

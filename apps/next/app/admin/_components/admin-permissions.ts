@@ -1,4 +1,13 @@
-export type AdminDomain = 'dashboard' | 'catalog' | 'marketing' | 'orders' | 'customers' | 'operations'
+export type AdminDomain =
+  | 'dashboard'
+  | 'catalog'
+  | 'sales'
+  | 'inventory'
+  | 'marketplace'
+  | 'marketing'
+  | 'customers'
+  | 'operations'
+  | 'settings'
 export type AdminRole = 'admin' | 'marketing' | 'catalog' | 'support' | 'ops'
 
 type PermissionValue = 'full' | 'read' | 'none'
@@ -9,42 +18,57 @@ const permissionMatrix: Record<AdminRole, DomainMatrix> = {
   admin: {
     dashboard: 'full',
     catalog: 'full',
+    sales: 'full',
+    inventory: 'full',
+    marketplace: 'full',
     marketing: 'full',
-    orders: 'full',
     customers: 'full',
     operations: 'full',
+    settings: 'full',
   },
   marketing: {
     dashboard: 'read',
     catalog: 'read',
+    sales: 'read',
+    inventory: 'read',
+    marketplace: 'read',
     marketing: 'full',
-    orders: 'read',
     customers: 'read',
     operations: 'none',
+    settings: 'read',
   },
   catalog: {
     dashboard: 'read',
     catalog: 'full',
+    sales: 'read',
+    inventory: 'full',
+    marketplace: 'read',
     marketing: 'read',
-    orders: 'read',
     customers: 'read',
     operations: 'none',
+    settings: 'read',
   },
   support: {
     dashboard: 'read',
     catalog: 'read',
+    sales: 'full',
+    inventory: 'read',
+    marketplace: 'read',
     marketing: 'read',
-    orders: 'full',
     customers: 'full',
     operations: 'none',
+    settings: 'read',
   },
   ops: {
     dashboard: 'read',
     catalog: 'read',
+    sales: 'read',
+    inventory: 'read',
+    marketplace: 'read',
     marketing: 'read',
-    orders: 'read',
     customers: 'read',
     operations: 'full',
+    settings: 'read',
   },
 }
 
@@ -58,4 +82,3 @@ export function resolveAdminRole(input: unknown): AdminRole {
 export function canAccessDomain(role: AdminRole, domain: AdminDomain) {
   return permissionMatrix[role][domain] !== 'none'
 }
-

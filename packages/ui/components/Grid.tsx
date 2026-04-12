@@ -1,6 +1,9 @@
+"use client"
+
 import { Children, ReactNode } from 'react'
-import { View, useWindowDimensions } from 'react-native'
-import { breakpoints, grid, spacing } from '@real/tokens'
+import { View } from 'react-native'
+import { grid, spacing } from '@real/tokens'
+import { useBreakpoint } from '../responsive'
 
 type GridProps = {
   children?: ReactNode
@@ -19,11 +22,11 @@ export function Grid({
   columns = mode === 'brand' ? grid.brandColumns : grid.productColumns,
   gap = spacing.md,
 }: GridProps) {
-  const { width } = useWindowDimensions()
+  const profile = useBreakpoint()
   const columnCount =
-    width <= breakpoints.mobileMax
+    profile.breakpoint === 'mobile'
       ? columns.mobile
-      : width <= breakpoints.tabletMax
+      : profile.breakpoint === 'tablet'
         ? columns.tablet
         : columns.desktop
 

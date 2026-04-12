@@ -1,6 +1,9 @@
-import { PropsWithChildren, ReactNode, createContext, useContext } from 'react'
+"use client"
+
+import { PropsWithChildren, ReactNode, createContext, useCallback, useContext, useEffect } from 'react'
 import { Platform, ScrollView, View } from 'react-native'
 import { colors, layout } from '@real/tokens'
+import { emitNativeScrollOffset } from '../primitives/nativeScrollSignal'
 import { Container } from './Container'
 
 type Variant = 'editorial' | 'commerce' | 'product' | 'cart' | 'checkout' | 'account' | 'dashboard'
@@ -131,6 +134,17 @@ const PageScaffoldBase = ({
     contentContainer,
   }
 
+  useEffect(() => {
+    emitNativeScrollOffset(0)
+    return () => {
+      emitNativeScrollOffset(0)
+    }
+  }, [])
+
+  const handleNativeScroll = useCallback((event: any) => {
+    emitNativeScrollOffset(event?.nativeEvent?.contentOffset?.y ?? 0)
+  }, [])
+
   const inner = (
     <View
       style={{
@@ -158,6 +172,8 @@ const PageScaffoldBase = ({
           testID={testID}
           keyboardShouldPersistTaps='handled'
           showsVerticalScrollIndicator={false}
+          onScroll={handleNativeScroll}
+          scrollEventThrottle={16}
           contentContainerStyle={{ paddingBottom: safeBottom }}
           style={{ flex: 1, backgroundColor: resolveSurfaceColor(surface) }}
         >

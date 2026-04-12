@@ -1,4 +1,5 @@
 import { borderStyle, borderWidth } from './borders'
+import { componentTokens } from './components'
 import { colors } from './colors'
 import { elevation } from './elevation'
 import { layers, opacity, zIndex } from './layers'
@@ -32,5 +33,6 @@ export const tokens = {
   opacity,
   layout,
   motion,
+  components: componentTokens,
   statusTone,
 } as const

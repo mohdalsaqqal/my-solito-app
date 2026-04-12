@@ -54,5 +54,16 @@ export const shadows = {
   },
 } as const
 
+// ── Web boxShadow string equivalents (for web-only inline styles) ─────────
+export const boxShadowStrings = {
+  none: 'none',
+  xs: '0 1px 2px rgba(0, 0, 0, 0.05)',
+  sm: '0 2px 4px rgba(0, 0, 0, 0.06)',
+  md: '0 4px 8px rgba(0, 0, 0, 0.08)',
+  lg: '0 8px 16px rgba(0, 0, 0, 0.10)',
+  xl: '0 12px 24px rgba(0, 0, 0, 0.12)',
+  card: '0 0 5px rgba(0, 0, 0, 0.14)',
+} as const
+
 // Web-only sticky header shadow — unchanged
 export const headerScrollShadow = '0 6px 20px rgba(20,18,15,0.06)'

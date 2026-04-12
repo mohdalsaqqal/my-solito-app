@@ -1,10 +1,6 @@
 import { useMemo } from 'react'
-import { localizeString } from '@real/app/lib/cms/blocks'
-import type { LocalizedString } from '@real/app/lib/types'
-import { HomeBlocksRenderer } from '@real/app/features/home/HomeBlocksRenderer'
-import type { RegisteredHomePageBlock } from '@real/app/sections/blocks/block-types'
-import { useBreakpoint } from '@real/ui/responsive'
-import { colors, componentTokens, layout } from '@real/tokens'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
+import { componentTokens, layout } from '@real/tokens'
 import {
   AnnouncementTicker,
   BrandSpotlightPanel,
@@ -77,132 +73,7 @@ type HomeRailAutoplaySettings = {
   brandSpotlights?: RailAutoplaySetting
 }
 
-type PublishedHomeBlock = RegisteredHomePageBlock['props']
-
-function resolveBlockString(block: PublishedHomeBlock, value: string | LocalizedString | undefined, fallback = '') {
-  if (!value) return fallback
-  if (typeof value === 'string') return value
-  return localizeString(value, block.locale, fallback)
-}
-
-function resolvePairString(
-  locale: PublishedHomeBlock['locale'],
-  valueEn?: string,
-  valueAr?: string,
-  fallback = '',
-) {
-  if (locale === 'ar') return valueAr || valueEn || fallback
-  return valueEn || valueAr || fallback
-}
-
-function mapBrandItems(
-  items: Array<{
-    id: string
-    name: string
-    href?: string
-    logoUrl?: string
-  }>,
-) {
-  return items.map((item) => ({
-    id: item.id,
-    name: item.name,
-    href: item.href,
-    logoUrl: item.logoUrl,
-  }))
-}
-
-function mapCategoryItems(
-  block: PublishedHomeBlock,
-  items: Array<{
-    id: string
-    label: string | LocalizedString
-    href?: string
-    imageUrl?: string
-  }>,
-) {
-  return items.map((item) => ({
-    id: item.id,
-    label: resolveBlockString(block, item.label),
-    href: item.href,
-    imageUrl: item.imageUrl,
-  }))
-}
-
-function mapHeroItems(block: PublishedHomeBlock) {
-  if (block.type === 'hero_carousel') {
-    const cards = block.cardsLocalized ?? block.cards
-    return cards.map((card) => ({
-      id: card.id,
-      title: 'titleText' in card && card.titleText ? card.titleText : resolvePairString(block.locale, card.titleEn, card.titleAr),
-      subtitle:
-        'subtitleText' in card && card.subtitleText
-          ? card.subtitleText
-          : resolvePairString(block.locale, card.subtitleEn, card.subtitleAr),
-      ctaLabel:
-        'ctaText' in card && card.ctaText ? card.ctaText : resolvePairString(block.locale, card.ctaLabelEn, card.ctaLabelAr),
-      href: card.href,
-      imageUrl: card.imageUrl,
-      badgeLabel:
-        'badgeText' in card && card.badgeText ? card.badgeText : resolvePairString(block.locale, card.badgeLabelEn, card.badgeLabelAr),
-    }))
-  }
-
-  if (block.type === 'hero') {
-    return [{
-      id: block.id,
-      title: resolveBlockString(block, block.title),
-      subtitle: resolveBlockString(block, block.subtitle),
-      ctaLabel: resolveBlockString(block, block.ctaLabel),
-      href: block.href,
-      imageUrl: block.imageUrl,
-    }]
-  }
-
-  return []
-}
-
-function mapOfferBannerBlocks(
-  block: PublishedHomeBlock,
-  items: Array<
-    | {
-        id: string
-        title?: string | LocalizedString
-        subtitle?: string | LocalizedString
-        ctaLabel?: string | LocalizedString
-        ctaText?: string | LocalizedString
-        ctaLabelEn?: string
-        ctaLabelAr?: string
-        href?: string
-        imageUrl?: string
-      }
-    | {
-        id: string
-        badge?: string | LocalizedString
-        title: string | LocalizedString
-        subtitle?: string | LocalizedString
-        href?: string
-      }
-  >,
-): OfferBannerBlock[] {
-  return items.map((item) => ({
-    id: item.id,
-    title: 'title' in item ? resolveBlockString(block, item.title) : undefined,
-    subtitle: resolveBlockString(block, item.subtitle),
-    ctaLabel:
-      'ctaLabel' in item
-        ? resolveBlockString(block, item.ctaLabel)
-        : 'ctaText' in item
-          ? resolveBlockString(block, item.ctaText)
-          : 'ctaLabelEn' in item || 'ctaLabelAr' in item
-            ? resolvePairString(block.locale, item.ctaLabelEn, item.ctaLabelAr)
-            : undefined,
-    href: item.href,
-    imageUrl: 'imageUrl' in item ? item.imageUrl : undefined,
-  }))
-}
-
 type HomeV2SectionsProps = {
-  homeBlocks?: RegisteredHomePageBlock[] | null
   heroItems?: HomeHeroItem[]
   tickerItems?: TickerItem[]
   bestSellersRail?: ResolvedRail | null
@@ -254,7 +125,6 @@ type HomeV2SectionsProps = {
 }
 
 export function HomeV2Sections({
-  homeBlocks = null,
   heroItems = [],
   tickerItems = [],
   bestSellersRail = null,
@@ -289,15 +159,9 @@ export function HomeV2Sections({
   onAddAllToCart,
 }: HomeV2SectionsProps) {
   const profile = useBreakpoint()
+  const c = useThemeColors()
   const isDesktop = profile.breakpoint === 'desktop'
   const layoutTokens = componentTokens.storefrontHome.layout
-  const orderedHomeBlocks = useMemo(
-    () =>
-      homeBlocks && homeBlocks.length > 0
-        ? [...homeBlocks].sort((left, right) => left.position - right.position)
-        : null,
-    [homeBlocks],
-  )
 
   const flashOffersRail =
     trendingRail ??
@@ -339,30 +203,12 @@ export function HomeV2Sections({
     heroItems[0]?.imageUrl ??
     ugcItems[0]?.imageUrl
 
-  if (orderedHomeBlocks && orderedHomeBlocks.length > 0) {
-    return (
-      <HomeBlocksRenderer
-        blocks={orderedHomeBlocks}
-        loading={loading}
-        error={error}
-        tickerSpeedMs={tickerSpeedMs}
-        railAutoplay={railAutoplay}
-        locale={locale}
-        onReload={onReload}
-        onNavigate={onNavigate}
-        onSelectProduct={onSelectProduct}
-        onAddToCart={onAddToCart}
-        onAddAllToCart={onAddAllToCart}
-      />
-    )
-  }
-
   return (
     <Box
       style={{
         width: '100%',
         gap: layoutTokens.rootGap,
-        backgroundColor: colors.background,
+        backgroundColor: c.background,
       }}
     >
       {tickerItems.length > 0 ? (

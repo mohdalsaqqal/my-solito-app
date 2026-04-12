@@ -1,6 +1,8 @@
+import React from 'react'
 import { Image, Platform, useWindowDimensions } from 'react-native'
-import { borderWidth, colors, fontWeights, letterSpacing, radius, spacing, typography } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { colors, fontWeights, letterSpacing, radius, spacing, typography } from '@real/tokens'
+import { Box, Text } from '../../primitives'
+import { Button } from '../Button'
 
 type CampaignHeroBlockProps = {
   /** Campaign headline */
@@ -22,7 +24,7 @@ type CampaignHeroBlockProps = {
   disabled?: boolean
 }
 
-export function CampaignHeroBlock({
+export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
   headline,
   preHeadline,
   subline,
@@ -91,6 +93,8 @@ export function CampaignHeroBlock({
 
   return (
     <Box
+      role="region"
+      aria-label={badgeLabel || headline}
       style={{
         height: blockHeight,
         backgroundColor: colors.inkBlack,
@@ -147,7 +151,7 @@ export function CampaignHeroBlock({
           <Box
             style={{
               alignSelf: contentAlign === 'center' ? 'center' : 'flex-start',
-              backgroundColor: colors.goldPrimary,
+              backgroundColor: colors.coralPrimary,
               borderRadius: radius.full,
               paddingVertical: spacing['4'],
               paddingHorizontal: spacing['12'],
@@ -217,36 +221,24 @@ export function CampaignHeroBlock({
 
         {/* CTA button */}
         {ctaLabel && onPress ? (
-          <Touchable
-            onPress={disabled ? undefined : onPress}
-            accessibilityRole='button'
-            accessibilityLabel={ctaLabel}
-            accessibilityState={{ disabled }}
+          <Box
             style={{
               alignSelf: contentAlign === 'center' ? 'center' : 'flex-start',
-              backgroundColor: colors.brandPrimary,
-              borderRadius: radius.full,
-              paddingVertical: spacing['12'],
-              paddingHorizontal: spacing['24'],
               marginTop: spacing['8'],
-              borderWidth: borderWidth.thin,
-              borderColor: colors.brandPrimary,
             }}
           >
-            <Text
-              style={{
-                fontSize: typography.label,
-                fontWeight: fontWeights.semibold,
-                color: colors.textInverted,
-                letterSpacing: letterSpacing.caps,
-                textTransform: 'uppercase',
-              }}
+            <Button
+              onPress={disabled ? undefined : onPress}
+              disabled={disabled}
+              variant='primaryCommerce'
+              shape='pill'
+              size='md'
             >
               {ctaLabel}
-            </Text>
-          </Touchable>
+            </Button>
+          </Box>
         ) : null}
       </Box>
     </Box>
   )
-}
+})

@@ -1,7 +1,10 @@
-import { Image } from 'react-native'
-import { borderWidth, colors, motionDuration, radius, spacing } from '@real/tokens'
-import { Box, Text, Touchable } from '../primitives'
+import React from 'react'
+import { Image, Platform } from 'react-native'
+import { borderWidth, radius, spacing } from '@real/tokens'
+import { Box, Text } from '../primitives'
 import { Button } from './Button'
+import { useThemeColors } from '../responsive'
+import { Button as ReusableButton } from '../reusables/button'
 
 type CampaignCardProps = {
   title: string
@@ -17,7 +20,7 @@ type CampaignCardProps = {
 
 const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
 
-export function CampaignCard({
+export const CampaignCard = React.memo(function CampaignCard({
   title,
   subtitle,
   ctaLabel,
@@ -28,51 +31,46 @@ export function CampaignCard({
   titleVariant = 'title',
   compact = false,
 }: CampaignCardProps) {
+  const c = useThemeColors()
   return (
-    <Touchable
+    <ReusableButton
       onPress={href ? () => onPress?.(href) : undefined}
+      disabled={!href}
+      variant='ghost'
+      size='default'
       style={{
         borderWidth: borderWidth.thin,
-        borderColor: colors.border,
+        borderColor: c.border,
         borderRadius: radius.md,
         overflow: 'hidden',
-        backgroundColor: colors.surface,
+        backgroundColor: c.surface,
         flex: 1,
       }}
     >
-      {({ hovered, focused }) => {
-        const active = hovered || focused
-        return (
-          <>
-            <Image
-              source={{ uri: imageUrl || FALLBACK_IMAGE }}
-              style={{
-                width: '100%',
-                aspectRatio,
-                backgroundColor: colors.backgroundSecondary,
-                transform: active ? [{ scale: 1.01 }] : [{ scale: 1 }],
-                transitionProperty: 'transform',
-                transitionDuration: `${motionDuration.hoverScale}ms`,
-              } as any}
-            />
-            <Box p='md' gap='sm' style={{ backgroundColor: colors.surface }}>
-              <Text variant={titleVariant} weight='700'>
-                {title}
-              </Text>
-              {subtitle ? (
-                <Text tone='muted' variant='bodySm' numberOfLines={compact ? 2 : undefined}>
-                  {subtitle}
-                </Text>
-              ) : null}
-              {ctaLabel ? (
-                <Box style={{ marginTop: spacing.xs, alignSelf: 'flex-start' }}>
-                  <Button size='sm'>{ctaLabel}</Button>
-                </Box>
-              ) : null}
-            </Box>
-          </>
-        )
-      }}
-    </Touchable>
+      <Image
+        source={{ uri: imageUrl || FALLBACK_IMAGE }}
+        style={{
+          width: '100%',
+          aspectRatio,
+          backgroundColor: c.backgroundSecondary,
+        } as any}
+        {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
+      />
+      <Box p='md' gap='sm' style={{ backgroundColor: c.surface }}>
+        <Text variant={titleVariant} weight='700'>
+          {title}
+        </Text>
+        {subtitle ? (
+          <Text tone='muted' variant='bodySm' numberOfLines={compact ? 2 : undefined}>
+            {subtitle}
+          </Text>
+        ) : null}
+        {ctaLabel ? (
+          <Box style={{ marginTop: spacing.xs, alignSelf: 'flex-start' }}>
+            <Button size='sm'>{ctaLabel}</Button>
+          </Box>
+        ) : null}
+      </Box>
+    </ReusableButton>
   )
-}
+})

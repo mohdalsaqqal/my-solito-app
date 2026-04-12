@@ -22,6 +22,11 @@ type CreatePayload = {
   query?: HomeBrandSpotlightConfig['query']
 }
 
+function normalizeBrandNames(input?: string[]) {
+  const selected = input?.map((item) => item.trim()).find(Boolean)
+  return selected ? [selected] : []
+}
+
 function normalizeLocalized(
   input: { en?: string; ar?: string } | undefined,
   fallbackEn = '',
@@ -79,10 +84,18 @@ export async function POST(request: Request) {
     const payload = ((await request.json().catch(() => ({}))) ?? {}) as CreatePayload
     const title = normalizeLocalized(payload.bannerTitle)
     const railTitle = normalizeLocalized(payload.railTitle)
+    const brandNames = normalizeBrandNames(payload.query?.brandNames)
     if (!title.en || !title.ar || !railTitle.en || !railTitle.ar) {
       return fail(
         'ADMIN_BRAND_SPOTLIGHT_INVALID',
         'bannerTitle and railTitle are required in both EN and AR.',
+        400
+      )
+    }
+    if (brandNames.length === 0) {
+      return fail(
+        'ADMIN_BRAND_SPOTLIGHT_BRAND_REQUIRED',
+        'A single selected brand is required for each brand spotlight.',
         400
       )
     }
@@ -111,10 +124,12 @@ export async function POST(request: Request) {
       bannerHref: payload.bannerHref?.trim() || '/shop',
       bannerImageUrl: payload.bannerImageUrl?.trim() || undefined,
       railTitle,
-      query: payload.query ?? {
-        source: 'best_sellers',
-        limit: 8,
-        sortBy: 'price_desc',
+      query: {
+        source: payload.query?.source ?? 'best_sellers',
+        limit: payload.query?.limit ?? 8,
+        sortBy: payload.query?.sortBy ?? 'price_desc',
+        productIds: payload.query?.productIds,
+        brandNames,
       },
     }
     list.push(created)

@@ -1,6 +1,7 @@
-import { accountProvider } from '@real/providers'
 import { fail, ok } from '../../../_lib/response'
 import { requireAuthSession } from '../../../_lib/request-auth'
+import { ServiceError } from '../../../../../server/services/_lib/service-error'
+import { deleteAccountAddress, updateAccountAddress } from '../../../../../server/services/account/account-addresses.service'
 
 export async function PATCH(
   request: Request,
@@ -13,21 +14,15 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const body = (await request.json().catch(() => ({}))) as {
-      label?: string
-      city?: string
-      area?: string
-      building?: string
-      floor?: string
-      apartment?: string
-    }
-
-    const result = await accountProvider.updateAddress(session.userId, id, body)
-    if (!result.ok) {
-      return fail(result.error.code, result.error.message, 400)
-    }
-    return ok(result.data)
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
+    return ok(await updateAccountAddress(session.userId, id, body))
   } catch (cause) {
+    if (cause instanceof ServiceError) {
+      return fail(cause.code, cause.message, cause.status, {
+        scope: 'PATCH /api/account/addresses/[id]',
+        cause: cause.cause ?? cause,
+      })
+    }
     return fail('ACCOUNT_ADDRESS_UPDATE_UNEXPECTED', 'Unexpected error while updating address.', 500, {
       scope: 'PATCH /api/account/addresses/[id]',
       cause,
@@ -46,16 +41,17 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const result = await accountProvider.deleteAddress(session.userId, id)
-    if (!result.ok) {
-      return fail(result.error.code, result.error.message, 400)
-    }
-    return ok(result.data)
+    return ok(await deleteAccountAddress(session.userId, id))
   } catch (cause) {
+    if (cause instanceof ServiceError) {
+      return fail(cause.code, cause.message, cause.status, {
+        scope: 'DELETE /api/account/addresses/[id]',
+        cause: cause.cause ?? cause,
+      })
+    }
     return fail('ACCOUNT_ADDRESS_DELETE_UNEXPECTED', 'Unexpected error while deleting address.', 500, {
       scope: 'DELETE /api/account/addresses/[id]',
       cause,
     })
   }
 }
-

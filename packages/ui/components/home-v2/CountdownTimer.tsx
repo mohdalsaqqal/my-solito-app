@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { colors, fontWeights, letterSpacing, radius, spacing, typography } from '@real/tokens'
-import { MotiView } from 'moti'
 import { Box, Text } from '../../primitives'
 
 type CountdownTimerProps = {
@@ -21,27 +20,22 @@ function getRemaining(targetMs: number) {
   return { h, m, s, expired: diff === 0 }
 }
 
-function DigitPair({ value, label }: { value: string; label: string }) {
+const DigitPair = React.memo(function DigitPair({ value, label }: { value: string; label: string }) {
   return (
     <Box style={{ alignItems: 'center', gap: spacing['1'] }}>
-      <MotiView
-        key={value}
-        from={{ opacity: 0, translateY: -4 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ type: 'timing', duration: 200 }}
-      >
+      <Box key={value}>
         <Text
           style={{
             fontSize: typography.headline,
             fontWeight: fontWeights.black,
-            color: colors.goldPrimary,
+            color: colors.coralPrimary,
             lineHeight: typography.headline * 1.1,
             letterSpacing: letterSpacing.campaignHeading,
           }}
         >
           {value}
         </Text>
-      </MotiView>
+      </Box>
       <Text
         style={{
           fontSize: typography.caption,
@@ -55,9 +49,9 @@ function DigitPair({ value, label }: { value: string; label: string }) {
       </Text>
     </Box>
   )
-}
+})
 
-function Separator() {
+const Separator = React.memo(function Separator() {
   return (
     <Text
       style={{
@@ -72,27 +66,34 @@ function Separator() {
       :
     </Text>
   )
-}
+})
 
-export function CountdownTimer({ targetIso, loading = false }: CountdownTimerProps) {
+export const CountdownTimer = React.memo(function CountdownTimer({ targetIso, loading = false }: CountdownTimerProps) {
   const targetMs = useRef(new Date(targetIso).getTime())
   const [time, setTime] = useState(() => getRemaining(targetMs.current))
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const expiredRef = useRef(false)
 
   useEffect(() => {
     targetMs.current = new Date(targetIso).getTime()
     setTime(getRemaining(targetMs.current))
+    expiredRef.current = false
   }, [targetIso])
 
   useEffect(() => {
-    if (time.expired) return
+    if (expiredRef.current) return
     intervalRef.current = setInterval(() => {
-      setTime(getRemaining(targetMs.current))
+      const next = getRemaining(targetMs.current)
+      setTime(next)
+      if (next.expired) {
+        expiredRef.current = true
+        if (intervalRef.current) clearInterval(intervalRef.current)
+      }
     }, 1000)
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [time.expired])
+  }, [])
 
   if (loading) {
     return (
@@ -127,4 +128,4 @@ export function CountdownTimer({ targetIso, loading = false }: CountdownTimerPro
       <DigitPair value={pad(time.s)} label='sec' />
     </Box>
   )
-}
+})

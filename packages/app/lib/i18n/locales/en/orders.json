@@ -1,8 +1,25 @@
 {
+  "title": "Orders",
+  "subtitle": "Track your recent purchases and fulfillment status.",
+  "error": {
+    "loadFailed": "Unable to load orders."
+  },
+  "empty": {
+    "message": "No orders yet."
+  },
   "actions": {
     "save": "Save",
     "cancel": "Cancel",
-    "apply": "Apply"
+    "apply": "Apply",
+    "browseShop": "Browse Shop",
+    "retry": "Retry",
+    "viewOrder": "View order"
+  },
+  "order": {
+    "orderId": "Order ID: {{id}}",
+    "date": "Date: {{date}}",
+    "status": "Status: {{status}}",
+    "total": "Total: {{currency}} {{amount}}"
   },
   "state": {
     "loading": "Loading...",

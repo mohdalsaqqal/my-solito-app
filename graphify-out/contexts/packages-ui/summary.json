@@ -1,0 +1,75 @@
+{
+  "slug": "packages-ui",
+  "label": "packages/ui",
+  "path": "packages/ui",
+  "use_when": "shared UI components, reusables, responsive helpers, design-system implementation",
+  "notes": "UI graph for the active shared UI contract and reusable primitives.",
+  "total_files": 170,
+  "total_words": 56215,
+  "code_files": 169,
+  "document_files": 1,
+  "paper_files": 0,
+  "image_files": 0,
+  "skipped_sensitive": 1,
+  "nodes": 302,
+  "edges": 447,
+  "communities": 48,
+  "god_nodes": [
+    {
+      "id": "sephorareferencehome_mixrgb",
+      "label": "mixRgb()",
+      "edges": 5
+    },
+    {
+      "id": "profiles_buildlayoutprofile",
+      "label": "buildLayoutProfile()",
+      "edges": 3
+    },
+    {
+      "id": "rn_slot_clonechild",
+      "label": "cloneChild()",
+      "edges": 3
+    },
+    {
+      "id": "sephorareferencehome_rgbwithalpha",
+      "label": "rgbWithAlpha()",
+      "edges": 3
+    },
+    {
+      "id": "sephorareferencehome_buildofferbannergradientfromrgb",
+      "label": "buildOfferBannerGradientFromRgb()",
+      "edges": 3
+    }
+  ],
+  "suggested_questions": [
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.05 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 2` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 3` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.1 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 5` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14 - nodes in this community are weakly interconnected."
+    }
+  ],
+  "report_path": "graphify-out/contexts/packages-ui/GRAPH_REPORT.md",
+  "graph_path": "graphify-out/contexts/packages-ui/graph.json",
+  "html_path": "graphify-out/contexts/packages-ui/graph.html",
+  "wiki_index_path": "graphify-out/contexts/packages-ui/wiki/index.md"
+}

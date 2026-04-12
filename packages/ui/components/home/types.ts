@@ -6,6 +6,7 @@ export type HomeHeroItem = {
   href?: string
   imageUrl?: string
   badgeLabel?: string
+  panelColor?: string
 }
 
 export type HomeCategoryItem = {
@@ -24,6 +25,7 @@ export type HomeProductItem = {
   currency?: string
   compareAtPrice?: number
   imageUrl?: string
+  imageAlt?: string
   hoverImageUrl?: string
   href?: string
   badge?: string

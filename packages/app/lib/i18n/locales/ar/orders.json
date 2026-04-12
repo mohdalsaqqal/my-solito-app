@@ -1,8 +1,25 @@
 {
+  "title": "الطلبات",
+  "subtitle": "تتبع طلباتك الأخيرة وحالة التنفيذ.",
+  "error": {
+    "loadFailed": "تعذر تحميل الطلبات."
+  },
+  "empty": {
+    "message": "لا توجد طلبات بعد."
+  },
   "actions": {
     "save": "حفظ",
     "cancel": "إلغاء",
-    "apply": "تطبيق"
+    "apply": "تطبيق",
+    "browseShop": "تسوّق الآن",
+    "retry": "أعد المحاولة",
+    "viewOrder": "عرض الطلب"
+  },
+  "order": {
+    "orderId": "رقم الطلب: {{id}}",
+    "date": "التاريخ: {{date}}",
+    "status": "الحالة: {{status}}",
+    "total": "المجموع: {{currency}} {{amount}}"
   },
   "state": {
     "loading": "جار التحميل...",

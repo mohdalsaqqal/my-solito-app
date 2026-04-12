@@ -1,17 +1,22 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Animated, Easing, Platform } from 'react-native'
 import { borderWidth, colors, spacing, zIndex } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { Box, Text } from '../../primitives'
+import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
+import { Button as ReusableButton } from '../../reusables/button'
 
 export type AnnouncementTickerItem = {
   id: string
   label: string
   href?: string
+  badgeLabel?: string
+  ctaLabel?: string
 }
 
 type AnnouncementTickerProps = {
   items: AnnouncementTickerItem[]
   speedMs?: number
+  variant?: 'utility' | 'campaign'
   onPressItem?: (href?: string) => void
 }
 
@@ -41,11 +46,16 @@ function TickerSequence({
             paddingVertical: spacing.sm,
           }}
         >
-          <Touchable onPress={item.href ? () => onPressItem?.(item.href) : undefined}>
+          <ReusableButton
+            onPress={item.href ? () => onPressItem?.(item.href) : undefined}
+            variant='link'
+            size='sm'
+            style={{ paddingHorizontal: 0, minHeight: spacing['24'] }}
+          >
             <Text variant='nav' tone={item.href ? 'primary' : 'muted'} weight={item.href ? '600' : '500'}>
               {item.label}
             </Text>
-          </Touchable>
+          </ReusableButton>
           {index < items.length - 1 ? (
             <Text
               variant='nav'
@@ -64,7 +74,7 @@ function TickerSequence({
   )
 }
 
-export function AnnouncementTicker({
+export const AnnouncementTicker = React.memo(function AnnouncementTicker({
   items,
   speedMs = 22000,
   onPressItem,
@@ -73,11 +83,12 @@ export function AnnouncementTicker({
   const [paused, setPaused] = useState(false)
   const translateX = useRef(new Animated.Value(0)).current
   const isWeb = Platform.OS === 'web'
+  const prefersReducedMotion = usePrefersReducedMotion()
 
   const validItems = useMemo(() => items.filter((item) => item.label.trim().length > 0), [items])
 
   useEffect(() => {
-    if (validItems.length === 0 || trackWidth <= 0 || paused) {
+    if (validItems.length === 0 || trackWidth <= 0 || paused || prefersReducedMotion) {
       return
     }
 
@@ -93,14 +104,60 @@ export function AnnouncementTicker({
 
     loop.start()
     return () => loop.stop()
-  }, [paused, speedMs, trackWidth, translateX, validItems.length])
+  }, [paused, speedMs, trackWidth, translateX, validItems.length, prefersReducedMotion])
 
   if (validItems.length === 0) {
     return null
   }
 
+  if (prefersReducedMotion) {
+    return (
+      <Box
+        role='marquee'
+        aria-label='Announcements'
+        aria-live='off'
+        aria-atomic='false'
+        style={{
+          borderTopWidth: borderWidth.thin,
+          borderBottomWidth: borderWidth.thin,
+          borderColor: colors.border,
+          backgroundColor: colors.background,
+          zIndex: zIndex.base,
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          paddingVertical: spacing.sm,
+        }}
+      >
+        {validItems.map((item, index) => (
+          <React.Fragment key={item.id}>
+            <ReusableButton
+              onPress={item.href ? () => onPressItem?.(item.href) : undefined}
+              variant='link'
+              size='sm'
+              style={{ paddingHorizontal: 0, minHeight: spacing['24'] }}
+            >
+              <Text variant='nav' tone={item.href ? 'primary' : 'muted'} weight={item.href ? '600' : '500'}>
+                {item.label}
+              </Text>
+            </ReusableButton>
+            {index < validItems.length - 1 ? (
+              <Text variant='nav' tone='muted' style={{ marginHorizontal: spacing.sm }}>
+                {'|'}
+              </Text>
+            ) : null}
+          </React.Fragment>
+        ))}
+      </Box>
+    )
+  }
+
   return (
     <Box
+      role='marquee'
+      aria-label='Announcements'
+      aria-live='off'
+      aria-atomic='false'
       style={{
         borderTopWidth: borderWidth.thin,
         borderBottomWidth: borderWidth.thin,
@@ -111,6 +168,8 @@ export function AnnouncementTicker({
       }}
       onPointerEnter={isWeb ? () => setPaused(true) : undefined}
       onPointerLeave={isWeb ? () => setPaused(false) : undefined}
+      onFocus={isWeb ? () => setPaused(true) : undefined}
+      onBlur={isWeb ? () => setPaused(false) : undefined}
     >
       <Animated.View
         style={{
@@ -124,4 +183,4 @@ export function AnnouncementTicker({
       </Animated.View>
     </Box>
   )
-}
+})

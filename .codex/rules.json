@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "agentsVersion": "v1.4",
+  "sourceOfTruth": "AGENTS.md",
+  "categories": {
+    "architecture": {
+      "domain": "🏗 Architecture / Core Logic",
+      "skills": ["brainstorming", "writing-plans", "verification-before-completion"],
+      "keywords": ["architecture", "refactor", "provider", "adapter", "registry", "bff", "contract", "module", "slot"],
+      "defaultModel": "gpt-5-codex",
+      "promptTemplate": "prompts/architect.md",
+      "planningRequired": true,
+      "guardRequired": true,
+      "defaultScope": ["packages/app", "packages/providers", "packages/adapters", "apps/next/app/api"]
+    },
+    "ui": {
+      "domain": "🎨 UI / UX / Frontend",
+      "skills": ["brainstorming", "frontend-design", "ui-ux-pro-max", "ui-visual-validator", "web-design-guidelines", "verification-before-completion"],
+      "keywords": ["ui", "ux", "design", "layout", "component", "card", "header", "footer", "checkout ui", "responsive", "rtl", "animation"],
+      "defaultModel": "gpt-5-codex",
+      "promptTemplate": "prompts/builder.md",
+      "planningRequired": true,
+      "guardRequired": true,
+      "defaultScope": ["packages/ui", "packages/app/screens", "apps/next/app"]
+    },
+    "expo": {
+      "domain": "📱 Expo / Native",
+      "skills": ["brainstorming", "building-native-ui", "native-data-fetching", "expo-api-routes", "expo-deployment", "verification-before-completion"],
+      "keywords": ["expo", "native", "ios", "android", "react native", "asyncstorage", "i18nmanager"],
+      "defaultModel": "gpt-5-codex",
+      "promptTemplate": "prompts/builder.md",
+      "planningRequired": true,
+      "guardRequired": true,
+      "defaultScope": ["apps/expo", "packages/app", "packages/ui"]
+    },
+    "debugging": {
+      "domain": "🐛 Debugging / Failure",
+      "skills": ["systematic-debugging", "verification-before-completion"],
+      "keywords": ["bug", "error", "fail", "broken", "not working", "regression", "trace", "exception", "crash"],
+      "defaultModel": "gpt-5-codex",
+      "promptTemplate": "prompts/fix.md",
+      "planningRequired": false,
+      "guardRequired": true,
+      "defaultScope": ["apps/next", "apps/expo", "packages/app", "packages/ui"]
+    },
+    "pricing": {
+      "domain": "💰 Pricing / Payments",
+      "skills": ["brainstorming", "writing-plans", "stripe-best-practices", "verification-before-completion"],
+      "keywords": ["pricing", "payment", "checkout", "quote", "promotion", "discount", "cart total", "stripe"],
+      "defaultModel": "gpt-5-codex",
+      "promptTemplate": "prompts/architect.md",
+      "planningRequired": true,
+      "guardRequired": true,
+      "defaultScope": ["packages/app/lib/pricing", "apps/next/app/api/checkout", "apps/next/app/api/orders", "packages/providers/contracts"]
+    },
+    "workflow": {
+      "domain": "🚀 Workflow / Scaling",
+      "skills": ["writing-plans", "executing-plans", "dispatching-parallel-agents", "subagent-driven-development", "using-git-worktrees", "verification-before-completion"],
+      "keywords": ["workflow", "codex", "agents", "automation", "scripts", "process", "plan", "qa flow", "ci", "guard"],
+      "defaultModel": "gpt-5-codex",
+      "promptTemplate": "prompts/reviewer.md",
+      "planningRequired": true,
+      "guardRequired": true,
+      "defaultScope": [".codex", "docs", "scripts", "AGENTS.md"]
+    }
+  },
+  "modePromptMap": {
+    "architect": "prompts/architect.md",
+    "builder": "prompts/builder.md",
+    "reviewer": "prompts/reviewer.md",
+    "fix": "prompts/fix.md",
+    "guard-fail": "prompts/guard-fail.md"
+  },
+  "pauseTriggers": [
+    {
+      "id": "new_top_level_folder",
+      "description": "New top-level folder requested",
+      "keywords": ["new top-level folder", "create top level folder", "new root folder"]
+    },
+    {
+      "id": "provider_interface_change",
+      "description": "Provider interface/contract changes requested",
+      "keywords": ["change provider interface", "modify provider contract", "new provider method", "breaking provider"]
+    },
+    {
+      "id": "runtime_plugin_system",
+      "description": "Runtime plugin engine/system requested",
+      "keywords": ["runtime plugin", "dynamic plugin", "plugin engine", "auto-discover plugins"]
+    },
+    {
+      "id": "new_external_integration",
+      "description": "New external integration requested",
+      "keywords": ["integrate with", "new integration", "connect to external api", "new erp", "new payment gateway"]
+    },
+    {
+      "id": "introduce_web_override",
+      "description": "Introducing .web.tsx requested",
+      "keywords": [".web.tsx", "create web override", "platform-specific web file"]
+    },
+    {
+      "id": "dependency_direction_change",
+      "description": "Dependency direction changes requested",
+      "keywords": ["change dependency direction", "ui import adapters", "bypass bff", "direct adapter import"]
+    }
+  ],
+  "scopeHints": [
+    { "keywords": ["admin", "cms", "operations"], "folders": ["apps/next/app/admin", "apps/next/app/api/admin"] },
+    { "keywords": ["checkout", "cart", "order"], "folders": ["packages/app/screens", "apps/next/app/api/checkout", "apps/next/app/api/orders"] },
+    { "keywords": ["product", "shop", "catalog", "plp", "pdp"], "folders": ["packages/app/screens", "packages/ui/components", "apps/next/app/api/products"] },
+    { "keywords": ["rtl", "locale", "i18n", "translation"], "folders": ["packages/app/lib/i18n", "apps/next/app/_lib", "apps/expo/app"] }
+  ]
+}

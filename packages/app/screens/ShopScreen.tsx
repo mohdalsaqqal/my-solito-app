@@ -1,18 +1,21 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Platform, useWindowDimensions } from 'react-native'
-import { breakpoints, layout, spacing } from '@real/tokens'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Platform } from 'react-native'
+import { layout, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Text } from '@real/ui/primitives'
-import { Button, ProductCard, ShopCatalogView, ShopPriceBucket, ShopQueryState, ShopSortKey } from '@real/ui/components'
+import { Button, ProductCard, ProductCardSkeleton, ShopCatalogView, ShopPriceBucket, ShopQueryState, ShopSortKey } from '@real/ui/components'
 import { Product } from '@real/app/lib/types'
 import { applyProductFilter } from '@real/app/lib/product-filter'
 import { passThroughPricingService } from '@real/app/lib/pricing'
+import { useBreakpoint } from '@real/ui/responsive'
 
 type ShopScreenProps = {
   products: Product[]
   loading: boolean
   error: string | null
   disabled?: boolean
+  initialCategoryFilters?: string[]
+  initialBrandFilters?: string[]
   bannerTitle?: string
   bannerSubtitle?: string
   bannerBadge?: string
@@ -169,11 +172,13 @@ function toggleItem(items: string[], value: string) {
   return [...items, value]
 }
 
-export function ShopScreen({
+export const ShopScreen = React.memo(function ShopScreen({
   products,
   loading,
   error,
   disabled = false,
+  initialCategoryFilters,
+  initialBrandFilters,
   bannerTitle = 'Flash offers and best sellers',
   bannerSubtitle = 'Discover active deals, trending picks, and high-conversion routines.',
   bannerBadge,
@@ -187,8 +192,8 @@ export function ShopScreen({
   lowStockThreshold,
   lowStockLabel,
 }: ShopScreenProps) {
-  const { width } = useWindowDimensions()
-  const isDesktop = width >= breakpoints.desktopMin
+  const profile = useBreakpoint()
+  const isDesktop = profile.breakpoint === 'desktop'
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [queryState, setQueryState] = useState<ShopQueryState>(DEFAULT_QUERY)
 
@@ -209,6 +214,50 @@ export function ShopScreen({
   useEffect(() => {
     writeQueryState(queryState)
   }, [queryState])
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      return
+    }
+
+    const nextCategories = (initialCategoryFilters ?? []).filter(Boolean)
+    const currentCategories = queryState.categories
+
+    if (
+      nextCategories.length === currentCategories.length &&
+      nextCategories.every((value, index) => value === currentCategories[index])
+    ) {
+      return
+    }
+
+    setQueryState((current) => ({
+      ...current,
+      page: 1,
+      categories: nextCategories,
+    }))
+  }, [initialCategoryFilters, queryState.categories])
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      return
+    }
+
+    const nextBrands = (initialBrandFilters ?? []).filter(Boolean)
+    const currentBrands = queryState.brands
+
+    if (
+      nextBrands.length === currentBrands.length &&
+      nextBrands.every((value, index) => value === currentBrands[index])
+    ) {
+      return
+    }
+
+    setQueryState((current) => ({
+      ...current,
+      page: 1,
+      brands: nextBrands,
+    }))
+  }, [initialBrandFilters, queryState.brands])
 
   const availableBrands = useMemo(
     () =>
@@ -245,7 +294,7 @@ export function ShopScreen({
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
   const safePage = Math.min(queryState.page, totalPages)
   const currentPageProducts = filteredProducts.slice((safePage - 1) * pageSize, safePage * pageSize)
-  const containerWidth = Math.max(Math.min(width - layout.gutterX.md * 2, layout.maxWidth.commerce), spacing.xxl * 4)
+  const containerWidth = Math.max(Math.min(profile.containerWidth - layout.gutterX.md * 2, layout.maxWidth.commerce), spacing.xxl * 4)
   const productGridGap = spacing['16']
   const desktopFilterWidth = spacing.xxl * 5
   const desktopPanelGap = spacing['24']
@@ -286,7 +335,7 @@ export function ShopScreen({
               <Text variant='title' tone='muted'>{copy?.loadingLabel ?? 'Loading shop...'}</Text>
               <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['16'] }}>
                 {Array.from({ length: isDesktop ? 8 : 4 }, (_, idx) => (
-                  <ProductCard key={`shop-loading-${idx}`} state='loading' width={cardWidth} />
+                  <ProductCardSkeleton key={`shop-loading-${idx}`} width={cardWidth} />
                 ))}
               </Box>
             </Box>
@@ -377,4 +426,4 @@ export function ShopScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

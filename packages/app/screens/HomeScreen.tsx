@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { resolveMarketingCampaign } from '@real/app/lib/campaigns'
 import { HomeV2Sections } from '@real/app/sections/home/HomeV2Sections'
 import { HomeBlocksRenderer } from '@real/app/features/home/HomeBlocksRenderer'
@@ -208,16 +208,22 @@ function HomeBlocksScreen({
  * Public entry point. Routes to the engine path when published blocks exist,
  * falls back to the legacy computation path otherwise.
  */
-export function HomeScreen(props: HomeScreenProps) {
+export const HomeScreen = React.memo(function HomeScreen(props: HomeScreenProps) {
   const publishedHomeBlocks = props.cmsHome?.page?.blocks ?? null
   const hasPublishedHomeBlocks = (publishedHomeBlocks?.length ?? 0) > 0
 
   if (hasPublishedHomeBlocks) {
-    return <HomeBlocksScreen {...props} />
+    const {
+      products: _products,
+      brands: _brands,
+      categories: _categories,
+      ...publishedPathProps
+    } = props
+    return <HomeBlocksScreen {...publishedPathProps} />
   }
 
   return <HomeLegacyScreen {...props} />
-}
+})
 
 function HomeLegacyScreen({
   cmsHome,
@@ -808,7 +814,7 @@ function HomeLegacyScreen({
       .map((category) => ({
         id: category.id,
         label: localize(locale, category.name, category.slug),
-        href: `/shop/categories/${category.slug}`,
+        href: `/shop?categories=${encodeURIComponent(category.slug)}`,
         itemCount: productCounts[category.slug.toLowerCase()] ?? 0,
         imageUrl: category.image || categoryImages[category.slug.toLowerCase()],
       }))
@@ -822,7 +828,7 @@ function HomeLegacyScreen({
       .map((category) => ({
         id: `fallback-${category}`,
         label: category!.charAt(0).toUpperCase() + category!.slice(1),
-        href: `/shop/categories/${category}`,
+        href: `/shop?categories=${encodeURIComponent(category!)}`,
         itemCount: productCounts[category!.toLowerCase()] ?? 0,
         imageUrl: categoryImages[category!.toLowerCase()],
       }))

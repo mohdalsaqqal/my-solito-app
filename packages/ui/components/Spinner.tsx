@@ -1,5 +1,7 @@
+import React from 'react'
 import { ActivityIndicator, View, ViewStyle } from 'react-native'
 import { colors, spacing } from '@real/tokens'
+import { useThemeColors } from '../responsive'
 
 type SpinnerTone = 'primary' | 'inverse' | 'muted'
 type SpinnerSize = 'sm' | 'md' | 'lg'
@@ -8,12 +10,6 @@ type SpinnerProps = {
   tone?: SpinnerTone
   size?: SpinnerSize
   style?: ViewStyle
-}
-
-const spinnerColor: Record<SpinnerTone, string> = {
-  primary: colors.brandPrimary,
-  inverse: colors.white,
-  muted:   colors.textMuted,
 }
 
 // Map to native ActivityIndicator sizes
@@ -25,12 +21,16 @@ const nativeSize: Record<SpinnerSize, 'small' | 'large'> = {
 
 // Constrain the container so sm/md are visually distinct
 const containerSize: Record<SpinnerSize, number> = {
-  sm: spacing['24'],  // 24px container
-  md: spacing['32'],  // 32px container
-  lg: spacing['48'],  // 48px container
+  sm: spacing['24'],
+  md: spacing['32'],
+  lg: spacing['48'],
 }
 
-export function Spinner({ tone = 'primary', size = 'md', style }: SpinnerProps) {
+export const Spinner = React.memo(function Spinner({ tone = 'primary', size = 'md', style }: SpinnerProps) {
+  const c = useThemeColors()
+  const resolvedColor =
+    tone === 'primary' ? c.brandPrimary : tone === 'inverse' ? c.white : c.textMuted
+
   return (
     <View
       style={[
@@ -45,7 +45,7 @@ export function Spinner({ tone = 'primary', size = 'md', style }: SpinnerProps) 
       accessibilityRole="progressbar"
       accessibilityLabel="Loading"
     >
-      <ActivityIndicator color={spinnerColor[tone]} size={nativeSize[size]} />
+      <ActivityIndicator color={resolvedColor} size={nativeSize[size]} />
     </View>
   )
-}
+})

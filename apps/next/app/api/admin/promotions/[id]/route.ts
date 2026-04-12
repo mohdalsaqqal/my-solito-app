@@ -16,8 +16,59 @@ type PatchPayload = {
 }
 
 function validateDateWindow(startAt?: string, endAt?: string) {
+  if (startAt && !Number.isFinite(new Date(startAt).getTime())) return false
+  if (endAt && !Number.isFinite(new Date(endAt).getTime())) return false
   if (!startAt || !endAt) return true
   return new Date(startAt).getTime() < new Date(endAt).getTime()
+}
+
+function validatePatchPayload(body: PatchPayload) {
+  if (!validateDateWindow(body.startAt, body.endAt)) {
+    return 'startAt and endAt must be valid ISO values with startAt before endAt.'
+  }
+
+  if (body.conditions) {
+    if (body.conditions.length === 0) return 'At least one condition is required.'
+    for (const condition of body.conditions) {
+      if (condition.type === 'min_cart_total') {
+        if (!Number.isFinite(condition.amount) || condition.amount <= 0) {
+          return 'min_cart_total amount must be > 0.'
+        }
+        continue
+      }
+      if (condition.type === 'brand_in') {
+        if (!Array.isArray(condition.brands) || condition.brands.length === 0) {
+          return 'brand_in must include at least one brand.'
+        }
+        continue
+      }
+      if (condition.type === 'coupon_required') {
+        const conditionCode = condition.code?.trim()
+        const promotionCode = body.code?.trim()
+        if (!conditionCode && !promotionCode) {
+          return 'coupon_required conditions require a coupon code on condition or promotion.'
+        }
+      }
+    }
+  }
+
+  if (body.rewards) {
+    if (body.rewards.length !== 1) return 'Exactly one reward is allowed.'
+    const reward = body.rewards[0]
+    if (reward.type === 'fixed_amount_off') {
+      if (!Number.isFinite(reward.value) || reward.value <= 0) {
+        return 'fixed_amount_off value must be > 0.'
+      }
+    } else if (reward.type === 'percent_off') {
+      if (!Number.isFinite(reward.value) || reward.value <= 0 || reward.value > 100) {
+        return 'percent_off value must be > 0 and <= 100.'
+      }
+    } else if (reward.type === 'free_shipping' && reward.value !== true) {
+      return 'free_shipping value must be true.'
+    }
+  }
+
+  return null
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -27,14 +78,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as PatchPayload
-    if (!validateDateWindow(body.startAt, body.endAt)) {
-      return fail('ADMIN_PROMOTION_DATE_INVALID', 'startAt must be before endAt.', 400)
-    }
-    if (body.conditions && body.conditions.length === 0) {
-      return fail('ADMIN_PROMOTION_CONDITIONS_INVALID', 'At least one condition is required.', 400)
-    }
-    if (body.rewards && body.rewards.length === 0) {
-      return fail('ADMIN_PROMOTION_REWARDS_INVALID', 'At least one reward is required.', 400)
+    const validationError = validatePatchPayload(body)
+    if (validationError) {
+      return fail('ADMIN_PROMOTION_INVALID', validationError, 400)
     }
 
     const updated = await promotionProvider.update(id, {
@@ -102,4 +148,3 @@ export async function DELETE(request: Request, context: { params: Promise<{ id: 
     })
   }
 }
-

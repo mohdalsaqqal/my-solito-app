@@ -16,11 +16,32 @@ function applySearch(rows: ProductRow[], search?: string) {
   if (!search) return rows
   const needle = search.trim().toLowerCase()
   if (!needle) return rows
-  return rows.filter((row) =>
-    `${row.title} ${row.brand ?? ''} ${row.category ?? ''} ${row.sku ?? ''} ${row.vendor ?? ''}`
-      .toLowerCase()
-      .includes(needle)
-  )
+
+  const scoreRow = (row: ProductRow) => {
+    const title = row.title.toLowerCase()
+    const brand = (row.brand ?? '').toLowerCase()
+    const sku = (row.sku ?? '').toLowerCase()
+    const id = row.id.toLowerCase()
+
+    if (title === needle) return 120
+    if (brand === needle) return 110
+    if (sku === needle || id === needle) return 100
+    if (title.startsWith(needle)) return 95
+    if (brand.startsWith(needle)) return 80
+    if (sku.startsWith(needle) || id.startsWith(needle)) return 75
+    if (title.includes(` ${needle}`)) return 70
+    if (brand.includes(` ${needle}`)) return 60
+    if (title.includes(needle)) return 50
+    if (brand.includes(needle)) return 40
+    if (sku.includes(needle) || id.includes(needle)) return 35
+    return 0
+  }
+
+  return rows
+    .map((row) => ({ row, score: scoreRow(row) }))
+    .filter((entry) => entry.score > 0)
+    .sort((left, right) => right.score - left.score || left.row.title.localeCompare(right.row.title))
+    .map((entry) => entry.row)
 }
 
 function applyFilters(rows: ProductRow[], filters?: Record<string, unknown>) {

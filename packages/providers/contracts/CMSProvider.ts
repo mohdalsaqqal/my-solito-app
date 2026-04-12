@@ -142,6 +142,79 @@ export type CMSHome = {
         href?: string
       }>
     }
+    educationBanner?: {
+      enabled?: boolean
+      title: LocalizedText
+      subtitle?: LocalizedText
+      ctaLabel?: LocalizedText
+      href?: string
+      imageUrl?: string
+    }
+    offerBanners?: Array<{
+      id: string
+      enabled?: boolean
+      imageUrl?: string
+      href?: string
+      ctaLabel?: LocalizedText
+    }>
+    ugcGallery?: {
+      enabled?: boolean
+      title?: LocalizedText
+      items: Array<{
+        id: string
+        imageUrl: string
+        caption?: LocalizedText
+        href?: string
+        productId?: string
+      }>
+    }
+    newsletterCta?: {
+      enabled?: boolean
+      title?: LocalizedText
+      subtitle?: LocalizedText
+      ctaLabel?: LocalizedText
+      href?: string
+    }
+    personalization?: {
+      enabled?: boolean
+      mode?: 'static' | 'rule-based' | 'ai'
+      recommendedTitle?: LocalizedText
+    }
+    marketplace?: {
+      gridDensity?: 'compact' | 'dense'
+      railSizePreset?: 'compact' | 'dense'
+      promoInsertion?: {
+        home?: number[]
+        shop?: number[]
+        search?: number[]
+      }
+      stickyListingPromo?: {
+        enabled?: boolean
+        badgeLabel?: LocalizedText
+        title?: LocalizedText
+        subtitle?: LocalizedText
+        ctaLabel?: LocalizedText
+        href?: string
+      }
+      pdpOfferCluster?: {
+        enabled?: boolean
+        badgeLabel?: LocalizedText
+        title?: LocalizedText
+        subtitle?: LocalizedText
+      }
+      cartUpsellRail?: {
+        enabled?: boolean
+        title?: LocalizedText
+        query?: {
+          source?: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
+          limit?: number
+          sortBy?: 'price_desc' | 'price_asc' | 'name_asc' | 'name_desc'
+          productIds?: string[]
+          brandNames?: string[]
+        }
+      }
+    }
+    homeBlocks?: Array<Record<string, unknown>>
   }
   identity?: {
     customer?: {

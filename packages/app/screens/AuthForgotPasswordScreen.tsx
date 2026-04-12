@@ -2,7 +2,14 @@ import { useState } from 'react'
 import { spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Button, Card } from '@real/ui/components'
-import { Box, Input, Text, Touchable } from '@real/ui/primitives'
+import { Box, Input, Text } from '@real/ui/primitives'
+
+const authForgotCopy = {
+  title: 'Reset Password',
+  subtitle: 'Enter your email and we will send reset instructions.',
+  emailPlaceholder: 'Email',
+  backToSignIn: 'Back to sign in',
+}
 
 type AuthForgotPasswordScreenProps = {
   loading?: boolean
@@ -38,11 +45,12 @@ export function AuthForgotPasswordScreen({
       <PageScaffold.Body>
         <Section>
           <Card variant='raised' style={{ gap: spacing.md }}>
-            <Text variant='headline'>Reset Password</Text>
-            <Text tone='muted'>Enter your email and we will send reset instructions.</Text>
+            <Text variant='headline'>{authForgotCopy.title}</Text>
+            <Text tone='muted'>{authForgotCopy.subtitle}</Text>
 
             <Input
-              placeholder='Email'
+              placeholder={authForgotCopy.emailPlaceholder}
+              accessibilityLabel='Email address'
               keyboardType='email-address'
               autoCapitalize='none'
               value={email}
@@ -58,9 +66,9 @@ export function AuthForgotPasswordScreen({
               {loading ? 'Sending...' : 'Send Reset Link'}
             </Button>
 
-            <Touchable onPress={onGoToLogin}>
-              <Text variant='caption' tone='primary'>Back to sign in</Text>
-            </Touchable>
+            <Box style={{ alignSelf: 'flex-start' }}>
+              <Button size='sm' variant='ghost' onPress={onGoToLogin}>{authForgotCopy.backToSignIn}</Button>
+            </Box>
           </Card>
         </Section>
       </PageScaffold.Body>

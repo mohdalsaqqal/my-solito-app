@@ -1,11 +1,28 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Database, Globe, RefreshCw, Server, Trash2 } from 'lucide-react'
+import {
+  CheckCircle2,
+  Database,
+  Globe,
+  Power,
+  RefreshCw,
+  Server,
+  Trash2,
+} from 'lucide-react'
 import { AdminCacheAction, AdminCacheAuditEntry } from '@real/app/lib/types'
 import { apiClient } from '../../../apiClient'
 import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
-import { Button, EmptyState, PageContainer, PageHeader, Panel, Section, StatusPill, TableShell } from '../../_components/AdminPagePrimitives'
+import {
+  AdminFormScaffold,
+  Button,
+  EmptyState,
+  PageContainer,
+  Panel,
+  Section,
+  StatusPill,
+  TableShell,
+} from '../../_components/AdminPagePrimitives'
 
 const actions: AdminCacheAction[] = [
   'revalidate_home_shop',
@@ -23,18 +40,45 @@ export default function AdminOperationsCachePage() {
   const [isRunning, setIsRunning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
+  const [cacheEnabled, setCacheEnabled] = useState<boolean | null>(null)
+  const [isTogglingCache, setIsTogglingCache] = useState(false)
 
   const load = async () => {
     try {
       const data = await apiClient.admin.cacheAudit()
       setRows(data)
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to load cache audit.')
+      setError(
+        cause instanceof Error ? cause.message : 'Unable to load cache audit.',
+      )
+    }
+  }
+
+  const loadCacheSettings = async () => {
+    try {
+      const data = await apiClient.admin.getCacheSettings()
+      setCacheEnabled(data.enabled)
+    } catch {
+      setCacheEnabled(true)
+    }
+  }
+
+  const toggleCache = async () => {
+    if (cacheEnabled === null) return
+    setIsTogglingCache(true)
+    try {
+      const next = await apiClient.admin.setCacheSettings({ enabled: !cacheEnabled })
+      setCacheEnabled(next.enabled)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Unable to update cache settings.')
+    } finally {
+      setIsTogglingCache(false)
     }
   }
 
   useEffect(() => {
     void load()
+    void loadCacheSettings()
   }, [])
 
   useEffect(() => {
@@ -56,14 +100,26 @@ export default function AdminOperationsCachePage() {
   const latest = useMemo(() => rows[0] ?? null, [rows])
   const cooldownRemaining = useMemo(() => {
     if (!latest?.cooldownSeconds) return 0
-    const elapsed = Math.floor((nowMs - new Date(latest.executedAt).getTime()) / 1000)
+    const elapsed = Math.floor(
+      (nowMs - new Date(latest.executedAt).getTime()) / 1000,
+    )
     return Math.max(latest.cooldownSeconds - elapsed, 0)
   }, [latest, nowMs])
   const isCooldownActive = cooldownRemaining > 0
+  const scaffoldNotice = error
+    ? { tone: 'danger' as const, message: error }
+    : isCooldownActive
+      ? {
+          tone: 'warning' as const,
+          message: `Cooldown active: ${cooldownRemaining}s remaining before the next cache action.`,
+        }
+      : undefined
 
   const run = async () => {
     if (isCooldownActive) {
-      setError(`Please wait ${cooldownRemaining}s before running another flush.`)
+      setError(
+        `Please wait ${cooldownRemaining}s before running another flush.`,
+      )
       return
     }
     setIsRunning(true)
@@ -73,7 +129,9 @@ export default function AdminOperationsCachePage() {
       setIsModalOpen(false)
       await load()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to run cache action.')
+      setError(
+        cause instanceof Error ? cause.message : 'Unable to run cache action.',
+      )
     } finally {
       setIsRunning(false)
     }
@@ -81,169 +139,362 @@ export default function AdminOperationsCachePage() {
 
   return (
     <PageContainer>
-      <PageHeader title='Cache Operations' />
-      {error ? <p style={{ marginTop: 0, color: colors.danger }}>{error}</p> : null}
-
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
-          gap: spacing['24'],
-        }}
-      >
-        <Section>
-          <Panel>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'], marginBottom: spacing['24'] }}>
-              <div
-                style={{
-                  width: spacing['40'],
-                  height: spacing['40'],
-                  borderRadius: radius.xl,
-                  backgroundColor: colors.surfaceMuted,
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-              >
-                <Globe size={20} color={colors.textSecondary} />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>CDN Cache</h3>
-                <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.sm }}>
-                  Manage edge caching and invalidation.
-                </p>
-              </div>
+      <Section>
+        <Panel>
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'], marginBottom: spacing['16'] }}>
+            <div style={{ width: spacing['40'], height: spacing['40'], borderRadius: radius.xl, backgroundColor: colors.surfaceMuted, display: 'grid', placeItems: 'center' }}>
+              <Power size={20} color={cacheEnabled ? colors.success : colors.danger} />
             </div>
-
-            <div style={{ display: 'grid', gap: spacing['16'] }}>
-              <div
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radius.xl,
-                  backgroundColor: colors.surfaceMuted,
-                  padding: spacing['12'],
-                }}
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
+                Webpack Build Cache
+              </h3>
+              <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.sm }}>
+                Enable or disable the Next.js webpack filesystem cache. Disable if you encounter out-of-memory errors during compilation.
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'] }}>
+              <StatusPill tone={cacheEnabled ? 'success' : 'danger'}>
+                {cacheEnabled === null ? 'Loading...' : cacheEnabled ? 'Enabled' : 'Disabled'}
+              </StatusPill>
+              <Button
+                tone={cacheEnabled ? 'danger' : 'secondary'}
+                onClick={() => void toggleCache()}
+                disabled={cacheEnabled === null || isTogglingCache}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: colors.textSecondary, fontSize: typography.sm }}>Status</span>
-                  <StatusPill tone='success'>Operational</StatusPill>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing['8'] }}>
-                  <span style={{ color: colors.textSecondary, fontSize: typography.sm }}>Hit Rate</span>
-                  <span style={{ color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.semibold) }}>98.4%</span>
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gap: spacing['4'] }}>
-                <label style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>
-                  Revalidate Action
-                </label>
-                <div style={{ display: 'flex', gap: spacing['8'], flexWrap: 'wrap' }}>
-                  <select value={action} onChange={(e) => setAction(e.target.value as AdminCacheAction)} style={inputStyle}>
-                    {actions.map((item) => (
-                      <option key={item} value={item}>
-                        {item}
-                      </option>
-                    ))}
-                  </select>
-                  <Button tone='secondary' onClick={() => setIsModalOpen(true)} disabled={isCooldownActive || isRunning}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
-                      <RefreshCw size={14} color={colors.textSecondary} />
-                      Revalidate
-                    </span>
-                  </Button>
-                </div>
-                <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.xs }}>
-                  Type FLUSH confirmation before destructive actions.
-                </p>
-              </div>
-
-              <Button tone='danger' onClick={() => setIsModalOpen(true)} style={{ width: '100%' }} disabled={isCooldownActive || isRunning}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                  Flush Entire CDN Cache
-                  <Trash2 size={14} color={colors.textInverted} />
-                </span>
+                {isTogglingCache ? 'Updating...' : cacheEnabled ? 'Disable Cache' : 'Enable Cache'}
               </Button>
-
-              {latest ? (
-                <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.xs, display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-                  <CheckCircle2 size={12} color={colors.success} />
-                  Last flushed at {new Date(latest.executedAt).toLocaleTimeString()}
-                </p>
-              ) : null}
-              {isCooldownActive ? (
-                <p style={{ margin: 0, color: colors.warning, fontSize: typography.xs }}>
-                  Cooldown active: {cooldownRemaining}s remaining
-                </p>
-              ) : null}
             </div>
-          </Panel>
-        </Section>
-
-        <Section>
-          <Panel>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'], marginBottom: spacing['24'] }}>
+          </div>
+        </Panel>
+      </Section>
+      <Section>
+        <AdminFormScaffold
+          title="Cache Operations"
+          subtitle="Run controlled cache actions and review audit history."
+          notice={scaffoldNotice}
+          actions={
+            <Button
+              tone="ghost"
+              onClick={() => void load()}
+              disabled={isRunning}
+            >
+              Refresh audit
+            </Button>
+          }
+        >
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns:
+                'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+              gap: spacing['24'],
+            }}
+          >
+            <Panel>
               <div
                 style={{
-                  width: spacing['40'],
-                  height: spacing['40'],
-                  borderRadius: radius.xl,
-                  backgroundColor: colors.surfaceMuted,
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-              >
-                <Database size={20} color={colors.textSecondary} />
-              </div>
-              <div>
-                <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>Application Cache</h3>
-                <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.sm }}>
-                  Redis and in-memory store controls.
-                </p>
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gap: spacing['16'] }}>
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+                  display: 'flex',
+                  alignItems: 'center',
                   gap: spacing['12'],
+                  marginBottom: spacing['24'],
                 }}
               >
-                <StatCard label='Keys' value='14,203' />
-                <StatCard label='Memory' value='248 MB' />
-              </div>
-
-              <div style={{ display: 'grid', gap: spacing['4'] }}>
-                <label style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>
-                  Clear by Tag
-                </label>
-                <div style={{ display: 'flex', gap: spacing['8'] }}>
-                  <select style={inputStyle}>
-                    <option>product-data</option>
-                    <option>user-sessions</option>
-                    <option>config</option>
-                  </select>
-                  <Button tone='secondary'>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
-                      <Server size={14} color={colors.textSecondary} />
-                      Clear
-                    </span>
-                  </Button>
+                <div
+                  style={{
+                    width: spacing['40'],
+                    height: spacing['40'],
+                    borderRadius: radius.xl,
+                    backgroundColor: colors.surfaceMuted,
+                    display: 'grid',
+                    placeItems: 'center',
+                  }}
+                >
+                  <Globe size={20} color={colors.textSecondary} />
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      margin: 0,
+                      color: colors.textPrimary,
+                      fontSize: typography.lg,
+                      fontWeight: Number(fontWeights.medium),
+                    }}
+                  >
+                    CDN Cache
+                  </h3>
+                  <p
+                    style={{
+                      margin: `${spacing['4']}px 0 0`,
+                      color: colors.textSecondary,
+                      fontSize: typography.sm,
+                    }}
+                  >
+                    Manage edge caching and invalidation.
+                  </p>
                 </div>
               </div>
-            </div>
-          </Panel>
-        </Section>
-      </div>
+
+              <div style={{ display: 'grid', gap: spacing['16'] }}>
+                <div
+                  style={{
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: radius.xl,
+                    backgroundColor: colors.surfaceMuted,
+                    padding: spacing['12'],
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: colors.textSecondary,
+                        fontSize: typography.sm,
+                      }}
+                    >
+                      Status
+                    </span>
+                    <StatusPill tone="success">Operational</StatusPill>
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: spacing['8'],
+                    }}
+                  >
+                    <span
+                      style={{
+                        color: colors.textSecondary,
+                        fontSize: typography.sm,
+                      }}
+                    >
+                      Hit Rate
+                    </span>
+                    <span
+                      style={{
+                        color: colors.textPrimary,
+                        fontSize: typography.sm,
+                        fontWeight: Number(fontWeights.semibold),
+                      }}
+                    >
+                      98.4%
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gap: spacing['4'] }}>
+                  <label
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: typography.xs,
+                      fontWeight: Number(fontWeights.medium),
+                    }}
+                  >
+                    Revalidate Action
+                  </label>
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: spacing['8'],
+                      flexWrap: 'wrap',
+                    }}
+                  >
+                    <select
+                      value={action}
+                      onChange={(e) =>
+                        setAction(e.target.value as AdminCacheAction)
+                      }
+                      style={inputStyle}
+                    >
+                      {actions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      tone="secondary"
+                      onClick={() => setIsModalOpen(true)}
+                      disabled={isCooldownActive || isRunning}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: spacing['8'],
+                        }}
+                      >
+                        <RefreshCw size={14} color={colors.textSecondary} />
+                        Revalidate
+                      </span>
+                    </Button>
+                  </div>
+                  <p
+                    style={{
+                      margin: 0,
+                      color: colors.textSecondary,
+                      fontSize: typography.xs,
+                    }}
+                  >
+                    Type FLUSH confirmation before destructive actions.
+                  </p>
+                </div>
+
+                <Button
+                  tone="danger"
+                  onClick={() => setIsModalOpen(true)}
+                  style={{ width: '100%' }}
+                  disabled={isCooldownActive || isRunning}
+                >
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                    }}
+                  >
+                    Flush Entire CDN Cache
+                    <Trash2 size={14} color={colors.textInverted} />
+                  </span>
+                </Button>
+
+                {latest ? (
+                  <p
+                    style={{
+                      margin: 0,
+                      color: colors.textSecondary,
+                      fontSize: typography.xs,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: spacing['4'],
+                    }}
+                  >
+                    <CheckCircle2 size={12} color={colors.success} />
+                    Last flushed at{' '}
+                    {new Date(latest.executedAt).toLocaleTimeString()}
+                  </p>
+                ) : null}
+              </div>
+            </Panel>
+
+            <Panel>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing['12'],
+                  marginBottom: spacing['24'],
+                }}
+              >
+                <div
+                  style={{
+                    width: spacing['40'],
+                    height: spacing['40'],
+                    borderRadius: radius.xl,
+                    backgroundColor: colors.surfaceMuted,
+                    display: 'grid',
+                    placeItems: 'center',
+                  }}
+                >
+                  <Database size={20} color={colors.textSecondary} />
+                </div>
+                <div>
+                  <h3
+                    style={{
+                      margin: 0,
+                      color: colors.textPrimary,
+                      fontSize: typography.lg,
+                      fontWeight: Number(fontWeights.medium),
+                    }}
+                  >
+                    Application Cache
+                  </h3>
+                  <p
+                    style={{
+                      margin: `${spacing['4']}px 0 0`,
+                      color: colors.textSecondary,
+                      fontSize: typography.sm,
+                    }}
+                  >
+                    Redis and in-memory store controls.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: spacing['16'] }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+                    gap: spacing['12'],
+                  }}
+                >
+                  <StatCard label="Keys" value="14,203" />
+                  <StatCard label="Memory" value="248 MB" />
+                </div>
+
+                <div style={{ display: 'grid', gap: spacing['4'] }}>
+                  <label
+                    style={{
+                      color: colors.textSecondary,
+                      fontSize: typography.xs,
+                      fontWeight: Number(fontWeights.medium),
+                    }}
+                  >
+                    Clear by Tag
+                  </label>
+                  <div style={{ display: 'flex', gap: spacing['8'] }}>
+                    <select style={inputStyle}>
+                      <option>product-data</option>
+                      <option>user-sessions</option>
+                      <option>config</option>
+                    </select>
+                    <Button tone="secondary">
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: spacing['8'],
+                        }}
+                      >
+                        <Server size={14} color={colors.textSecondary} />
+                        Clear
+                      </span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Panel>
+          </div>
+        </AdminFormScaffold>
+      </Section>
 
       <Section>
-        <Panel density='dense'>
-          <h3 style={{ margin: `0 0 ${spacing['12']}px`, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.medium) }}>
+        <Panel density="dense">
+          <h3
+            style={{
+              margin: `0 0 ${spacing['12']}px`,
+              color: colors.textPrimary,
+              fontSize: typography.lg,
+              fontWeight: Number(fontWeights.medium),
+            }}
+          >
             Cache Audit
           </h3>
           {rows.length === 0 ? (
-            <EmptyState title='No cache audit entries' description='Run a cache action to generate audit rows.' />
+            <EmptyState
+              title="No cache audit entries"
+              description="Run a cache action to generate audit rows."
+            />
           ) : (
             <TableShell>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -252,7 +503,7 @@ export default function AdminOperationsCachePage() {
                     {['Action', 'When', 'Paths/Tags', 'CDN'].map((head) => (
                       <th
                         key={head}
-                        scope='col'
+                        scope="col"
                         style={{
                           height: spacing['48'],
                           paddingInline: spacing['12'],
@@ -275,19 +526,46 @@ export default function AdminOperationsCachePage() {
                 <tbody>
                   {rows.map((entry) => (
                     <tr key={entry.id}>
-                      <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textPrimary }}>
+                      <td
+                        style={{
+                          padding: spacing['12'],
+                          borderBottom: `1px solid ${colors.border}`,
+                          color: colors.textPrimary,
+                        }}
+                      >
                         {entry.action}
                       </td>
-                      <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textSecondary, fontSize: typography.xs }}>
+                      <td
+                        style={{
+                          padding: spacing['12'],
+                          borderBottom: `1px solid ${colors.border}`,
+                          color: colors.textSecondary,
+                          fontSize: typography.xs,
+                        }}
+                      >
                         {new Date(entry.executedAt).toLocaleString()}
                       </td>
-                      <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}`, color: colors.textSecondary, fontSize: typography.xs }}>
+                      <td
+                        style={{
+                          padding: spacing['12'],
+                          borderBottom: `1px solid ${colors.border}`,
+                          color: colors.textSecondary,
+                          fontSize: typography.xs,
+                        }}
+                      >
                         paths: {entry.revalidatedPaths.join(', ') || '-'}
                         <br />
                         tags: {entry.revalidatedTags.join(', ') || '-'}
                       </td>
-                      <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                        <StatusPill tone={entry.cdn.success ? 'success' : 'warning'}>
+                      <td
+                        style={{
+                          padding: spacing['12'],
+                          borderBottom: `1px solid ${colors.border}`,
+                        }}
+                      >
+                        <StatusPill
+                          tone={entry.cdn.success ? 'success' : 'warning'}
+                        >
                           {entry.cdn.success ? 'Success' : 'Failed'}
                         </StatusPill>
                       </td>
@@ -302,8 +580,8 @@ export default function AdminOperationsCachePage() {
 
       {isModalOpen ? (
         <div
-          role='dialog'
-          aria-modal='true'
+          role="dialog"
+          aria-modal="true"
           style={{
             position: 'fixed',
             inset: 0,
@@ -324,15 +602,40 @@ export default function AdminOperationsCachePage() {
               overflow: 'hidden',
             }}
           >
-            <div style={{ padding: spacing['16'], borderBottom: `1px solid ${colors.border}` }}>
-              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.lg, fontWeight: Number(fontWeights.semibold) }}>
+            <div
+              style={{
+                padding: spacing['16'],
+                borderBottom: `1px solid ${colors.border}`,
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  color: colors.textPrimary,
+                  fontSize: typography.lg,
+                  fontWeight: Number(fontWeights.semibold),
+                }}
+              >
                 Flush CDN Cache?
               </h3>
-              <p style={{ margin: `${spacing['8']}px 0 0`, color: colors.textSecondary, fontSize: typography.sm }}>
-                This action removes cached content from edge locations and increases origin load temporarily.
+              <p
+                style={{
+                  margin: `${spacing['8']}px 0 0`,
+                  color: colors.textSecondary,
+                  fontSize: typography.sm,
+                }}
+              >
+                This action removes cached content from edge locations and
+                increases origin load temporarily.
               </p>
             </div>
-            <div style={{ padding: spacing['16'], display: 'grid', gap: spacing['12'] }}>
+            <div
+              style={{
+                padding: spacing['16'],
+                display: 'grid',
+                gap: spacing['12'],
+              }}
+            >
               <div
                 style={{
                   borderRadius: radius.xl,
@@ -343,12 +646,13 @@ export default function AdminOperationsCachePage() {
                   fontSize: typography.xs,
                 }}
               >
-                Warning: destructive operation. Type <strong>FLUSH</strong> to confirm.
+                Warning: destructive operation. Type <strong>FLUSH</strong> to
+                confirm.
               </div>
               <input
                 value={confirmation}
                 onChange={(e) => setConfirmation(e.target.value.toUpperCase())}
-                placeholder='FLUSH'
+                placeholder="FLUSH"
                 style={{ ...inputStyle, fontFamily: 'monospace' }}
               />
             </div>
@@ -362,10 +666,16 @@ export default function AdminOperationsCachePage() {
                 gap: spacing['8'],
               }}
             >
-              <Button tone='ghost' onClick={() => setIsModalOpen(false)}>
+              <Button tone="ghost" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button tone='danger' disabled={confirmation !== 'FLUSH' || isRunning || isCooldownActive} onClick={() => void run()}>
+              <Button
+                tone="danger"
+                disabled={
+                  confirmation !== 'FLUSH' || isRunning || isCooldownActive
+                }
+                onClick={() => void run()}
+              >
                 {isRunning ? 'Flushing...' : 'Flush Cache'}
               </Button>
             </div>
@@ -398,7 +708,14 @@ function StatCard({ label, value }: { label: string; value: string }) {
       >
         {label}
       </p>
-      <p style={{ margin: `${spacing['8']}px 0 0`, color: colors.textPrimary, fontSize: typography.xxl, fontWeight: Number(fontWeights.semibold) }}>
+      <p
+        style={{
+          margin: `${spacing['8']}px 0 0`,
+          color: colors.textPrimary,
+          fontSize: typography.xxl,
+          fontWeight: Number(fontWeights.semibold),
+        }}
+      >
         {value}
       </p>
     </div>

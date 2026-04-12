@@ -5,7 +5,7 @@ import {
   resolveLocale,
   resolveLocaleAndDirectionFromAcceptLanguage,
   resolveLocaleFromAcceptLanguage,
-} from './rtl-manager'
+} from './rtl-manager-core'
 
 export {
   isRtlLocale,

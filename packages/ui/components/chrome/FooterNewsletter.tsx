@@ -1,6 +1,10 @@
-import { useState } from 'react'
-import { colors, motionDuration, radius, spacing } from '@real/tokens'
-import { Box, Input, Text, Touchable } from '../../primitives'
+import React, { useState } from 'react'
+import { radius, spacing } from '@real/tokens'
+import { Box, Input, Text } from '../../primitives'
+import { useThemeColors } from '../../responsive'
+import { Button as ReusableButton } from '../../reusables/button'
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 type FooterNewsletterProps = {
   title: string
@@ -14,7 +18,7 @@ type FooterNewsletterProps = {
   state?: 'loading' | 'empty' | 'error' | 'disabled' | 'default'
 }
 
-export function FooterNewsletter({
+export const FooterNewsletter = React.memo(function FooterNewsletter({
   title,
   subtitle,
   firstNamePlaceholder,
@@ -29,6 +33,7 @@ export function FooterNewsletter({
   const [email, setEmail] = useState('')
   const [submitState, setSubmitState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null)
+  const c = useThemeColors()
 
   if (state === 'empty') {
     return null
@@ -41,7 +46,7 @@ export function FooterNewsletter({
       return
     }
 
-    if (!email.includes('@')) {
+    if (!EMAIL_REGEX.test(email)) {
       setSubmitState('error')
       setSubmitFeedback(errorMessage)
       return
@@ -94,7 +99,7 @@ export function FooterNewsletter({
             radiusKey='md'
             style={{
               flex: 1,
-              backgroundColor: colors.surface,
+              backgroundColor: c.surface,
             }}
           />
         </Box>
@@ -105,32 +110,31 @@ export function FooterNewsletter({
             placeholder={emailPlaceholder}
             readOnly={disabled}
             radiusKey='md'
+            keyboardType='email-address'
             style={{
               flex: 1.2,
-              backgroundColor: colors.surface,
+              backgroundColor: c.surface,
             }}
           />
         </Box>
-        <Touchable disabled={disabled} onPress={handleSubmit}>
-          {({ hovered, focused }) => (
-            <Box
-              style={{
-                justifyContent: 'center',
-                paddingVertical: spacing.sm,
-                paddingHorizontal: spacing.lg,
-                borderRadius: radius.md,
-                backgroundColor: hovered || focused ? colors.brandPrimary : colors.white,
-                minHeight: spacing['48'],
-                transitionProperty: 'background-color',
-                transitionDuration: `${motionDuration.microInteraction}ms`,
-              }}
-            >
-              <Text variant='label' tone={hovered || focused ? 'inverse' : 'default'} weight='700'>
-                {submitState === 'loading' ? 'Submitting...' : submitLabel}
-              </Text>
-            </Box>
-          )}
-        </Touchable>
+        <ReusableButton
+          disabled={disabled}
+          onPress={handleSubmit}
+          variant='secondary'
+          size='default'
+          style={{
+            justifyContent: 'center',
+            paddingVertical: spacing.sm,
+            paddingHorizontal: spacing.lg,
+            borderRadius: radius.md,
+            backgroundColor: c.white,
+            minHeight: spacing['48'],
+          }}
+        >
+          <Text variant='label' tone='default' weight='700'>
+            {submitState === 'loading' ? 'Submitting...' : submitLabel}
+          </Text>
+        </ReusableButton>
       </Box>
       {submitFeedback ? (
         <Text variant='caption' tone='inverse' style={{ opacity: 0.9 }}>
@@ -139,4 +143,4 @@ export function FooterNewsletter({
       ) : null}
     </Box>
   )
-}
+})

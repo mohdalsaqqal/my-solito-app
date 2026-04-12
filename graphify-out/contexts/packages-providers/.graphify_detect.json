@@ -1,0 +1,42 @@
+{
+  "files": {
+    "code": [
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\index.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\registry.test.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\registry.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\AccountProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\AuthProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\capabilities.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\CartProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\CatalogProviders.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\CMSProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\EntityMapping.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\index.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\inventory.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\job.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\MenuProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\order.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\OrderProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\page-config.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\PharmacistProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\product.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\ProductProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\PromotionProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\ReferralProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\ReleaseProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\ReviewProvider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\translation-provider.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\types.ts",
+      "C:\\Users\\hamoo\\Downloads\\solito v5 docs\\my-solito-app\\packages\\providers\\contracts\\vendor.ts"
+    ],
+    "document": [],
+    "paper": [],
+    "image": []
+  },
+  "total_files": 27,
+  "total_words": 4919,
+  "needs_graph": false,
+  "warning": "Corpus is ~4,919 words - fits in a single context window. You may not need a graph.",
+  "skipped_sensitive": [],
+  "graphifyignore_patterns": 0
+}

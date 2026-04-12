@@ -238,3 +238,4 @@ const cellStyle = {
   color: colors.textPrimary,
   fontSize: typography.sm,
 } as const
+

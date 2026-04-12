@@ -1,4 +1,5 @@
 import { ProviderResult } from './types'
+import { CanonicalEntity } from './EntityMapping'
 
 export type LocalizedString = {
   en: string
@@ -21,7 +22,7 @@ export type ProductQuery = {
   title?: LocalizedString
 }
 
-export type Category = {
+export type Category = CanonicalEntity & {
   id: string
   slug: string
   name: LocalizedString
@@ -41,7 +42,7 @@ export interface CategoryProvider {
   getBySlug(slug: string): Promise<ProviderResult<Category>>
 }
 
-export type Brand = {
+export type Brand = CanonicalEntity & {
   id: string
   slug: string
   name: LocalizedString

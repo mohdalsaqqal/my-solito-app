@@ -1,7 +1,9 @@
+import React from 'react'
 import { Pressable, View, ViewStyle } from 'react-native'
-import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
+import { borderWidth, opacity, radius, spacing } from '@real/tokens'
 import { Text } from '../primitives/Text'
 import { Skeleton } from './Skeleton'
+import { useThemeColors } from '../responsive'
 
 type CheckboxProps = {
   checked?: boolean
@@ -13,7 +15,7 @@ type CheckboxProps = {
   style?: ViewStyle
 }
 
-export function Checkbox({
+export const Checkbox = React.memo(function Checkbox({
   checked = false,
   indeterminate = false,
   label,
@@ -22,6 +24,8 @@ export function Checkbox({
   onChange,
   style,
 }: CheckboxProps) {
+  const c = useThemeColors()
+
   if (loading) {
     return (
       <View style={[{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }, style]}>
@@ -56,8 +60,8 @@ export function Checkbox({
           height: 20,
           borderRadius: radius.sm,
           borderWidth: borderWidth.thin,
-          borderColor: isChecked ? colors.brandPrimary : colors.border,
-          backgroundColor: isChecked ? colors.brandPrimary : 'transparent',
+          borderColor: isChecked ? c.brandPrimary : c.border,
+          backgroundColor: isChecked ? c.brandPrimary : 'transparent',
           alignItems: 'center',
           justifyContent: 'center',
         }}
@@ -67,7 +71,7 @@ export function Checkbox({
             style={{
               width: 10,
               height: 2,
-              backgroundColor: colors.white,
+              backgroundColor: c.white,
               borderRadius: radius.full,
             }}
           />
@@ -86,4 +90,4 @@ export function Checkbox({
       )}
     </Pressable>
   )
-}
+})

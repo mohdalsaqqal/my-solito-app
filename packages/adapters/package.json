@@ -1,6 +1,7 @@
 {
   "name": "@real/adapters",
   "version": "0.0.0",
+  "type": "module",
   "main": "index.ts",
   "sideEffects": false
 }

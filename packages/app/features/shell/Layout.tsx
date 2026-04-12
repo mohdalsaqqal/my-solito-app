@@ -1,9 +1,9 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { Platform, Pressable, View } from 'react-native'
-import { useWindowDimensions } from 'react-native'
 import { ArrowUp } from 'phosphor-react'
-import { borderWidth, breakpoints, colors, layout, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, layout, radius, spacing, zIndex, boxShadowStrings } from '@real/tokens'
 import { Box, Icon, Text } from '@real/ui'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 import {
   defaultBottomNavItems,
   defaultBrandItems,
@@ -81,6 +81,7 @@ export type LayoutLocale = {
 export type LayoutActions = {
   onSearchSubmit?: (query: string) => void
   onPressLogo?: () => void
+  onNativeCategoriesPress?: () => void
   onNativeAccountPress?: () => void
 }
 
@@ -130,6 +131,7 @@ export type LayoutProps = {
   onLocaleChange?: (nextLocale: LocaleCode) => void
   onSearchSubmit?: (query: string) => void
   onPressLogo?: () => void
+  onNativeCategoriesPress?: () => void
   onNativeAccountPress?: () => void
   showFooter?: boolean
   mobileBottomInset?: number
@@ -176,15 +178,15 @@ export function Layout({
   onLocaleChange: legacyOnLocaleChange,
   onSearchSubmit: legacyOnSearchSubmit,
   onPressLogo: legacyOnPressLogo,
+  onNativeCategoriesPress: legacyOnNativeCategoriesPress,
   onNativeAccountPress: legacyOnNativeAccountPress,
   showFooter: legacyShowFooter,
   mobileBottomInset: legacyMobileBottomInset,
 }: LayoutProps) {
-  const { width } = useWindowDimensions()
-  const isDesktopViewport = width >= breakpoints.desktopMin
-  const [hasHydrated, setHasHydrated] = useState(Platform.OS !== 'web')
-  // Keep the first web render deterministic so shell chrome does not choose a different mobile/desktop tree.
-  const isDesktop = Platform.OS === 'web' && !hasHydrated ? true : isDesktopViewport
+  const profile = useBreakpoint()
+  const isDesktopViewport = profile.breakpoint === 'desktop'
+  const isDesktop = isDesktopViewport
+  const c = useThemeColors()
   const showMobileBottomNav = !isDesktop
   const mobileNavHeight = spacing['64'] + spacing['8']
   const mobileBottomInset = display?.mobileBottomInset ?? legacyMobileBottomInset ?? 0
@@ -197,16 +199,13 @@ export function Layout({
     (typeof localeProps === 'string' ? undefined : localeProps?.onChange) ?? legacyOnLocaleChange
   const onSearchSubmit = actions?.onSearchSubmit ?? legacyOnSearchSubmit
   const onPressLogo = actions?.onPressLogo ?? legacyOnPressLogo
+  const onNativeCategoriesPress =
+    actions?.onNativeCategoriesPress ?? legacyOnNativeCategoriesPress
   const onNativeAccountPress = actions?.onNativeAccountPress ?? legacyOnNativeAccountPress
   const showFooter = display?.showFooter ?? legacyShowFooter ?? true
+  const showDesktopFooter = showFooter && Platform.OS === 'web' && isDesktop
   
   const [showScrollTop, setShowScrollTop] = useState(false)
-
-  useEffect(() => {
-    if (Platform.OS === 'web') {
-      setHasHydrated(true)
-    }
-  }, [])
 
   useEffect(() => {
     if (Platform.OS !== 'web') return
@@ -361,7 +360,6 @@ export function Layout({
         campaignLink={resolvedCampaign?.link}
         logoSrc={resolvedBranding.logoSrc}
         logoAlt={resolvedBranding.logoAlt}
-        logoSize={resolvedBranding.logoSize}
         cartCount={resolvedCart.count}
         wishlistCount={wishlistCount}
         accountCount={accountCount}
@@ -380,6 +378,7 @@ export function Layout({
         onSearchSubmit={onSearchSubmit}
         onLogoPress={onPressLogo}
         onLocaleChange={onLocaleChange}
+        onNativeCategoriesPress={onNativeCategoriesPress}
         onNativeAccountPress={onNativeAccountPress}
       />
 
@@ -394,7 +393,7 @@ export function Layout({
         {children}
       </Box>
 
-      {showFooter ? (
+      {showDesktopFooter ? (
         <Footer
           locale={locale}
           dir={dir}
@@ -418,18 +417,18 @@ export function Layout({
             width: 44,
             height: 44,
             borderRadius: radius.full,
-            backgroundColor: hovered ? colors.surfaceMuted : colors.surface,
+            backgroundColor: hovered ? c.surfaceMuted : c.surface,
             borderWidth: borderWidth.thin,
-            borderColor: colors.border,
+            borderColor: c.border,
             alignItems: 'center',
             justifyContent: 'center',
             boxShadow: hovered
-              ? '0 4px 12px rgba(14,10,10,0.14), 0 6px 24px rgba(14,10,10,0.10)'
-              : '0 2px 8px rgba(14,10,10,0.10), 0 4px 18px rgba(14,10,10,0.08)',
+              ? boxShadowStrings.lg
+              : boxShadowStrings.md,
             transition: 'background-color 0.15s ease, box-shadow 0.15s ease',
           } as any)}
         >
-          <ArrowUp size={18} color={colors.textSecondary} weight='bold' />
+          <ArrowUp size={18} color={c.textSecondary} weight='bold' />
         </Pressable>
       ) : null}
 
@@ -442,12 +441,13 @@ export function Layout({
             end: 0,
             zIndex: zIndex.sticky,
             borderTopWidth: borderWidth.thin,
-            borderColor: colors.border,
-            backgroundColor: colors.surface,
+            borderColor: c.border,
+            backgroundColor: c.surface,
             flexDirection: 'row',
-            justifyContent: 'space-around',
-            paddingTop: spacing.xs,
-            paddingBottom: spacing.xs + mobileBottomInset,
+            justifyContent: 'space-between',
+            minHeight: spacing['56'] + spacing.xxs + mobileBottomInset,
+            paddingTop: spacing['6'],
+            paddingBottom: spacing['6'] + mobileBottomInset,
           }}
         >
           {resolvedNavigation.bottomNavItems?.map((item) => {
@@ -457,24 +457,26 @@ export function Layout({
               <Pressable
                 key={item.id}
                 onPress={() => handleBottomNavPress(item)}
-                style={{ paddingHorizontal: spacing.xs }}
+                style={{ flex: 1, paddingHorizontal: spacing['4'] }}
               >
-                <Box style={{ alignItems: 'center', gap: spacing.xxs }}>
+                <Box style={{ alignItems: 'center', gap: spacing['4'] }}>
                   <Box style={{ position: 'relative' }}>
                     <Icon
                       name={toBottomNavIconName(item.id)}
-                      color={active ? colors.brandPrimary : colors.textSecondary}
+                      size={22}
+                      color={active ? c.textPrimary : c.textSecondary}
+                      weight={active ? 'fill' : 'regular'}
                     />
                     {item.id === 'cart' && resolvedCart.count > 0 ? (
                       <Box
                         style={{
                           position: 'absolute',
-                          top: -spacing.xxs,
-                          end: -spacing.xs,
+                          top: -spacing['4'],
+                          end: -spacing['6'],
                           minWidth: spacing.md,
                           height: spacing.md,
-                          borderRadius: radius.xs,
-                          backgroundColor: colors.brandPrimary,
+                          borderRadius: radius.full,
+                          backgroundColor: c.brandPrimary,
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
@@ -485,7 +487,11 @@ export function Layout({
                       </Box>
                     ) : null}
                   </Box>
-                  <Text variant='meta' tone={active ? 'primary' : 'muted'}>
+                  <Text
+                    variant='meta'
+                    tone={active ? 'default' : 'muted'}
+                    weight={active ? '700' : '500'}
+                  >
                     {label}
                   </Text>
                 </Box>
@@ -498,10 +504,12 @@ export function Layout({
   )
 }
 
-function toBottomNavIconName(id: string): 'home' | 'categories' | 'cart' | 'deals' | 'account' | 'more' {
+function toBottomNavIconName(id: string): 'home' | 'categories' | 'cart' | 'deals' | 'account' | 'wishlist' | 'star' | 'more' {
   if (id === 'home') return 'home'
   if (id === 'categories') return 'categories'
+  if (id === 'brands') return 'star'
   if (id === 'cart') return 'cart'
+  if (id === 'wishlist') return 'wishlist'
   if (id === 'deals') return 'deals'
   if (id === 'account') return 'account'
   return 'more'

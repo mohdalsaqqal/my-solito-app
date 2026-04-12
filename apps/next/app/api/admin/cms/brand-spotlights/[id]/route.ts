@@ -22,6 +22,11 @@ type UpdatePayload = {
   position?: number
 }
 
+function normalizeBrandNames(input?: string[]) {
+  const selected = input?.map((item) => item.trim()).find(Boolean)
+  return selected ? [selected] : []
+}
+
 function toRecord(
   item: HomeBrandSpotlightConfig,
   meta?: { updatedAt: string; updatedBy: { userId: string; email: string } }
@@ -80,6 +85,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (index < 0) return fail('ADMIN_BRAND_SPOTLIGHT_NOT_FOUND', 'Brand spotlight not found.', 404)
 
     const current = list[index]
+    const nextBrandNames = payload.query
+      ? normalizeBrandNames(payload.query.brandNames ?? current.query?.brandNames)
+      : current.query?.brandNames
+
+    if (payload.query && (!nextBrandNames || nextBrandNames.length === 0)) {
+      return fail(
+        'ADMIN_BRAND_SPOTLIGHT_BRAND_REQUIRED',
+        'A single selected brand is required for each brand spotlight.',
+        400
+      )
+    }
+
     const updated: HomeBrandSpotlightConfig = {
       ...current,
       enabled: typeof payload.enabled === 'boolean' ? payload.enabled : current.enabled,
@@ -93,7 +110,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       bannerHref: payload.bannerHref?.trim() || current.bannerHref,
       bannerImageUrl: payload.bannerImageUrl?.trim() || current.bannerImageUrl,
       railTitle: payload.railTitle ? normalizeLocalized(current.railTitle, payload.railTitle) : current.railTitle,
-      query: payload.query ?? current.query,
+      query: payload.query
+        ? {
+            source: payload.query.source ?? current.query?.source ?? 'best_sellers',
+            limit: payload.query.limit ?? current.query?.limit ?? 8,
+            sortBy: payload.query.sortBy ?? current.query?.sortBy ?? 'price_desc',
+            productIds: payload.query.productIds ?? current.query?.productIds,
+            brandNames: nextBrandNames,
+          }
+        : current.query,
     }
     list[index] = updated
 

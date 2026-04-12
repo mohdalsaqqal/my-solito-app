@@ -22,6 +22,7 @@ import { StarRating } from './StarRating'
 import { StockBadge } from './StockBadge'
 import { PriceTag } from './PriceTag'
 import { Button } from './Button'
+import { useFocusTrap } from './useFocusTrap'
 import { HomeProductItem } from './home/types'
 import { useBreakpoint, useThemeColors } from '../responsive'
 
@@ -43,6 +44,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
   const c = useThemeColors()
   const profile = useBreakpoint()
   const dialogRef = useRef<any>(null)
+  useFocusTrap(dialogRef, open)
   const [quantity, setQuantity] = useState(1)
   const [addingToCart, setAddingToCart] = useState(false)
   const [mediaIndex, setMediaIndex] = useState(0)
@@ -318,7 +320,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                 <StarRating value={item.rating} reviewCount={item.reviews} size={14} />
                 {typeof item.reviews === 'number' && item.reviews > 0 && (
                   <Text variant='bodySm' tone='muted'>
-                    ({item.reviews} reviews)
+                    ({item.reviews} reviews) {/* TODO(i18n): t('quickView.reviews') */}
                   </Text>
                 )}
               </Box>
@@ -332,7 +334,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
             />
 
             <Text variant='caption' tone='muted'>
-              Tax included.
+              Tax included. {/* TODO(i18n): t('quickView.taxIncluded') */}
             </Text>
 
             {/* Stock Status */}
@@ -347,7 +349,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
 
             <Box style={{ gap: spacing['8'] }}>
               <Text variant='bodySm' tone='default'>
-                Earn <Text weight='700'>Glow Points</Text> by purchasing this product
+                Earn <Text weight='700'>Glow Points</Text> by purchasing this product {/* TODO(i18n): t('quickView.glowPoints') */}
               </Text>
               <ReusableButton
                 accessibilityLabel='Sign in to earn points'
@@ -366,14 +368,19 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                   tone='muted'
                   style={{ textDecorationLine: 'underline' }}
                 >
-                  Sign In or create an account to earn points
+                  Sign In or create an account to earn points {/* TODO(i18n): t('quickView.glowPoints') */}
                 </Text>
               </ReusableButton>
             </Box>
 
             {/* Quantity Selector */}
             {/* Actions */}
-            <Box style={{ gap: spacing['12'] }}>
+            <Box
+              style={{ gap: spacing['12'] }}
+              role="status"
+              accessibilityLabel="Cart quantity and actions"
+              aria-live="polite"
+            >
               {!isOutOfStock ? (
                 <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
                   <Box
@@ -398,10 +405,10 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                       variant='ghost'
                       size='icon'
                       style={{
-                        width: spacing['24'],
-                        height: spacing['24'],
-                        minWidth: spacing['24'],
-                        minHeight: spacing['24'],
+                        width: spacing['40'],
+                        height: spacing['40'],
+                        minWidth: spacing['40'],
+                        minHeight: spacing['40'],
                         paddingHorizontal: 0,
                         paddingVertical: 0,
                         borderRadius: radius.full,
@@ -424,10 +431,10 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                       variant='ghost'
                       size='icon'
                       style={{
-                        width: spacing['24'],
-                        height: spacing['24'],
-                        minWidth: spacing['24'],
-                        minHeight: spacing['24'],
+                        width: spacing['40'],
+                        height: spacing['40'],
+                        minWidth: spacing['40'],
+                        minHeight: spacing['40'],
                         paddingHorizontal: 0,
                         paddingVertical: 0,
                         borderRadius: radius.full,
@@ -449,7 +456,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                       disabled={addingToCart}
                       fullWidth
                     >
-                      {addingToCart ? 'Adding...' : 'Add to Cart'}
+                      {addingToCart ? 'Adding...' /* TODO(i18n): t('quickView.adding') */ : 'Add to Cart' /* TODO(i18n): t('quickView.addToCart') */}
                     </Button>
                   </Box>
                   <IconCircleButton icon='wishlist' label='Add to wishlist' />
@@ -457,7 +464,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                 </Box>
               ) : (
                 <Button variant='solid' size='lg' disabled fullWidth>
-                  Out of Stock
+                  Out of Stock {/* TODO(i18n): t('quickView.outOfStock') */}
                 </Button>
               )}
 
@@ -491,7 +498,7 @@ export const QuickViewModal = React.memo(function QuickViewModal({
                       textDecorationLine: 'underline',
                     }}
                     >
-                    View Full Details
+                    View Full Details {/* TODO(i18n): t('quickView.viewFullDetails') */}
                   </Text>
                   <Icon name={detailArrowIcon} size={spacing['16']} color={c.textSecondary} />
                 </Box>

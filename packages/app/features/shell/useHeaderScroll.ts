@@ -1,19 +1,25 @@
 // packages/app/features/shell/useHeaderScroll.ts
 import { Platform } from 'react-native'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
+import { subscribeNativeScrollOffset } from '@real/ui'
 
 type UseHeaderScrollReturn =
-  | { isAtTop: boolean; onScroll?: undefined }         // web
-  | { isAtTop: boolean; onScroll: (e: any) => void }  // native
+  | { isAtTop: boolean } // web
+  | { isAtTop: boolean } // native
 
 export function useHeaderScroll(): UseHeaderScrollReturn {
   const isWeb = Platform.OS === 'web'
 
-  const [isAtTop, setIsAtTop] = useState<boolean>(() => {
-    if (!isWeb) return true
-    if (typeof globalThis.scrollY === 'undefined') return true
-    return (globalThis as { scrollY?: number }).scrollY === 0
-  })
+  // Keep SSR and the first client render deterministic, then sync with real scroll after mount.
+  const [isAtTop, setIsAtTop] = useState<boolean>(true)
+
+  useEffect(() => {
+    if (isWeb) return
+
+    return subscribeNativeScrollOffset((offsetY) => {
+      setIsAtTop(offsetY === 0)
+    })
+  }, [isWeb])
 
   useEffect(() => {
     if (!isWeb) return
@@ -37,18 +43,5 @@ export function useHeaderScroll(): UseHeaderScrollReturn {
     return () => globalThis.removeEventListener?.('scroll', onScroll)
   }, [isWeb])
 
-  const onScroll = useCallback((e: any) => {
-    const y: number = e?.nativeEvent?.contentOffset?.y ?? 0
-    setIsAtTop(y === 0)
-  }, [])
-
-  // NOTE: On native, isAtTop stays true because there is no global scroll listener.
-  // To enable native scroll hide/reveal, pass the returned `onScroll` handler to
-  // the active screen's ScrollView via a context or prop-drilling pattern.
-  // This is deferred — the initial implementation only supports web scroll detection.
-  if (isWeb) {
-    return { isAtTop }
-  }
-
-  return { isAtTop, onScroll }
+  return { isAtTop }
 }

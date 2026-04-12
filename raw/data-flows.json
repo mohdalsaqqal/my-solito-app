@@ -1,0 +1,33 @@
+{
+  "data_flows": {
+    "canonical_data_flow": [
+      "UI (Server + Client Components)",
+      "→ apps/next/server/services",
+      "→ packages/providers (registry)",
+      "→ packages/adapters (mock today, real later)"
+    ],
+    "canonical_ui_flow": [
+      "Shared UI Consumers",
+      "→ packages/ui/components",
+      "→ packages/ui/reusables"
+    ],
+    "homepage_layout_engine": {
+      "flow": "CMS → Server Layer → Normalized Blocks → UI",
+      "pipeline": {
+        "HomeScreen": {
+          "hasPublishedBlocks": {
+            "HomeBlocksRenderer": [
+              "useBreakpoint() → LayoutProfile",
+              "buildHomeLayout(rawBlocks, profile) → ResolvedRenderSlot[]",
+              "dispatchHomeRenderer(slot) → typed renderer per block type"
+            ]
+          },
+          "noBlocks": "HomeLegacyScreen (fallback)"
+        }
+      }
+    },
+    "layout_as_data": {
+      "flow": "CMS -> Server Layer -> Normalized Blocks -> UI"
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "slug": "apps-next-api",
+  "label": "apps/next/app/api",
+  "path": "apps/next/app/api",
+  "use_when": "route handlers, auth/session gates, admin APIs, request validation, web BFF entry points",
+  "notes": "API-first graph for App Router route handlers and request/auth helpers.",
+  "total_files": 160,
+  "total_words": 34462,
+  "code_files": 160,
+  "document_files": 0,
+  "paper_files": 0,
+  "image_files": 0,
+  "skipped_sensitive": 3,
+  "nodes": 222,
+  "edges": 318,
+  "communities": 26,
+  "god_nodes": [
+    {
+      "id": "route_post",
+      "label": "POST()",
+      "edges": 13
+    },
+    {
+      "id": "route_patch",
+      "label": "PATCH()",
+      "edges": 7
+    },
+    {
+      "id": "rate_limiter_ratelimiter",
+      "label": "RateLimiter",
+      "edges": 6
+    },
+    {
+      "id": "referral_profile_store_readprofiles",
+      "label": "readProfiles()",
+      "edges": 6
+    },
+    {
+      "id": "referral_profile_store_listreferralprofiles",
+      "label": "listReferralProfiles()",
+      "edges": 6
+    }
+  ],
+  "suggested_questions": [
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.12 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11 - nodes in this community are weakly interconnected."
+    }
+  ],
+  "report_path": "graphify-out/contexts/apps-next-api/GRAPH_REPORT.md",
+  "graph_path": "graphify-out/contexts/apps-next-api/graph.json",
+  "html_path": "graphify-out/contexts/apps-next-api/graph.html",
+  "wiki_index_path": "graphify-out/contexts/apps-next-api/wiki/index.md"
+}

@@ -12,12 +12,22 @@ const workspaceRoot = path.resolve(projectRoot, '../..')
 
 const config = getDefaultConfig(projectRoot)
 
+function escapeForMetroPath(value) {
+  return value
+    .split(/[/\\]/)
+    .map((segment) => segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('[/\\\\]')
+}
+
 config.watchFolders = [workspaceRoot]
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 config.resolver.disableHierarchicalLookup = true
+config.resolver.blockList = new RegExp(
+  `^${escapeForMetroPath(path.resolve(workspaceRoot, '.tmp'))}[/\\\\].*`
+)
 
 config.transformer.getTransformOptions = async () => ({
   transform: {

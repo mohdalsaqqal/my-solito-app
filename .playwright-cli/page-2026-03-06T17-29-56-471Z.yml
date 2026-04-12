@@ -1,0 +1,168 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]: R
+        - generic [ref=e8]: Real Cosmetics
+      - navigation [ref=e10]:
+        - link "Dashboard" [ref=e11] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - generic [ref=e13]:
+            - img [ref=e14]
+            - generic [ref=e19]: Dashboard
+        - generic [ref=e20]:
+          - button "Catalog" [ref=e21] [cursor=pointer]:
+            - generic [ref=e22]:
+              - img [ref=e23]
+              - generic [ref=e26]: Catalog
+            - img [ref=e28]
+          - generic [ref=e30]:
+            - link "Products" [ref=e31] [cursor=pointer]:
+              - /url: /admin/catalog/products
+              - generic [ref=e33]:
+                - img [ref=e34]
+                - generic [ref=e38]: Products
+            - link "Categories" [ref=e39] [cursor=pointer]:
+              - /url: /admin/catalog/categories
+              - generic [ref=e41]:
+                - img [ref=e42]
+                - generic [ref=e46]: Categories
+            - link "Brands" [ref=e47] [cursor=pointer]:
+              - /url: /admin/catalog/brands
+              - generic [ref=e49]:
+                - img [ref=e50]
+                - generic [ref=e54]: Brands
+            - link "Queries" [ref=e55] [cursor=pointer]:
+              - /url: /admin/catalog/queries
+              - generic [ref=e57]:
+                - img [ref=e58]
+                - generic [ref=e61]: Queries
+        - generic [ref=e62]:
+          - button "Marketing" [ref=e63] [cursor=pointer]:
+            - generic [ref=e64]:
+              - img [ref=e65]
+              - generic [ref=e68]: Marketing
+            - img [ref=e70]
+          - generic [ref=e72]:
+            - link "Promotions" [ref=e73] [cursor=pointer]:
+              - /url: /admin/marketing/promotions
+              - generic [ref=e75]:
+                - img [ref=e76]
+                - generic [ref=e79]: Promotions
+            - generic [ref=e80]:
+              - button "CMS" [ref=e81] [cursor=pointer]:
+                - generic [ref=e82]:
+                  - img [ref=e83]
+                  - generic [ref=e86]: CMS
+                - img [ref=e88]
+              - generic [ref=e90]:
+                - link "Releases" [ref=e91] [cursor=pointer]:
+                  - /url: /admin/marketing/cms/releases
+                  - generic [ref=e93]:
+                    - img [ref=e94]
+                    - generic [ref=e97]: Releases
+                - link "Blocks" [ref=e98] [cursor=pointer]:
+                  - /url: /admin/marketing/cms/blocks
+                  - generic [ref=e100]:
+                    - img [ref=e101]
+                    - generic [ref=e104]: Blocks
+                - link "Queries" [ref=e105] [cursor=pointer]:
+                  - /url: /admin/marketing/cms/queries
+                  - generic [ref=e107]:
+                    - img [ref=e108]
+                    - generic [ref=e111]: Queries
+        - link "Orders" [ref=e112] [cursor=pointer]:
+          - /url: /admin/orders
+          - generic [ref=e114]:
+            - img [ref=e115]
+            - generic [ref=e119]: Orders
+        - link "Customers" [ref=e120] [cursor=pointer]:
+          - /url: /admin/customers
+          - generic [ref=e122]:
+            - img [ref=e123]
+            - generic [ref=e128]: Customers
+        - generic [ref=e129]:
+          - button "Operations" [ref=e130] [cursor=pointer]:
+            - generic [ref=e131]:
+              - img [ref=e132]
+              - generic [ref=e135]: Operations
+            - img [ref=e137]
+          - generic [ref=e139]:
+            - link "Cache" [ref=e140] [cursor=pointer]:
+              - /url: /admin/operations/cache
+              - generic [ref=e142]:
+                - img [ref=e143]
+                - generic [ref=e146]: Cache
+            - link "Audit" [ref=e147] [cursor=pointer]:
+              - /url: /admin/operations/audit
+              - generic [ref=e149]:
+                - img [ref=e150]
+                - generic [ref=e152]: Audit
+            - link "Translations" [ref=e153] [cursor=pointer]:
+              - /url: /admin/operations/translations
+              - generic [ref=e155]:
+                - img [ref=e156]
+                - generic [ref=e160]: Translations
+      - generic [ref=e161]:
+        - generic [ref=e164]: "Environment: production"
+        - generic [ref=e165]:
+          - img [ref=e167]
+          - generic [ref=e170]:
+            - generic [ref=e171]: Admin User
+            - generic [ref=e172]: admin@realcosmetics.local
+          - button "Logout" [ref=e173] [cursor=pointer]:
+            - img [ref=e174]
+    - generic [ref=e177]:
+      - banner [ref=e178]:
+        - generic [ref=e179]:
+          - button "Toggle sidebar" [ref=e180] [cursor=pointer]:
+            - img [ref=e181]
+          - navigation "Breadcrumb" [ref=e182]:
+            - list [ref=e183]:
+              - listitem [ref=e184]:
+                - generic [ref=e185]: en
+              - listitem [ref=e186]:
+                - generic [ref=e187]: /
+                - generic [ref=e188]: admin
+              - listitem [ref=e189]:
+                - generic [ref=e190]: /
+                - generic [ref=e191]: marketing
+              - listitem [ref=e192]:
+                - generic [ref=e193]: /
+                - generic [ref=e194]: cms
+              - listitem [ref=e195]:
+                - generic [ref=e196]: /
+                - generic [ref=e197]: releases
+        - generic [ref=e198]:
+          - generic [ref=e199]:
+            - img [ref=e200]
+            - searchbox "Search..." [ref=e203]
+          - button "Notifications" [ref=e204] [cursor=pointer]:
+            - img [ref=e205]
+          - button "AD" [ref=e209] [cursor=pointer]
+      - main [ref=e210]:
+        - generic [ref=e211]:
+          - generic [ref=e212]:
+            - generic [ref=e213]:
+              - heading "CMS Releases" [level=1] [ref=e214]
+              - paragraph [ref=e215]: Manage content releases and scheduled updates.
+            - button "New Release" [ref=e217] [cursor=pointer]:
+              - generic [ref=e218]:
+                - img [ref=e219]
+                - text: New Release
+          - generic [ref=e221]:
+            - generic [ref=e222]:
+              - generic [ref=e223]:
+                - img [ref=e224]
+                - textbox "Search releases..." [ref=e227]
+              - generic [ref=e228]:
+                - button "Staging" [ref=e229] [cursor=pointer]
+                - button "Production" [ref=e230] [cursor=pointer]
+            - generic [ref=e231]:
+              - paragraph [ref=e232]: No releases found
+              - paragraph [ref=e233]: Create your first release to manage CMS publishing flow.
+              - button "Create release" [ref=e234] [cursor=pointer]:
+                - generic [ref=e235]:
+                  - img [ref=e236]
+                  - text: Create release
+  - alert [ref=e239]

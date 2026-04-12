@@ -3,10 +3,13 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
+const REPO_ROOT = path.resolve(TEST_DIR, '../../../../..')
 
 const PAGE_CONFIG_STORE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -15,7 +18,7 @@ const PAGE_CONFIG_STORE_PATH = path.join(
   'page-config-store.ts'
 )
 const PAGE_VERSION_STORE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -24,7 +27,7 @@ const PAGE_VERSION_STORE_PATH = path.join(
   'page-version-store.ts'
 )
 const RELEASE_BLOCKS_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -34,7 +37,7 @@ const RELEASE_BLOCKS_ROUTE_PATH = path.join(
   'route.ts'
 )
 const RELEASE_BLOCK_DETAIL_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -45,7 +48,7 @@ const RELEASE_BLOCK_DETAIL_ROUTE_PATH = path.join(
   'route.ts'
 )
 const RELEASE_PUBLISH_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -57,7 +60,7 @@ const RELEASE_PUBLISH_ROUTE_PATH = path.join(
   'route.ts'
 )
 const PREVIEW_TOKEN_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',

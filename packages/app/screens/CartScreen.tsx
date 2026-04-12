@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
-import { Platform, useWindowDimensions } from 'react-native'
-import { borderWidth, breakpoints, colors, componentTokens, spacing } from '@real/tokens'
+import React, { useMemo, useState } from 'react'
+import { Platform } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { borderWidth, componentTokens, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Divider, Text } from '@real/ui/primitives'
 import { Button, Card, PaymentBadges, QuantityInput } from '@real/ui/components'
 import { passThroughPricingService } from '@real/app/lib/pricing'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
+import { useRouter } from 'next/navigation'
 
 type CartScreenItem = {
   productId: string
@@ -46,7 +49,7 @@ function SummaryRow({
   )
 }
 
-export function CartScreen({
+export const CartScreen = React.memo(function CartScreen({
   items,
   loading,
   error,
@@ -56,30 +59,36 @@ export function CartScreen({
   onCheckout,
   onRetry,
 }: CartScreenProps) {
-  const { width } = useWindowDimensions()
-  const isCompact = width > 0 && width < breakpoints.tabletMin
-  const isDesktop = width >= breakpoints.desktopMin || (Platform.OS === 'web' && width === 0)
+  const profile = useBreakpoint()
+  const c = useThemeColors()
+  const { t } = useTranslation('cart')
+  const router = useRouter()
+  const isCompact = profile.breakpoint === 'mobile'
+  const isDesktop = profile.breakpoint === 'desktop'
   const cartTokens = componentTokens.storefrontCommerce.cart
-  const cartTitle = 'Cart'
-  const loadErrorTitle = 'Unable to load cart'
-  const retryLabel = 'Retry'
-  const emptyTitle = 'Your cart is empty'
-  const emptyMessage = 'Add products to start checkout.'
-  const removeLabel = 'Remove'
-  const removingLabel = 'Removing...'
-  const updatingLabel = 'Updating...'
-  const summaryTitle = 'Order summary'
-  const subtotalLabel = 'Subtotal'
-  const shippingLabel = 'Shipping'
-  const totalLabel = 'Total'
-  const summaryNotice = 'Secure checkout. Final shipping and promotions are confirmed at checkout.'
-  const checkoutLabel = 'Checkout'
+  const cartTitle = t('title')
+  const loadErrorTitle = t('error.loadFailed')
+  const retryLabel = t('actions.retry')
+  const emptyTitle = t('empty.title')
+  const emptyMessage = t('empty.subtitle')
+  const removeLabel = t('item.remove')
+  const removingLabel = t('item.removing')
+  const updatingLabel = t('item.updating')
+  const summaryTitle = t('summary.title')
+  const subtotalLabel = t('summary.subtotal')
+  const shippingLabel = t('summary.shipping')
+  const totalLabel = t('summary.total')
+  const summaryNotice = t('summary.notice')
+  const checkoutLabel = t('actions.checkout')
 
   const [pendingById, setPendingById] = useState<Record<string, boolean>>({})
   const [actionById, setActionById] = useState<Record<string, 'updating' | 'removing' | undefined>>({})
   const [actionErrorById, setActionErrorById] = useState<Record<string, string | null>>({})
 
-  const cartTotals = passThroughPricingService.getCartTotals(items)
+  const cartTotals = useMemo(
+    () => passThroughPricingService.getCartTotals(items),
+    [items],
+  )
   const currency = cartTotals.currency
   const formatter = useMemo(
     () =>
@@ -107,7 +116,7 @@ export function CartScreen({
     try {
       await mutate()
     } catch (cause) {
-      const message = cause instanceof Error ? cause.message : 'Unable to update cart item.'
+      const message = cause instanceof Error ? cause.message : t('item.updateError')
       setActionErrorById((current) => ({ ...current, [productId]: message }))
     } finally {
       setPendingById((current) => ({ ...current, [productId]: false }))
@@ -137,7 +146,7 @@ export function CartScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
-              <Text variant='h2'>{loadErrorTitle}</Text>
+              <Text variant='h1'>{loadErrorTitle}</Text>
               <Text tone='muted'>{error}</Text>
               <Box style={isCompact ? undefined : { width: spacing.xxl * 3 }}>
                 <Button variant='outline' onPress={onRetry}>{retryLabel}</Button>
@@ -155,8 +164,11 @@ export function CartScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
-              <Text variant='h2'>{emptyTitle}</Text>
+              <Text variant='h1'>{emptyTitle}</Text>
               <Text tone='muted'>{emptyMessage}</Text>
+              <Box style={{ width: spacing.xxl * 3 }}>
+                <Button onPress={() => router.push('/shop')}>{t('actions.startShopping')}</Button>
+              </Box>
             </Box>
           </Section>
         </PageScaffold.Body>
@@ -169,7 +181,7 @@ export function CartScreen({
       <PageScaffold.Body>
         <Section>
           <Box style={{ gap: cartTokens.summaryGap }}>
-            <Text variant='h2'>{cartTitle}</Text>
+            <Text variant='h1'>{cartTitle}</Text>
             <Box
               style={{
                 flexDirection: isDesktop ? 'row' : 'column',
@@ -185,7 +197,7 @@ export function CartScreen({
                     style={{
                       gap: cartTokens.itemGap,
                       borderWidth: borderWidth.thin,
-                      borderColor: colors.stroke,
+                      borderColor: c.stroke,
                       padding: cartTokens.itemPadding,
                     }}
                   >
@@ -270,7 +282,7 @@ export function CartScreen({
                   style={{
                     gap: cartTokens.summaryGap,
                     borderWidth: borderWidth.thin,
-                    borderColor: colors.stroke,
+                    borderColor: c.stroke,
                     padding: cartTokens.summaryPanelPadding,
                   }}
                 >
@@ -294,4 +306,4 @@ export function CartScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

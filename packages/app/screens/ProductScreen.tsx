@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Image, Platform, useWindowDimensions, View } from 'react-native'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Image, Platform, View } from 'react-native'
 import { Product, Review } from '@real/app/lib/types'
-import { borderWidth, breakpoints, colors, componentTokens, layout, radius, spacing } from '@real/tokens'
+import { borderWidth, componentTokens, layout, radius, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
-import { Box, Divider, HorizontalScroll, Text, Touchable } from '@real/ui/primitives'
+import { Box, Divider, HorizontalScroll, Text } from '@real/ui/primitives'
 import {
   Badge,
   Button,
@@ -16,11 +16,12 @@ import {
   QuantityInput,
   StockBadge,
 } from '@real/ui/components'
+import { Button as ReusableButton } from '@real/ui/reusables/button'
 import { applyProductFilter } from '@real/app/lib/product-filter'
 import { recommendationService } from '@real/app/lib/recommendation'
 import { passThroughPricingService } from '@real/app/lib/pricing'
-import { buildHomeProductItem } from '@real/app/lib/product-card-presentation'
-import { HomeProductItem } from '@real/ui/components/home/types'
+import { buildProductCardModels } from '@real/app/lib/product-card-model'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 
 type ProductScreenProps = {
   product: Product | null
@@ -171,7 +172,7 @@ function inferOptionGroups(product: Product): ProductOptionGroup[] {
   return [{ id: 'size', label: 'Size', values: ['Standard'] }]
 }
 
-export function ProductScreen({
+export const ProductScreen = React.memo(function ProductScreen({
   product,
   products,
   locale = 'en',
@@ -190,9 +191,10 @@ export function ProductScreen({
   onSelectProduct,
   onReload,
 }: ProductScreenProps) {
-  const { width } = useWindowDimensions()
-  const isCompact = width > 0 && width < breakpoints.tabletMin
-  const isDesktop = width >= breakpoints.desktopMin || (Platform.OS === 'web' && width === 0)
+  const profile = useBreakpoint()
+  const c = useThemeColors()
+  const isCompact = profile.breakpoint === 'mobile'
+  const isDesktop = profile.breakpoint === 'desktop'
   const pdpTokens = componentTokens.storefrontCommerce.pdp
   const loadErrorTitle = locale === 'ar' ? 'تعذر تحميل المنتج' : 'Unable to load product'
   const retryLabel = locale === 'ar' ? 'إعادة المحاولة' : 'Retry'
@@ -377,12 +379,15 @@ export function ProductScreen({
   const hasThumbnailRail = imageUrls.length > 1
   const activeImage = imageUrls[Math.min(activeImageIndex, imageUrls.length - 1)] ?? PLACEHOLDER_IMAGE
   const stickyTop = layout.header.mainRowHeight + layout.header.navRowHeight + spacing.md
-  const currencyFormatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: product.currency || 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })
+  const currencyFormatter = useMemo(
+    () => new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: product.currency || 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }),
+    [product.currency],
+  )
 
   const tabLabelDescription = copy?.tabs?.description ?? (locale === 'ar' ? 'الوصف' : 'Description')
   const tabLabelHowToUse = copy?.tabs?.howToUse ?? (locale === 'ar' ? 'طريقة الاستخدام' : 'How to use')
@@ -452,7 +457,7 @@ export function ProductScreen({
     : typeof product.stock === 'number' && product.stock > 0 && product.stock <= 8
     ? 'low-stock'
     : 'in-stock'
-  const relatedHomeItems = relatedProducts.map((item) => buildHomeProductItem(item, locale))
+  const relatedCardItems = buildProductCardModels(relatedProducts, locale)
   const mobileStickyStyle =
     Platform.OS === 'web'
       ? ({
@@ -461,15 +466,15 @@ export function ProductScreen({
           right: 0,
           bottom: 0,
           borderTopWidth: borderWidth.thin,
-          borderColor: colors.border,
-          backgroundColor: colors.surface,
+          borderColor: c.border,
+          backgroundColor: c.surface,
           paddingHorizontal: pdpTokens.stickyMobileBarPadding,
           paddingVertical: pdpTokens.stickyMobileBarPadding,
         } as any)
       : {
           borderTopWidth: borderWidth.thin,
-          borderColor: colors.border,
-          backgroundColor: colors.surface,
+          borderColor: c.border,
+          backgroundColor: c.surface,
           paddingHorizontal: pdpTokens.stickyMobileBarPadding,
           paddingVertical: pdpTokens.stickyMobileBarPadding,
         }
@@ -508,9 +513,9 @@ export function ProductScreen({
         variant='flat'
         style={{
           gap: pdpTokens.purchasePanelGap,
-          backgroundColor: colors.surface,
+          backgroundColor: c.surface,
           borderWidth: borderWidth.thin,
-          borderColor: colors.border,
+          borderColor: c.border,
         }}
       >
         <MarketplacePromoStrip
@@ -544,7 +549,7 @@ export function ProductScreen({
             </Text>
           </Box>
           <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-            <Icon name='star' size={spacing['16']} color={colors.goldPrimary} weight='fill' />
+            <Icon name='star' size={spacing['16']} color={c.amberWarm} weight='fill' />
             <Text variant='caption' tone='muted'>
               {reviews.length > 0
                 ? `${averageRating.toFixed(1)} / 5 (${reviews.length})`
@@ -565,20 +570,15 @@ export function ProductScreen({
                     {group.values.map((value) => {
                       const active = selectedOptions[group.id] === value
                       return (
-                        <Touchable
+                        <Button
                           key={value}
                           onPress={() => setSelectedOptions((current) => ({ ...current, [group.id]: value }))}
-                          style={{
-                            borderWidth: borderWidth.thin,
-                            borderColor: active ? colors.brandPrimary : colors.border,
-                            backgroundColor: active ? colors.brandPrimarySubtle : colors.surface,
-                            borderRadius: radius.md,
-                            paddingHorizontal: spacing['16'],
-                            paddingVertical: spacing['8'],
-                          }}
+                          variant={active ? 'outline' : 'secondaryQuiet'}
+                          size='sm'
+                          shape='pill'
                         >
-                          <Text variant='bodySm'>{value}</Text>
-                        </Touchable>
+                          {value}
+                        </Button>
                       )
                     })}
                   </Box>
@@ -617,7 +617,7 @@ export function ProductScreen({
             gap: pdpTokens.trustCardGap,
             padding: pdpTokens.trustCardPadding,
             borderWidth: borderWidth.thin,
-            borderColor: colors.border,
+            borderColor: c.border,
           }}
         >
           <Text variant='caption' weight='700' tone='muted'>
@@ -628,7 +628,7 @@ export function ProductScreen({
               <Icon
                 name={index === 0 ? 'shipping' : index === 1 ? 'returns' : 'secure'}
                 size={spacing['16']}
-                color={colors.textSecondary}
+                color={c.textSecondary}
               />
               <Text variant='caption' tone='muted'>
                 {item}
@@ -678,27 +678,31 @@ export function ProductScreen({
             {hasThumbnailRail ? (
               <Box style={{ gap: pdpTokens.mediaGap }}>
                 {imageUrls.map((uri, index) => (
-                  <Touchable
+                  <ReusableButton
                     key={`${uri}-${index}`}
                     onPress={() => setActiveImageIndex(index)}
+                    variant='ghost'
+                    size='default'
                     style={{
                       borderWidth: borderWidth.thin,
-                      borderColor: index === activeImageIndex ? colors.brandPrimary : colors.border,
-                      backgroundColor: index === activeImageIndex ? colors.brandPrimarySubtle : colors.surface,
+                      borderColor: index === activeImageIndex ? c.brandPrimary : c.border,
+                      backgroundColor: index === activeImageIndex ? c.brandPrimarySubtle : c.surface,
                       borderRadius: radius.xs,
                       padding: spacing.hairline,
                     }}
                   >
                     <Image
                       source={{ uri }}
+                      alt={product.name}
                       style={{
                         width: pdpTokens.mediaThumbSize,
                         height: pdpTokens.mediaThumbSize,
                         borderRadius: radius.xs,
-                        backgroundColor: colors.backgroundSecondary,
+                        backgroundColor: c.backgroundSecondary,
                       }}
+                      {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                     />
-                  </Touchable>
+                  </ReusableButton>
                 ))}
               </Box>
             ) : null}
@@ -706,20 +710,18 @@ export function ProductScreen({
               <Box
                 style={{
                   borderWidth: borderWidth.thin,
-                  borderColor: colors.border,
+                  borderColor: c.border,
                   borderRadius: radius.xs,
                   overflow: 'hidden',
-                  backgroundColor: colors.backgroundSecondary,
+                  backgroundColor: c.backgroundSecondary,
                 }}
               >
-                <Image
-                  source={{ uri: activeImage }}
-                  style={{
-                    width: '100%' as const,
-                    aspectRatio: 1,
-                    backgroundColor: colors.backgroundSecondary,
-                  }}
-                />
+              <Image
+                source={{ uri: product.image }}
+                alt={product.name}
+                resizeMode='contain'
+                style={{ width: '100%', height: '100%' }}
+              />
               </Box>
             </Box>
           </Box>
@@ -756,17 +758,19 @@ export function ProductScreen({
               const selected = selectedSetIds.includes(setProduct.id)
               const unavailable = inferOutOfStock(setProduct)
               return (
-                <Touchable
+                <ReusableButton
                   key={setProduct.id}
                   disabled={unavailable}
                   onPress={() => toggleSetItem(setProduct.id)}
+                  variant='ghost'
+                  size='default'
                   style={{
                     flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     paddingVertical: pdpTokens.setRowPaddingY,
                     borderBottomWidth: borderWidth.thin,
-                    borderColor: colors.border,
+                    borderColor: c.border,
                     opacity: unavailable ? 0.6 : 1,
                   }}
                 >
@@ -777,8 +781,8 @@ export function ProductScreen({
                         height: spacing.lg,
                         borderRadius: radius.xs,
                         borderWidth: borderWidth.thin,
-                        borderColor: selected ? colors.brandPrimary : colors.border,
-                        backgroundColor: selected ? colors.brandPrimarySubtle : colors.surface,
+                        borderColor: selected ? c.brandPrimary : c.border,
+                        backgroundColor: selected ? c.brandPrimarySubtle : c.surface,
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
@@ -787,12 +791,14 @@ export function ProductScreen({
                     </Box>
                     <Image
                       source={{ uri: setProduct.image || PLACEHOLDER_IMAGE }}
+                      alt={deriveProductName(setProduct.name)}
                       style={{
                         width: spacing.xxl,
                         height: spacing.xxl,
                         borderRadius: radius.xs,
-                        backgroundColor: colors.backgroundSecondary,
+                        backgroundColor: c.backgroundSecondary,
                       }}
+                      {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                     />
                     <Box style={{ flex: 1 }}>
                       <Text variant='caption' tone='muted'>{deriveBrand(setProduct.name)}</Text>
@@ -803,7 +809,7 @@ export function ProductScreen({
                   <Text variant='subtitle' weight='700'>
                     {formatPrice(passThroughPricingService.getProductPrice(setProduct).unitPrice)}
                   </Text>
-                </Touchable>
+                </ReusableButton>
               )
             })}
           </Box>
@@ -825,20 +831,15 @@ export function ProductScreen({
           ].map((tab) => {
             const active = tab.key === activeTab
             return (
-              <Touchable
+              <Button
                 key={tab.key}
                 onPress={() => setActiveTab(tab.key)}
-                style={{
-                  borderBottomWidth: borderWidth.thin,
-                  borderColor: active ? colors.brandPrimary : colors.border,
-                  paddingBottom: pdpTokens.tabPaddingBottom,
-                  marginEnd: spacing.md,
-                }}
+                variant={active ? 'outline' : 'ghost'}
+                size='sm'
+                shape='pill'
               >
-                <Text tone={active ? 'primary' : 'muted'} variant='caption' weight='700'>
-                  {tab.label}
-                </Text>
-              </Touchable>
+                {tab.label}
+              </Button>
             )
           })}
         </Box>
@@ -891,14 +892,15 @@ export function ProductScreen({
         <Box style={{ gap: pdpTokens.detailsGap }}>
           <Text variant='h2'>{relatedTitle}</Text>
           <HorizontalScroll contentContainerStyle={{ gap: spacing['16'] }}>
-            {relatedHomeItems.map((item) => (
+            {relatedCardItems.map((item) => (
               <ProductCard
                 key={item.id}
                 item={item}
-                density="minimal"
+                variant='compact'
                 width={isCompact ? pdpTokens.relatedCardWidthMobile : pdpTokens.relatedCardWidthDesktop}
-                onPress={(selected) => onSelectProduct?.(selected.id)}
-                onAddToCart={(selected) => onAddToCart?.(selected.id, 1)}
+                showWishlist
+                onPress={() => onSelectProduct?.(item.id)}
+                onPressAdd={() => onAddToCart?.(item.id, 1)}
               />
             ))}
           </HorizontalScroll>
@@ -913,4 +915,4 @@ export function ProductScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

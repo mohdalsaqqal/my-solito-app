@@ -10,13 +10,28 @@ type PreviewPayload = {
   exp: number
 }
 
-function getSecret() {
-  return process.env.PREVIEW_TOKEN_SECRET || process.env.ODOO_SECRET || 'dev-preview-secret'
+function isReleaseLikeEnvironment() {
+  const appEnv = process.env.APP_ENV?.trim().toLowerCase()
+  if (appEnv === 'production' || appEnv === 'staging') {
+    return true
+  }
+  return process.env.NODE_ENV === 'production'
 }
 
-function signPayload(payload: PreviewPayload) {
+function getSecret(): string | null {
+  const configured = process.env.PREVIEW_TOKEN_SECRET?.trim()
+  if (configured) {
+    return configured
+  }
+  if (isReleaseLikeEnvironment()) {
+    return null
+  }
+  return 'dev-preview-secret'
+}
+
+function signPayload(payload: PreviewPayload, secret: string) {
   return crypto
-    .createHmac('sha256', getSecret())
+    .createHmac('sha256', secret)
     .update(JSON.stringify(payload))
     .digest('hex')
 }
@@ -33,7 +48,11 @@ export function createPreviewToken(
     versionId: typeof versionId === 'string' && versionId.trim().length > 0 ? versionId.trim() : undefined,
     exp: Math.floor(Date.now() / 1000) + Math.max(10, ttlSeconds),
   }
-  const signature = signPayload(payload)
+  const secret = getSecret()
+  if (!secret) {
+    throw new Error('PREVIEW_TOKEN_SECRET is required in this environment.')
+  }
+  const signature = signPayload(payload, secret)
   const tokenPayload = JSON.stringify({ ...payload, signature })
   return Buffer.from(tokenPayload, 'utf8').toString('base64url')
 }
@@ -41,6 +60,10 @@ export function createPreviewToken(
 export function verifyPreviewToken(token: string | null | undefined) {
   if (!token) {
     return { valid: false as const, reason: 'MISSING' }
+  }
+  const secret = getSecret()
+  if (!secret) {
+    return { valid: false as const, reason: 'CONFIG' }
   }
 
   try {
@@ -60,8 +83,13 @@ export function verifyPreviewToken(token: string | null | undefined) {
       storeId: parsed.storeId,
       versionId: parsed.versionId,
       exp: parsed.exp,
-    })
-    if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(parsed.signature))) {
+    }, secret)
+
+    const expectedBuf = Buffer.from(expected)
+    const actualBuf = Buffer.from(parsed.signature)
+
+    // Length check first: timingSafeEqual throws on different-length buffers
+    if (expectedBuf.length !== actualBuf.length || !crypto.timingSafeEqual(expectedBuf, actualBuf)) {
       return { valid: false as const, reason: 'INVALID_SIGNATURE' }
     }
 

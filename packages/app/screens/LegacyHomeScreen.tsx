@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 import { Product, CMSHome } from '@real/app/lib/types'
 import {
   HomeCategoryStrip,
@@ -51,7 +51,7 @@ function toHomeProductItem(product: Product, badge?: string): HomeProductItem {
   }
 }
 
-export function LegacyHomeScreen({
+export const LegacyHomeScreen = React.memo(function LegacyHomeScreen({
   products,
   cmsHome,
   categories,
@@ -157,4 +157,4 @@ export function LegacyHomeScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

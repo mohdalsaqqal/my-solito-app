@@ -1,0 +1,36 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { AuthResetPasswordScreen } from '@real/app/screens/AuthResetPasswordScreen'
+import { apiClient } from '../../apiClient'
+
+export function AuthResetPasswordPageClient({ defaultToken }: { defaultToken: string }) {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  return (
+    <AuthResetPasswordScreen
+      defaultToken={defaultToken}
+      loading={loading}
+      error={error}
+      successMessage={successMessage}
+      onSubmit={async (input) => {
+        setLoading(true)
+        setError(null)
+        setSuccessMessage(null)
+        try {
+          await apiClient.auth.resetPassword(input)
+          setSuccessMessage('Password updated successfully. You can sign in now.')
+        } catch (cause) {
+          setError(cause instanceof Error ? cause.message : 'Unable to reset password.')
+        } finally {
+          setLoading(false)
+        }
+      }}
+      onGoToLogin={() => router.push('/auth/login')}
+    />
+  )
+}

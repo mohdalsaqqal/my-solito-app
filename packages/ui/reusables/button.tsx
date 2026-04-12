@@ -7,16 +7,16 @@ import { Platform, Pressable } from 'react-native';
 
 const buttonVariants = cva(
   cn(
-    // DESIGN.md §4 — "Roundedness Scale of 0px" — Brutalist-Luxe, no radius
-    'group shrink-0 flex-row items-center justify-center gap-2 rounded-none shadow-none',
+    // Phase 1 compact CTA baseline: dark primary actions, quiet light secondary actions.
+    'group shrink-0 flex-row items-center justify-center gap-2 rounded-[8px] shadow-none',
     Platform.select({
-      web: "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all focus-visible:ring-[3px] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+      web: "focus-visible:border-ring focus-visible:ring-[4px] focus-visible:ring-ring/70 focus-visible:ring-offset-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     })
   ),
   {
     variants: {
       variant: {
-        // DESIGN.md primary red — hover/pressed via CSS token vars
+        // Default primary action is dark neutral; purchase-intent red is handled by higher-level variants.
         default: cn(
           'bg-primary active:bg-primary-pressed',
           Platform.select({ web: 'hover:bg-primary-hover active:scale-[0.98]' })
@@ -34,8 +34,8 @@ const buttonVariants = cva(
           })
         ),
         secondary: cn(
-          'bg-secondary active:bg-secondary/80',
-          Platform.select({ web: 'hover:bg-secondary/80' })
+          'bg-secondary text-secondary-foreground active:bg-muted',
+          Platform.select({ web: 'hover:bg-muted' })
         ),
         ghost: cn(
           'active:bg-accent dark:active:bg-accent/50',
@@ -45,10 +45,11 @@ const buttonVariants = cva(
       },
       size: {
         // DESIGN.md — generous padding (px-8) on primary CTAs
+        // WCAG 2.5.5: all sizes minimum 44px touch target
         default: cn('h-12 px-8 py-3 sm:h-11', Platform.select({ web: 'has-[>svg]:px-6' })),
-        sm: cn('h-9 gap-1.5 px-4 sm:h-8', Platform.select({ web: 'has-[>svg]:px-3' })),
+        sm: cn('h-11 gap-1.5 px-4 sm:h-11', Platform.select({ web: 'has-[>svg]:px-3' })),
         lg: cn('h-14 px-10 sm:h-12', Platform.select({ web: 'has-[>svg]:px-8' })),
-        icon: 'h-10 w-10 sm:h-9 sm:w-9',
+        icon: 'h-11 w-11 sm:h-11 sm:w-11',
       },
     },
     defaultVariants: {

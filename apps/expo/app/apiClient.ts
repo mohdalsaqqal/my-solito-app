@@ -52,4 +52,11 @@ if (__DEV__) {
   console.log(`[expo-api] baseUrl=${baseUrl}`)
 }
 
-export const apiClient = createApiClient({ baseUrl })
+export const apiClient = createApiClient({
+  baseUrl,
+  // Native fetch requests do not carry browser provenance headers; use the
+  // explicit machine-client bypass expected by the hardened mutation routes.
+  defaultHeaders: {
+    'x-rc-trusted-request': '1',
+  },
+})

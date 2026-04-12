@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import { prisma } from '../../../server/lib/prisma'
 import path from 'node:path'
 
 export type LogoSizeKey = 'sm' | 'md' | 'lg'
@@ -34,10 +34,9 @@ export interface SiteConfigState {
 }
 
 export const ADMIN_DATA_DIR = path.join(process.cwd(), '.data')
-const STORAGE_FILE = path.join(ADMIN_DATA_DIR, 'admin-site-config.json')
 
 export async function ensureAdminDataDir() {
-  await fs.mkdir(ADMIN_DATA_DIR, { recursive: true })
+  // No-op: Prisma doesn't need directory creation
 }
 
 const DEFAULT_BRANDING: SiteConfigState['branding'] = {
@@ -128,16 +127,89 @@ function initialState(): SiteConfigState {
 
 export async function readSiteConfig(): Promise<SiteConfigState> {
   try {
-    const raw = await fs.readFile(STORAGE_FILE, 'utf-8')
-    return normalizeSiteConfigState(JSON.parse(raw))
+    const config = await prisma.cmsSiteConfig.findUnique({ where: { id: 'default' } })
+    if (!config) return initialState()
+
+    return {
+      branding: {
+        en: {
+          logoUrl: config.brandingEnLogoUrl,
+          logoAlt: config.brandingEnLogoAlt,
+          logoSize: normalizeLogoSize(config.brandingEnLogoSize),
+        },
+        ar: {
+          logoUrl: config.brandingArLogoUrl,
+          logoAlt: config.brandingArLogoAlt,
+          logoSize: normalizeLogoSize(config.brandingArLogoSize),
+        },
+      },
+      topBar: {
+        messageEn: config.topBarMessageEn,
+        messageAr: config.topBarMessageAr,
+        ctaLabelEn: config.topBarCtaLabelEn,
+        ctaLabelAr: config.topBarCtaLabelAr,
+        ctaHref: config.topBarCtaHref,
+      },
+      footer: {
+        newsletterTitleEn: config.footerNewsletterTitleEn,
+        newsletterTitleAr: config.footerNewsletterTitleAr,
+        legalEn: config.footerLegalEn,
+        legalAr: config.footerLegalAr,
+      },
+      search: {
+        panelTitleEn: config.searchPanelTitleEn,
+        panelTitleAr: config.searchPanelTitleAr,
+      },
+    }
   } catch {
     return initialState()
   }
 }
 
 export async function writeSiteConfig(state: SiteConfigState): Promise<void> {
-  await ensureAdminDataDir()
-  await fs.writeFile(STORAGE_FILE, JSON.stringify(normalizeSiteConfigState(state), null, 2), 'utf-8')
+  const normalized = normalizeSiteConfigState(state)
+  await prisma.cmsSiteConfig.upsert({
+    where: { id: 'default' },
+    create: {
+      id: 'default',
+      brandingEnLogoUrl: normalized.branding.en.logoUrl,
+      brandingEnLogoAlt: normalized.branding.en.logoAlt,
+      brandingEnLogoSize: normalized.branding.en.logoSize,
+      brandingArLogoUrl: normalized.branding.ar.logoUrl,
+      brandingArLogoAlt: normalized.branding.ar.logoAlt,
+      brandingArLogoSize: normalized.branding.ar.logoSize,
+      topBarMessageEn: normalized.topBar.messageEn,
+      topBarMessageAr: normalized.topBar.messageAr,
+      topBarCtaLabelEn: normalized.topBar.ctaLabelEn,
+      topBarCtaLabelAr: normalized.topBar.ctaLabelAr,
+      topBarCtaHref: normalized.topBar.ctaHref,
+      footerNewsletterTitleEn: normalized.footer.newsletterTitleEn,
+      footerNewsletterTitleAr: normalized.footer.newsletterTitleAr,
+      footerLegalEn: normalized.footer.legalEn,
+      footerLegalAr: normalized.footer.legalAr,
+      searchPanelTitleEn: normalized.search.panelTitleEn,
+      searchPanelTitleAr: normalized.search.panelTitleAr,
+    },
+    update: {
+      brandingEnLogoUrl: normalized.branding.en.logoUrl,
+      brandingEnLogoAlt: normalized.branding.en.logoAlt,
+      brandingEnLogoSize: normalized.branding.en.logoSize,
+      brandingArLogoUrl: normalized.branding.ar.logoUrl,
+      brandingArLogoAlt: normalized.branding.ar.logoAlt,
+      brandingArLogoSize: normalized.branding.ar.logoSize,
+      topBarMessageEn: normalized.topBar.messageEn,
+      topBarMessageAr: normalized.topBar.messageAr,
+      topBarCtaLabelEn: normalized.topBar.ctaLabelEn,
+      topBarCtaLabelAr: normalized.topBar.ctaLabelAr,
+      topBarCtaHref: normalized.topBar.ctaHref,
+      footerNewsletterTitleEn: normalized.footer.newsletterTitleEn,
+      footerNewsletterTitleAr: normalized.footer.newsletterTitleAr,
+      footerLegalEn: normalized.footer.legalEn,
+      footerLegalAr: normalized.footer.legalAr,
+      searchPanelTitleEn: normalized.search.panelTitleEn,
+      searchPanelTitleAr: normalized.search.panelTitleAr,
+    },
+  })
 }
 
 export function mergeSiteConfigState(

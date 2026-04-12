@@ -1,3 +1,4 @@
+import React from 'react'
 import { View, ViewStyle } from 'react-native'
 import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
 import { Text } from '../primitives/Text'
@@ -37,7 +38,7 @@ const stockConfig: Record<
   },
 }
 
-export function StockBadge({
+export const StockBadge = React.memo(function StockBadge({
   level,
   quantity,
   loading = false,
@@ -78,4 +79,4 @@ export function StockBadge({
       </Text>
     </View>
   )
-}
+})

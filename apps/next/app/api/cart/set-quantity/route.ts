@@ -1,36 +1,36 @@
 import { cartProvider } from '@real/providers'
 import { fail, ok } from '../../_lib/response'
+import { CartSetQuantityBodySchema } from '../../_lib/validation-schemas'
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as {
-      productId?: string
-      quantity?: number
+    const body = await request.json()
+    const parsed = CartSetQuantityBodySchema.safeParse(body)
+    if (!parsed.success) {
+      return fail('CART_SET_QUANTITY_INVALID', parsed.error.issues[0].message, 400)
     }
 
-    if (!body.productId || typeof body.quantity !== 'number' || body.quantity < 0) {
-      return fail('INVALID_CART_SET_QUANTITY_PAYLOAD', 'productId and non-negative quantity are required.', 400)
-    }
+    const { productId, quantity } = parsed.data
 
     const current = await cartProvider.get()
     if (!current.ok) {
       return fail(current.error.code, current.error.message, 500)
     }
 
-    const existing = current.data.items.find((item) => item.productId === body.productId)
+    const existing = current.data.items.find((item) => item.productId === productId)
     if (existing) {
-      const removed = await cartProvider.remove(body.productId)
+      const removed = await cartProvider.remove(productId)
       if (!removed.ok) {
         return fail(removed.error.code, removed.error.message, 500)
       }
-      if (body.quantity === 0) {
+      if (quantity === 0) {
         return ok(removed.data)
       }
-    } else if (body.quantity === 0) {
+    } else if (quantity === 0) {
       return ok(current.data)
     }
 
-    const added = await cartProvider.add(body.productId, body.quantity)
+    const added = await cartProvider.add(productId, quantity)
     if (!added.ok) {
       return fail(added.error.code, added.error.message, 500)
     }

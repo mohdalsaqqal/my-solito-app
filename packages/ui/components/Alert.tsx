@@ -1,7 +1,8 @@
-import { ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import { Pressable, View, ViewStyle } from 'react-native'
-import { borderWidth, colors, radius, spacing, statusTone } from '@real/tokens'
+import { borderWidth, radius, spacing, statusTone } from '@real/tokens'
 import { Text } from '../primitives/Text'
+import { useThemeColors } from '../responsive'
 
 type AlertTone = 'success' | 'warning' | 'error' | 'info'
 
@@ -13,21 +14,6 @@ type AlertProps = {
   style?: ViewStyle
 }
 
-// Derive from tokens — single source of truth (§1.1)
-const subtleBg: Record<AlertTone, string> = {
-  success: statusTone.success.subtle,
-  warning: statusTone.warning.subtle,
-  error:   statusTone.error.subtle,
-  info:    statusTone.info.subtle,
-}
-
-const accentColor: Record<AlertTone, string> = {
-  success: colors.success,
-  warning: colors.warning,
-  error:   colors.error,
-  info:    colors.info,
-}
-
 const textTone: Record<AlertTone, 'success' | 'warning' | 'danger' | 'info'> = {
   success: 'success',
   warning: 'warning',
@@ -35,7 +21,13 @@ const textTone: Record<AlertTone, 'success' | 'warning' | 'danger' | 'info'> = {
   info:    'info',
 }
 
-export function Alert({ tone = 'info', title, children, onDismiss, style }: AlertProps) {
+export const Alert = React.memo(function Alert({ tone = 'info', title, children, onDismiss, style }: AlertProps) {
+  const c = useThemeColors()
+  const accent =
+    tone === 'success' ? c.success : tone === 'warning' ? c.warning : tone === 'error' ? c.error : c.info
+  const bg =
+    tone === 'success' ? statusTone.success.subtle : tone === 'warning' ? statusTone.warning.subtle : tone === 'error' ? statusTone.error.subtle : statusTone.info.subtle
+
   return (
     <View
       accessibilityRole="alert"
@@ -48,10 +40,10 @@ export function Alert({ tone = 'info', title, children, onDismiss, style }: Aler
           paddingVertical: spacing.sm,
           borderRadius: radius.md,
           borderStartWidth: 3,
-          borderStartColor: accentColor[tone],
+          borderStartColor: accent,
           borderWidth: borderWidth.thin,
-          borderColor: accentColor[tone],
-          backgroundColor: subtleBg[tone],
+          borderColor: accent,
+          backgroundColor: bg,
         },
         style,
       ]}
@@ -81,4 +73,4 @@ export function Alert({ tone = 'info', title, children, onDismiss, style }: Aler
       )}
     </View>
   )
-}
+})

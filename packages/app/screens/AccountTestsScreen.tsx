@@ -1,4 +1,5 @@
 import { spacing } from '@real/tokens'
+import { useTranslation } from 'react-i18next'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Text } from '@real/ui/primitives'
 import { Button, Card } from '@real/ui/components'
@@ -19,6 +20,7 @@ export function AccountTestsScreen({
   onReload,
   onSelectTest,
 }: AccountTestsScreenProps) {
+  const { t } = useTranslation('account')
   if (loading) {
     return (
       <PageScaffold variant='account' density='standard' scroll='auto'>
@@ -40,10 +42,10 @@ export function AccountTestsScreen({
         <PageScaffold.Body>
           <Section>
             <Card tone='subtle' style={{ gap: spacing['8'] }}>
-              <Text tone='danger'>Unable to load tests.</Text>
+              <Text tone='danger'>{t('error.loadFailed')}</Text>
               <Text tone='muted' variant='bodySm'>{error}</Text>
               <Box style={{ width: spacing['128'] }}>
-                <Button variant='outline' onPress={onReload}>Retry</Button>
+                <Button variant='outline' onPress={onReload}>{t('testDetail.retry')}</Button>
               </Box>
             </Card>
           </Section>
@@ -58,13 +60,13 @@ export function AccountTestsScreen({
         <Section>
           <Box gap='16'>
             <Card variant='raised' style={{ gap: spacing['8'] }}>
-              <Text variant='h2'>Diagnostics tests</Text>
-              <Text tone='muted'>Review your in-branch test history and recommendations.</Text>
+              <Text variant='h1'>{t('tests.title')}</Text>
+              <Text tone='muted'>{t('tests.empty')}</Text>
             </Card>
 
             {tests.length === 0 ? (
               <Card tone='subtle'>
-                <Text tone='muted'>No tests available yet.</Text>
+                <Text tone='muted'>{t('tests.empty')}</Text>
               </Card>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
@@ -79,7 +81,7 @@ export function AccountTestsScreen({
                     </Text>
                     <Box style={{ width: spacing['128'] }}>
                       <Button size='sm' variant='outline' onPress={() => onSelectTest?.(test.id)}>
-                        View result
+                        {t('tests.viewResult')}
                       </Button>
                     </Box>
                   </Card>

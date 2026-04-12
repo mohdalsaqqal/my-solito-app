@@ -1,0 +1,29 @@
+{
+  "slug": "packages-providers",
+  "label": "packages/providers",
+  "path": "packages/providers",
+  "use_when": "provider contracts, registry behavior, readiness, integration boundaries",
+  "notes": "Contract graph for provider interfaces and registry selection.",
+  "total_files": 27,
+  "total_words": 4919,
+  "code_files": 27,
+  "document_files": 0,
+  "paper_files": 0,
+  "image_files": 0,
+  "skipped_sensitive": 0,
+  "nodes": 29,
+  "edges": 34,
+  "communities": 6,
+  "god_nodes": [],
+  "suggested_questions": [
+    {
+      "type": "no_signal",
+      "question": null,
+      "why": "Not enough signal to generate questions. This usually means the corpus has no AMBIGUOUS edges, no bridge nodes, no INFERRED relationships, and all communities are tightly cohesive. Add more files or run with --mode deep to extract richer edges."
+    }
+  ],
+  "report_path": "graphify-out/contexts/packages-providers/GRAPH_REPORT.md",
+  "graph_path": "graphify-out/contexts/packages-providers/graph.json",
+  "html_path": "graphify-out/contexts/packages-providers/graph.html",
+  "wiki_index_path": "graphify-out/contexts/packages-providers/wiki/index.md"
+}

@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
-import { ViewStyle } from 'react-native'
-import { MotiView } from 'moti'
-import { colors, radius } from '@real/tokens'
+import { View, ViewStyle } from 'react-native'
+import { colors, opacity, radius } from '@real/tokens'
+import { useThemeColors } from '../responsive'
 
 type SkeletonProps = {
   width: number | `${number}%`
@@ -11,22 +11,16 @@ type SkeletonProps = {
 }
 
 function SkeletonItem({ width, height, radius: radiusKey = 'xs', style }: SkeletonProps) {
+  const c = useThemeColors()
   return (
-    <MotiView
-      from={{ opacity: 1 }}
-      animate={{ opacity: 0.4 }}
-      transition={{
-        type: 'timing',
-        duration: 800,
-        loop: true,
-        repeatReverse: true,
-      }}
+    <View
       style={[
         {
           width,
           height,
-          backgroundColor: colors.backgroundSecondary,
+          backgroundColor: c.backgroundSecondary,
           borderRadius: radius[radiusKey],
+          opacity: opacity.disabled,
         },
         style,
       ]}

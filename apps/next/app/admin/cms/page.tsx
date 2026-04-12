@@ -4,3 +4,4 @@ export default function AdminCmsCompatPage() {
   redirect('/admin/marketing/cms/releases')
 }
 
+

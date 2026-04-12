@@ -13,10 +13,15 @@ type BuildCartHashInput = {
   branchId?: string
   shippingBaseline: number
   couponCode?: string
+  referralCode?: string
 }
 
 export function normalizeCouponCode(code?: string) {
   return (code ?? '').trim().toLowerCase()
+}
+
+export function normalizeReferralCode(code?: string) {
+  return (code ?? '').trim().toUpperCase()
 }
 
 export function round2(value: number) {
@@ -45,6 +50,7 @@ export function buildCartHash(input: BuildCartHashInput) {
     branchId: input.branchId ?? '',
     shippingBaseline: round2(input.shippingBaseline),
     couponCode: normalizeCouponCode(input.couponCode),
+    referralCode: normalizeReferralCode(input.referralCode),
   }
 
   return createHash('sha256').update(JSON.stringify(canonical)).digest('hex')

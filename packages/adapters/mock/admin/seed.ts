@@ -5,6 +5,7 @@ import {
   ProductDetail,
   VendorDetail,
 } from '@real/providers/contracts'
+import { generatedMockProductRows } from '../product/generated-mock-erp-data'
 
 export type AdminMockState = {
   products: ProductDetail[]
@@ -24,30 +25,45 @@ const orderStatuses = ['open', 'cancelled', 'on_hold']
 const vendorStatuses = ['approved', 'pending', 'rejected']
 const payoutStatuses = ['ready', 'processing', 'on_hold']
 
+type SourceProductRow = {
+  id: string
+  name: string
+  description?: string
+  price: number
+  currency: string
+  image?: string
+  stock?: number
+  brand?: string
+  category?: string
+  vendor_sku?: string
+  csv_brand_label?: string
+}
+
+const sourceProducts = generatedMockProductRows as SourceProductRow[]
+
 export function createAdminMockSeed(): AdminMockState {
-  const products: ProductDetail[] = Array.from({ length: 1200 }, (_, index) => {
-    const id = `prod-${String(index + 1).padStart(6, '0')}`
-    const vendor = vendors[index % vendors.length]
-    const brand = brands[index % brands.length]
-    const category = categories[index % categories.length]
-    const price = 15 + (index % 120)
-    const inventory = index % 21 === 0 ? 0 : 12 + (index % 80)
+  const products: ProductDetail[] = sourceProducts.slice(0, 1200).map((product, index) => {
+    const vendor = product.csv_brand_label ?? product.brand ?? vendors[index % vendors.length]
+    const brand = product.brand ?? brands[index % brands.length]
+    const category = product.category ?? categories[index % categories.length]
+    const inventory = product.stock ?? (index % 21 === 0 ? 0 : 12 + (index % 80))
     const status = inventory === 0 ? 'draft' : index % 9 === 0 ? 'archived' : 'active'
+    const price = product.price
 
     return {
-      id,
-      title: `${vendor} Product ${index + 1}`,
-      description: `Premium ${category} catalog item for ${vendor}.`,
+      id: product.id,
+      title: product.name,
+      description: product.description ?? `Premium ${category} catalog item for ${vendor}.`,
       brand,
       category,
       price,
-      comparePrice: price + 8,
+      comparePrice: Math.round((price + 8) * 100) / 100,
       inventory,
       status,
-      sku: `SKU-${index + 1}`,
-      image: `https://picsum.photos/seed/${index + 1}/80/80`,
+      sku: product.vendor_sku ?? `SKU-${index + 1}`,
+      image: product.image,
       vendor,
-      currency: 'USD',
+      currency: product.currency ?? 'USD',
       sales: 20 + (index % 400),
       variantCount: 1 + (index % 6),
       sourceColumns: [
@@ -154,4 +170,3 @@ export function createAdminMockSeed(): AdminMockState {
     jobs: [],
   }
 }
-

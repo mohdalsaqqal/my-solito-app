@@ -1,5 +1,7 @@
 import type { CMSPageBlock, LocalizedString, Product } from '@real/app/lib/types'
+import { buildProductCardModel, buildProductCardModels } from '@real/app/lib/product-card-model'
 import type { HomeBrandItem, HomeProductItem } from '@real/ui/components/home/types'
+import type { ProductCardModel } from '@real/ui/components/ProductCard.types'
 
 export type RegisteredStorefrontPageBlock = CMSPageBlock
 export type RegisteredHomePageBlock = RegisteredStorefrontPageBlock
@@ -75,6 +77,20 @@ export function mapProductToHomeItem(product: Product): HomeProductItem {
 
 export function mapProductsToHomeItems(products: Product[]) {
   return products.map(mapProductToHomeItem)
+}
+
+export function mapProductToProductCardModel(
+  product: Product,
+  locale: 'en' | 'ar' = 'en',
+): ProductCardModel {
+  return buildProductCardModel(product, locale)
+}
+
+export function mapProductsToProductCardModels(
+  products: Product[],
+  locale: 'en' | 'ar' = 'en',
+): ProductCardModel[] {
+  return buildProductCardModels(products, locale)
 }
 
 export function mapBrandItems(

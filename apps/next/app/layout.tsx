@@ -1,38 +1,26 @@
 import { StylesProvider } from './styles-provider'
 import './globals.css'
-import { Almarai, Cairo, Manrope, Tajawal } from 'next/font/google'
+import { Manrope, Tajawal } from 'next/font/google'
 import { colors } from '@real/tokens'
 import { ChunkErrorRecovery } from './_components/ChunkErrorRecovery'
 import { Providers } from './_components/Providers'
+import { startAutoPrune } from './api/_lib/rate-limiter'
 
-// Phase 1 storefront typography: sans-led, campaign-first, high-scan commerce UI.
+// Start rate-limiter bucket pruning on server init
+startAutoPrune()
+
 const manrope = Manrope({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-manrope',
-  weight: ['400', '500', '600', '700'],
-})
-
-// Arabic / RTL support — Cairo
-const cairo = Cairo({
-  subsets: ['latin', 'arabic'],
-  display: 'swap',
-  variable: '--font-cairo',
-  weight: ['400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700'],
 })
 
 const tajawal = Tajawal({
   subsets: ['latin', 'arabic'],
   display: 'swap',
   variable: '--font-tajawal',
-  weight: ['400', '500', '700', '800', '900'],
-})
-
-const almarai = Almarai({
-  subsets: ['latin', 'arabic'],
-  display: 'swap',
-  variable: '--font-almarai',
-  weight: ['300', '400', '700', '800'],
+  weight: ['300', '400', '500', '700'],
 })
 
 export const metadata = {
@@ -84,7 +72,7 @@ export default function RootLayout({
       lang={DEFAULT_LOCALE}
       dir={DEFAULT_DIRECTION}
       suppressHydrationWarning
-      className={`${manrope.variable} ${cairo.variable} ${tajawal.variable} ${almarai.variable}`}
+      className={`${manrope.variable} ${tajawal.variable}`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: ROOT_LOCALE_SCRIPT }} />

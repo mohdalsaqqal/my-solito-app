@@ -1,6 +1,8 @@
-import { colors, fontWeights, radius, letterSpacing, spacing, typography } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { fontWeights, letterSpacing, spacing, typography } from '@real/tokens'
+import { Box, Text } from '../../primitives'
 import { CountdownTimer } from './CountdownTimer'
+import { useThemeColors } from '../../responsive'
+import { Button } from '../Button'
 
 type FlashSaleBandProps = {
   /** Short offer text, e.g. "40% OFF" */
@@ -28,10 +30,11 @@ export function FlashSaleBand({
   loading = false,
   disabled = false,
 }: FlashSaleBandProps) {
+  const c = useThemeColors()
   return (
     <Box
       style={{
-        backgroundColor: colors.brandPrimary,
+        backgroundColor: c.commercePrimary,
         paddingVertical: spacing['24'],
         paddingHorizontal: spacing['16'],
         alignItems: 'center',
@@ -45,7 +48,7 @@ export function FlashSaleBand({
           style={{
             fontSize: typography.subheadline,
             fontWeight: fontWeights.ultra,
-            color: colors.textInverted,
+            color: c.textInverted,
             letterSpacing: letterSpacing.labelPill,
             textTransform: 'uppercase',
           }}
@@ -56,7 +59,7 @@ export function FlashSaleBand({
           style={{
             fontSize: typography.headline,
             fontWeight: fontWeights.black,
-            color: colors.textInverted,
+            color: c.textInverted,
             letterSpacing: letterSpacing.campaignHeading,
           }}
         >
@@ -66,7 +69,7 @@ export function FlashSaleBand({
           style={{
             fontSize: typography.body,
             fontWeight: fontWeights.regular,
-            color: colors.textInverted,
+            color: c.textInverted,
             opacity: 0.85,
           }}
         >
@@ -81,30 +84,15 @@ export function FlashSaleBand({
 
       {/* CTA button */}
       {onPressCta ? (
-        <Touchable
+        <Button
           onPress={disabled ? undefined : onPressCta}
-          accessibilityRole='button'
-          accessibilityLabel={ctaLabel}
-          accessibilityState={{ disabled }}
-          style={{
-            backgroundColor: colors.inkBlack,
-            borderRadius: radius.full,
-            paddingVertical: spacing['12'],
-            paddingHorizontal: spacing['24'],
-          }}
+          disabled={disabled}
+          variant='premiumAccent'
+          shape='pill'
+          size='md'
         >
-          <Text
-            style={{
-              fontSize: typography.label,
-              fontWeight: fontWeights.semibold,
-              color: colors.inkFrost,
-              letterSpacing: letterSpacing.caps,
-              textTransform: 'uppercase',
-            }}
-          >
-            {ctaLabel}
-          </Text>
-        </Touchable>
+          {ctaLabel}
+        </Button>
       ) : null}
     </Box>
   )

@@ -1,0 +1,121 @@
+{
+  "generated_at": "2026-04-12T05:36:12Z",
+  "root": ".",
+  "contexts": [
+    {
+      "slug": "apps-next-api",
+      "label": "apps/next/app/api",
+      "path": "apps/next/app/api",
+      "use_when": "route handlers, auth/session gates, admin APIs, request validation, web BFF entry points",
+      "notes": "API-first graph for App Router route handlers and request/auth helpers.",
+      "total_files": 160,
+      "total_words": 34462,
+      "code_files": 160,
+      "document_files": 0,
+      "paper_files": 0,
+      "image_files": 0,
+      "skipped_sensitive": 3,
+      "nodes": 222,
+      "edges": 318,
+      "communities": 26,
+      "god_nodes": [
+        {
+          "id": "route_post",
+          "label": "POST()",
+          "edges": 13
+        },
+        {
+          "id": "route_patch",
+          "label": "PATCH()",
+          "edges": 7
+        },
+        {
+          "id": "rate_limiter_ratelimiter",
+          "label": "RateLimiter",
+          "edges": 6
+        },
+        {
+          "id": "referral_profile_store_readprofiles",
+          "label": "readProfiles()",
+          "edges": 6
+        },
+        {
+          "id": "referral_profile_store_listreferralprofiles",
+          "label": "listReferralProfiles()",
+          "edges": 6
+        }
+      ],
+      "suggested_questions": [
+        {
+          "type": "low_cohesion",
+          "question": "Should `Community 0` be split into smaller, more focused modules?",
+          "why": "Cohesion score 0.12 - nodes in this community are weakly interconnected."
+        },
+        {
+          "type": "low_cohesion",
+          "question": "Should `Community 1` be split into smaller, more focused modules?",
+          "why": "Cohesion score 0.11 - nodes in this community are weakly interconnected."
+        }
+      ],
+      "report_path": "graphify-out/contexts/apps-next-api/GRAPH_REPORT.md",
+      "graph_path": "graphify-out/contexts/apps-next-api/graph.json",
+      "html_path": "graphify-out/contexts/apps-next-api/graph.html",
+      "wiki_index_path": "graphify-out/contexts/apps-next-api/wiki/index.md"
+    },
+    {
+      "slug": "apps-next-services",
+      "label": "apps/next/server/services",
+      "path": "apps/next/server/services",
+      "use_when": "business logic, orchestration, provider calls, server-side reads and mutations",
+      "notes": "Service-layer graph for the canonical server composition layer.",
+      "total_files": 56,
+      "total_words": 15576,
+      "code_files": 56,
+      "document_files": 0,
+      "paper_files": 0,
+      "image_files": 0,
+      "skipped_sensitive": 0,
+      "nodes": 173,
+      "edges": 261,
+      "communities": 14,
+      "god_nodes": [
+        {
+          "id": "search_service_buildsearchpayload",
+          "label": "buildSearchPayload()",
+          "edges": 9
+        },
+        {
+          "id": "admin_menus_service_validatemenupayload",
+          "label": "validateMenuPayload()",
+          "edges": 6
+        },
+        {
+          "id": "resolve_shell_menus_service_textforlocale",
+          "label": "textForLocale()",
+          "edges": 6
+        },
+        {
+          "id": "resolve_shell_menus_service_resolveitemhref",
+          "label": "resolveItemHref()",
+          "edges": 6
+        },
+        {
+          "id": "admin_cache_service_runadmincacheaction",
+          "label": "runAdminCacheAction()",
+          "edges": 5
+        }
+      ],
+      "suggested_questions": [
+        {
+          "type": "low_cohesion",
+          "question": "Should `Community 0` be split into smaller, more focused modules?",
+          "why": "Cohesion score 0.08 - nodes in this community are weakly interconnected."
+        }
+      ],
+      "report_path": "graphify-out/contexts/apps-next-services/GRAPH_REPORT.md",
+      "graph_path": "graphify-out/contexts/apps-next-services/graph.json",
+      "html_path": "graphify-out/contexts/apps-next-services/graph.html",
+      "wiki_index_path": "graphify-out/contexts/apps-next-services/wiki/index.md"
+    }
+  ]
+}

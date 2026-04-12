@@ -1,496 +1,131 @@
 /* packages/ui/global.css
-   ─────────────────────────────────────────────────────────────────────────
-   CSS Token Bridge
-   Maps packages/tokens/*.ts → CSS custom properties for Tailwind v4 @theme
-   Every value here must match its corresponding TypeScript token.
-   ───────────────────────────────────────────────────────────────────────── */
+   Handwritten theme wiring only.
+   The token payload is generated from packages/tokens by scripts/generate-css-token-bridge.mjs.
+*/
+
+@import './generated-token-bridge.css';
 
 @theme {
-  /* ── Colors — DESIGN.md "The Editorial Monolith" ── */
-  /* surface hierarchy: lowest white → surface hsl(0 0% 97.6%) → container-low hsl(0 0% 95.3%) → container 93.3% → dim hsl(0 0% 89.8%) */
-  --color-background:              hsl(0 0% 97.6%);
-  --color-background-secondary:    hsl(0 0% 95.3%);
-  --color-surface-lowest:          hsl(0 0% 100%);
-  --color-surface-container-low:   hsl(0 0% 95.3%);
-  --color-surface-container:       hsl(0 0% 93.3%);
-  --color-surface-dim:             hsl(0 0% 89.8%);
-  --color-foreground:              hsl(0 0% 10.2%);
-  --color-foreground-muted:        hsl(0 0% 62%);
-  --color-border:                  transparent;
-  --color-outline-variant:         rgba(231, 189, 183, 0.15);
-  --color-card:                    hsl(0 0% 100%);
-  --color-muted:                   hsl(0 0% 93.3%);
-  --color-muted-foreground:        hsl(0 0% 36.9%);
+  --radius: var(--radius-md);
+  --spacing-px: 1px;
+  --spacing-0-5: 2px;
+  --tracking-campaign: var(--tracking-campaign-heading);
+  --tracking-label: var(--tracking-label-pill);
 
-  /* Brand — DESIGN.md primary = hsl(356 100% 33%) — deep blood red */
-  --color-primary:              hsl(0 0% 13%);
-  --color-primary-hover:        hsl(0 0% 20%);
-  --color-primary-pressed:      hsl(0 0% 8%);
-  --color-primary-subtle:       hsl(0 100% 98%);
-  --color-primary-foreground:   hsl(0 0% 100%);
-  --color-secondary:            hsl(0 0% 97.6%);
-  --color-secondary-foreground: hsl(0 0% 10.2%);
-  --color-accent:               hsl(0 0% 93.3%);
-  --color-accent-foreground:    hsl(0 0% 10.2%);
-  --color-input:                transparent;
-  --color-ring:                 hsl(0 0% 13%);
-  --color-popover:              hsl(0 0% 100%);
-  --color-popover-foreground:   hsl(0 0% 10.2%);
-  --color-card-foreground:      hsl(0 0% 10.2%);
-  --color-destructive-foreground: hsl(0 0% 100%);
-
-  /* Ink family — Figma Primary (cool pure darks) */
-  --color-ink-black:  hsl(0 0% 12%);
-  --color-ink-deep:   hsl(0 0% 16%);
-  --color-ink-mid:    hsl(0 0% 22%);
-  --color-ink-frost:  hsl(0 0% 94%);
-
-  /* Gold family — Figma Attention gold */
-  --color-gold:         hsl(42 86% 48%);
-  --color-gold-light:   hsl(42 88% 61%);
-  --color-gold-subtle:  hsl(42 70% 93%);
-
-  /* Grayscale — shades/tints of neutral */
-  --color-gray-0:   hsl(0 0% 97%);    
-  --color-gray-5:   hsl(0 0% 87%);    
-  --color-gray-10:  hsl(0 0% 78%);    
-  --color-gray-20:  hsl(0 0% 68%);    
-  --color-gray-30:  hsl(0 0% 58%);    
-  --color-gray-40:  hsl(0 0% 49%);    
-  --color-gray-50:  hsl(0 0% 39%);    
-  --color-gray-60:  hsl(0 0% 29%);    
-  --color-gray-70:  hsl(0 0% 19%);    
-  --color-gray-80:  hsl(0 0% 9%);     
-  --color-gray-90:  hsl(0 0% 0%);     
-  --color-gray-100: hsl(0 0% 0%);     
-  /* Tints */
-  --color-tint-0:   hsl(0 0% 97%);    
-  --color-tint-10:  hsl(0 0% 98%);    
-  --color-tint-20:  hsl(0 0% 98%);    
-  --color-tint-30:  hsl(0 0% 98%);    
-  --color-tint-40:  hsl(0 0% 99%);    
-  --color-tint-50:  hsl(0 0% 99%);    
-  --color-tint-60:  hsl(0 0% 100%);   
-  --color-tint-70:  hsl(0 0% 100%);   
-
-  /* Status — Figma pixel-perfect */
-  --color-success:              hsl(153 72% 34%);
-  --color-success-subtle:       hsl(153 95% 94%);
-  --color-warning:              hsl(42 86% 48%);
-  --color-warning-subtle:       hsl(48 100% 94%);
-  --color-destructive:          hsl(344 85% 55%);
-  --color-destructive-subtle:   hsl(344 80% 98%);
-  --color-info:                 hsl(214 90% 42%);
-  --color-info-subtle:          hsl(224 100% 95%);
-
-  /* ── Radius — NiceOne rounded scale ── */
-  --radius-none: 0px;
-  --radius-xs:   2px;
-  --radius-sm:   2px;
-  --radius-md:   6px;
-  --radius-lg:   8px;
-  --radius-xl:   12px;
-  --radius-2xl:  16px;
-  --radius-full: 9999px;
-  --radius:      6px;
-
-  /* ── Spacing — from packages/tokens/spacing.ts ── */
-  --spacing-px:   1px;
-  --spacing-0-5:  2px;
-  --spacing-1:    4px;
-  --spacing-2:    8px;
-  --spacing-3:    12px;
-  --spacing-4:    16px;
-  --spacing-5:    20px;
-  --spacing-6:    24px;
-  --spacing-7:    28px;
-  --spacing-8:    32px;
-  --spacing-10:   40px;
-  --spacing-12:   48px;
-  --spacing-14:   56px;
-  --spacing-16:   64px;
-  --spacing-20:   80px;
-  --spacing-24:   96px;
-  --spacing-32:   128px;
-
-  /* ── Typography — DM Sans (EN) + Tajawal (AR) ── */
-  --font-sans:      var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading:   var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display:   var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-secondary: var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, sans-serif;
-  --font-logo:      var(--font-dm-sans, "DM Sans"), -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-arabic:    var(--font-tajawal, "Tajawal"), -apple-system, system-ui, sans-serif;
-  --font-mono:      Menlo, monospace;
-
-  /* ── Text scale — NiceOne expanded 10–20px ── */
-  --text-h1:        1.25rem;    /* 20px */
-  --text-h2:        1.125rem;   /* 18px */
-  --text-h3:        1rem;       /* 16px */
-  --text-h4:        0.875rem;   /* 14px */
-  --text-h5:        0.8125rem;  /* 13px */
-  --text-h6:        0.75rem;    /* 12px */
-  --text-body1:     0.875rem;   /* 14px */
-  --text-body2:     0.75rem;    /* 12px */
-  --text-caption:   0.6875rem;  /* 11px */
-  --text-overline:  0.625rem;   /* 10px */
-  --text-button:    0.875rem;   /* 14px */
-  --text-price:     1rem;       /* 16px */
-
-  /* Legacy aliases */
-  --text-xs:    0.6875rem;
-  --text-sm:    0.75rem;
-  --text-base:  0.875rem;
-  --text-lg:    1rem;
-  --text-xl:    1.125rem;
-  --text-2xl:   1.25rem;
-  --text-3xl:   1.25rem;
-  --text-4xl:   1.25rem;
-
-  /* Campaign typography */
-  --text-campaign:    1.125rem;
-  --text-headline:    1.125rem;
-  --text-subheadline: 0.875rem;
-
-  /* Line heights */
-  --leading-h1:      1.75rem;
-  --leading-h2:      1.625rem;
-  --leading-h3:      1.5rem;
-  --leading-h4:      1.25rem;
-  --leading-h5:      1.125rem;
-  --leading-h6:      1.125rem;
-  --leading-body1:   1.375rem;
-  --leading-body2:   1.125rem;
-  --leading-caption: 1rem;
-
-  /* Figma letter spacing */
-  --tracking-h1:       -0.03em;
-  --tracking-h2:       -0.02em;
-  --tracking-campaign: -0.025em;
-  --tracking-label:     0.12em;
-  --tracking-overline:  0.16em;   /* wide caps */
-
-  /* ── Elevation — 4-level + card system ── */
-  --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
-  --shadow-sm:   0 2px 4px rgba(0,0,0,0.06);
-  --shadow-md:   0 4px 8px rgba(0,0,0,0.08);
-  --shadow-lg:   0 8px 16px rgba(0,0,0,0.10);
-  --shadow-xl:   0 12px 24px rgba(0,0,0,0.12);
-  --shadow-card: 0 0 5px rgba(0,0,6,0.14);
-
-  /* ── Motion — from packages/tokens/motion.ts — §24 tokenized durations ── */
-  --duration-micro:   220ms;
-  --duration-hover:   260ms;
-  --duration-reveal:  560ms;
-  --duration-stagger: 24ms;
-  --ease-premium: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-exit:    cubic-bezier(0.7, 0, 0.84, 0);
-
-  /* ── Layout Grid — Figma System Layout Grid ── */
-  /* Mobile:        2 cols / 16px gutter / 16px margin                  */
-  /* Desktop-1280: 12 cols / 32px gutter / 112px margin → 1056px content */
-  /* Desktop-1920: 12 cols / 30px gutter / 240px margin → 1440px content */
-  --grid-columns-mobile:       2;
-  --grid-gutter-mobile:        16px;
-  --grid-margin-mobile:        16px;
-  --grid-columns-desktop:      12;
-  --grid-gutter-desktop-1280:  32px;
-  --grid-margin-desktop-1280:  112px;
+  /* Layout grid */
+  --grid-columns-mobile: 2;
+  --grid-gutter-mobile: 16px;
+  --grid-margin-mobile: 16px;
+  --grid-columns-desktop: 12;
+  --grid-gutter-desktop-1280: 32px;
+  --grid-margin-desktop-1280: 112px;
   --grid-content-desktop-1280: 1056px;
-  --grid-gutter-desktop-1920:  30px;
-  --grid-margin-desktop-1920:  240px;
+  --grid-gutter-desktop-1920: 30px;
+  --grid-margin-desktop-1920: 240px;
   --grid-content-desktop-1920: 1440px;
 
-  /* ── Icon sizes — Figma ICONS section (24px base grid) ── */
+  /* Icon sizes */
   --icon-xs: 16px;
   --icon-sm: 20px;
   --icon-md: 24px;
   --icon-lg: 32px;
   --icon-xl: 48px;
 
-  /* ── Z-index — from packages/tokens/layers.ts ── */
-  --z-base:     0;
-  --z-raised:   10;
-  --z-sticky:   100;
-  --z-overlay:  300;
-  --z-modal:    400;
-  --z-toast:    500;
+  /* Non-token layer aliases used by existing CSS */
+  --z-raised: 10;
   --z-dropdown: 700;
-  --z-search:   1200;
 }
 
 :root,
 .light {
-  /* ── DESIGN.md "Paper-on-Paper" light theme ── */
-  --background:                hsl(0 0% 97.6%);
-  --foreground:                hsl(0 0% 10.2%);
-  --card:                      hsl(0 0% 100%);
-  --card-foreground:           hsl(0 0% 10.2%);
-  --popover:                   hsl(0 0% 100%);
-  --popover-foreground:        hsl(0 0% 10.2%);
-  --primary:                   hsl(0 0% 13%);
-  --primary-foreground:        hsl(0 0% 100%);
-  --secondary:                 hsl(0 0% 97.6%);
-  --secondary-foreground:      hsl(0 0% 10.2%);
-  --muted:                     hsl(0 0% 93.3%);
-  --muted-foreground:          hsl(0 0% 36.9%);
-  --accent:                    hsl(0 0% 93.3%);
-  --accent-foreground:         hsl(0 0% 10.2%);
-  --destructive:               hsl(344 85% 55%);
-  --destructive-foreground:    hsl(0 0% 100%);
-  --border:                    transparent;
-  --input:                     transparent;
-  --ring:                      hsl(0 0% 13%);
-  --color-background:           hsl(0 0% 97.6%);
-  --color-background-secondary: hsl(0 0% 95.3%);
-  --color-foreground:           hsl(0 0% 10.2%);
-  --color-foreground-muted:     hsl(0 0% 62%);
-  --color-border:               transparent;
-  --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(0 0% 93.3%);
-  --color-muted-foreground:     hsl(0 0% 36.9%);
-  --color-primary-subtle:       hsl(0 100% 98%);
-  --color-success-subtle:       hsl(153 95% 94%);
-  --color-warning-subtle:       hsl(48 100% 94%);
-  --color-destructive-subtle:   hsl(344 80% 98%);
-  --color-info-subtle:          hsl(224 100% 95%);
-  --color-secondary:            hsl(0 0% 97.6%);
-  --color-secondary-foreground: hsl(0 0% 10.2%);
-  --color-accent:               hsl(0 0% 93.3%);
-  --color-accent-foreground:    hsl(0 0% 10.2%);
-  --color-input:                transparent;
-  --color-ring:                 hsl(0 0% 13%);
-  --color-popover:              hsl(0 0% 100%);
-  --color-popover-foreground:   hsl(0 0% 10.2%);
-  --color-card-foreground:      hsl(0 0% 10.2%);
-  --color-destructive-foreground: hsl(0 0% 100%);
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+  --popover: var(--color-popover);
+  --popover-foreground: var(--color-popover-foreground);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+  --muted: var(--color-muted);
+  --muted-foreground: var(--color-muted-foreground);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+  --border: var(--color-border);
+  --input: var(--color-input);
+  --ring: var(--color-ring);
 }
 
 .dark {
-  /* ── DESIGN.md dark theme — Ink surfaces ── */
-  --background:                hsl(0 0% 9%);
-  --foreground:                hsl(0 0% 94%);
-  --card:                      hsl(0 0% 12%);
-  --card-foreground:           hsl(0 0% 94%);
-  --popover:                   hsl(0 0% 12%);
-  --popover-foreground:        hsl(0 0% 94%);
-  --primary:                   hsl(0 0% 13%);
-  --primary-foreground:        hsl(0 0% 100%);
-  --secondary:                 hsl(0 0% 16%);
-  --secondary-foreground:      hsl(0 0% 94%);
-  --muted:                     hsl(0 0% 16%);
-  --muted-foreground:          hsl(0 0% 54%);
-  --accent:                    hsl(0 0% 16%);
-  --accent-foreground:         hsl(0 0% 94%);
-  --destructive:               hsl(344 85% 55%);
-  --destructive-foreground:    hsl(0 0% 100%);
-  --border:                    hsl(0 0% 22%);
-  --input:                     hsl(0 0% 16%);
-  --ring:                      hsl(0 0% 13%);
-  --color-background:           hsl(0 0% 9%);
-  --color-background-secondary: hsl(0 0% 12%);
-  --color-foreground:           hsl(0 0% 94%);
-  --color-foreground-muted:     hsl(0 0% 63%);
-  --color-border:               hsl(0 0% 22%);
-  --color-card:                 hsl(0 0% 12%);
-  --color-muted:                hsl(0 0% 16%);
-  --color-muted-foreground:     hsl(0 0% 54%);
-  --color-primary-subtle:       hsl(358 30% 15%);
-  --color-success-subtle:       hsl(153 40% 12%);
-  --color-warning-subtle:       hsl(48 40% 12%);
-  --color-destructive-subtle:   hsl(0 40% 12%);
-  --color-info-subtle:          hsl(224 40% 12%);
-  --color-secondary:            hsl(0 0% 16%);
-  --color-secondary-foreground: hsl(0 0% 94%);
-  --color-accent:               hsl(0 0% 16%);
-  --color-accent-foreground:    hsl(0 0% 94%);
-  --color-input:                hsl(0 0% 16%);
-  --color-ring:                 hsl(0 0% 13%);
-  --color-popover:              hsl(0 0% 12%);
-  --color-popover-foreground:   hsl(0 0% 94%);
-  --color-card-foreground:      hsl(0 0% 94%);
-  --color-destructive-foreground: hsl(0 0% 100%);
-  /* ── Dark mode surface hierarchy ── */
-  --color-surface-lowest:         hsl(0 0% 13%);
-  --color-surface-container-low:  hsl(0 0% 11%);
-  --color-surface-container:      hsl(0 0% 14%);
-  --color-surface-dim:            hsl(0 0% 16%);
-  /* ── Dark mode ink palette ── */
-  --color-ink-black:              hsl(0 0% 90%);
-  --color-ink-deep:               hsl(0 0% 84%);
-  --color-ink-mid:                hsl(0 0% 76%);
-  --color-ink-frost:              hsl(210 10% 12%);
-  /* ── Dark mode gold palette ── */
-  --color-gold:                   hsl(42 80% 58%);
-  --color-gold-light:             hsl(42 85% 68%);
-  --color-gold-subtle:            hsl(42 30% 16%);
-  /* ── Dark mode gray scale (inverted) ── */
-  --color-gray-0:                 hsl(0 0% 9%);
-  --color-gray-5:                 hsl(0 0% 13%);
-  --color-gray-10:                hsl(0 0% 18%);
-  --color-gray-20:                hsl(0 0% 24%);
-  --color-gray-30:                hsl(0 0% 30%);
-  --color-gray-40:                hsl(0 0% 36%);
-  --color-gray-50:                hsl(0 0% 42%);
-  --color-gray-60:                hsl(0 0% 52%);
-  --color-gray-70:                hsl(0 0% 62%);
-  --color-gray-80:                hsl(0 0% 72%);
-  --color-gray-90:                hsl(0 0% 82%);
-  --color-gray-100:               hsl(0 0% 90%);
-  /* ── Dark mode tint scale ── */
-  --color-tint-0:                 hsl(0 0% 9%);
-  --color-tint-10:                hsl(0 0% 10%);
-  --color-tint-20:                hsl(0 0% 11%);
-  --color-tint-30:                hsl(0 0% 12%);
-  --color-tint-40:                hsl(0 0% 13%);
-  --color-tint-50:                hsl(0 0% 14%);
-  --color-tint-60:                hsl(0 0% 15%);
-  --color-tint-70:                hsl(0 0% 16%);
-  /* ── Dark mode status colors ── */
-  --color-success:                hsl(153 60% 45%);
-  --color-warning:                hsl(42 80% 58%);
-  --color-destructive:            hsl(344 75% 62%);
-  --color-info:                   hsl(214 80% 60%);
-  /* ── Dark mode outline variant ── */
-  --color-outline-variant:        hsl(0 40% 28%);
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+  --popover: var(--color-popover);
+  --popover-foreground: var(--color-popover-foreground);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+  --muted: var(--color-muted);
+  --muted-foreground: var(--color-muted-foreground);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+  --border: var(--color-border);
+  --input: var(--color-input);
+  --ring: var(--color-ring);
 }
 
 /* Uniwind themes must expose the exact same dashed variables per theme variant. */
 @variant light {
-  /* ── DESIGN.md "Paper-on-Paper" light theme ── */
-  --background:                hsl(0 0% 97.6%);
-  --foreground:                hsl(0 0% 10.2%);
-  --card:                      hsl(0 0% 100%);
-  --card-foreground:           hsl(0 0% 10.2%);
-  --popover:                   hsl(0 0% 100%);
-  --popover-foreground:        hsl(0 0% 10.2%);
-  --primary:                   hsl(0 0% 13%);
-  --primary-foreground:        hsl(0 0% 100%);
-  --secondary:                 hsl(0 0% 97.6%);
-  --secondary-foreground:      hsl(0 0% 10.2%);
-  --muted:                     hsl(0 0% 93.3%);
-  --muted-foreground:          hsl(0 0% 36.9%);
-  --accent:                    hsl(0 0% 93.3%);
-  --accent-foreground:         hsl(0 0% 10.2%);
-  --destructive:               hsl(344 85% 55%);
-  --destructive-foreground:    hsl(0 0% 100%);
-  --border:                    transparent;
-  --input:                     transparent;
-  --ring:                      hsl(0 0% 13%);
-  --color-background:           hsl(0 0% 97.6%);
-  --color-background-secondary: hsl(0 0% 95.3%);
-  --color-foreground:           hsl(0 0% 10.2%);
-  --color-foreground-muted:     hsl(0 0% 62%);
-  --color-border:               transparent;
-  --color-card:                 hsl(0 0% 100%);
-  --color-muted:                hsl(0 0% 93.3%);
-  --color-muted-foreground:     hsl(0 0% 36.9%);
-  --color-primary-subtle:       hsl(0 100% 98%);
-  --color-success-subtle:       hsl(153 95% 94%);
-  --color-warning-subtle:       hsl(48 100% 94%);
-  --color-destructive-subtle:   hsl(344 80% 98%);
-  --color-info-subtle:          hsl(224 100% 95%);
-  --color-secondary:            hsl(0 0% 97.6%);
-  --color-secondary-foreground: hsl(0 0% 10.2%);
-  --color-accent:               hsl(0 0% 93.3%);
-  --color-accent-foreground:    hsl(0 0% 10.2%);
-  --color-input:                transparent;
-  --color-ring:                 hsl(0 0% 13%);
-  --color-popover:              hsl(0 0% 100%);
-  --color-popover-foreground:   hsl(0 0% 10.2%);
-  --color-card-foreground:      hsl(0 0% 10.2%);
-  --color-destructive-foreground: hsl(0 0% 100%);
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+  --popover: var(--color-popover);
+  --popover-foreground: var(--color-popover-foreground);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+  --muted: var(--color-muted);
+  --muted-foreground: var(--color-muted-foreground);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+  --border: var(--color-border);
+  --input: var(--color-input);
+  --ring: var(--color-ring);
 }
 
 @variant dark {
-  /* ── DESIGN.md dark theme — Ink surfaces ── */
-  --background:                hsl(0 0% 9%);
-  --foreground:                hsl(0 0% 94%);
-  --card:                      hsl(0 0% 12%);
-  --card-foreground:           hsl(0 0% 94%);
-  --popover:                   hsl(0 0% 12%);
-  --popover-foreground:        hsl(0 0% 94%);
-  --primary:                   hsl(0 0% 13%);
-  --primary-foreground:        hsl(0 0% 100%);
-  --secondary:                 hsl(0 0% 16%);
-  --secondary-foreground:      hsl(0 0% 94%);
-  --muted:                     hsl(0 0% 16%);
-  --muted-foreground:          hsl(0 0% 54%);
-  --accent:                    hsl(0 0% 16%);
-  --accent-foreground:         hsl(0 0% 94%);
-  --destructive:               hsl(344 85% 55%);
-  --destructive-foreground:    hsl(0 0% 100%);
-  --border:                    hsl(0 0% 22%);
-  --input:                     hsl(0 0% 16%);
-  --ring:                      hsl(0 0% 13%);
-  --color-background:           hsl(0 0% 9%);
-  --color-background-secondary: hsl(0 0% 12%);
-  --color-foreground:           hsl(0 0% 94%);
-  --color-foreground-muted:     hsl(0 0% 63%);
-  --color-border:               hsl(0 0% 22%);
-  --color-card:                 hsl(0 0% 12%);
-  --color-muted:                hsl(0 0% 16%);
-  --color-muted-foreground:     hsl(0 0% 54%);
-  --color-primary-subtle:       hsl(358 30% 15%);
-  --color-success-subtle:       hsl(153 40% 12%);
-  --color-warning-subtle:       hsl(48 40% 12%);
-  --color-destructive-subtle:   hsl(0 40% 12%);
-  --color-info-subtle:          hsl(224 40% 12%);
-  --color-secondary:            hsl(0 0% 16%);
-  --color-secondary-foreground: hsl(0 0% 94%);
-  --color-accent:               hsl(0 0% 16%);
-  --color-accent-foreground:    hsl(0 0% 94%);
-  --color-input:                hsl(0 0% 16%);
-  --color-ring:                 hsl(0 0% 13%);
-  --color-popover:              hsl(0 0% 12%);
-  --color-popover-foreground:   hsl(0 0% 94%);
-  --color-card-foreground:      hsl(0 0% 94%);
-  --color-destructive-foreground: hsl(0 0% 100%);
-  /* ── Dark mode surface hierarchy ── */
-  --color-surface-lowest:         hsl(0 0% 13%);
-  --color-surface-container-low:  hsl(0 0% 11%);
-  --color-surface-container:      hsl(0 0% 14%);
-  --color-surface-dim:            hsl(0 0% 16%);
-  /* ── Dark mode ink palette ── */
-  --color-ink-black:              hsl(0 0% 90%);
-  --color-ink-deep:               hsl(0 0% 84%);
-  --color-ink-mid:                hsl(0 0% 76%);
-  --color-ink-frost:              hsl(210 10% 12%);
-  /* ── Dark mode gold palette ── */
-  --color-gold:                   hsl(42 80% 58%);
-  --color-gold-light:             hsl(42 85% 68%);
-  --color-gold-subtle:            hsl(42 30% 16%);
-  /* ── Dark mode gray scale (inverted) ── */
-  --color-gray-0:                 hsl(0 0% 9%);
-  --color-gray-5:                 hsl(0 0% 13%);
-  --color-gray-10:                hsl(0 0% 18%);
-  --color-gray-20:                hsl(0 0% 24%);
-  --color-gray-30:                hsl(0 0% 30%);
-  --color-gray-40:                hsl(0 0% 36%);
-  --color-gray-50:                hsl(0 0% 42%);
-  --color-gray-60:                hsl(0 0% 52%);
-  --color-gray-70:                hsl(0 0% 62%);
-  --color-gray-80:                hsl(0 0% 72%);
-  --color-gray-90:                hsl(0 0% 82%);
-  --color-gray-100:               hsl(0 0% 90%);
-  /* ── Dark mode tint scale ── */
-  --color-tint-0:                 hsl(0 0% 9%);
-  --color-tint-10:                hsl(0 0% 10%);
-  --color-tint-20:                hsl(0 0% 11%);
-  --color-tint-30:                hsl(0 0% 12%);
-  --color-tint-40:                hsl(0 0% 13%);
-  --color-tint-50:                hsl(0 0% 14%);
-  --color-tint-60:                hsl(0 0% 15%);
-  --color-tint-70:                hsl(0 0% 16%);
-  /* ── Dark mode status colors ── */
-  --color-success:                hsl(153 60% 45%);
-  --color-warning:                hsl(42 80% 58%);
-  --color-destructive:            hsl(344 75% 62%);
-  --color-info:                   hsl(214 80% 60%);
-  /* ── Dark mode outline variant ── */
-  --color-outline-variant:        hsl(0 40% 28%);
+  --background: var(--color-background);
+  --foreground: var(--color-foreground);
+  --card: var(--color-card);
+  --card-foreground: var(--color-card-foreground);
+  --popover: var(--color-popover);
+  --popover-foreground: var(--color-popover-foreground);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-foreground);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-foreground);
+  --muted: var(--color-muted);
+  --muted-foreground: var(--color-muted-foreground);
+  --accent: var(--color-accent);
+  --accent-foreground: var(--color-accent-foreground);
+  --destructive: var(--color-destructive);
+  --destructive-foreground: var(--color-destructive-foreground);
+  --border: var(--color-border);
+  --input: var(--color-input);
+  --ring: var(--color-ring);
 }
 
-/* ── RTL font switching ── */
-[dir="rtl"] {
+[dir='rtl'] {
   font-family: var(--font-arabic);
 }

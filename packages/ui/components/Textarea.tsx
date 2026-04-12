@@ -1,7 +1,9 @@
+import React from 'react'
 import { TextInput, TextInputProps, View, ViewStyle } from 'react-native'
-import { borderWidth, colors, opacity, radius, spacing, typography } from '@real/tokens'
+import { borderWidth, opacity, radius, spacing, typography } from '@real/tokens'
 import { Text } from '../primitives/Text'
 import { Skeleton } from './Skeleton'
+import { useThemeColors } from '../responsive'
 
 type TextareaProps = Omit<TextInputProps, 'multiline' | 'style'> & {
   rows?: number
@@ -11,7 +13,7 @@ type TextareaProps = Omit<TextInputProps, 'multiline' | 'style'> & {
   style?: ViewStyle
 }
 
-export function Textarea({
+export const Textarea = React.memo(function Textarea({
   rows = 4,
   error,
   disabled = false,
@@ -19,6 +21,8 @@ export function Textarea({
   style,
   ...props
 }: TextareaProps) {
+  const c = useThemeColors()
+
   if (loading) {
     const height = rows * 24 + spacing.md * 2
     return <Skeleton width="100%" height={height} radius="md" style={style} />
@@ -37,14 +41,14 @@ export function Textarea({
           paddingHorizontal: spacing.md,
           paddingVertical: spacing.sm,
           borderWidth: borderWidth.thin,
-          borderColor: error ? colors.error : colors.border,
+          borderColor: error ? c.error : c.border,
           borderRadius: radius.md,
-          backgroundColor: disabled ? colors.backgroundSecondary : colors.background,
-          color: disabled ? colors.textMuted : colors.text,
+          backgroundColor: disabled ? c.backgroundSecondary : c.background,
+          color: disabled ? c.textMuted : c.text,
           fontSize: typography.bodyMd,
           opacity: disabled ? opacity.disabled : 1,
         }}
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={c.textMuted}
         {...props}
       />
       {error && (
@@ -54,4 +58,4 @@ export function Textarea({
       )}
     </View>
   )
-}
+})

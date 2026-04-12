@@ -1,6 +1,6 @@
 import { spacing } from '@real/tokens'
 import { Box } from '../../primitives'
-import { HomeProductItem } from '../home/types'
+import type { ProductCardModel } from '../ProductCard.types'
 import { BestItemsMonthRail } from './BestItemsMonthRail'
 import { BrandStoryBanner } from './BrandStoryBanner'
 
@@ -12,13 +12,15 @@ type BrandSpotlightSectionProps = {
   bannerHref?: string
   bannerImageUrl?: string
   railTitle: string
-  items: HomeProductItem[]
+  items: ProductCardModel[]
+  autoplay?: boolean
+  autoplayMs?: number
   loading?: boolean
   error?: string | null
   onRetry?: () => void
   onPressBanner?: (href?: string) => void
-  onPressProduct?: (item: HomeProductItem) => void
-  onAddToCart?: (item: HomeProductItem) => void
+  onPressProduct?: (item: ProductCardModel) => void
+  onAddToCart?: (item: ProductCardModel) => void
 }
 
 export function BrandSpotlightSection({
@@ -30,6 +32,8 @@ export function BrandSpotlightSection({
   bannerImageUrl,
   railTitle,
   items,
+  autoplay = false,
+  autoplayMs = 4200,
   loading = false,
   error,
   onRetry,
@@ -38,7 +42,7 @@ export function BrandSpotlightSection({
   onAddToCart,
 }: BrandSpotlightSectionProps) {
   return (
-    <Box key={id} style={{ gap: spacing['16'] }}>
+    <Box key={id} data-ect-node="BrandSpotlightSection" style={{ gap: spacing['16'] }}>
       <BrandStoryBanner
         title={bannerTitle}
         subtitle={bannerSubtitle}
@@ -47,10 +51,12 @@ export function BrandSpotlightSection({
         imageUrl={bannerImageUrl}
         onPress={onPressBanner}
       />
-      {items.length >= 3 ? (
+      {items.length > 0 ? (
         <BestItemsMonthRail
           title={railTitle}
           items={items}
+          autoplay={autoplay}
+          autoplayMs={autoplayMs}
           loading={loading}
           error={error}
           onRetry={onRetry}

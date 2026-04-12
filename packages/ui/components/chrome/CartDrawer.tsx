@@ -1,12 +1,15 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { I18nManager, Image, Platform, ScrollView, View } from 'react-native'
-import { borderWidth, colors, elevation, motionDuration, radius, spacing, zIndex } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { borderWidth, elevation, motionDuration, radius, spacing, zIndex } from '@real/tokens'
+import { Box, Text } from '../../primitives'
+import { Button as ReusableButton } from '../../reusables/button'
 import { Button } from '../Button'
 import { Card } from '../Card'
 import { Icon } from '../Icon'
+import { IconButton } from '../IconButton'
+import { useThemeColors } from '../../responsive'
 
 export type CartDrawerItem = {
   id: string
@@ -22,6 +25,7 @@ type CartDrawerProps = {
   open: boolean
   items: CartDrawerItem[]
   subtotal: number
+  freeDeliveryThreshold?: number
   loading?: boolean
   error?: string | null
   onClose: () => void
@@ -34,10 +38,27 @@ type CartDrawerProps = {
 
 const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
 
-export function CartDrawer({
+const currencyFormatterCache = new Map<string, Intl.NumberFormat>()
+
+function getCurrencyFormatter(currencyCode: string): Intl.NumberFormat {
+  let fmt = currencyFormatterCache.get(currencyCode)
+  if (!fmt) {
+    fmt = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+    currencyFormatterCache.set(currencyCode, fmt)
+  }
+  return fmt
+}
+
+export const CartDrawer = React.memo(function CartDrawer({
   open,
   items,
   subtotal,
+  freeDeliveryThreshold = 99,
   loading = false,
   error,
   onClose,
@@ -47,13 +68,11 @@ export function CartDrawer({
   onViewCart,
   onCheckout,
 }: CartDrawerProps) {
-  const formatCurrency = (value: number, currencyCode: string) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currencyCode,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(value)
+  const c = useThemeColors()
+  const formatCurrency = useCallback(
+    (value: number, currencyCode: string) => getCurrencyFormatter(currencyCode).format(value),
+    [],
+  )
 
   const [pendingById, setPendingById] = useState<Record<string, boolean>>({})
   const [actionById, setActionById] = useState<Record<string, 'updating' | 'removing' | undefined>>({})
@@ -126,6 +145,31 @@ export function CartDrawer({
     }
   }, [open, onClose])
 
+  useEffect(() => {
+    if (!open || Platform.OS !== 'web') {
+      return
+    }
+
+    const doc = (globalThis as { document?: Document }).document
+    const body = doc?.body
+    const root = doc?.documentElement
+
+    if (!body || !root) {
+      return
+    }
+
+    const previousBodyOverflow = body.style.overflow
+    const previousRootOverflow = root.style.overflow
+
+    body.style.overflow = 'hidden'
+    root.style.overflow = 'hidden'
+
+    return () => {
+      body.style.overflow = previousBodyOverflow
+      root.style.overflow = previousRootOverflow
+    }
+  }, [open])
+
   const totalQuantity = useMemo(() => items.reduce((sum, item) => sum + item.quantity, 0), [items])
 
   const runMutation = async (
@@ -156,13 +200,16 @@ export function CartDrawer({
           (I18nManager.isRTL ? 'rtl' : 'ltr')) === 'rtl')
       : I18nManager.isRTL
   const currency = items[0]?.currency ?? 'USD'
-  const freeDeliveryTarget = 99
+  const freeDeliveryTarget = freeDeliveryThreshold
   const amountToFreeDelivery = Math.max(0, freeDeliveryTarget - subtotal)
   const freeDeliveryProgress = Math.max(0, Math.min(1, subtotal / freeDeliveryTarget))
 
   return (
-    <Box
+    <div
       data-ect-node="CartDrawer"
+      role='dialog'
+      aria-modal='true'
+      aria-label='Cart drawer'
       style={{
         position: 'fixed',
         top: 0,
@@ -170,21 +217,21 @@ export function CartDrawer({
         bottom: 0,
         left: 0,
         zIndex: zIndex.searchTop + 4,
-      } as any}
+      }}
     >
-      <Touchable
-        onPress={onClose}
+      <div
+        aria-hidden='true'
+        onClick={onClose}
         style={{
           position: 'absolute',
           top: 0,
           right: 0,
           bottom: 0,
           left: 0,
-          backgroundColor: colors.black,
-          opacity: 0.32,
-          transitionProperty: 'opacity',
-          transitionDuration: `${motionDuration.pageReveal}ms`,
-        } as any}
+          backgroundColor: c.inkBlack,
+          opacity: 0.38,
+          cursor: 'pointer',
+        }}
       />
 
       <View
@@ -193,8 +240,6 @@ export function CartDrawer({
             panelRef.current = node as unknown as HTMLElement
           }
         }}
-        accessibilityRole='dialog'
-        accessibilityLabel='Cart drawer'
         style={{
           position: 'absolute',
           top: 0,
@@ -202,9 +247,9 @@ export function CartDrawer({
           bottom: 0,
           width: spacing.xxl * 9.6,
           maxWidth: '92%' as any,
-          backgroundColor: colors.surface,
+          backgroundColor: c.surface,
           [isRtl ? 'borderRightWidth' : 'borderLeftWidth']: borderWidth.thin,
-          borderColor: colors.border,
+          borderColor: c.border,
           flexDirection: 'column',
           ...(Platform.OS === 'web'
             ? {
@@ -220,32 +265,19 @@ export function CartDrawer({
             paddingTop: spacing['4'],
             paddingBottom: spacing['3'],
             borderBottomWidth: borderWidth.thin,
-            borderBottomColor: colors.border,
-            backgroundColor: colors.surface,
+            borderBottomColor: c.border,
+            backgroundColor: c.surface,
           }}
         >
           <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Touchable
-              nativeID='cart-drawer-close'
-              accessibilityRole='button'
-              onPress={onClose}
-            >
-              {({ hovered, focused }) => (
-                <Box
-                  style={{
-                    width: spacing['32'],
-                    height: spacing['32'],
-                    borderRadius: radius.full,
-                    backgroundColor: hovered || focused ? colors.surfaceMuted : colors.surface,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: hovered || focused ? 1 : 0.72,
-                  }}
-                >
-                  <Icon name='close' size={16} />
-                </Box>
-              )}
-            </Touchable>
+            <Box id='cart-drawer-close' style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+              <IconButton
+                icon='close'
+                label='Close cart drawer'
+                onPress={onClose}
+                tone='ghost'
+              />
+            </Box>
             <Text variant='title' size={15} weight='700'>
               Bag
               <Text variant='caption' tone='muted' style={{ letterSpacing: 0.2 }}>
@@ -264,15 +296,15 @@ export function CartDrawer({
               paddingHorizontal: spacing['16'],
               paddingVertical: spacing['6'],
               borderBottomWidth: borderWidth.thin,
-              borderBottomColor: colors.border,
-              backgroundColor: colors.surface,
+              borderBottomColor: c.border,
+              backgroundColor: c.surface,
             }}
           >
             <Box
               style={{
                 paddingHorizontal: spacing['4'],
                 paddingVertical: spacing['2'],
-                backgroundColor: colors.surface,
+                backgroundColor: c.surface,
                 gap: spacing['4'],
               }}
             >
@@ -285,7 +317,7 @@ export function CartDrawer({
                 }}
               >
                 <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['6'], flex: 1 }}>
-                  <Icon name='shipping' size={14} color={colors.textSecondary} />
+                  <Icon name='shipping' size={14} color={c.textSecondary} />
                   <Text variant='bodySm' tone='muted' weight='500' numberOfLines={1} style={{ flex: 1 }}>
                     {amountToFreeDelivery > 0
                       ? `Add ${formatCurrency(amountToFreeDelivery, currency)} for free delivery`
@@ -293,48 +325,43 @@ export function CartDrawer({
                   </Text>
                 </Box>
                 {amountToFreeDelivery > 0 ? (
-                  <Touchable
+                  <ReusableButton
                     onPress={() => {
                       onViewCart()
                       onClose()
                     }}
-                    accessibilityRole='button'
                     accessibilityLabel='Add more items for free delivery'
+                    variant='ghost'
+                    size='sm'
+                    style={{
+                      minHeight: spacing['24'],
+                      borderRadius: radius.full,
+                      paddingHorizontal: spacing['8'],
+                      backgroundColor: c.surfaceMuted,
+                      borderWidth: borderWidth.thin,
+                      borderColor: c.border,
+                    }}
                   >
-                    {({ hovered }) => (
-                      <Box
-                        style={{
-                          minHeight: spacing['24'],
-                          borderRadius: radius.full,
-                          paddingHorizontal: spacing['8'],
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          backgroundColor: hovered ? colors.brandPrimarySubtle : colors.surfaceMuted,
-                          borderWidth: borderWidth.thin,
-                          borderColor: hovered ? colors.brandPrimary : colors.border,
-                        }}
-                      >
                     <Text variant='caption' weight='700' tone='primary'>
                       Add more
                     </Text>
-                      </Box>
-                    )}
-                  </Touchable>
+                  </ReusableButton>
                 ) : null}
               </Box>
               <Box
                 style={{
                   height: spacing['1'],
                   borderRadius: radius.full,
-                  backgroundColor: colors.surfaceMuted,
+                  backgroundColor: c.surfaceMuted,
                   overflow: 'hidden',
                 }}
               >
                 <Box
                   style={{
                     height: '100%',
-                    width: `${Math.round(freeDeliveryProgress * 100)}%`,
-                    backgroundColor: colors.brandPrimary,
+                    backgroundColor: c.brandPrimary,
+                    transformOrigin: 'left',
+                    transform: [{ scaleX: freeDeliveryProgress }],
                   }}
                 />
               </Box>
@@ -344,7 +371,7 @@ export function CartDrawer({
 
         {/* Scrollable Content */}
         <ScrollView
-          style={{ flex: 1, backgroundColor: colors.surface }}
+          style={{ flex: 1, backgroundColor: c.surface }}
           contentContainerStyle={{ padding: spacing['12'], paddingBottom: spacing['16'] }}
         >
           {loading ? (
@@ -354,13 +381,13 @@ export function CartDrawer({
             </Box>
           ) : error ? (
             <Box style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 200, gap: spacing.sm }}>
-              <Icon name='unknown' size={32} color={colors.textSecondary} />
+              <Icon name='unknown' size={32} color={c.textSecondary} />
               <Text tone='danger' weight='600'>Unable to load cart.</Text>
               <Text tone='muted' variant='bodySm'>{error}</Text>
             </Box>
           ) : items.length === 0 ? (
             <Box style={{ flex: 1, alignItems: 'center', justifyContent: 'center', minHeight: 300, gap: spacing.lg }}>
-              <Icon name='cart' size={48} color={colors.border} />
+              <Icon name='cart' size={48} color={c.border} />
               <Text tone='muted' variant='title' weight='600'>Your cart is empty.</Text>
               <Button
                 variant='solid'
@@ -382,9 +409,9 @@ export function CartDrawer({
                     gap: spacing['8'],
                     paddingVertical: spacing['8'],
                     borderRadius: radius.sm,
-                    backgroundColor: colors.surface,
+                    backgroundColor: c.surface,
                     borderBottomWidth: borderWidth.thin,
-                    borderBottomColor: colors.stroke,
+                    borderBottomColor: c.stroke,
                   }}
                 >
                   {/* Thumbnail */}
@@ -393,9 +420,9 @@ export function CartDrawer({
                       width: 52,
                       height: 64,
                       borderRadius: radius.sm,
-                      backgroundColor: colors.backgroundSecondary,
+                      backgroundColor: c.backgroundSecondary,
                       borderWidth: borderWidth.thin,
-                      borderColor: colors.border,
+                      borderColor: c.border,
                       overflow: 'hidden',
                     }}
                   >
@@ -404,6 +431,7 @@ export function CartDrawer({
                       alt={item.name}
                       style={{ width: '100%', height: '100%' }}
                       resizeMode='cover'
+                      {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                     />
                   </Box>
 
@@ -436,55 +464,62 @@ export function CartDrawer({
                             flexDirection: 'row',
                             alignItems: 'center',
                             borderWidth: borderWidth.thin,
-                            borderColor: colors.border,
+                            borderColor: c.border,
                             borderRadius: radius.full,
-                            backgroundColor: colors.surfaceMuted,
-                            height: 32,
+                            backgroundColor: c.surfaceMuted,
                           }}
                         >
-                          <Touchable
+                          <ReusableButton
                             onPress={() => runMutation(item, 'updating', onDecrease)}
                             disabled={pendingById[item.id]}
-                            style={{ width: 28, height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            accessibilityLabel='Decrease quantity'
+                            accessibilityRole='button'
+                            variant='ghost'
+                            size='icon'
+                            style={{ width: 44, height: 44, minWidth: 44, minHeight: 44, paddingHorizontal: 0, paddingVertical: 0, alignItems: 'center', justifyContent: 'center' }}
                           >
-                            <Text variant='caption' tone='muted' weight='700'>−</Text>
-                          </Touchable>
+                            <Text variant='caption' tone='muted' weight='700'>-</Text>
+                          </ReusableButton>
                           <Box style={{ minWidth: 20, alignItems: 'center', justifyContent: 'center' }}>
                             <Text variant='caption' weight='700'>{item.quantity}</Text>
                           </Box>
-                          <Touchable
+                          <ReusableButton
                             onPress={() => runMutation(item, 'updating', onIncrease)}
                             disabled={pendingById[item.id]}
-                            style={{ width: 28, height: '100%', alignItems: 'center', justifyContent: 'center' }}
+                            accessibilityLabel='Increase quantity'
+                            accessibilityRole='button'
+                            variant='ghost'
+                            size='icon'
+                            style={{ width: 44, height: 44, minWidth: 44, minHeight: 44, paddingHorizontal: 0, paddingVertical: 0, alignItems: 'center', justifyContent: 'center' }}
                           >
                             <Text variant='caption' tone='muted' weight='700'>+</Text>
-                          </Touchable>
+                          </ReusableButton>
                         </Box>
 
-                        <Touchable
+                        <ReusableButton
                           onPress={() => runMutation(item, 'removing', onRemove)}
                           disabled={pendingById[item.id]}
                           accessibilityLabel='Delete item from cart'
+                          accessibilityRole='button'
+                          variant='ghost'
+                          size='icon'
+                          style={{
+                            width: 44,
+                            height: 44,
+                            minWidth: 44,
+                            minHeight: 44,
+                            paddingHorizontal: 0,
+                            paddingVertical: 0,
+                            borderRadius: radius.full,
+                            backgroundColor: c.surface,
+                          }}
                         >
-                          {({ hovered }) => (
-                            <Box
-                              style={{
-                                width: spacing['24'],
-                                height: spacing['24'],
-                                borderRadius: radius.full,
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                backgroundColor: hovered ? colors.brandPrimarySubtle : colors.surface,
-                              }}
-                            >
-                              <Icon
-                                name='delete'
-                                size={14}
-                                color={hovered ? colors.error : colors.textSecondary}
-                              />
-                            </Box>
-                          )}
-                        </Touchable>
+                          <Icon
+                            name='delete'
+                            size={14}
+                            color={c.textSecondary}
+                          />
+                        </ReusableButton>
                       </Box>
 
                       <Box style={{ alignItems: 'flex-end' }}>
@@ -512,9 +547,9 @@ export function CartDrawer({
               paddingHorizontal: spacing['12'],
               paddingTop: spacing['8'],
               paddingBottom: spacing['10'],
-              backgroundColor: colors.surface,
+              backgroundColor: c.surface,
               borderTopWidth: borderWidth.thin,
-              borderTopColor: colors.border,
+              borderTopColor: c.border,
             }}
           >
             <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing['8'] }}>
@@ -533,24 +568,27 @@ export function CartDrawer({
               Checkout
             </Button>
             <Box style={{ alignItems: 'center', marginTop: spacing['6'] }}>
-              <Touchable
+              <ReusableButton
                 onPress={() => {
                   onViewCart()
                   onClose()
                 }}
-                accessibilityRole='button'
                 accessibilityLabel='View full cart'
+                variant='link'
+                size='sm'
+                style={{
+                  paddingHorizontal: 0,
+                  paddingVertical: 0,
+                }}
               >
-                {({ hovered }) => (
-                  <Text variant='bodySm' tone='muted' style={{ textDecorationLine: hovered ? 'underline' : 'none' }}>
-                    View full cart
-                  </Text>
-                )}
-              </Touchable>
+                <Text variant='bodySm' tone='muted' style={{ textDecorationLine: 'underline' }}>
+                  View full cart
+                </Text>
+              </ReusableButton>
             </Box>
           </Box>
         )}
       </View>
-    </Box>
+    </div>
   )
-}
+})

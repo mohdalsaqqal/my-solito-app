@@ -1,0 +1,21 @@
+{
+  "name": "solito-v5-premium-cosmetics-commerce",
+  "type": "monorepo",
+  "description": "Cross-platform cosmetics commerce platform powering Real Cosmetics",
+  "tech_stack": {
+    "web": ["Next.js 16 (App Router)", "React 19", "Uniwind", "Tailwind CSS 4"],
+    "mobile": ["Expo 54", "React Native 0.81", "Reanimated 4", "Uniwind"],
+    "shared_ui": "React Native primitives → DOM via Uniwind (RNR-centered)",
+    "state": "Server-first (services → providers → adapters)",
+    "database": "Prisma (ORM)",
+    "package_manager": "Yarn 4.13 (workspaces)",
+    "build_orchestration": "Turbo",
+    "i18n": "i18next + Crowdin (EN/AR with RTL support)"
+  },
+  "brand_direction": {
+    "type": "Mass-market commercial beauty",
+    "reference": "niceonesa.com",
+    "style": "Sans-serif-led, dense, conversion-oriented UI",
+    "anti_references": ["Aesop", "Glossier"]
+  }
+}

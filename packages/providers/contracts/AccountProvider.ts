@@ -153,6 +153,14 @@ export type AccountQr = {
   qrCode: string
 }
 
+export type AccountIntegrationProfile = {
+  userId: string
+  externalCustomerId?: string
+  paymentCustomerId?: string
+  referralProfileId?: string
+  lastSyncedAt?: string
+}
+
 export interface AccountProvider {
   getOverview(user: {
     userId: string
@@ -197,4 +205,5 @@ export interface AccountProvider {
   deleteAddress(userId: string, addressId: string): Promise<ProviderResult<AccountAddress[]>>
   setDefaultAddress(userId: string, addressId: string): Promise<ProviderResult<AccountAddress[]>>
   getQr(userId: string): Promise<ProviderResult<AccountQr>>
+  getIntegrationProfile?(userId: string): Promise<ProviderResult<AccountIntegrationProfile>>
 }

@@ -12,6 +12,8 @@ export type CartLine = {
   quantity: number
   price: number
   currency: string
+  imageUrl?: string
+  brand?: string
 }
 
 export type FooterLink = {
@@ -40,18 +42,93 @@ export type LocalizedText = {
   ar: string
 }
 
+export type UtilityBarItem = {
+  id: string
+  label: string
+  href?: string
+  highlight?: boolean
+}
+
+export type LogoSizeKey = 'sm' | 'md' | 'lg'
+
+export type MenuAnalyticsConfig = {
+  impressionKey?: string
+  clickKey?: string
+}
+
+export type ShellMenuLink = {
+  id: string
+  label: string
+  href: string
+  description?: string
+  analytics?: MenuAnalyticsConfig
+  luxury?: boolean
+}
+
+export type ShellFeaturedSlot = {
+  id: string
+  type: 'banner' | 'product' | 'campaign'
+  title?: string
+  subtitle?: string
+  ctaLabel?: string
+  href?: string
+  imageUrl?: string
+  analytics?: MenuAnalyticsConfig
+}
+
+export type ShellBrandRail = {
+  title?: string
+  items: ShellMenuLink[]
+  analytics?: MenuAnalyticsConfig
+}
+
+export type ShellMegaMenuColumn = {
+  id: string
+  label: string
+  href?: string
+  children: ShellMenuLink[]
+  analytics?: MenuAnalyticsConfig
+}
+
+export type ShellMegaMenuSection = {
+  id: string
+  label: string
+  href?: string
+  description?: string
+  columns: ShellMegaMenuColumn[]
+  brandRail?: ShellBrandRail
+  featuredSlot?: ShellFeaturedSlot
+  analytics?: MenuAnalyticsConfig
+}
+
+export type ShellResolvedMenus = {
+  headerPrimary?: ShellMenuLink[]
+  headerMegaCategories?: {
+    analytics?: MenuAnalyticsConfig
+    sections: ShellMegaMenuSection[]
+  }
+}
+
 export type ShellContent = {
   topBar?: {
-    message: LocalizedText
+    message?: LocalizedText
     secondaryMessage?: LocalizedText
+    tertiaryMessage?: LocalizedText
     ctaLabel?: LocalizedText
     ctaHref?: string
+    items?: Array<{
+      id: string
+      label: LocalizedText
+      href?: string
+      highlight?: boolean
+    }>
   }
   branding?: {
     logo: {
       uri: string
       alt: LocalizedText
     }
+    logoSize?: LogoSizeKey
   }
   navigation?: {
     categories?: Array<{
@@ -61,6 +138,12 @@ export type ShellContent = {
       group?: string
       description?: LocalizedText
     }>
+    quickActions?: Array<{
+      id: string
+      label: LocalizedText
+      href: string
+    }>
+    menus?: ShellResolvedMenus
   }
   footer?: {
     newsletterTitle?: LocalizedText
@@ -84,6 +167,22 @@ export type ShellContent = {
       noRecentSearches?: LocalizedText
     }
     clearRecentLabel?: LocalizedText
+  }
+  mobileHeader?: {
+    deliveryLabel?: LocalizedText
+    deliveryLocation?: LocalizedText
+    searchPlaceholder?: LocalizedText
+    shortcuts?: Array<{
+      id: string
+      label: LocalizedText
+      href: string
+      icon?: 'categories' | 'product' | 'star' | 'trending' | 'gift' | 'deals'
+    }>
+  }
+  statusPages?: {
+    homeUnavailableTitle?: LocalizedText
+    homeUnavailableSubtitle?: LocalizedText
+    homeUnavailableCtaLabel?: LocalizedText
   }
 }
 

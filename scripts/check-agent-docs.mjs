@@ -60,6 +60,12 @@ function readLines(filePath) {
   return content.split(/\r?\n/)
 }
 
+function hasSourceOfTruthHeading(lines, ceiling) {
+  return lines
+    .slice(0, ceiling)
+    .some(line => /^##\s+source of truth\s*$/i.test(line.trim()))
+}
+
 // ─── Step 1: Verify AGENTS.md has Source of Truth section ────────────
 const findings = []
 const shimResults = []
@@ -72,8 +78,7 @@ function addFinding(ruleId, severity, path, message, principle) {
 let sotPresent = false
 try {
   const agentsLines = readLines(AGENTS_MD_PATH)
-  const first30 = agentsLines.slice(0, 30).join('\n').toLowerCase()
-  if (first30.includes('source of truth')) {
+  if (hasSourceOfTruthHeading(agentsLines, 30)) {
     sotPresent = true
   } else {
     addFinding('AD-000', 'FAIL', 'AGENTS.md',

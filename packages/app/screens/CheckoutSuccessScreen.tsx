@@ -23,7 +23,7 @@ export function CheckoutSuccessScreen({
       <PageScaffold.Body>
         <Section>
           <Card variant='raised' style={{ gap: spacing['16'] }}>
-            <Text variant='h2'>Order placed</Text>
+            <Text variant='h1'>Order placed</Text>
             <Text tone='muted'>Your order was submitted successfully.</Text>
             <Box style={{ gap: spacing['8'] }}>
               <Text variant='bodySm'>Order ID: {orderId}</Text>

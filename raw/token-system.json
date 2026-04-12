@@ -1,0 +1,42 @@
+{
+  "token_system": {
+    "source": "packages/tokens/",
+    "types": {
+      "colors": {
+        "usage": "Inline: colors.xxx from @real/tokens; Reusables: bg-primary className",
+        "palette": {
+          "primary_CTA": "#222222 (dark neutral) with white text",
+          "purchase_intent": "#a8000d (deep blood red — reserved for buy/add-to-cart)",
+          "shell_surfaces": ["#f9f9f9", "#ffffff", "#f3f3f3"],
+          "status": {
+            "green": "success",
+            "gold": "warning",
+            "red": "danger/error/sale",
+            "blue": "info"
+          }
+        }
+      },
+      "spacing": {
+        "usage": "spacing.xxx — Never raw numbers"
+      },
+      "radius": {
+        "usage": "radius.xxx — Never hardcoded"
+      },
+      "typography": {
+        "usage": "typography.xxx, fontWeights.xxx, lineHeights.xxx",
+        "font": "Manrope (sans-serif only)",
+        "scale": {
+          "headlines": "14px",
+          "body_ui_text": "12px",
+          "labels_meta": "10-11px"
+        }
+      },
+      "shadows": {
+        "usage": "shadows.xxx (9-level: xs→xl) — Semantic elevation aliases"
+      },
+      "motion": {
+        "usage": "motion.xxx — 300ms micro, 600ms page reveals"
+      }
+    }
+  }
+}

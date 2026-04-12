@@ -1,7 +1,9 @@
 import { Image, ScrollView } from 'react-native'
-import { borderWidth, colors, radius, spacing } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { borderWidth, radius, spacing } from '@real/tokens'
+import { Box, Text } from '../../primitives'
 import { HomeBrandItem } from './types'
+import { Button as ReusableButton } from '../../reusables/button'
+import { useThemeColors } from '../../responsive'
 
 type HomeBrandRailProps = {
   items: HomeBrandItem[]
@@ -11,6 +13,7 @@ type HomeBrandRailProps = {
 const FALLBACK_IMAGE = '/brand-logo-placeholder.svg'
 
 export function HomeBrandRail({ items, onPressItem }: HomeBrandRailProps) {
+  const c = useThemeColors()
   if (items.length === 0) {
     return null
   }
@@ -26,15 +29,17 @@ export function HomeBrandRail({ items, onPressItem }: HomeBrandRailProps) {
         contentContainerStyle={{ gap: spacing.xs }}
       >
         {items.map((item) => (
-          <Touchable
+          <ReusableButton
             key={item.id}
             onPress={() => onPressItem?.(item)}
+            variant='ghost'
+            size='default'
             style={{
               width: spacing.xxl * 3,
               borderWidth: borderWidth.thin,
-              borderColor: colors.border,
+              borderColor: c.border,
               borderRadius: radius.xs,
-              backgroundColor: colors.surface,
+              backgroundColor: c.surface,
               alignItems: 'center',
               justifyContent: 'center',
               padding: spacing['16'],
@@ -43,15 +48,16 @@ export function HomeBrandRail({ items, onPressItem }: HomeBrandRailProps) {
           >
             <Image
               source={{ uri: item.logoUrl || FALLBACK_IMAGE }}
+              alt={item.name}
               style={{
                 width: spacing.xxl + spacing.sm,
                 height: spacing.xxl + spacing.sm,
                 borderRadius: radius.full,
-                backgroundColor: colors.backgroundSecondary,
+                backgroundColor: c.backgroundSecondary,
               }}
             />
             <Text variant='caption' numberOfLines={1}>{item.name}</Text>
-          </Touchable>
+          </ReusableButton>
         ))}
       </ScrollView>
     </Box>

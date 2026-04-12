@@ -1,9 +1,13 @@
 import { authProvider } from '@real/providers'
 import { fail } from '../../_lib/response'
 import { clearAuthSessionCookieHeader, jsonOk } from '../../_lib/auth-session'
+import { requireTrustedMutationRequest } from '../../_lib/request-auth'
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const trustedError = requireTrustedMutationRequest(request)
+    if (trustedError) return trustedError
+
     const result = await authProvider.logout()
     if (!result.ok) {
       return fail(result.error.code, result.error.message, 500)

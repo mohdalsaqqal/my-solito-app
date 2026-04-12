@@ -1,0 +1,67 @@
+{
+  "monorepo_structure": {
+    "apps": {
+      "next": {
+        "description": "Next.js web app + server layer",
+        "owns": [
+          "Web app (App Router)",
+          "Server layer",
+          "Route Handlers",
+          "Server Actions",
+          "server/services"
+        ],
+        "rules": [
+          "Import providers, not adapters",
+          "Normalize server data",
+          "Keep page reads in services",
+          "Keep route handlers thin"
+        ]
+      },
+      "expo": {
+        "description": "React Native mobile app (Expo)",
+        "owns": ["Mobile app"]
+      },
+      "strapi": {
+        "description": "CMS (excluded from workspaces)",
+        "owns": []
+      }
+    },
+    "packages": {
+      "app": {
+        "description": "Shared screens, features, business logic (web + native)",
+        "owns": ["Shared screens and flows"],
+        "rules": [
+          "No adapters",
+          "No process.env",
+          "No className"
+        ]
+      },
+      "ui": {
+        "description": "Shared RNR-centered component system",
+        "owns": [
+          "Pure UI",
+          "Shared reusable controls",
+          "Product-facing shared components"
+        ],
+        "subpackages": {
+          "reusables": "Core shared control layer (cva + className, Tailwind/Uniwind variants)",
+          "components": "Product-facing shared UI (inline token styles)",
+          "primitives": "Legacy API surface (do not grow)",
+          "responsive": "useBreakpoint(), layout profiles"
+        }
+      },
+      "tokens": {
+        "description": "Design tokens (colors, spacing, typography, radius, shadows, motion, etc.)",
+        "owns": ["Design token definitions"]
+      },
+      "providers": {
+        "description": "Provider contracts + registry",
+        "owns": ["Contracts", "Registry"]
+      },
+      "adapters": {
+        "description": "External integrations (all mock data today)",
+        "owns": ["External integrations only"]
+      }
+    }
+  }
+}

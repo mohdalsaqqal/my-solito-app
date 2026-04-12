@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Platform, ScrollView, useWindowDimensions } from 'react-native'
 import { spacing } from '@real/tokens'
 import { Box } from '../../primitives'
@@ -15,7 +15,7 @@ type HeroCampaignSliderProps = {
 
 const HERO_GAP = spacing.xs
 
-export function HeroCampaignSlider({
+export const HeroCampaignSlider = React.memo(function HeroCampaignSlider({
   items,
   autoplay = true,
   autoplayMs = 4200,
@@ -122,13 +122,14 @@ export function HeroCampaignSlider({
         }}
       >
         {items.map((item) => (
-          <HeroSlideCard
-            key={item.id}
-            item={item}
-            width={cardWidth}
-            imageAspectRatio={imageAspectRatio}
-            onPress={onPressItem}
-          />
+          <Box key={item.id} role='group' aria-roledescription='slide'>
+            <HeroSlideCard
+              item={item}
+              width={cardWidth}
+              imageAspectRatio={imageAspectRatio}
+              onPress={onPressItem}
+            />
+          </Box>
         ))}
       </ScrollView>
 
@@ -145,4 +146,4 @@ export function HeroCampaignSlider({
       ) : null}
     </Box>
   )
-}
+})

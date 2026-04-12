@@ -3,8 +3,9 @@ import { ViewStyle } from 'react-native'
 import { borderWidth, colors, iconSizes, radius, spacing } from '@real/tokens'
 import { Box } from '../../primitives/Box'
 import { Text } from '../../primitives/Text'
-import { Touchable } from '../../primitives/Touchable'
 import { Icon } from '../Icon'
+import { Button as ReusableButton } from '../../reusables/button'
+import { useThemeColors } from '../../responsive'
 
 export type MiniSearchBarProps = {
   placeholder: string
@@ -32,7 +33,14 @@ const pillBaseStyle: ViewStyle = {
   minHeight: spacing['40'],
 }
 
+const buttonResetStyle: ViewStyle = {
+  paddingHorizontal: spacing.none,
+  paddingVertical: spacing.none,
+  borderRadius: radius.full,
+}
+
 export function MiniSearchBar({ placeholder, onPress, dir = 'ltr' }: MiniSearchBarProps) {
+  const c = useThemeColors()
   const isRtl = dir === 'rtl'
 
   const pillStyle = useMemo<ViewStyle>(
@@ -42,16 +50,19 @@ export function MiniSearchBar({ placeholder, onPress, dir = 'ltr' }: MiniSearchB
 
   return (
     <Box style={barStyle}>
-      <Touchable
+      <ReusableButton
         onPress={onPress}
         accessibilityRole="button"
         accessibilityLabel={placeholder}
+        variant='ghost'
+        size='default'
+        style={buttonResetStyle}
       >
         <Box style={pillStyle}>
           <Icon
             name="search"
             size={iconSizes.sm}
-            color={colors.textMuted}
+            color={c.textMuted}
             weight="regular"
           />
           <Text
@@ -63,7 +74,7 @@ export function MiniSearchBar({ placeholder, onPress, dir = 'ltr' }: MiniSearchB
             {placeholder}
           </Text>
         </Box>
-      </Touchable>
+      </ReusableButton>
     </Box>
   )
 }

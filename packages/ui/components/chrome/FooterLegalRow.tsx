@@ -23,7 +23,7 @@ export function FooterLegalRow({ text, state = 'default' }: FooterLegalRowProps)
   }
 
   return (
-    <Text tone={state === 'disabled' ? 'muted' : 'muted'} variant='meta' style={{ opacity: 0.85 }}>
+    <Text tone='inverse' variant='meta' style={{ opacity: state === 'disabled' ? 0.55 : 0.72 }}>
       {text}
     </Text>
   )

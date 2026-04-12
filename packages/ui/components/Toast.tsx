@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
-import { AnimatePresence, MotiView } from 'moti'
-import { borderWidth, colors, motionDuration, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, colors, radius, spacing, zIndex } from '@real/tokens'
 import { Text } from '../primitives/Text'
 
 type ToastTone = 'success' | 'error' | 'info' | 'warning'
@@ -27,11 +26,7 @@ const toastAccent: Record<ToastTone, string> = {
 
 function ToastItemView({ item, onDismiss }: { item: ToastItem; onDismiss: () => void }) {
   return (
-    <MotiView
-      from={{ opacity: 0, translateY: 16 }}
-      animate={{ opacity: 1, translateY: 0 }}
-      exit={{ opacity: 0, translateY: -8 }}
-      transition={{ type: 'timing', duration: motionDuration.microInteraction }}
+    <View
       style={{
         marginBottom: spacing.sm,
         paddingHorizontal: spacing.md,
@@ -62,7 +57,7 @@ function ToastItemView({ item, onDismiss }: { item: ToastItem; onDismiss: () => 
       >
         <Text variant="caption" tone="muted">✕</Text>
       </Pressable>
-    </MotiView>
+    </View>
   )
 }
 
@@ -100,11 +95,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         }}
         accessibilityLiveRegion="polite"
       >
-        <AnimatePresence>
-          {toasts.map((item) => (
-            <ToastItemView key={item.id} item={item} onDismiss={() => dismiss(item.id)} />
-          ))}
-        </AnimatePresence>
+        {toasts.map((item) => (
+          <ToastItemView key={item.id} item={item} onDismiss={() => dismiss(item.id)} />
+        ))}
       </View>
     </ToastContext.Provider>
   )

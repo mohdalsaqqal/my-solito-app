@@ -179,7 +179,7 @@ const seedStore: ReleaseStore = {
             id: 'ob-1',
             imageUrl:
               'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=900&h=600&q=80',
-            href: '/shop/categories/skincare',
+            href: '/shop?categories=skincare',
             ctaLabelEn: 'Shop Skincare',
             ctaLabelAr: 'تسوق العناية بالبشرة',
           },
@@ -187,7 +187,7 @@ const seedStore: ReleaseStore = {
             id: 'ob-2',
             imageUrl:
               'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&h=600&q=80',
-            href: '/shop/categories/makeup',
+            href: '/shop?categories=makeup',
             ctaLabelEn: 'Shop Makeup',
             ctaLabelAr: 'تسوق المكياج',
           },
@@ -195,7 +195,7 @@ const seedStore: ReleaseStore = {
             id: 'ob-3',
             imageUrl:
               'https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&w=900&h=600&q=80',
-            href: '/shop/categories/fragrance',
+            href: '/shop?categories=fragrance',
             ctaLabelEn: 'Shop Fragrance',
             ctaLabelAr: 'تسوق العطور',
           },
@@ -203,7 +203,7 @@ const seedStore: ReleaseStore = {
             id: 'ob-4',
             imageUrl:
               'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=900&h=600&q=80',
-            href: '/shop/categories/haircare',
+            href: '/shop?categories=haircare',
             ctaLabelEn: 'Shop Haircare',
             ctaLabelAr: 'تسوق العناية بالشعر',
           },

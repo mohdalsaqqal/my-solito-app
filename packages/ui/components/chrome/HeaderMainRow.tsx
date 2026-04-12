@@ -1,10 +1,11 @@
-import { useState } from 'react'
-import { borderWidth, colors, layout, letterSpacing, motionDuration, radius, shadows, spacing, typography } from '@real/tokens'
+import React, { useState } from 'react'
+import { borderWidth, layout, letterSpacing, motionDuration, radius, shadows, spacing, typography } from '@real/tokens'
 import { Box, Container, Input, Text } from '../../primitives'
 import { Button as ReusableButton } from '../../reusables/button'
 import { Badge } from '../Badge'
 import { Button } from '../Button'
 import { Icon } from '../Icon'
+import { useThemeColors } from '../../responsive'
 
 type HeaderMainRowProps = {
   variant?: 'default' | 'mega-search'
@@ -52,6 +53,7 @@ function Action({
   pulse?: boolean
 }) {
   const [interactive, setInteractive] = useState(false)
+  const c = useThemeColors()
 
   return (
     <Box style={{ alignItems: 'center', gap: spacing['8'] }}>
@@ -65,10 +67,10 @@ function Action({
         variant={emphasized ? 'default' : 'ghost'}
         size='icon'
         style={{
-          minHeight: emphasized ? spacing['40'] : spacing['32'],
-          minWidth: emphasized ? spacing['40'] : spacing['32'],
+          minHeight: emphasized ? spacing['40'] : spacing['40'],
+          minWidth: emphasized ? spacing['40'] : spacing['40'],
           borderRadius: emphasized ? radius.full : radius.md,
-          backgroundColor: emphasized ? colors.brandPrimary : interactive ? colors.surfaceMuted : 'transparent',
+          backgroundColor: emphasized ? c.brandPrimary : interactive ? c.surfaceMuted : 'transparent',
           transitionProperty: 'background-color,transform',
           transitionDuration: `${motionDuration.microInteraction}ms`,
           transform: [{ translateY: interactive ? -1 : 0 }],
@@ -77,8 +79,8 @@ function Action({
         <Box
           style={{
             position: 'relative',
-            minHeight: emphasized ? spacing['40'] : spacing['32'],
-            minWidth: emphasized ? spacing['40'] : spacing['32'],
+            minHeight: spacing['40'],
+            minWidth: spacing['40'],
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -86,7 +88,7 @@ function Action({
           <Icon
             name={iconName}
             size={spacing['24']}
-            color={emphasized ? colors.textInverted : interactive ? colors.goldPrimary : colors.textPrimary}
+            color={emphasized ? c.textInverted : interactive ? c.roseAccent : c.textPrimary}
             weight={interactive ? 'fill' : 'regular'}
           />
           {iconName !== 'account' && typeof count === 'number' && count > 0 ? (
@@ -99,7 +101,7 @@ function Action({
                 minWidth: spacing['16'],
                 height: spacing['16'],
                 borderRadius: radius.xs,
-                backgroundColor: colors.brandPrimary,
+                backgroundColor: c.brandPrimary,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
@@ -130,7 +132,7 @@ function Action({
           height: 2,
           width: interactive ? spacing['24'] : 0,
           borderRadius: 2,
-          backgroundColor: colors.brandPrimary,
+          backgroundColor: c.brandPrimary,
           transitionProperty: 'width',
           transitionDuration: `${motionDuration.normal}ms`,
         }}
@@ -139,7 +141,7 @@ function Action({
   )
 }
 
-export function HeaderMainRow({
+export const HeaderMainRow = React.memo(function HeaderMainRow({
   variant = 'default',
   logoText,
   onPressLogo,
@@ -168,8 +170,9 @@ export function HeaderMainRow({
   mobile = false,
   state = 'default',
 }: HeaderMainRowProps) {
+  const c = useThemeColors()
   const [localeInteractive, setLocaleInteractive] = useState(false)
-  const searchInputHeight = Math.round(spacing['40'] * 0.7 * 1.15 * 1.15 * 1.15)
+  const searchInputHeight = spacing['40']
   const isMegaSearch = variant === 'mega-search'
 
   if (state === 'empty') {
@@ -178,7 +181,7 @@ export function HeaderMainRow({
 
   if (state === 'loading') {
     return (
-      <Box style={{ backgroundColor: colors.surfaceLowest }}>
+      <Box style={{ backgroundColor: c.surfaceLowest }}>
         <Container>
           <Box style={{ minHeight: layout.header.mainRowHeight, justifyContent: 'center' }}>
             <Text tone='muted' variant='caption'>
@@ -192,7 +195,7 @@ export function HeaderMainRow({
 
   if (state === 'error') {
     return (
-      <Box style={{ backgroundColor: colors.surfaceLowest }}>
+      <Box style={{ backgroundColor: c.surfaceLowest }}>
         <Container>
           <Box style={{ minHeight: layout.header.mainRowHeight, justifyContent: 'center' }}>
             <Text tone='danger' variant='caption'>
@@ -206,7 +209,7 @@ export function HeaderMainRow({
 
   if (mobile) {
     return (
-      <Box style={{ backgroundColor: colors.surfaceLowest }}>
+      <Box style={{ backgroundColor: c.surfaceLowest }}>
         <Container>
           <Box style={{ minHeight: layout.header.mainRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing['16'] }}>
             <ReusableButton
@@ -222,7 +225,7 @@ export function HeaderMainRow({
             <Box style={{ flex: 1.8 }}>
               <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
                 <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
-                  <Icon name='search' color={colors.textPrimary} />
+                  <Icon name='search' color={c.textPrimary} />
                 </Box>
                 <Input
                   value={searchValue}
@@ -240,8 +243,8 @@ export function HeaderMainRow({
                     fontSize: typography.bodySm,
                     minHeight: searchInputHeight,
                     height: searchInputHeight,
-                    borderColor: colors.gray10,
-                    backgroundColor: colors.surfaceContainerLow,
+                    borderColor: c.gray10,
+                    backgroundColor: c.surfaceContainerLow,
                   }}
                 />
               </Box>
@@ -253,7 +256,7 @@ export function HeaderMainRow({
   }
 
   return (
-    <Box style={{ backgroundColor: colors.surfaceLowest }}>
+    <Box style={{ backgroundColor: c.surfaceLowest }}>
       <Container>
         <Box
           style={{
@@ -306,7 +309,7 @@ export function HeaderMainRow({
               ) : null}
               <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%', flex: 1 }}>
                 <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
-                  <Icon name='search' color={colors.textPrimary} />
+                  <Icon name='search' color={c.textPrimary} />
                 </Box>
                 <Input
                   value={searchValue}
@@ -324,9 +327,9 @@ export function HeaderMainRow({
                     fontSize: typography.bodySm,
                     minHeight: searchInputHeight,
                     height: searchInputHeight,
-                    borderColor: colors.gray10,
+                    borderColor: c.gray10,
                     borderWidth: borderWidth.thin,
-                    backgroundColor: colors.surfaceContainerLow,
+                    backgroundColor: c.surfaceContainerLow,
                   }}
                 />
               </Box>
@@ -369,10 +372,10 @@ export function HeaderMainRow({
                 variant='ghost'
                 size='icon'
                 style={{
-                  minHeight: spacing['32'],
-                  minWidth: spacing['32'],
+                  minHeight: spacing['40'],
+                  minWidth: spacing['40'],
                   borderRadius: radius.md,
-                  backgroundColor: localeInteractive ? colors.surfaceMuted : 'transparent',
+                  backgroundColor: localeInteractive ? c.surfaceMuted : 'transparent',
                   transitionProperty: 'background-color,transform',
                   transitionDuration: `${motionDuration.microInteraction}ms`,
                   transform: [{ translateY: localeInteractive ? -1 : 0 }],
@@ -382,7 +385,7 @@ export function HeaderMainRow({
                 <Icon
                   name='language'
                   size={spacing['24']}
-                  color={localeInteractive ? colors.goldPrimary : colors.textPrimary}
+                  color={localeInteractive ? c.roseAccent : c.textPrimary}
                 />
               </ReusableButton>
               <Box
@@ -390,7 +393,7 @@ export function HeaderMainRow({
                   height: 2,
                   width: localeInteractive ? spacing['24'] : 0,
                   borderRadius: 2,
-                  backgroundColor: colors.brandPrimary,
+                  backgroundColor: c.brandPrimary,
                   transitionProperty: 'width',
                   transitionDuration: `${motionDuration.normal}ms`,
                 }}
@@ -401,4 +404,4 @@ export function HeaderMainRow({
       </Container>
     </Box>
   )
-}
+})

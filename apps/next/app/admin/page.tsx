@@ -4,3 +4,4 @@ export default function AdminIndexPage() {
   redirect('/admin/dashboard')
 }
 
+

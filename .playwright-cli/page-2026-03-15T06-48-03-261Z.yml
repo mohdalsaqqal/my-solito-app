@@ -1,0 +1,102 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]: Free delivery for orders above 99 USD
+          - generic [ref=e10]: 15,000+ products
+          - generic [ref=e12]: Official brands and weekly deals
+        - generic [ref=e14]:
+          - img [ref=e17] [cursor=pointer]
+          - img [ref=e23] [cursor=pointer]
+          - img [ref=e28] [cursor=pointer]
+          - img [ref=e33] [cursor=pointer]
+      - generic [ref=e36]:
+        - generic [ref=e40]:
+          - generic [ref=e43] [cursor=pointer]:
+            - generic [ref=e44]: REAL
+            - generic [ref=e45]: beauty market
+          - generic [ref=e47]:
+            - button "All Categories" [ref=e48] [cursor=pointer]:
+              - generic [ref=e49]:
+                - generic [ref=e50]: All Categories
+                - img [ref=e51]
+            - generic [ref=e56]:
+              - generic:
+                - img
+              - textbox "Search 5,000+ products..." [ref=e57]
+          - generic [ref=e58]:
+            - button "EN" [ref=e59] [cursor=pointer]:
+              - generic [ref=e60]:
+                - img [ref=e61]
+                - generic [ref=e65]: EN
+                - img [ref=e66]
+            - button "USD" [ref=e69] [cursor=pointer]:
+              - generic [ref=e70]:
+                - generic [ref=e71]: USD
+                - img [ref=e72]
+            - button "Account" [ref=e75] [cursor=pointer]:
+              - img [ref=e77]
+            - button "Wishlist" [ref=e81] [cursor=pointer]:
+              - generic [ref=e82]:
+                - img [ref=e83]
+                - generic:
+                  - generic: "2"
+            - button "Cart" [ref=e86] [cursor=pointer]:
+              - img [ref=e88]
+        - generic [ref=e97]:
+          - generic [ref=e100] [cursor=pointer]: Best Selling
+          - generic [ref=e103] [cursor=pointer]: Top Categories
+          - generic [ref=e106] [cursor=pointer]: New Arrival
+          - generic [ref=e109] [cursor=pointer]: Bundles
+          - generic [ref=e111] [cursor=pointer]:
+            - img [ref=e112]
+            - generic [ref=e115]: Luxury Product
+          - generic [ref=e117] [cursor=pointer]:
+            - img [ref=e118]
+            - generic [ref=e123]: Hot Sale
+    - generic [ref=e130]:
+      - generic [ref=e158]: Instagram
+      - generic [ref=e160]:
+        - generic [ref=e161]: REAL
+        - generic [ref=e162]: cosmetics
+        - generic [ref=e163]: endless beauty
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - generic [ref=e170]: About
+          - generic [ref=e171]:
+            - generic [ref=e173] [cursor=pointer]: About us
+            - generic [ref=e175] [cursor=pointer]: Contact
+            - generic [ref=e177] [cursor=pointer]: All products
+            - generic [ref=e179] [cursor=pointer]: New arrivals
+        - generic [ref=e180]:
+          - generic [ref=e181]: Help
+          - generic [ref=e182]:
+            - generic [ref=e184] [cursor=pointer]: Shipping
+            - generic [ref=e186] [cursor=pointer]: Returns
+            - generic [ref=e188] [cursor=pointer]: Privacy
+            - generic [ref=e190] [cursor=pointer]: Terms
+        - generic [ref=e191]:
+          - generic [ref=e192]:
+            - generic [ref=e193]: Follow us
+            - generic [ref=e194]:
+              - img [ref=e197] [cursor=pointer]
+              - img [ref=e203] [cursor=pointer]
+              - img [ref=e208] [cursor=pointer]
+              - img [ref=e213] [cursor=pointer]
+          - generic [ref=e216]:
+            - generic [ref=e217]: Payment
+            - generic [ref=e218]:
+              - generic [ref=e220]: AMEX
+              - generic [ref=e222]: MC
+              - generic [ref=e224]: VISA
+              - generic [ref=e226]: PAY
+        - generic [ref=e228]:
+          - generic [ref=e229]: Stay in the loop
+          - generic [ref=e230]: Get launches, offers, and skincare insights.
+          - generic [ref=e231]:
+            - textbox "Email address" [ref=e233]
+            - img [ref=e236] [cursor=pointer]
+      - generic [ref=e242]: (c) Real Cosmetics
+  - button "Open Next.js Dev Tools" [ref=e248] [cursor=pointer]:
+    - img [ref=e249]

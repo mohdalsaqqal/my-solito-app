@@ -2,9 +2,13 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
+import { fileURLToPath } from 'node:url'
+
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
+const REPO_ROOT = path.resolve(TEST_DIR, '../../../../..')
 
 const ADMIN_BLOCKS_PAGE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -15,7 +19,7 @@ const ADMIN_BLOCKS_PAGE_PATH = path.join(
   'page.tsx',
 )
 const RELEASE_BLOCKS_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -25,7 +29,7 @@ const RELEASE_BLOCKS_ROUTE_PATH = path.join(
   'route.ts',
 )
 const RELEASE_BLOCK_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -36,7 +40,7 @@ const RELEASE_BLOCK_ROUTE_PATH = path.join(
   'route.ts',
 )
 const RELEASES_ROUTE_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'apps',
   'next',
   'app',
@@ -46,7 +50,7 @@ const RELEASES_ROUTE_PATH = path.join(
   'route.ts',
 )
 const PAGE_TYPES_PATH = path.join(
-  process.cwd(),
+  REPO_ROOT,
   'packages',
   'app',
   'lib',

@@ -12,7 +12,7 @@
  * Separated from Server Component to enable SSR for main content.
  */
 
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { startTransition, useCallback, useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { resolveDirection } from '@real/app/lib/rtl-manager'
 import { setCurrentLocale, useCurrentLocale } from '@real/app/lib/i18n/client'
@@ -84,7 +84,7 @@ function ClientHomeContent({
   const [quickViewOpen, setQuickViewOpen] = useState(false)
   
   // Server-hydrated state
-  const [products] = useState<Product[]>(initialProducts)
+  const [products, setProducts] = useState<Product[]>(initialProducts)
   const [brands, setBrands] = useState(initialBrands)
   const [categories, setCategories] = useState(initialCategories)
   const [cmsHome, setCmsHome] = useState<CMSHome | null>(initialCmsHome)
@@ -93,6 +93,15 @@ function ClientHomeContent({
   const dir = resolveDirection(locale)
   const homeUnavailable = Boolean(error) && (!cmsHome || products.length === 0)
 
+  useEffect(() => {
+    setProducts(initialProducts)
+    setBrands(initialBrands)
+    setCategories(initialCategories)
+    setCmsHome(initialCmsHome)
+    setError(initialError)
+    setLoading(false)
+  }, [initialProducts, initialBrands, initialCategories, initialCmsHome, initialError])
+
   // Load cart on client (requires auth cookie)
   useEffect(() => {
     void apiClient.cart.get().then(setCart).catch(() => {
@@ -100,30 +109,13 @@ function ClientHomeContent({
     })
   }, [])
 
-  // Reload CMS data (for stale data recovery)
-  const loadCmsData = useCallback(async () => {
+  const refreshServerData = useCallback(() => {
     setLoading(true)
     setError(null)
-    try {
-      const [cmsResult, categoriesResult, brandsResult] = await Promise.allSettled([
-        apiClient.cms.home(),
-        apiClient.catalog.categories(),
-        apiClient.catalog.brands(),
-      ])
-      
-      if (cmsResult.status === 'fulfilled') setCmsHome(cmsResult.value)
-      if (categoriesResult.status === 'fulfilled') setCategories(categoriesResult.value)
-      if (brandsResult.status === 'fulfilled') setBrands(brandsResult.value)
-
-      if (cmsResult.status === 'rejected') {
-        setError(cmsResult.reason instanceof Error ? cmsResult.reason.message : 'Unable to fetch CMS data.')
-      }
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Unable to fetch homepage data.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    startTransition(() => {
+      router.refresh()
+    })
+  }, [router])
 
   // Quick view handler
   const handleQuickView = useCallback((productItem: HomeProductItem) => {
@@ -199,7 +191,7 @@ function ClientHomeContent({
     categories: categories.map((category) => ({
       id: category.id,
       label: category.name[locale] || category.name.en,
-      href: `/shop/categories/${category.slug}`,
+      href: `/shop?categories=${encodeURIComponent(category.slug)}`,
     })),
     salesItems: defaultSalesItems,
     brandItems: defaultBrandItems,
@@ -255,17 +247,17 @@ function ClientHomeContent({
       actions={actions}
       display={display}
     >
-      <main id='main-content' role='main' tabIndex={-1} style={{ display: 'block' }}>
+      <main id='main-content' tabIndex={-1} style={{ display: 'block' }}>
         {homeUnavailable ? (
-          <StorefrontStatusPanel
-            title={statusCopy.title}
-            subtitle={statusCopy.subtitle}
-            ctaLabel={statusCopy.ctaLabel}
-            onRetry={() => {
-              void loadCmsData()
-            }}
-          />
-        ) : (
+            <StorefrontStatusPanel
+              title={statusCopy.title}
+              subtitle={statusCopy.subtitle}
+              ctaLabel={statusCopy.ctaLabel}
+              onRetry={() => {
+                refreshServerData()
+              }}
+            />
+          ) : (
           <HomeScreen
             locale={locale}
             cmsHome={cmsHome}
@@ -274,7 +266,7 @@ function ClientHomeContent({
             categories={categories}
             loading={loading}
             error={error}
-            onReload={loadCmsData}
+            onReload={refreshServerData}
             onNavigate={(href) => router.push(href)}
             onSelectProduct={(id) => router.push(`/product/${id}`)}
             onQuickView={handleQuickView}

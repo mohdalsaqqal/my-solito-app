@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import { spacing } from '@real/tokens'
 import { breakpoints } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
@@ -160,7 +161,7 @@ const defaultRoleCards: AdminRoleCard[] = [
   },
 ]
 
-export function AdminScreen({
+export const AdminScreen = React.memo(function AdminScreen({
   title = 'Admin Command Center',
   notice = 'Campaign and loyalty updates publish to customer surfaces after approval.',
   metrics = defaultMetrics,
@@ -203,6 +204,7 @@ export function AdminScreen({
 }: AdminScreenProps) {
   const { width } = useWindowDimensions()
   const isCompact = width > 0 && width < breakpoints.tabletMin
+  const { t } = useTranslation('admin')
   const [activeTab, setActiveTab] = useState<AdminTabKey>('overview')
   const [userFilter, setUserFilter] = useState<UserFilterKey>('all')
   const [selectedCacheAction, setSelectedCacheAction] = useState<AdminCacheAction>('revalidate_home_shop')
@@ -292,10 +294,10 @@ export function AdminScreen({
     key: 'best_sellers' | 'new_arrivals' | 'bundle_only' | 'manual_ids'
     label: string
   }> = [
-    { key: 'best_sellers', label: 'Best sellers' },
-    { key: 'new_arrivals', label: 'New arrivals' },
-    { key: 'bundle_only', label: 'Bundle only' },
-    { key: 'manual_ids', label: 'Manual ids' },
+    { key: 'best_sellers', label: t('sourceOptions.bestSellers') },
+    { key: 'new_arrivals', label: t('sourceOptions.newArrivals') },
+    { key: 'bundle_only', label: t('sourceOptions.bundleOnly') },
+    { key: 'manual_ids', label: t('sourceOptions.manualIds') },
   ]
 
   return (
@@ -304,12 +306,12 @@ export function AdminScreen({
         <Section>
           <Box gap='24'>
       <Card variant='raised' style={{ gap: spacing['8'] }}>
-        <Text variant='h2'>{title}</Text>
+        <Text variant='h1'>{title}</Text>
         <Text tone='muted'>{notice}</Text>
       </Card>
 
       <Card variant='raised' style={{ gap: spacing['12'] }}>
-        <Text variant='label'>Admin navigation</Text>
+        <Text variant='label'>{t('navigation.title')}</Text>
         <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
           {tabs.map((tab) => (
             <Button
@@ -335,19 +337,19 @@ export function AdminScreen({
           </Box>
 
           <Card variant='raised' style={{ gap: spacing['12'] }}>
-            <Text variant='title'>Quick actions</Text>
+            <Text variant='title'>{t('navigation.quickActions')}</Text>
             <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
               <Button size='sm' variant='outline' onPress={() => setActiveTab('orders')}>
-                Go to Orders
+                {t('navigation.goToOrders')}
               </Button>
               <Button size='sm' variant='outline' onPress={() => onOpenCmsControls?.()}>
-                Go to CMS controls
+                {t('navigation.goToCms')}
               </Button>
               <Button size='sm' variant='outline' onPress={() => setActiveTab('users')}>
-                Go to Users & roles
+                {t('navigation.goToUsers')}
               </Button>
               <Button size='sm' variant='outline' onPress={() => setActiveTab('cache')}>
-                Go to Cache & revalidation
+                {t('navigation.goToCache')}
               </Button>
             </Box>
           </Card>
@@ -357,9 +359,9 @@ export function AdminScreen({
       {activeTab === 'orders' ? (
         <Card variant='raised' style={{ gap: spacing['16'] }}>
           <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Text variant='title'>Order operations</Text>
+            <Text variant='title'>{t('orders.title')}</Text>
             <Button variant='outline' size='sm' onPress={onReloadOrders}>
-              Refresh
+              {t('cms.spotlights.refresh')}
             </Button>
           </Box>
 
@@ -367,12 +369,12 @@ export function AdminScreen({
             <Card tone='subtle' style={{ minHeight: spacing['96'] }} />
           ) : ordersError ? (
             <Card tone='subtle' style={{ gap: spacing['8'] }}>
-              <Text tone='danger'>Unable to load orders.</Text>
+              <Text tone='danger'>{t('orders.loadError')}</Text>
               <Text tone='muted' variant='bodySm'>{ordersError}</Text>
             </Card>
           ) : orders.length === 0 ? (
             <Card tone='subtle'>
-              <Text tone='muted'>No orders found.</Text>
+              <Text tone='muted'>{t('orders.empty')}</Text>
             </Card>
           ) : (
             <Box style={{ gap: spacing['8'] }}>
@@ -419,13 +421,13 @@ export function AdminScreen({
         <Box gap='16'>
           <Card variant='raised' style={{ gap: spacing['12'] }}>
             <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text variant='title'>CMS toggles preview</Text>
+              <Text variant='title'>{t('cms.toggles.title')}</Text>
               <Badge tone='outline'>
                 {controlToggles.filter((item) => item.enabled).length}/{controlToggles.length || 0} active
               </Badge>
             </Box>
             {controlToggles.length === 0 ? (
-              <Text tone='muted'>No toggle configuration loaded.</Text>
+              <Text tone='muted'>{t('cms.toggles.empty')}</Text>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
                 {controlToggles.map((toggle) => (
@@ -433,7 +435,7 @@ export function AdminScreen({
                     <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'] }}>
                       <Text variant='label'>{toggle.label}</Text>
                       <Badge tone={toggle.enabled ? 'accent' : 'outline'}>
-                        {toggle.enabled ? 'Enabled' : 'Disabled'}
+                        {toggle.enabled ? t('cms.toggles.enabled') : t('cms.toggles.disabled')}
                       </Badge>
                     </Box>
                     {toggle.description ? (
@@ -442,7 +444,7 @@ export function AdminScreen({
                       </Text>
                     ) : null}
                     <Text variant='caption' tone='muted'>
-                      Surface: {toggle.surface}
+                      {t('cms.toggles.surface', { surface: toggle.surface })}
                     </Text>
                     <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
                       <Button
@@ -451,7 +453,7 @@ export function AdminScreen({
                         disabled={updatingToggleId === toggle.id || toggle.enabled}
                         onPress={() => onToggleControl?.(toggle.id, true)}
                       >
-                        Enable
+                        {t('cms.toggles.enable')}
                       </Button>
                       <Button
                         size='sm'
@@ -459,7 +461,7 @@ export function AdminScreen({
                         disabled={updatingToggleId === toggle.id || !toggle.enabled}
                         onPress={() => onToggleControl?.(toggle.id, false)}
                       >
-                        Disable
+                        {t('cms.toggles.disable')}
                       </Button>
                     </Box>
                   </Card>
@@ -469,11 +471,11 @@ export function AdminScreen({
           </Card>
 
           <Card variant='raised' style={{ gap: spacing['12'] }}>
-            <Text variant='title'>Home marketing blocks</Text>
+            <Text variant='title'>{t('cms.marketingBlocks.title')}</Text>
             <Box style={{ gap: spacing['8'] }}>
               <Text variant='label'>Rails ({homeMarketingPreview?.rails.length ?? 0})</Text>
               {(homeMarketingPreview?.rails.length ?? 0) === 0 ? (
-                <Text tone='muted'>No rails configured.</Text>
+                <Text tone='muted'>{t('cms.marketingBlocks.noRails')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {homeMarketingPreview?.rails.map((rail) => (
@@ -496,7 +498,7 @@ export function AdminScreen({
             <Box style={{ gap: spacing['8'] }}>
               <Text variant='label'>Brand spotlights ({homeMarketingPreview?.brandSpotlights.length ?? 0})</Text>
               {(homeMarketingPreview?.brandSpotlights.length ?? 0) === 0 ? (
-                <Text tone='muted'>No brand spotlights configured.</Text>
+                <Text tone='muted'>{t('cms.marketingBlocks.noSpotlights')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {homeMarketingPreview?.brandSpotlights.map((spotlight) => (
@@ -521,21 +523,21 @@ export function AdminScreen({
 
             <Box style={{ gap: spacing['8'] }}>
               <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'] }}>
-                <Text variant='label'>Brand spotlight manager</Text>
+                <Text variant='label'>{t('cms.spotlights.title')}</Text>
                 <Button size='sm' variant='outline' onPress={onReloadBrandSpotlights}>
-                  Refresh
+                  {t('cms.spotlights.refresh')}
                 </Button>
               </Box>
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
-                <Text variant='label'>Add spotlight</Text>
-                <Input value={newSpotlightId} onChangeText={setNewSpotlightId} placeholder='Optional id (e.g. spotlight-new)' />
-                <Input value={newSpotlightBannerTitleEn} onChangeText={setNewSpotlightBannerTitleEn} placeholder='Banner title (EN)' />
-                <Input value={newSpotlightBannerTitleAr} onChangeText={setNewSpotlightBannerTitleAr} placeholder='Banner title (AR)' />
-                <Input value={newSpotlightRailTitleEn} onChangeText={setNewSpotlightRailTitleEn} placeholder='Rail title (EN)' />
-                <Input value={newSpotlightRailTitleAr} onChangeText={setNewSpotlightRailTitleAr} placeholder='Rail title (AR)' />
-                <Input value={newSpotlightBrandNames} onChangeText={setNewSpotlightBrandNames} placeholder='Brand names CSV (e.g. Fenty Beauty, Huda Beauty)' />
-                <Input value={newSpotlightImageUrl} onChangeText={setNewSpotlightImageUrl} placeholder='Banner image URL' />
-                <Input value={newSpotlightHref} onChangeText={setNewSpotlightHref} placeholder='Banner href (e.g. /shop)' />
+                <Text variant='label'>{t('cms.spotlights.add')}</Text>
+                <Input value={newSpotlightId} onChangeText={setNewSpotlightId} placeholder={t('cms.placeholders.spotlightId')} />
+                <Input value={newSpotlightBannerTitleEn} onChangeText={setNewSpotlightBannerTitleEn} placeholder={t('cms.placeholders.bannerTitleEn')} />
+                <Input value={newSpotlightBannerTitleAr} onChangeText={setNewSpotlightBannerTitleAr} placeholder={t('cms.placeholders.bannerTitleAr')} />
+                <Input value={newSpotlightRailTitleEn} onChangeText={setNewSpotlightRailTitleEn} placeholder={t('cms.placeholders.railTitleEn')} />
+                <Input value={newSpotlightRailTitleAr} onChangeText={setNewSpotlightRailTitleAr} placeholder={t('cms.placeholders.railTitleAr')} />
+                <Input value={newSpotlightBrandNames} onChangeText={setNewSpotlightBrandNames} placeholder={t('cms.placeholders.brandNamesCsv')} />
+                <Input value={newSpotlightImageUrl} onChangeText={setNewSpotlightImageUrl} placeholder={t('cms.placeholders.bannerImageUrl')} />
+                <Input value={newSpotlightHref} onChangeText={setNewSpotlightHref} placeholder={t('cms.placeholders.bannerHref')} />
                 <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                   <Button
                     size='sm'
@@ -573,7 +575,7 @@ export function AdminScreen({
                       })
                     }}
                   >
-                    {updatingBrandSpotlightId === 'new' ? 'Adding...' : 'Add spotlight'}
+                    {updatingBrandSpotlightId === 'new' ? t('cms.spotlights.adding') : t('cms.spotlights.add')}
                   </Button>
                 </Box>
               </Card>
@@ -581,7 +583,7 @@ export function AdminScreen({
               {loadingBrandSpotlights ? (
                 <Card tone='subtle' style={{ minHeight: spacing['80'] }} />
               ) : brandSpotlights.length === 0 ? (
-                <Text tone='muted'>No spotlight records yet.</Text>
+                <Text tone='muted'>{t('cms.spotlights.noRecords')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {brandSpotlights.map((spotlight, index) => {
@@ -608,16 +610,16 @@ export function AdminScreen({
                         <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'] }}>
                           <Text variant='label'>{spotlight.id}</Text>
                           <Badge tone={spotlight.enabled ? 'accent' : 'outline'}>
-                            {spotlight.enabled ? 'Enabled' : 'Disabled'}
+                            {spotlight.enabled ? t('cms.toggles.enabled') : t('cms.toggles.disabled')}
                           </Badge>
                         </Box>
-                        <Input value={draft.bannerTitleEn} onChangeText={(value) => setDraft({ bannerTitleEn: value })} placeholder='Banner title (EN)' />
-                        <Input value={draft.bannerTitleAr} onChangeText={(value) => setDraft({ bannerTitleAr: value })} placeholder='Banner title (AR)' />
-                        <Input value={draft.railTitleEn} onChangeText={(value) => setDraft({ railTitleEn: value })} placeholder='Rail title (EN)' />
-                        <Input value={draft.railTitleAr} onChangeText={(value) => setDraft({ railTitleAr: value })} placeholder='Rail title (AR)' />
-                        <Input value={draft.brandNamesCsv} onChangeText={(value) => setDraft({ brandNamesCsv: value })} placeholder='Brand names CSV' />
-                        <Input value={draft.imageUrl} onChangeText={(value) => setDraft({ imageUrl: value })} placeholder='Banner image URL' />
-                        <Input value={draft.href} onChangeText={(value) => setDraft({ href: value })} placeholder='Banner href' />
+                        <Input value={draft.bannerTitleEn} onChangeText={(value) => setDraft({ bannerTitleEn: value })} placeholder={t('cms.placeholders.bannerTitleEn')} />
+                        <Input value={draft.bannerTitleAr} onChangeText={(value) => setDraft({ bannerTitleAr: value })} placeholder={t('cms.placeholders.bannerTitleAr')} />
+                        <Input value={draft.railTitleEn} onChangeText={(value) => setDraft({ railTitleEn: value })} placeholder={t('cms.placeholders.railTitleEn')} />
+                        <Input value={draft.railTitleAr} onChangeText={(value) => setDraft({ railTitleAr: value })} placeholder={t('cms.placeholders.railTitleAr')} />
+                        <Input value={draft.brandNamesCsv} onChangeText={(value) => setDraft({ brandNamesCsv: value })} placeholder={t('cms.placeholders.brandNamesCsvShort')} />
+                        <Input value={draft.imageUrl} onChangeText={(value) => setDraft({ imageUrl: value })} placeholder={t('cms.placeholders.bannerImageUrl')} />
+                        <Input value={draft.href} onChangeText={(value) => setDraft({ href: value })} placeholder={t('cms.placeholders.bannerHrefShort')} />
                         {spotlight.updatedAt ? (
                           <Text variant='caption' tone='muted'>
                             Updated: {new Date(spotlight.updatedAt).toLocaleString()}
@@ -630,7 +632,7 @@ export function AdminScreen({
                             disabled={updatingBrandSpotlightId === spotlight.id || spotlight.enabled}
                             onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { enabled: true })}
                           >
-                            Enable
+                            {t('cms.toggles.enable')}
                           </Button>
                           <Button
                             size='sm'
@@ -638,7 +640,7 @@ export function AdminScreen({
                             disabled={updatingBrandSpotlightId === spotlight.id || !spotlight.enabled}
                             onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { enabled: false })}
                           >
-                            Disable
+                            {t('cms.toggles.disable')}
                           </Button>
                           <Button
                             size='sm'
@@ -646,7 +648,7 @@ export function AdminScreen({
                             disabled={updatingBrandSpotlightId === spotlight.id || index === 0}
                             onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { position: index - 1 })}
                           >
-                            Move up
+                            {t('cms.spotlights.moveUp')}
                           </Button>
                           <Button
                             size='sm'
@@ -654,7 +656,7 @@ export function AdminScreen({
                             disabled={updatingBrandSpotlightId === spotlight.id || index === brandSpotlights.length - 1}
                             onPress={() => onUpdateBrandSpotlight?.(spotlight.id, { position: index + 1 })}
                           >
-                            Move down
+                            {t('cms.spotlights.moveDown')}
                           </Button>
                           <Button
                             size='sm'
@@ -686,7 +688,7 @@ export function AdminScreen({
                               })
                             }}
                           >
-                            {updatingBrandSpotlightId === spotlight.id ? 'Saving...' : 'Save'}
+                            {updatingBrandSpotlightId === spotlight.id ? t('cms.spotlights.saving') : t('actions.save')}
                           </Button>
                           <Button
                             size='sm'
@@ -694,7 +696,7 @@ export function AdminScreen({
                             disabled={updatingBrandSpotlightId === spotlight.id}
                             onPress={() => onDeleteBrandSpotlight?.(spotlight.id)}
                           >
-                            Delete
+                            {t('cms.spotlights.delete')}
                           </Button>
                         </Box>
                         <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
@@ -735,9 +737,9 @@ export function AdminScreen({
       {activeTab === 'users' ? (
         <Box gap='16'>
           <Card variant='raised' style={{ gap: spacing['12'] }}>
-            <Text variant='title'>Permissions matrix</Text>
+            <Text variant='title'>{t('users.permissionsMatrix')}</Text>
             <Text variant='bodySm' tone='muted'>
-              Updates apply immediately per click. Use filters to narrow users.
+              {t('users.permissionsHint')}
             </Text>
             <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
               <Badge tone='outline'>CMS: {permissionCounts.cms}</Badge>
@@ -768,7 +770,7 @@ export function AdminScreen({
             </Box>
             {filteredRoleCards.length === 0 ? (
               <Card tone='subtle'>
-                <Text tone='muted'>No users match this filter.</Text>
+                <Text tone='muted'>{t('users.noUsersMatchFilter')}</Text>
               </Card>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
@@ -780,7 +782,7 @@ export function AdminScreen({
                     </Box>
                     <Text variant='caption' tone='muted'>{user.email}</Text>
                     <Box style={{ gap: spacing['6'] }}>
-                      <Text variant='caption' tone='muted'>CMS Toggles</Text>
+                      <Text variant='caption' tone='muted'>{t('users.cmsToggles')}</Text>
                       <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                         <Button
                           size='sm'
@@ -788,7 +790,7 @@ export function AdminScreen({
                           disabled={updatingUserId === user.id || !!user.permissions?.canManageCmsToggles}
                           onPress={() => onUpdateUserPermissions?.(user.id, { canManageCmsToggles: true })}
                         >
-                          Allow
+                          {t('users.allow')}
                         </Button>
                         <Button
                           size='sm'
@@ -796,12 +798,12 @@ export function AdminScreen({
                           disabled={updatingUserId === user.id || !user.permissions?.canManageCmsToggles}
                           onPress={() => onUpdateUserPermissions?.(user.id, { canManageCmsToggles: false })}
                         >
-                          Deny
+                          {t('users.deny')}
                         </Button>
                       </Box>
                     </Box>
                     <Box style={{ gap: spacing['6'] }}>
-                      <Text variant='caption' tone='muted'>Users</Text>
+                      <Text variant='caption' tone='muted'>{t('users.usersLabel')}</Text>
                       <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                         <Button
                           size='sm'
@@ -809,7 +811,7 @@ export function AdminScreen({
                           disabled={updatingUserId === user.id || !!user.permissions?.canManageUsers}
                           onPress={() => onUpdateUserPermissions?.(user.id, { canManageUsers: true })}
                         >
-                          Allow
+                          {t('users.allow')}
                         </Button>
                         <Button
                           size='sm'
@@ -817,12 +819,12 @@ export function AdminScreen({
                           disabled={updatingUserId === user.id || !user.permissions?.canManageUsers}
                           onPress={() => onUpdateUserPermissions?.(user.id, { canManageUsers: false })}
                         >
-                          Deny
+                          {t('users.deny')}
                         </Button>
                       </Box>
                     </Box>
                     <Box style={{ gap: spacing['6'] }}>
-                      <Text variant='caption' tone='muted'>Cache Ops</Text>
+                      <Text variant='caption' tone='muted'>{t('users.cacheOps')}</Text>
                       <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                         <Button
                           size='sm'
@@ -830,7 +832,7 @@ export function AdminScreen({
                           disabled={updatingUserId === user.id || !!user.permissions?.canRunCacheOps}
                           onPress={() => onUpdateUserPermissions?.(user.id, { canRunCacheOps: true })}
                         >
-                          Allow
+                          {t('users.allow')}
                         </Button>
                         <Button
                           size='sm'
@@ -838,7 +840,7 @@ export function AdminScreen({
                           disabled={updatingUserId === user.id || !user.permissions?.canRunCacheOps}
                           onPress={() => onUpdateUserPermissions?.(user.id, { canRunCacheOps: false })}
                         >
-                          Deny
+                          {t('users.deny')}
                         </Button>
                       </Box>
                     </Box>
@@ -849,9 +851,9 @@ export function AdminScreen({
           </Card>
 
           <Card variant='raised' style={{ gap: spacing['12'] }}>
-            <Text variant='title'>Users & role preview</Text>
+            <Text variant='title'>{t('users.usersRolePreview')}</Text>
             {filteredRoleCards.length === 0 ? (
-              <Text tone='muted'>No users match this filter.</Text>
+              <Text tone='muted'>{t('users.noUsersMatchFilter')}</Text>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
                 {filteredRoleCards.map((user) => (
@@ -883,7 +885,7 @@ export function AdminScreen({
                         disabled={updatingUserId === user.id || user.role === 'customer'}
                         onPress={() => onUpdateUserRole?.(user.id, 'customer')}
                       >
-                        Customer
+                        {t('users.role.customer')}
                       </Button>
                       <Button
                         size='sm'
@@ -891,7 +893,7 @@ export function AdminScreen({
                         disabled={updatingUserId === user.id || user.role === 'pharmacist'}
                         onPress={() => onUpdateUserRole?.(user.id, 'pharmacist')}
                       >
-                        Pharmacist
+                        {t('users.role.pharmacist')}
                       </Button>
                       <Button
                         size='sm'
@@ -899,7 +901,7 @@ export function AdminScreen({
                         disabled={updatingUserId === user.id || user.role === 'admin'}
                         onPress={() => onUpdateUserRole?.(user.id, 'admin')}
                       >
-                        Admin
+                        {t('users.role.admin')}
                       </Button>
                     </Box>
                     <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
@@ -909,7 +911,7 @@ export function AdminScreen({
                         disabled={updatingUserId === user.id || user.status === 'active'}
                         onPress={() => onUpdateUserStatus?.(user.id, 'active')}
                       >
-                        Set active
+                        {t('users.setActive')}
                       </Button>
                       <Button
                         size='sm'
@@ -917,7 +919,7 @@ export function AdminScreen({
                         disabled={updatingUserId === user.id || user.status === 'invited'}
                         onPress={() => onUpdateUserStatus?.(user.id, 'invited')}
                       >
-                        Set invited
+                        {t('users.setInvited')}
                       </Button>
                       <Button
                         size='sm'
@@ -925,7 +927,7 @@ export function AdminScreen({
                         disabled={updatingUserId === user.id || user.status === 'disabled'}
                         onPress={() => onUpdateUserStatus?.(user.id, 'disabled')}
                       >
-                        Set disabled
+                        {t('users.setDisabled')}
                       </Button>
                     </Box>
                   </Card>
@@ -940,9 +942,9 @@ export function AdminScreen({
         <Box gap='16'>
           <Card variant='raised' style={{ gap: spacing['12'] }}>
             <Box style={{ gap: spacing['4'] }}>
-              <Text variant='title'>Cache & revalidation operations</Text>
+              <Text variant='title'>{t('cache.title')}</Text>
               <Text tone='muted' variant='bodySm'>
-                Type FLUSH, then execute. A cooldown is enforced server-side per admin user.
+                {t('cache.flushHint')}
               </Text>
             </Box>
             <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
@@ -969,7 +971,7 @@ export function AdminScreen({
             <Input
               value={flushConfirmation}
               onChangeText={setFlushConfirmation}
-              placeholder='Type FLUSH to confirm'
+              placeholder={t('cache.flushConfirmationPlaceholder')}
             />
             {cacheActionError ? (
               <Text tone='danger' variant='bodySm'>
@@ -991,26 +993,26 @@ export function AdminScreen({
                 }
                 disabled={runningCacheAction || flushConfirmation.trim().toUpperCase() !== 'FLUSH'}
               >
-                {runningCacheAction ? 'Running...' : 'Run operation'}
+                {runningCacheAction ? t('cache.running') : t('cache.runOperation')}
               </Button>
               <Button variant='outline' onPress={onReloadCacheAudit} disabled={runningCacheAction}>
-                Refresh audit
+                {t('cache.refreshAudit')}
               </Button>
             </Box>
           </Card>
 
           <Card variant='raised' style={{ gap: spacing['12'] }}>
-            <Text variant='title'>Audit trail</Text>
+            <Text variant='title'>{t('audit.title')}</Text>
             {loadingCacheAudit ? (
               <Card tone='subtle' style={{ minHeight: spacing['80'] }} />
             ) : cacheAuditError ? (
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
-                <Text tone='danger'>Unable to load cache audit.</Text>
+                <Text tone='danger'>{t('audit.loadError')}</Text>
                 <Text tone='muted' variant='bodySm'>{cacheAuditError}</Text>
               </Card>
             ) : cacheAuditEntries.length === 0 ? (
               <Card tone='subtle'>
-                <Text tone='muted'>No cache operations recorded yet.</Text>
+                <Text tone='muted'>{t('audit.empty')}</Text>
               </Card>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
@@ -1041,21 +1043,21 @@ export function AdminScreen({
 
           <Card variant='raised' style={{ gap: spacing['12'] }}>
             <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text variant='title'>Admin operations audit</Text>
+              <Text variant='title'>{t('opsAudit.title')}</Text>
               <Button size='sm' variant='outline' onPress={onReloadOpsAudit}>
-                Refresh
+                {t('cms.spotlights.refresh')}
               </Button>
             </Box>
             {opsAuditLoading ? (
               <Card tone='subtle' style={{ minHeight: spacing['80'] }} />
             ) : opsAuditError ? (
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
-                <Text tone='danger'>Unable to load operations audit.</Text>
+                <Text tone='danger'>{t('opsAudit.loadError')}</Text>
                 <Text tone='muted' variant='bodySm'>{opsAuditError}</Text>
               </Card>
             ) : opsAuditEntries.length === 0 ? (
               <Card tone='subtle'>
-                <Text tone='muted'>No admin operation audit entries yet.</Text>
+                <Text tone='muted'>{t('opsAudit.empty')}</Text>
               </Card>
             ) : (
               <Box style={{ gap: spacing['8'] }}>
@@ -1084,4 +1086,4 @@ export function AdminScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

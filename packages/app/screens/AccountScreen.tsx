@@ -1,9 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Image, Platform, useWindowDimensions } from 'react-native'
-import { borderWidth, breakpoints, colors, radius, spacing } from '@real/tokens'
+import React, { useEffect, useMemo, useState } from 'react'
+import { Image, Platform } from 'react-native'
+import { borderWidth, radius, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
-import { Box, HorizontalScroll, Input, Text, Touchable } from '@real/ui/primitives'
+import { Box, HorizontalScroll, Input, Text } from '@real/ui/primitives'
+import { Touchable } from '@real/ui/primitives/Touchable'
 import { Button, Card, MetricCard } from '@real/ui/components'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
+import type { TranslationKey } from '@real/app/lib/i18n/generated/translation-keys'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import { AccountQrPreview } from './AccountQrPreview'
 import {
   AccountAddress,
@@ -14,6 +18,7 @@ import {
   OrderSummary,
   WishlistItem,
 } from '@real/app/lib/types'
+import type { ReferralAccountSummary } from '@real/app/lib/referral/referral-types'
 
 type LoyaltySummary = AccountOverview['loyaltySummary']
 
@@ -30,6 +35,7 @@ type AccountScreenProps = {
   loyaltyHistory?: LoyaltyHistoryEntry[]
   wishlist?: WishlistItem[]
   tests?: AccountTestRecord[]
+  referralSummary?: ReferralAccountSummary | null
   loading?: boolean
   error?: string | null
   signingOut?: boolean
@@ -63,17 +69,24 @@ type AccountScreenProps = {
   onSetDefaultAddress?: (id: string) => void
 }
 
-type AccountTab = 'dashboard' | 'orders' | 'tests' | 'addresses' | 'loyalty' | 'wishlist' | 'settings'
+type AccountTab = 'dashboard' | 'orders' | 'tests' | 'addresses' | 'loyalty' | 'wishlist' | 'settings' | 'referral'
 
-const IN_PAGE_TABS: Array<{ key: AccountTab; label: string }> = [
-  { key: 'dashboard', label: 'Dashboard' },
-  { key: 'orders', label: 'Orders' },
-  { key: 'tests', label: 'Tests' },
-  { key: 'addresses', label: 'Addresses' },
-  { key: 'loyalty', label: 'Loyalty' },
-  { key: 'wishlist', label: 'Wishlist' },
-  { key: 'settings', label: 'Settings' },
-]
+const IN_PAGE_TAB_KEYS: AccountTab[] = ['dashboard', 'orders', 'tests', 'addresses', 'loyalty', 'wishlist', 'settings']
+
+const TAB_LABEL_KEY_MAP: Record<AccountTab, TranslationKey> = {
+  dashboard: 'account.tabs.dashboard',
+  orders: 'account.tabs.orders',
+  tests: 'account.tabs.tests',
+  addresses: 'account.tabs.addresses',
+  loyalty: 'account.tabs.loyalty',
+  wishlist: 'account.tabs.wishlist',
+  settings: 'account.tabs.settings',
+  referral: 'account.tabs.settings',
+}
+
+function getTabLabel(key: AccountTab, t: (k: TranslationKey) => string): string {
+  return t(TAB_LABEL_KEY_MAP[key])
+}
 
 function formatMoney(value: number, currency: string) {
   return `${currency} ${value.toFixed(2)}`
@@ -97,12 +110,12 @@ function splitProductName(rawName: string) {
   }
 }
 
-export function AccountScreen({
+export const AccountScreen = React.memo(function AccountScreen({
   customerName,
   customerEmail,
   userQrCode,
-  promoTitle = 'Loyalty unlocks better routines',
-  promoSubtitle = 'Earn points on every checkout and redeem on essentials.',
+  promoTitle,
+  promoSubtitle,
   orders = [],
   addresses = [],
   loyalty = null,
@@ -125,10 +138,14 @@ export function AccountScreen({
   onRemoveAddress,
   onSetDefaultAddress,
 }: AccountScreenProps) {
-  const { width } = useWindowDimensions()
+  const { t } = useTranslation('account')
+  const resolvedPromoTitle = promoTitle ?? t('account.promo.title')
+  const resolvedPromoSubtitle = promoSubtitle ?? t('account.promo.subtitle')
+  const profile = useBreakpoint()
+  const c = useThemeColors()
   const isNative = Platform.OS !== 'web'
-  const isDesktop = !isNative && (width >= breakpoints.desktopMin || width === 0)
-  const isCompact = width > 0 && width < breakpoints.tabletMin
+  const isDesktop = !isNative && profile.breakpoint === 'desktop'
+  const isCompact = profile.breakpoint === 'mobile'
   const [activeTab, setActiveTab] = useState<AccountTab>(initialTab)
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [addressLabel, setAddressLabel] = useState('')
@@ -142,6 +159,15 @@ export function AccountScreen({
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null)
   const [confirmDeleteAddressId, setConfirmDeleteAddressId] = useState<string | null>(null)
   const [qrImageDataUrl, setQrImageDataUrl] = useState<string | null>(null)
+
+  const IN_PAGE_TABS = useMemo(
+    () =>
+      IN_PAGE_TAB_KEYS.map((key) => ({
+        key,
+        label: getTabLabel(key, t),
+      })),
+    [t]
+  )
 
   useEffect(() => {
     setActiveTab(initialTab)
@@ -179,25 +205,25 @@ export function AccountScreen({
     const currency = loyalty?.currency ?? mostRecentOrder?.currency ?? 'USD'
     return [
       {
-        label: 'Tier',
+        label: t('account.metrics.tier'),
         value: loyalty?.tier ?? 'Starter',
       },
       {
-        label: 'Points',
+        label: t('account.metrics.points'),
         value: `${loyalty?.points ?? 0}`,
       },
       {
-        label: 'Redeemable',
+        label: t('account.metrics.redeemable'),
         value: formatMoney(loyalty?.redeemableValue ?? 0, currency),
       },
       {
-        label: 'Last order',
+        label: t('account.metrics.lastOrder'),
         value: mostRecentOrder
           ? formatMoney(mostRecentOrder.total, mostRecentOrder.currency)
-          : 'No orders',
+          : t('account.metrics.noOrders'),
       },
     ]
-  }, [loyalty?.currency, loyalty?.points, loyalty?.redeemableValue, loyalty?.tier, mostRecentOrder])
+  }, [loyalty?.currency, loyalty?.points, loyalty?.redeemableValue, loyalty?.tier, mostRecentOrder, t])
 
   const resetAddressForm = () => {
     setAddressLabel('')
@@ -218,7 +244,7 @@ export function AccountScreen({
     const area = addressArea.trim()
     const building = addressBuilding.trim()
     if (!label || !city || !area || !building) {
-      setAddressFormError('Label, city, area, and building are required.')
+      setAddressFormError(t('account.addresses.form.validationError'))
       return
     }
 
@@ -241,7 +267,7 @@ export function AccountScreen({
       resetAddressForm()
     } catch (error) {
       setAddressFormSaving(false)
-      setAddressFormError(error instanceof Error ? error.message : 'Unable to save address.')
+      setAddressFormError(error instanceof Error ? error.message : t('account.addresses.form.saveError'))
     }
   }
 
@@ -287,8 +313,8 @@ export function AccountScreen({
           }}
         >
           <Box style={{ gap: spacing['8'] }}>
-            <Text variant='h2'>Account</Text>
-            <Text variant='bodySm'>Welcome, {customerName}</Text>
+            <Text variant='h1'>{t('account.title')}</Text>
+            <Text variant='bodySm'>{t('account.welcome', { name: customerName })}</Text>
             {customerEmail ? <Text variant='caption' tone='muted'>{customerEmail}</Text> : null}
           </Box>
 
@@ -304,7 +330,7 @@ export function AccountScreen({
                     paddingVertical: spacing['8'],
                     paddingHorizontal: spacing['16'],
                     borderRadius: radius.sm,
-                    backgroundColor: activeTab === tab.key ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                    backgroundColor: activeTab === tab.key ? c.brandPrimarySubtle : c.surfaceMuted,
                   }}
                 >
                   <Text tone={activeTab === tab.key ? 'primary' : 'default'} variant='label'>
@@ -325,7 +351,7 @@ export function AccountScreen({
                       paddingVertical: spacing['8'],
                       paddingHorizontal: spacing['16'],
                       borderRadius: radius.full,
-                      backgroundColor: activeTab === tab.key ? colors.brandPrimarySubtle : colors.surfaceMuted,
+                      backgroundColor: activeTab === tab.key ? c.brandPrimarySubtle : c.surfaceMuted,
                     }}
                     >
                       <Text tone={activeTab === tab.key ? 'primary' : 'default'} variant='label'>
@@ -339,7 +365,7 @@ export function AccountScreen({
 
           <Box style={isCompact ? undefined : { width: spacing['128'] }}>
             <Button size='sm' variant='outline' onPress={onSignOut} disabled={signingOut}>
-              {signingOut ? 'Signing out...' : 'Sign out'}
+              {signingOut ? t('account.signOut.signingOut') : t('account.signOut.label')}
             </Button>
           </Box>
         </Card>
@@ -347,14 +373,14 @@ export function AccountScreen({
         <Box style={{ flex: 1, gap: spacing['16'] }}>
           {activeTab === 'dashboard' || activeTab === 'loyalty' ? (
             <Card variant='raised' style={{ gap: spacing['8'] }}>
-              <Text variant='title'>{promoTitle}</Text>
-              <Text tone='muted'>{promoSubtitle}</Text>
+              <Text variant='title'>{resolvedPromoTitle}</Text>
+              <Text tone='muted'>{resolvedPromoSubtitle}</Text>
             </Card>
           ) : null}
 
           {error ? (
             <Card tone='subtle' style={{ gap: spacing['8'] }}>
-              <Text tone='danger'>Unable to load account data.</Text>
+              <Text tone='danger'>{t('account.error.loadFailed')}</Text>
               <Text tone='muted' variant='bodySm'>{error}</Text>
             </Card>
           ) : null}
@@ -383,31 +409,31 @@ export function AccountScreen({
 
               <Card variant='flat' style={{ gap: spacing['8'] }}>
                 <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text variant='title'>Recent orders</Text>
+                  <Text variant='title'>{t('account.orders.title')}</Text>
                   <Touchable onPress={() => setTab('orders')}>
-                    <Text variant='label' tone='primary'>View all</Text>
+                    <Text variant='label' tone='primary'>{t('account.orders.viewAll')}</Text>
                   </Touchable>
                 </Box>
 
                 {orders.length === 0 ? (
-                  <Text tone='muted'>No orders yet.</Text>
+                  <Text tone='muted'>{t('account.orders.empty')}</Text>
                 ) : (
                   orders.slice(0, 3).map((order) => (
                     <Touchable
                       key={order.id}
                       onPress={() => onSelectOrder?.(order.id)}
                       accessibilityRole='button'
-                      accessibilityLabel={`Open order ${order.id}`}
+                      accessibilityLabel={t('account.orders.accessibilityLabel', { id: order.id })}
                     >
                       <Box
                         style={{
                           paddingVertical: spacing['8'],
-                          borderBottomColor: colors.divider,
+                          borderBottomColor: c.divider,
                           borderBottomWidth: borderWidth.thin,
                           gap: spacing['4'],
                         }}
                       >
-                        <Text variant='label'>Order {order.id}</Text>
+                        <Text variant='label'>{t('account.orders.orderLabel', { id: order.id })}</Text>
                         <Text variant='caption' tone='muted'>
                           {order.status} • {formatMoney(order.total, order.currency)}
                         </Text>
@@ -419,19 +445,19 @@ export function AccountScreen({
 
               <Card variant='flat' style={{ gap: spacing['8'] }}>
                 <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text variant='title'>Diagnostics tests</Text>
+                  <Text variant='title'>{t('account.tests.title')}</Text>
                   <Touchable onPress={() => setTab('tests')}>
-                    <Text variant='label' tone='primary'>Open tests</Text>
+                    <Text variant='label' tone='primary'>{t('account.tests.openTests')}</Text>
                   </Touchable>
                 </Box>
                 {tests.length === 0 ? (
-                  <Text tone='muted'>No tests recorded yet.</Text>
+                  <Text tone='muted'>{t('account.tests.empty')}</Text>
                 ) : (
                   tests.slice(0, 2).map((test) => (
                     <Box key={test.id} style={{ gap: spacing['4'] }}>
                       <Text variant='label'>{test.title}</Text>
                       <Text tone='muted' variant='caption'>
-                        {new Date(test.createdAt).toLocaleDateString()} • {test.recommendedCount} recommendations
+                        {new Date(test.createdAt).toLocaleDateString()} • {t('account.tests.recommendations', { count: test.recommendedCount })}
                       </Text>
                     </Box>
                   ))
@@ -442,14 +468,14 @@ export function AccountScreen({
 
           {activeTab === 'orders' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>
-              <Text variant='title'>Orders</Text>
+              <Text variant='title'>{t('account.orders.title')}</Text>
               {orders.length === 0 ? (
-                <Text tone='muted'>No orders yet.</Text>
+                <Text tone='muted'>{t('account.orders.empty')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {orders.map((order) => (
                     <Card key={order.id} tone='subtle' style={{ gap: spacing['4'] }}>
-                      <Text variant='label'>Order {order.id}</Text>
+                      <Text variant='label'>{t('account.orders.orderLabel', { id: order.id })}</Text>
                       <Text tone='muted' variant='caption'>
                         {new Date(order.createdAt).toLocaleDateString()} • {order.status}
                       </Text>
@@ -462,7 +488,7 @@ export function AccountScreen({
                           variant='outline'
                           onPress={() => onSelectOrder?.(order.id)}
                         >
-                          View order
+                          {t('account.orders.viewOrder')}
                         </Button>
                       </Box>
                     </Card>
@@ -474,12 +500,12 @@ export function AccountScreen({
 
           {activeTab === 'tests' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>
-              <Text variant='title'>Diagnostics tests</Text>
+              <Text variant='title'>{t('account.tests.title')}</Text>
               {userQrCode ? (
                 <Card tone='subtle' style={{ gap: spacing['8'] }}>
-                  <Text variant='label'>My QR code</Text>
+                  <Text variant='label'>{t('account.tests.qr.title')}</Text>
                   <Text tone='muted' variant='caption'>
-                    Pharmacist can scan this code to open your profile instantly.
+                    {t('account.tests.qr.subtitle')}
                   </Text>
                   <AccountQrPreview userQrCode={userQrCode} qrImageDataUrl={qrImageDataUrl} />
                   <Text variant='caption' tone='muted'>
@@ -488,17 +514,17 @@ export function AccountScreen({
                 </Card>
               ) : null}
               {tests.length === 0 ? (
-                <Text tone='muted'>No tests recorded yet.</Text>
+                <Text tone='muted'>{t('account.tests.empty')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {tests.map((test) => (
                     <Card key={test.id} tone='subtle' style={{ gap: spacing['4'] }}>
                       <Text variant='label'>{test.title}</Text>
                       <Text tone='muted' variant='caption'>
-                        {new Date(test.createdAt).toLocaleDateString()} • {test.recommendedCount} recommendations
+                        {new Date(test.createdAt).toLocaleDateString()} • {t('account.tests.recommendations', { count: test.recommendedCount })}
                       </Text>
                       <Text tone='muted' variant='caption'>
-                        Purchased from recommendations: {test.purchasedCount}
+                        {t('account.tests.purchasedFromRecommendations', { count: test.purchasedCount })}
                       </Text>
                       <Box style={isDesktop ? { width: spacing['128'] } : isCompact ? undefined : { alignSelf: 'flex-start' }}>
                         <Button
@@ -506,7 +532,7 @@ export function AccountScreen({
                           variant='outline'
                           onPress={() => onSelectTest?.(test.id)}
                         >
-                          View result
+                          {t('account.tests.viewResult')}
                         </Button>
                       </Box>
                     </Card>
@@ -519,7 +545,7 @@ export function AccountScreen({
           {activeTab === 'addresses' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>
               <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text variant='title'>Addresses</Text>
+                <Text variant='title'>{t('account.addresses.title')}</Text>
                 <Button
                   size='sm'
                   variant='outline'
@@ -534,42 +560,42 @@ export function AccountScreen({
                     })
                   }}
                 >
-                  {showAddressForm ? 'Close form' : 'Add address'}
+                  {showAddressForm ? t('account.addresses.form.closeForm') : t('account.addresses.add')}
                 </Button>
               </Box>
 
               {showAddressForm ? (
                 <Card tone='subtle' style={{ gap: spacing['12'] }}>
-                  <Text variant='label'>{editingAddressId ? 'Edit address' : 'Add a new address'}</Text>
+                  <Text variant='label'>{editingAddressId ? t('account.addresses.form.editTitle') : t('account.addresses.form.addTitle')}</Text>
                   <Input
                     value={addressLabel}
                     onChangeText={setAddressLabel}
-                    placeholder='Label (Home, Work, etc.)'
+                    placeholder={t('account.addresses.form.label')}
                   />
                   <Input
                     value={addressCity}
                     onChangeText={setAddressCity}
-                    placeholder='City'
+                    placeholder={t('account.addresses.form.city')}
                   />
                   <Input
                     value={addressArea}
                     onChangeText={setAddressArea}
-                    placeholder='Area'
+                    placeholder={t('account.addresses.form.area')}
                   />
                   <Input
                     value={addressBuilding}
                     onChangeText={setAddressBuilding}
-                    placeholder='Building'
+                    placeholder={t('account.addresses.form.building')}
                   />
                   <Input
                     value={addressFloor}
                     onChangeText={setAddressFloor}
-                    placeholder='Floor (optional)'
+                    placeholder={t('account.addresses.form.floor')}
                   />
                   <Input
                     value={addressApartment}
                     onChangeText={setAddressApartment}
-                    placeholder='Apartment (optional)'
+                    placeholder={t('account.addresses.form.apartment')}
                   />
                   {addressFormError ? (
                     <Text variant='caption' tone='danger'>
@@ -582,7 +608,7 @@ export function AccountScreen({
                     onPress={() => void handleSaveAddress()}
                     disabled={addressFormSaving}
                   >
-                      {addressFormSaving ? 'Saving...' : editingAddressId ? 'Update address' : 'Save address'}
+                      {addressFormSaving ? t('account.addresses.form.saving') : editingAddressId ? t('account.addresses.form.update') : t('account.addresses.form.save')}
                   </Button>
                     <Button
                       size='sm'
@@ -590,21 +616,21 @@ export function AccountScreen({
                       onPress={resetAddressForm}
                       disabled={addressFormSaving}
                     >
-                      Cancel
+                      {t('account.addresses.form.cancel')}
                     </Button>
                   </Box>
                 </Card>
               ) : null}
 
               {addresses.length === 0 ? (
-                <Text tone='muted'>No addresses saved yet.</Text>
+                <Text tone='muted'>{t('account.addresses.empty')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {addresses.map((address) => (
                     <Card key={address.id} tone='subtle' style={{ gap: spacing['4'] }}>
                       <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                         <Text variant='label'>{address.label}</Text>
-                        {address.isDefault ? <Text variant='caption' tone='primary'>Default</Text> : null}
+                        {address.isDefault ? <Text variant='caption' tone='primary'>{t('account.addresses.default')}</Text> : null}
                       </Box>
                       <Text tone='muted' variant='caption'>
                         {address.city}, {address.area}, {address.building}
@@ -625,11 +651,11 @@ export function AccountScreen({
                             setShowAddressForm(true)
                           }}
                         >
-                          Edit
+                          {t('account.addresses.edit')}
                         </Button>
                         {!address.isDefault ? (
                           <Button size='sm' variant='outline' onPress={() => onSetDefaultAddress?.(address.id)}>
-                            Set default
+                            {t('account.addresses.setAsDefault')}
                           </Button>
                         ) : null}
                         {confirmDeleteAddressId === address.id ? (
@@ -642,14 +668,14 @@ export function AccountScreen({
                                 await onRemoveAddress?.(address.id)
                               }}
                             >
-                              Confirm delete
+                              {t('account.addresses.confirmDelete')}
                             </Button>
                             <Button
                               size='sm'
                               variant='outline'
                               onPress={() => setConfirmDeleteAddressId(null)}
                             >
-                              Cancel
+                              {t('account.addresses.cancelDelete')}
                             </Button>
                           </>
                         ) : (
@@ -658,13 +684,13 @@ export function AccountScreen({
                             variant='outline'
                             onPress={() => setConfirmDeleteAddressId(address.id)}
                           >
-                            Delete
+                            {t('account.addresses.delete')}
                           </Button>
                         )}
                       </Box>
                       {confirmDeleteAddressId === address.id ? (
                         <Text variant='caption' tone='danger'>
-                          This action cannot be undone.
+                          {t('account.addresses.deleteWarning')}
                         </Text>
                       ) : null}
                     </Card>
@@ -676,15 +702,15 @@ export function AccountScreen({
 
           {activeTab === 'loyalty' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>
-              <Text variant='title'>Loyalty wallet</Text>
+              <Text variant='title'>{t('account.loyalty.title')}</Text>
               {!loyalty ? (
-                <Text tone='muted'>Loyalty is not available for this account yet.</Text>
+                <Text tone='muted'>{t('account.loyalty.notAvailable')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
-                  <Text variant='bodySm'>Tier: {loyalty.tier}</Text>
-                  <Text variant='bodySm'>Points balance: {loyalty.points}</Text>
+                  <Text variant='bodySm'>{t('account.loyalty.tier', { tier: loyalty.tier })}</Text>
+                  <Text variant='bodySm'>{t('account.loyalty.pointsBalance', { points: loyalty.points })}</Text>
                   <Text variant='bodySm'>
-                    Redeemable value: {formatMoney(loyalty.redeemableValue, loyalty.currency)}
+                    {t('account.loyalty.redeemableValue', { value: formatMoney(loyalty.redeemableValue, loyalty.currency) })}
                   </Text>
                   {loyaltyWallet ? (
                     <>
@@ -706,7 +732,7 @@ export function AccountScreen({
                             width: '100%',
                             height: spacing['8'],
                             borderRadius: radius.sm,
-                            backgroundColor: colors.surfaceMuted,
+                            backgroundColor: c.surfaceMuted,
                             overflow: 'hidden',
                           }}
                         >
@@ -714,7 +740,7 @@ export function AccountScreen({
                             style={{
                               width: `${loyaltyWallet.tierProgress.progressPercent}%`,
                               height: '100%',
-                              backgroundColor: colors.brandPrimary,
+                              backgroundColor: c.brandPrimary,
                             }}
                           />
                         </Box>
@@ -726,38 +752,40 @@ export function AccountScreen({
                           }}
                         >
                           <Text variant='caption' tone='muted'>
-                            Current: {loyaltyWallet.tierProgress.currentTierName}
+                            {t('account.loyalty.tierProgress.current', { tier: loyaltyWallet.tierProgress.currentTierName })}
                           </Text>
                           <Text variant='caption' tone='muted'>
                             {loyaltyWallet.tierProgress.nextTierName
-                              ? `Next: ${loyaltyWallet.tierProgress.nextTierName}`
-                              : 'Top tier reached'}
+                              ? t('account.loyalty.tierProgress.next', { tier: loyaltyWallet.tierProgress.nextTierName })
+                              : t('account.loyalty.tierProgress.topTier')}
                           </Text>
                         </Box>
                         {loyaltyWallet.tierProgress.nextTierName ? (
                           <Text variant='caption' tone='muted'>
-                            {`${loyaltyWallet.tierProgress.pointsToNextTier} points to reach ${loyaltyWallet.tierProgress.nextTierName}`}
+                            {t('account.loyalty.tierProgress.pointsToNext', { points: loyaltyWallet.tierProgress.pointsToNextTier, tier: loyaltyWallet.tierProgress.nextTierName })}
                           </Text>
                         ) : null}
                       </Card>
                       <Text variant='caption' tone='muted'>
-                        {`Expiring soon: ${loyaltyWallet.expiringSoonPoints} points${
-                          loyaltyWallet.expiringSoonAt
-                            ? ` by ${new Date(loyaltyWallet.expiringSoonAt).toLocaleDateString()}`
-                            : ''
-                        }`}
+                        {t('account.loyalty.expiringSoon', {
+                          points: loyaltyWallet.expiringSoonPoints,
+                          date: loyaltyWallet.expiringSoonAt
+                            ? new Date(loyaltyWallet.expiringSoonAt).toLocaleDateString()
+                            : undefined,
+                        })}
                       </Text>
                       <Text variant='caption' tone='muted'>
-                        {`In-store barcode: ${loyaltyWallet.barcode.code} (expires ${new Date(
-                          loyaltyWallet.barcode.expiresAt
-                        ).toLocaleDateString()})`}
+                        {t('account.loyalty.inStoreBarcode', {
+                          code: loyaltyWallet.barcode.code,
+                          date: new Date(loyaltyWallet.barcode.expiresAt).toLocaleDateString(),
+                        })}
                       </Text>
                       <Box style={{ gap: spacing['4'] }}>
-                        <Text variant='caption' tone='muted'>Available redeem options</Text>
+                        <Text variant='caption' tone='muted'>{t('account.loyalty.redeemOptions.title')}</Text>
                         <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'] }}>
                           {loyaltyWallet.redeemOptions.map((option) => (
                             <Text key={option.percent} variant='caption' tone='muted'>
-                              {`${option.percent}% (${option.pointsCost} pts)`}
+                              {t('account.loyalty.redeemOptions.option', { percent: option.percent, points: option.pointsCost })}
                             </Text>
                           ))}
                         </Box>
@@ -767,9 +795,9 @@ export function AccountScreen({
                 </Box>
               )}
 
-              <Text variant='title'>History</Text>
+              <Text variant='title'>{t('account.loyalty.history.title')}</Text>
               {loyaltyHistory.length === 0 ? (
-                <Text tone='muted'>No loyalty activity yet.</Text>
+                <Text tone='muted'>{t('account.loyalty.history.empty')}</Text>
               ) : (
                 loyaltyHistory.slice(0, 6).map((entry) => (
                   <Box
@@ -779,7 +807,7 @@ export function AccountScreen({
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       paddingVertical: spacing['8'],
-                      borderBottomColor: colors.divider,
+                      borderBottomColor: c.divider,
                       borderBottomWidth: borderWidth.thin,
                     }}
                   >
@@ -800,9 +828,9 @@ export function AccountScreen({
 
           {activeTab === 'wishlist' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>
-              <Text variant='title'>Wishlist</Text>
+              <Text variant='title'>{t('account.wishlist.title')}</Text>
               {wishlist.length === 0 ? (
-                <Text tone='muted'>No saved items yet.</Text>
+                <Text tone='muted'>{t('account.wishlist.empty')}</Text>
               ) : (
                 <Box style={{ gap: spacing['8'] }}>
                   {wishlist.map((item) => (
@@ -810,7 +838,7 @@ export function AccountScreen({
                       key={item.id}
                       onPress={() => onOpenWishlistItem?.(item.id)}
                       accessibilityRole='button'
-                      accessibilityLabel={`Open product ${item.name}`}
+                      accessibilityLabel={t('account.wishlist.accessibilityLabel', { name: item.name })}
                     >
                       <Card tone='subtle'>
                         <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['12'] }}>
@@ -819,7 +847,7 @@ export function AccountScreen({
                               width: spacing['48'],
                               height: spacing['48'],
                               borderRadius: radius.sm,
-                              backgroundColor: colors.surfaceMuted,
+                              backgroundColor: c.surfaceMuted,
                               overflow: 'hidden',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -833,9 +861,10 @@ export function AccountScreen({
                                   height: spacing['48'],
                                 }}
                                 resizeMode='cover'
+                                {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                               />
                             ) : (
-                              <Text variant='caption' tone='muted'>IMG</Text>
+                              <Text variant='caption' tone='muted'>{t('account.wishlist.imgPlaceholder')}</Text>
                             )}
                           </Box>
 
@@ -855,7 +884,7 @@ export function AccountScreen({
                                 variant='outline'
                                 onPress={() => onAddWishlistItemToCart?.(item.id)}
                               >
-                                Add to cart
+                                {t('account.wishlist.addToCart')}
                               </Button>
                             </Box>
                           </Box>
@@ -870,16 +899,16 @@ export function AccountScreen({
 
           {activeTab === 'settings' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>
-              <Text variant='title'>Settings</Text>
+              <Text variant='title'>{t('account.settings.title')}</Text>
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
-                <Text variant='label'>Notifications</Text>
-                <Text variant='caption' tone='muted'>Email and campaign preferences.</Text>
-                <Button size='sm' variant='outline'>Manage notifications</Button>
+                <Text variant='label'>{t('account.settings.notifications.title')}</Text>
+                <Text variant='caption' tone='muted'>{t('account.settings.notifications.subtitle')}</Text>
+                <Button size='sm' variant='outline'>{t('account.settings.notifications.manage')}</Button>
               </Card>
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
-                <Text variant='label'>Password</Text>
-                <Text variant='caption' tone='muted'>Update your account password and security.</Text>
-                <Button size='sm' variant='outline'>Change password</Button>
+                <Text variant='label'>{t('account.settings.password.title')}</Text>
+                <Text variant='caption' tone='muted'>{t('account.settings.password.subtitle')}</Text>
+                <Button size='sm' variant='outline'>{t('account.settings.password.change')}</Button>
               </Card>
             </Card>
           ) : null}
@@ -892,4 +921,4 @@ export function AccountScreen({
   )
 
   return content
-}
+})

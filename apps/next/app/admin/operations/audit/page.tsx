@@ -10,6 +10,7 @@ import { Button, EmptyState, PageContainer, PageHeader, Panel, Section, StatusPi
 export default function AdminOperationsAuditPage() {
   const [rows, setRows] = useState<AdminOpsAuditEntry[]>([])
   const [query, setQuery] = useState('')
+  const [actorFilter, setActorFilter] = useState('')
   const [entityFilter, setEntityFilter] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isExporting, setIsExporting] = useState(false)
@@ -43,7 +44,7 @@ export default function AdminOperationsAuditPage() {
     setIsExporting(true)
     try {
       const exported = await apiClient.admin.exportOpsAudit({
-        actor: query || undefined,
+        actor: actorFilter || undefined,
         type: entityFilter || undefined,
       })
       const blob = new Blob([JSON.stringify(exported, null, 2)], {
@@ -114,6 +115,20 @@ export default function AdminOperationsAuditPage() {
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
+              <input
+                value={actorFilter}
+                onChange={(e) => setActorFilter(e.target.value)}
+                placeholder='Actor email or user id'
+                style={{
+                  minHeight: spacing['40'],
+                  borderRadius: radius.xl,
+                  border: `1px solid ${colors.border}`,
+                  backgroundColor: colors.surface,
+                  color: colors.textPrimary,
+                  fontSize: typography.sm,
+                  paddingInline: spacing['12'],
+                }}
+              />
               <select
                 value={entityFilter}
                 onChange={(e) => setEntityFilter(e.target.value)}
@@ -136,7 +151,7 @@ export default function AdminOperationsAuditPage() {
               </select>
               <Button
                 tone='secondary'
-                onClick={() => void load({ type: entityFilter || undefined, actor: query || undefined })}
+                onClick={() => void load({ type: entityFilter || undefined, actor: actorFilter || undefined })}
               >
                 Apply
               </Button>
@@ -152,6 +167,7 @@ export default function AdminOperationsAuditPage() {
                   tone='ghost'
                   onClick={() => {
                     setQuery('')
+                    setActorFilter('')
                     setEntityFilter('')
                   }}
                 >
@@ -246,3 +262,4 @@ export default function AdminOperationsAuditPage() {
     </PageContainer>
   )
 }
+

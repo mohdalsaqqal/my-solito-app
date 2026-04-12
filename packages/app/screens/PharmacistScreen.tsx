@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useWindowDimensions } from 'react-native'
 import { spacing } from '@real/tokens'
 import { breakpoints } from '@real/tokens'
@@ -55,7 +55,7 @@ function resolveRecommendationId(product: SearchRecommendationItem): string {
   return normalizeProductId(product.id)
 }
 
-export function PharmacistScreen({
+export const PharmacistScreen = React.memo(function PharmacistScreen({
   title = 'Pharmacist Console',
   notice = 'Only dermatologist-approved products can be marked as clinical recommendations.',
   operatorName = '',
@@ -385,7 +385,7 @@ export function PharmacistScreen({
           }}
         >
           <Box style={{ gap: spacing['4'], flex: 1 }}>
-            <Text variant='h2'>{title}</Text>
+            <Text variant='h1'>{title}</Text>
             <Text tone='muted'>{notice}</Text>
             {operatorName ? (
               <Text tone='muted' variant='caption'>
@@ -599,4 +599,4 @@ export function PharmacistScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

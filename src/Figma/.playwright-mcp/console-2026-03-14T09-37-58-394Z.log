@@ -1,0 +1,2 @@
+[  666616ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5173/src/components/IndexScreen.tsx?t=1773481743282:0
+[  667584ms] [ERROR] [vite] Failed to reload /src/components/IndexScreen.tsx. This could be due to syntax errors or importing non-existent modules. (see errors above) @ http://localhost:5173/@vite/client:808

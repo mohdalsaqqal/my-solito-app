@@ -6,6 +6,8 @@ import { pushAudit, readAdminControlsState, writeAdminControlsState } from '../.
 type PatchPayload = {
   environment?: 'staging' | 'production'
   status?: 'draft' | 'published'
+  name?: string
+  scheduledAt?: string
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -22,6 +24,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           ? body.environment
           : undefined,
       status: body.status === 'draft' || body.status === 'published' ? body.status : undefined,
+      name: typeof body.name === 'string' ? body.name : undefined,
+      scheduledAt: typeof body.scheduledAt === 'string' ? body.scheduledAt : undefined,
     })
 
     if (!updated.ok) {

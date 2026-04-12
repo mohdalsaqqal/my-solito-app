@@ -1,33 +1,95 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { Plus, Edit2, Trash2, Power, X, Tag } from 'lucide-react'
-import type { Promotion, PromotionCondition, PromotionReward } from '@real/app/lib/types'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import {
+  ArrowUpRight,
+  BadgePercent,
+  CalendarRange,
+  Plus,
+  Power,
+  Search,
+  Sparkles,
+  Tag,
+  Trash2,
+  X,
+} from 'lucide-react'
+import type {
+  Promotion,
+  PromotionCondition,
+  PromotionReward,
+} from '@real/app/lib/types'
 import { apiClient } from '../../../apiClient'
 import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
 import {
+  ActivityFeed,
+  AdminCommandBar,
+  AdminKpiCard,
+  AdminKpiGrid,
+  AdminPanelHeader,
+  AdminTrendPill,
   Button,
+  EmptyState,
   Field,
+  InlineLoading,
+  MetricList,
   PageContainer,
-  PageHeader,
-  Section,
+  Panel,
   SelectInput,
   StatusPill,
   TextInput,
+  WorkspaceLayout,
 } from '../../_components/AdminPagePrimitives'
 
-const cardRadius = radius.xl + 4
 const iconBtnStyle = {
   border: 0,
   background: 'transparent',
   cursor: 'pointer',
-  padding: spacing['4'],
+  width: 44,
+  height: 44,
   borderRadius: radius.md,
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'center',
 } as const
 
-// ─── Condition Builder ───────────────────────────────────────────────────────
+const promotionDrawerTokens = {
+  backdrop: colors.black,
+  panelBackground: colors.surface,
+  panelBorder: colors.border,
+  panelShadow: '0 16px 36px rgba(15,15,17,0.10), 0 28px 56px rgba(15,15,17,0.12)',
+  headerBackground: colors.surfaceLowest,
+} as const
+
+const copy = {
+  conditionTypes: {
+    minCartTotal: 'Min cart total',
+    brandIn: 'Brand in',
+    couponRequired: 'Coupon required',
+  },
+  placeholders: {
+    amount: 'Amount',
+    brands: 'brand1, brand2',
+    couponOptional: 'Coupon code (optional)',
+    promotionId: 'SUMMER_SALE_2026',
+    displayName: 'Summer Sale 10% Off',
+    couponCode: 'SAVE10',
+    search: 'Search by ID, code, or name',
+  },
+  rewardTypes: {
+    percentOff: 'Percent off (%)',
+    fixedAmountOff: 'Fixed amount off',
+    freeShipping: 'Free shipping',
+  },
+  status: {
+    active: 'Active',
+    inactive: 'Inactive',
+  },
+  queue: {
+    reward: 'Reward',
+    window: 'Window',
+    conditions: 'Conditions',
+  },
+} as const
 
 type ConditionRow =
   | { type: 'min_cart_total'; amount: string }
@@ -35,8 +97,10 @@ type ConditionRow =
   | { type: 'coupon_required'; code: string }
 
 function conditionRowToPayload(row: ConditionRow): PromotionCondition {
-  if (row.type === 'min_cart_total') return { type: 'min_cart_total', amount: Number(row.amount) }
-  if (row.type === 'brand_in')
+  if (row.type === 'min_cart_total') {
+    return { type: 'min_cart_total', amount: Number(row.amount) }
+  }
+  if (row.type === 'brand_in') {
     return {
       type: 'brand_in',
       brands: row.brands
@@ -44,16 +108,52 @@ function conditionRowToPayload(row: ConditionRow): PromotionCondition {
         .map((s) => s.trim())
         .filter(Boolean),
     }
+  }
   return { type: 'coupon_required', code: row.code || undefined }
 }
 
 function conditionPayloadToRow(c: PromotionCondition): ConditionRow {
-  if (c.type === 'min_cart_total') return { type: 'min_cart_total', amount: String(c.amount) }
-  if (c.type === 'brand_in') return { type: 'brand_in', brands: c.brands.join(', ') }
+  if (c.type === 'min_cart_total') {
+    return { type: 'min_cart_total', amount: String(c.amount) }
+  }
+  if (c.type === 'brand_in') {
+    return { type: 'brand_in', brands: c.brands.join(', ') }
+  }
   return {
     type: 'coupon_required',
     code: (c as { type: 'coupon_required'; code?: string }).code ?? '',
   }
+}
+
+function formatDateRange(startAt: string, endAt: string) {
+  return `${new Date(startAt).toLocaleDateString()} - ${new Date(endAt).toLocaleDateString()}`
+}
+
+function formatRelativeWindow(endAt: string) {
+  const diffMs = new Date(endAt).getTime() - Date.now()
+  const diffDays = Math.ceil(diffMs / 86400000)
+  if (diffDays < 0) return 'Expired'
+  if (diffDays === 0) return 'Ends today'
+  if (diffDays === 1) return 'Ends tomorrow'
+  return `${diffDays} days left`
+}
+
+function rewardLabel(reward?: PromotionReward) {
+  if (!reward) return 'No reward'
+  if (reward.type === 'percent_off') return `${reward.value}% off`
+  if (reward.type === 'fixed_amount_off') return `-${reward.value}`
+  return 'Free shipping'
+}
+
+function conditionsLabel(conditions: PromotionCondition[]) {
+  if (conditions.length === 0) return 'No conditions'
+  return conditions
+    .map((condition) => {
+      if (condition.type === 'min_cart_total') return `Cart > ${condition.amount}`
+      if (condition.type === 'brand_in') return `${condition.brands.length} brand rule`
+      return 'Coupon gate'
+    })
+    .join(' - ')
 }
 
 function ConditionBuilder({
@@ -71,7 +171,15 @@ function ConditionBuilder({
   return (
     <div style={{ display: 'grid', gap: spacing['8'] }}>
       {rows.map((row, i) => (
-        <div key={i} style={{ display: 'flex', gap: spacing['8'], alignItems: 'flex-end' }}>
+        <div
+          key={i}
+          style={{
+            display: 'flex',
+            gap: spacing['8'],
+            alignItems: 'flex-end',
+            flexWrap: 'wrap',
+          }}
+        >
           <div style={{ flex: '0 0 180px' }}>
             <SelectInput
               value={row.type}
@@ -82,36 +190,42 @@ function ConditionBuilder({
                 else updateRow(i, { type: t, code: '' })
               }}
             >
-              <option value='min_cart_total'>Min cart total</option>
-              <option value='brand_in'>Brand in</option>
-              <option value='coupon_required'>Coupon required</option>
+              <option value='min_cart_total'>{copy.conditionTypes.minCartTotal}</option>
+              <option value='brand_in'>{copy.conditionTypes.brandIn}</option>
+              <option value='coupon_required'>{copy.conditionTypes.couponRequired}</option>
             </SelectInput>
           </div>
-          <div style={{ flex: 1 }}>
-            {row.type === 'min_cart_total' && (
+          <div style={{ flex: 1, minWidth: 220 }}>
+            {row.type === 'min_cart_total' ? (
               <TextInput
                 type='number'
-                placeholder='Amount'
+                placeholder={copy.placeholders.amount}
                 value={row.amount}
                 onChange={(e) => updateRow(i, { ...row, amount: e.target.value })}
               />
-            )}
-            {row.type === 'brand_in' && (
+            ) : null}
+            {row.type === 'brand_in' ? (
               <TextInput
-                placeholder='brand1, brand2'
+                placeholder={copy.placeholders.brands}
                 value={row.brands}
                 onChange={(e) => updateRow(i, { ...row, brands: e.target.value })}
               />
-            )}
-            {row.type === 'coupon_required' && (
+            ) : null}
+            {row.type === 'coupon_required' ? (
               <TextInput
-                placeholder='Coupon code (optional)'
+                placeholder={copy.placeholders.couponOptional}
                 value={row.code}
                 onChange={(e) => updateRow(i, { ...row, code: e.target.value })}
               />
-            )}
+            ) : null}
           </div>
-          <button type='button' onClick={() => removeRow(i)} style={iconBtnStyle} title='Remove condition' aria-label='Remove condition'>
+          <button
+            type='button'
+            onClick={() => removeRow(i)}
+            style={iconBtnStyle}
+            title='Remove condition'
+            aria-label='Remove condition'
+          >
             <X size={14} color={colors.danger} />
           </button>
         </div>
@@ -136,8 +250,6 @@ function ConditionBuilder({
     </div>
   )
 }
-
-// ─── Form state helpers ──────────────────────────────────────────────────────
 
 type FormState = {
   id: string
@@ -185,8 +297,6 @@ function promotionToForm(p: Promotion): FormState {
   }
 }
 
-// ─── Slide-over ──────────────────────────────────────────────────────────────
-
 function PromotionSlideOver({
   promotion,
   onClose,
@@ -197,9 +307,15 @@ function PromotionSlideOver({
   onSave: (form: FormState) => Promise<void>
 }) {
   const isEdit = Boolean(promotion)
-  const [form, setForm] = useState<FormState>(promotion ? promotionToForm(promotion) : blankForm())
+  const [form, setForm] = useState<FormState>(
+    promotion ? promotionToForm(promotion) : blankForm(),
+  )
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const titleId = useId()
+  const descriptionId = useId()
+  const previousActiveRef = useRef<HTMLElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((prev) => ({ ...prev, [k]: v }))
@@ -207,10 +323,12 @@ function PromotionSlideOver({
   const validate = (): string | null => {
     if (!isEdit && !form.id.trim()) return 'Promotion ID is required'
     if (!form.startAt || !form.endAt) return 'Start and end dates are required'
-    if (new Date(form.startAt) >= new Date(form.endAt)) return 'End date must be after start date'
+    if (new Date(form.startAt) >= new Date(form.endAt)) {
+      return 'End date must be after start date'
+    }
     if (form.rewardType === 'percent_off') {
       const v = Number(form.rewardValue)
-      if (!Number.isFinite(v) || v <= 0 || v > 100) return 'Percentage must be 1–100'
+      if (!Number.isFinite(v) || v <= 0 || v > 100) return 'Percentage must be 1-100'
     }
     if (form.rewardType === 'fixed_amount_off') {
       const v = Number(form.rewardValue)
@@ -237,6 +355,59 @@ function PromotionSlideOver({
     }
   }
 
+  useEffect(() => {
+    const doc = globalThis.document
+    if (!doc) return
+
+    previousActiveRef.current = doc.activeElement instanceof HTMLElement ? doc.activeElement : null
+    panelRef.current?.focus()
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (event.key !== 'Tab' || !panelRef.current) {
+        return
+      }
+
+      const focusables = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => !element.hasAttribute('disabled') && element.tabIndex !== -1)
+
+      if (focusables.length === 0) {
+        event.preventDefault()
+        panelRef.current.focus()
+        return
+      }
+
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = doc.activeElement
+
+      if (event.shiftKey) {
+        if (active === first || !panelRef.current.contains(active)) {
+          event.preventDefault()
+          last?.focus()
+        }
+        return
+      }
+
+      if (active === last || !panelRef.current.contains(active)) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+
+    doc.addEventListener('keydown', onKeyDown)
+    return () => {
+      doc.removeEventListener('keydown', onKeyDown)
+      previousActiveRef.current?.focus()
+    }
+  }, [onClose])
+
   return (
     <>
       <div
@@ -244,46 +415,79 @@ function PromotionSlideOver({
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.3)',
+          backgroundColor: promotionDrawerTokens.backdrop,
+          opacity: 0.38,
           zIndex: 40,
         }}
       />
       <div
+        ref={panelRef}
+        role='dialog'
+        aria-modal='true'
+        aria-labelledby={titleId}
+        aria-describedby={descriptionId}
+        tabIndex={-1}
         style={{
           position: 'fixed',
           top: 0,
           right: 0,
-          width: 520,
+          width: 580,
           maxWidth: '100vw',
           height: '100vh',
-          backgroundColor: colors.surface,
-          borderLeft: `1px solid ${colors.border}`,
+          backgroundColor: promotionDrawerTokens.panelBackground,
+          borderLeft: `1px solid ${promotionDrawerTokens.panelBorder}`,
           zIndex: 50,
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '-8px 0 32px rgba(0,0,0,0.12)',
+          boxShadow: promotionDrawerTokens.panelShadow,
         }}
       >
-        {/* Header */}
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             justifyContent: 'space-between',
-            padding: `${spacing['16']}px ${spacing['24']}px`,
+            gap: spacing['12'],
+            padding: `${spacing['20']}px ${spacing['24']}px`,
             borderBottom: `1px solid ${colors.border}`,
+            backgroundColor: promotionDrawerTokens.headerBackground,
           }}
         >
-          <h2
-            style={{
-              margin: 0,
-              fontSize: typography.lg,
-              fontWeight: Number(fontWeights.semibold),
-              color: colors.textPrimary,
-            }}
-          >
-            {isEdit ? 'Edit Promotion' : 'New Promotion'}
-          </h2>
+          <div style={{ display: 'grid', gap: spacing['6'] }}>
+            <span
+              style={{
+                color: colors.brandPrimary,
+                fontSize: typography.xs,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                fontWeight: Number(fontWeights.semibold),
+              }}
+            >
+              Campaign workspace
+            </span>
+            <h2
+              id={titleId}
+              style={{
+                margin: 0,
+                fontSize: typography.xl,
+                fontWeight: Number(fontWeights.bold),
+                color: colors.textPrimary,
+              }}
+            >
+              {isEdit ? 'Edit promotion' : 'New promotion'}
+            </h2>
+            <p
+              id={descriptionId}
+              style={{
+                margin: 0,
+                color: colors.textSecondary,
+                fontSize: typography.sm,
+                lineHeight: 1.5,
+              }}
+            >
+              Shape the reward, timing, and gating logic before publishing the next discount lane.
+            </p>
+          </div>
           <button
             type='button'
             aria-label='Close'
@@ -293,108 +497,100 @@ function PromotionSlideOver({
               background: 'transparent',
               cursor: 'pointer',
               color: colors.textSecondary,
-              padding: spacing['4'],
+              width: 44,
+              height: 44,
+              display: 'grid',
+              placeItems: 'center',
             }}
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: `${spacing['24']}px` }}>
           <div style={{ display: 'grid', gap: spacing['16'] }}>
-            {!isEdit && (
-              <Field label='Promotion ID' hint='Unique identifier — cannot be changed after creation'>
+            {!isEdit ? (
+              <Field label='Promotion ID' hint='Unique identifier. This cannot be changed after creation.'>
                 <TextInput
                   value={form.id}
                   onChange={(e) => set('id', e.target.value)}
-                  placeholder='e.g. SUMMER_SALE_2026'
+                  placeholder={copy.placeholders.promotionId}
                 />
               </Field>
-            )}
-            <Field label='Display Name'>
-              <TextInput
-                value={form.nameEn}
-                onChange={(e) => set('nameEn', e.target.value)}
-                placeholder='e.g. Summer Sale 10% Off'
-              />
-            </Field>
-            <Field label='Coupon Code' hint='Leave blank if no code required'>
-              <TextInput
-                value={form.code}
-                onChange={(e) => set('code', e.target.value.toUpperCase())}
-                placeholder='e.g. SAVE10'
-              />
-            </Field>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['12'] }}>
-              <Field label='Start Date'>
+            ) : null}
+
+            <div style={formCardStyle}>
+              <Field label='Display name'>
                 <TextInput
-                  type='date'
-                  value={form.startAt}
-                  onChange={(e) => set('startAt', e.target.value)}
+                  value={form.nameEn}
+                  onChange={(e) => set('nameEn', e.target.value)}
+                  placeholder={copy.placeholders.displayName}
                 />
               </Field>
-              <Field label='End Date'>
+              <Field label='Coupon code' hint='Leave blank to run this as an auto-applied campaign.'>
                 <TextInput
-                  type='date'
-                  value={form.endAt}
-                  onChange={(e) => set('endAt', e.target.value)}
+                  value={form.code}
+                  onChange={(e) => set('code', e.target.value.toUpperCase())}
+                  placeholder={copy.placeholders.couponCode}
                 />
               </Field>
             </div>
-            <Field label='Reward Type'>
-              <SelectInput
-                value={form.rewardType}
-                onChange={(e) => set('rewardType', e.target.value as FormState['rewardType'])}
-              >
-                <option value='percent_off'>Percent Off (%)</option>
-                <option value='fixed_amount_off'>Fixed Amount Off</option>
-                <option value='free_shipping'>Free Shipping</option>
-              </SelectInput>
-            </Field>
-            {form.rewardType !== 'free_shipping' && (
-              <Field label={form.rewardType === 'percent_off' ? 'Discount (%)' : 'Discount Amount'}>
-                <TextInput
-                  type='number'
-                  value={form.rewardValue}
-                  onChange={(e) => set('rewardValue', e.target.value)}
-                />
-              </Field>
-            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['12'] }}>
-              <Field label='Priority' hint='Higher = applied first'>
-                <TextInput
-                  type='number'
-                  value={form.priority}
-                  onChange={(e) => set('priority', e.target.value)}
-                />
+              <Field label='Start date'>
+                <TextInput type='date' value={form.startAt} onChange={(e) => set('startAt', e.target.value)} />
+              </Field>
+              <Field label='End date'>
+                <TextInput type='date' value={form.endAt} onChange={(e) => set('endAt', e.target.value)} />
+              </Field>
+            </div>
+
+            <div style={formCardStyle}>
+              <Field label='Reward type'>
+                <SelectInput
+                  value={form.rewardType}
+                  onChange={(e) => set('rewardType', e.target.value as FormState['rewardType'])}
+                >
+                  <option value='percent_off'>{copy.rewardTypes.percentOff}</option>
+                  <option value='fixed_amount_off'>{copy.rewardTypes.fixedAmountOff}</option>
+                  <option value='free_shipping'>{copy.rewardTypes.freeShipping}</option>
+                </SelectInput>
+              </Field>
+              {form.rewardType !== 'free_shipping' ? (
+                <Field label={form.rewardType === 'percent_off' ? 'Discount (%)' : 'Discount amount'}>
+                  <TextInput type='number' value={form.rewardValue} onChange={(e) => set('rewardValue', e.target.value)} />
+                </Field>
+              ) : null}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['12'] }}>
+              <Field label='Priority' hint='Higher values win when campaigns collide.'>
+                <TextInput type='number' value={form.priority} onChange={(e) => set('priority', e.target.value)} />
               </Field>
               <Field label='Status'>
                 <SelectInput
                   value={form.isActive ? 'active' : 'inactive'}
                   onChange={(e) => set('isActive', e.target.value === 'active')}
                 >
-                  <option value='active'>Active</option>
-                  <option value='inactive'>Inactive</option>
+                  <option value='active'>{copy.status.active}</option>
+                  <option value='inactive'>{copy.status.inactive}</option>
                 </SelectInput>
               </Field>
             </div>
+
             <Field
               label='Conditions'
-              hint='All conditions must be met for the promotion to apply'
+              hint='All configured conditions must be true before the campaign applies.'
             >
-              <ConditionBuilder
-                rows={form.conditions}
-                onChange={(c) => set('conditions', c)}
-              />
+              <ConditionBuilder rows={form.conditions} onChange={(c) => set('conditions', c)} />
             </Field>
-            {error && (
+
+            {error ? (
               <p style={{ margin: 0, color: colors.danger, fontSize: typography.sm }}>{error}</p>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Footer */}
         <div
           style={{
             padding: `${spacing['16']}px ${spacing['24']}px`,
@@ -402,19 +598,14 @@ function PromotionSlideOver({
             display: 'flex',
             gap: spacing['8'],
             justifyContent: 'flex-end',
+            backgroundColor: colors.surface,
           }}
         >
           <Button tone='ghost' onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            tone='primary'
-            onClick={() => {
-              void handleSave()
-            }}
-            disabled={saving}
-          >
-            {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Promotion'}
+          <Button tone='primary' onClick={() => { void handleSave() }} disabled={saving}>
+            {saving ? 'Saving...' : isEdit ? 'Save changes' : 'Create promotion'}
           </Button>
         </div>
       </div>
@@ -422,22 +613,26 @@ function PromotionSlideOver({
   )
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
+const statusTabs = ['all', 'active', 'inactive'] as const
 
 export default function AdminMarketingPromotionsPage() {
   const [rows, setRows] = useState<Promotion[]>([])
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  // undefined = slide-over closed; null = new; Promotion = edit
+  const [statusFilter, setStatusFilter] = useState<(typeof statusTabs)[number]>('all')
   const [slideOver, setSlideOver] = useState<Promotion | null | undefined>(undefined)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = async () => {
+    setLoading(true)
     try {
       const data = await apiClient.admin.listPromotions()
       setRows(data)
+      setError(null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load')
+      setError(e instanceof Error ? e.message : 'Failed to load promotions')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -453,7 +648,6 @@ export default function AdminMarketingPromotionsPage() {
 
   const handleSave = async (form: FormState) => {
     if (slideOver && slideOver.id) {
-      // Edit path
       const updated = await apiClient.admin.updatePromotion(slideOver.id, {
         code: form.code || undefined,
         name: { en: form.nameEn, ar: slideOver.name.ar },
@@ -466,7 +660,6 @@ export default function AdminMarketingPromotionsPage() {
       })
       setRows((prev) => prev.map((r) => (r.id === slideOver.id ? updated : r)))
     } else {
-      // Create path
       const created = await apiClient.admin.createPromotion({
         id: form.id.trim(),
         code: form.code || undefined,
@@ -483,7 +676,7 @@ export default function AdminMarketingPromotionsPage() {
   }
 
   const handleDelete = async (p: Promotion) => {
-    if (!confirm(`Delete promotion "${p.id}"?`)) return
+    if (!window.confirm(`Delete promotion "${p.id}"?`)) return
     await apiClient.admin.deletePromotion(p.id)
     setRows((prev) => prev.filter((r) => r.id !== p.id))
   }
@@ -510,295 +703,387 @@ export default function AdminMarketingPromotionsPage() {
     [rows, search, statusFilter],
   )
 
-  const pillTab = (label: string, value: typeof statusFilter) => (
-    <button
-      type='button'
-      key={value}
-      onClick={() => setStatusFilter(value)}
-      style={{
-        border: 0,
-        cursor: 'pointer',
-        borderRadius: radius.full,
-        padding: `6px ${spacing['16']}px`,
-        fontSize: typography.sm,
-        fontWeight: Number(fontWeights.medium),
-        backgroundColor: statusFilter === value ? colors.brandPrimary : 'transparent',
-        color: statusFilter === value ? '#fff' : colors.textSecondary,
-        transition: 'background 0.15s',
-      }}
-    >
-      {label}
-    </button>
-  )
+  const activeRows = rows.filter((row) => row.isActive)
+  const inactiveRows = rows.filter((row) => !row.isActive)
+  const codeDrivenRows = rows.filter((row) => Boolean(row.code))
+  const endingSoon = activeRows.filter((row) => {
+    const diffMs = new Date(row.endAt).getTime() - Date.now()
+    return diffMs >= 0 && diffMs <= 7 * 86400000
+  })
+
+  const activityItems = activeRows.slice(0, 5).map((promotion) => ({
+    id: promotion.id,
+    title: promotion.name.en || promotion.id,
+    detail: `${rewardLabel(promotion.rewards[0])} - ${conditionsLabel(promotion.conditions)}`,
+    meta: formatRelativeWindow(promotion.endAt),
+    tone: promotion.isActive ? ('success' as const) : ('neutral' as const),
+  }))
+
+  const railMetrics = [
+    { label: 'Code-led campaigns', value: codeDrivenRows.length.toLocaleString(), tone: 'brand' as const },
+    { label: 'Auto-applied campaigns', value: (rows.length - codeDrivenRows.length).toLocaleString() },
+    {
+      label: 'Ending this week',
+      value: endingSoon.length.toLocaleString(),
+      tone: endingSoon.length ? ('warning' as const) : ('default' as const),
+    },
+    {
+      label: 'Highest priority',
+      value: rows.length ? String(Math.max(...rows.map((promotion) => promotion.priority))) : '0',
+    },
+  ]
 
   return (
     <PageContainer>
-      <PageHeader
+      <AdminCommandBar
+        eyebrow='Marketing Operations'
         title='Promotions'
-        subtitle='Create and manage discount promotions, coupon codes, and reward rules.'
-        actions={
-          <Button tone='primary' onClick={() => setSlideOver(null)}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
-              <Plus size={14} /> New Promotion
+        subtitle='Operate discount strategy as a campaign control room: manage live windows, reward tension, and coupon-driven traffic without losing merchandising context.'
+        status={
+          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
+            <AdminTrendPill
+              value={activeRows.length ? `${activeRows.length} live campaigns` : 'No live campaigns'}
+              tone={activeRows.length ? 'success' : 'warning'}
+            />
+            <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
+              {endingSoon.length ? `${endingSoon.length} ending in 7 days` : 'No immediate expiry pressure'}
             </span>
-          </Button>
+          </div>
+        }
+        actions={
+          <>
+            <Button tone='secondary' onClick={() => void load()} disabled={loading}>
+              {loading ? 'Refreshing...' : 'Refresh'}
+            </Button>
+            <Button tone='primary' onClick={() => setSlideOver(null)}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
+                <Plus size={14} /> New Promotion
+              </span>
+            </Button>
+          </>
         }
       />
 
-      {error && <p style={{ color: colors.danger, fontSize: typography.sm }}>{error}</p>}
+      {error ? (
+        <Panel tone='danger'>
+          <div style={{ color: colors.danger, fontSize: typography.sm }}>{error}</div>
+        </Panel>
+      ) : null}
 
-      {/* Filters row */}
-      <Section>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: spacing['16'],
-            flexWrap: 'wrap',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              gap: spacing['4'],
-              backgroundColor: colors.surfaceMuted,
-              borderRadius: radius.full,
-              padding: '4px',
-            }}
-          >
-            {pillTab('All', 'all')}
-            {pillTab('Active', 'active')}
-            {pillTab('Inactive', 'inactive')}
-          </div>
-          <TextInput
-            type='search'
-            placeholder='Search by ID, code, name...'
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ maxWidth: 280 }}
-          />
-        </div>
-      </Section>
+      <AdminKpiGrid>
+        <AdminKpiCard label='Live campaigns' value={activeRows.length.toLocaleString()} meta='Promotions currently available to shoppers' icon={Sparkles} tone='brand' />
+        <AdminKpiCard label='Coupon-driven' value={codeDrivenRows.length.toLocaleString()} meta='Campaigns that rely on explicit codes' icon={Tag} trend={<AdminTrendPill value='Acquisition lever' tone='neutral' />} />
+        <AdminKpiCard label='Ending soon' value={endingSoon.length.toLocaleString()} meta='Live campaigns ending within the next 7 days' icon={CalendarRange} tone={endingSoon.length ? 'warning' : 'default'} />
+        <AdminKpiCard label='Inactive' value={inactiveRows.length.toLocaleString()} meta='Drafted or paused promotions ready for review' icon={BadgePercent} tone='default' />
+      </AdminKpiGrid>
 
-      {/* Table */}
-      <Section>
-        {filtered.length === 0 ? (
-          <div
-            style={{
-              padding: spacing['48'],
-              textAlign: 'center',
-              border: `1px solid ${colors.border}`,
-              borderRadius: cardRadius,
-            }}
-          >
-            <Tag size={32} color={colors.textSecondary} style={{ marginBottom: spacing['12'] }} />
-            <p
-              style={{
-                margin: '0 0 4px',
-                fontSize: typography.base,
-                fontWeight: Number(fontWeights.semibold),
-                color: colors.textPrimary,
-              }}
-            >
-              {search || statusFilter !== 'all' ? 'No promotions match' : 'No promotions yet'}
-            </p>
-            <p style={{ margin: 0, fontSize: typography.sm, color: colors.textSecondary }}>
-              {search || statusFilter !== 'all'
-                ? 'Try adjusting your filters.'
-                : 'Create your first promotion to get started.'}
-            </p>
-          </div>
-        ) : (
-          <div
-            style={{
-              border: `1px solid ${colors.border}`,
-              borderRadius: cardRadius,
-              overflow: 'hidden',
-              backgroundColor: colors.surface,
-            }}
-          >
-            {/* Table header */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 120px 140px 200px 80px 80px 100px',
-                backgroundColor: colors.surfaceMuted,
-                borderBottom: `1px solid ${colors.border}`,
-              }}
-            >
-              {['Promotion', 'Code', 'Reward', 'Window', 'Priority', 'Status', ''].map((h) => (
+      <WorkspaceLayout
+        main={
+          <>
+            <Panel tone='brand'>
+              <AdminPanelHeader title='Campaign filters' subtitle='Switch between live and inactive lanes, then narrow the queue with keyword search.' />
+              <div style={{ display: 'grid', gap: spacing['12'] }}>
                 <div
-                  key={h}
                   style={{
-                    padding: `${spacing['8']}px ${spacing['12']}px`,
-                    fontSize: typography.xs,
-                    fontWeight: Number(fontWeights.semibold),
-                    color: colors.textSecondary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  {h}
-                </div>
-              ))}
-            </div>
-
-            {/* Table rows */}
-            {filtered.map((p) => {
-              const reward = p.rewards[0]
-              const rewardLabel =
-                reward?.type === 'percent_off'
-                  ? `${reward.value}% off`
-                  : reward?.type === 'fixed_amount_off'
-                    ? `-${reward.value}`
-                    : 'Free shipping'
-              return (
-                <div
-                  key={p.id}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 120px 140px 200px 80px 80px 100px',
-                    borderBottom: `1px solid ${colors.border}`,
+                    display: 'flex',
                     alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: spacing['12'],
+                    flexWrap: 'wrap',
                   }}
                 >
-                  {/* Promotion name/id */}
-                  <div style={{ padding: `${spacing['12']}px` }}>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: typography.sm,
-                        fontWeight: Number(fontWeights.medium),
-                        color: colors.textPrimary,
-                      }}
-                    >
-                      {p.id}
-                    </p>
-                    {p.name.en && (
-                      <p
-                        style={{
-                          margin: '2px 0 0',
-                          fontSize: typography.xs,
-                          color: colors.textSecondary,
-                        }}
-                      >
-                        {p.name.en}
-                      </p>
-                    )}
-                  </div>
-                  {/* Code */}
-                  <div style={{ padding: `${spacing['12']}px` }}>
-                    {p.code ? (
-                      <span
-                        style={{
-                          fontSize: typography.xs,
-                          fontFamily: 'monospace',
-                          backgroundColor: colors.surfaceMuted,
-                          borderRadius: radius.md,
-                          padding: `2px ${spacing['8']}px`,
-                          color: colors.textPrimary,
-                        }}
-                      >
-                        {p.code}
-                      </span>
-                    ) : (
-                      <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>
-                        —
-                      </span>
-                    )}
-                  </div>
-                  {/* Reward */}
                   <div
                     style={{
-                      padding: `${spacing['12']}px`,
-                      fontSize: typography.sm,
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {rewardLabel}
-                  </div>
-                  {/* Window */}
-                  <div
-                    style={{
-                      padding: `${spacing['12']}px`,
-                      fontSize: typography.xs,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {new Date(p.startAt).toLocaleDateString()} –{' '}
-                    {new Date(p.endAt).toLocaleDateString()}
-                  </div>
-                  {/* Priority */}
-                  <div
-                    style={{
-                      padding: `${spacing['12']}px`,
-                      fontSize: typography.sm,
-                      color: colors.textSecondary,
-                      textAlign: 'center',
-                    }}
-                  >
-                    {p.priority}
-                  </div>
-                  {/* Status */}
-                  <div style={{ padding: `${spacing['12']}px` }}>
-                    <StatusPill tone={p.isActive ? 'success' : 'neutral'}>
-                      {p.isActive ? 'Active' : 'Inactive'}
-                    </StatusPill>
-                  </div>
-                  {/* Actions */}
-                  <div
-                    style={{
-                      padding: `${spacing['8']}px`,
                       display: 'flex',
                       gap: spacing['4'],
-                      justifyContent: 'flex-end',
+                      backgroundColor: colors.surfaceMuted,
+                      borderRadius: radius.full,
+                      padding: '4px',
                     }}
                   >
-                    <button
-                      type='button'
-                      onClick={() => setSlideOver(p)}
-                      style={iconBtnStyle}
-                      title='Edit'
-                    >
-                      <Edit2 size={14} color={colors.textSecondary} />
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        void handleToggle(p)
+                    {statusTabs.map((value) => {
+                      const active = statusFilter === value
+                      const label = value === 'all' ? 'All' : value === 'active' ? 'Active' : 'Inactive'
+                      return (
+                        <button
+                          key={value}
+                          type='button'
+                          onClick={() => setStatusFilter(value)}
+                          className='admin-focus-ring'
+                          style={{
+                            border: 0,
+                            cursor: 'pointer',
+                            borderRadius: radius.full,
+                            padding: `6px ${spacing['16']}px`,
+                            fontSize: typography.sm,
+                            fontWeight: Number(fontWeights.medium),
+                            backgroundColor: active ? colors.textPrimary : 'transparent',
+                            color: active ? colors.textInverted : colors.textSecondary,
+                          }}
+                        >
+                          {label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  <div style={{ position: 'relative', width: '100%', maxWidth: 320 }}>
+                    <Search size={16} color={colors.textSecondary} style={{ position: 'absolute', insetInlineStart: 12, top: 12 }} />
+                    <input
+                      className='admin-focus-ring'
+                      type='search'
+                      aria-label={copy.placeholders.search}
+                      placeholder={copy.placeholders.search}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      style={{
+                        width: '100%',
+                        minHeight: 44,
+                        borderRadius: radius.xl,
+                        border: `1px solid ${colors.border}`,
+                        backgroundColor: colors.surface,
+                        color: colors.textPrimary,
+                        paddingInlineStart: spacing['32'] + spacing['8'],
+                        paddingInlineEnd: spacing['12'],
+                        fontSize: typography.sm,
+                        outline: 'none',
                       }}
-                      style={iconBtnStyle}
-                      title={p.isActive ? 'Deactivate' : 'Activate'}
-                    >
-                      <Power size={14} color={p.isActive ? colors.success : colors.textSecondary} />
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        void handleDelete(p)
-                      }}
-                      style={iconBtnStyle}
-                      title='Delete'
-                    >
-                      <Trash2 size={14} color={colors.danger} />
-                    </button>
+                    />
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
-      </Section>
+                <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.xs, lineHeight: 1.5 }}>
+                  Use the campaign workspace to keep high-priority offers visible, tighten reward overlap, and retire stale promotions before they dilute the shopping signal.
+                </p>
+              </div>
+            </Panel>
+            <Panel>
+              <AdminPanelHeader
+                title='Promotion queue'
+                subtitle='Every row keeps the reward, timing, and gating logic visible so operators can act quickly without opening each record.'
+                actions={<StatusPill tone='neutral'>{filtered.length.toLocaleString()} visible</StatusPill>}
+              />
 
-      {/* Slide-over */}
-      {slideOver !== undefined && (
-        <PromotionSlideOver
-          promotion={slideOver}
-          onClose={() => setSlideOver(undefined)}
-          onSave={handleSave}
-        />
-      )}
+              {loading ? (
+                <InlineLoading label='Loading promotions...' />
+              ) : filtered.length === 0 ? (
+                <EmptyState
+                  title={search || statusFilter !== 'all' ? 'No matching campaigns' : 'No promotions yet'}
+                  description={
+                    search || statusFilter !== 'all'
+                      ? 'Try widening the search or switching lanes.'
+                      : 'Create the first campaign to start shaping discount strategy.'
+                  }
+                />
+              ) : (
+                <div style={{ display: 'grid', gap: spacing['12'] }}>
+                  {filtered.map((promotion) => {
+                    const reward = promotion.rewards[0]
+                    return (
+                      <div
+                        key={promotion.id}
+                        style={{
+                          border: `1px solid ${colors.border}`,
+                          borderRadius: radius.xl + 4,
+                          backgroundColor: colors.surface,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: spacing['16'],
+                            display: 'grid',
+                            gap: spacing['12'],
+                            background:
+                              promotion.isActive
+                                ? 'linear-gradient(180deg, rgba(44,97,83,0.05) 0%, rgba(255,255,255,1) 100%)'
+                                : colors.surface,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              justifyContent: 'space-between',
+                              gap: spacing['12'],
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <div style={{ display: 'grid', gap: spacing['6'] }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: spacing['8'],
+                                  flexWrap: 'wrap',
+                                }}
+                              >
+                                <span style={{ color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
+                                  {promotion.name.en || promotion.id}
+                                </span>
+                                <StatusPill tone={promotion.isActive ? 'success' : 'neutral'}>
+                                  {promotion.isActive ? 'Active' : 'Inactive'}
+                                </StatusPill>
+                                <AdminTrendPill value={`Priority ${promotion.priority}`} tone='neutral' />
+                              </div>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: spacing['8'],
+                                  flexWrap: 'wrap',
+                                  color: colors.textSecondary,
+                                  fontSize: typography.sm,
+                                }}
+                              >
+                                <span>{promotion.id}</span>
+                                <span>-</span>
+                                <span>{promotion.code || 'Auto applied'}</span>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
+                              <button type='button' onClick={() => setSlideOver(promotion)} style={iconBtnStyle} title='Edit promotion'>
+                                <ArrowUpRight size={15} color={colors.textSecondary} />
+                              </button>
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  void handleToggle(promotion)
+                                }}
+                                style={iconBtnStyle}
+                                title={promotion.isActive ? 'Deactivate' : 'Activate'}
+                              >
+                                <Power size={15} color={promotion.isActive ? colors.success : colors.textSecondary} />
+                              </button>
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  void handleDelete(promotion)
+                                }}
+                                style={iconBtnStyle}
+                                title='Delete promotion'
+                              >
+                                <Trash2 size={15} color={colors.danger} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: 'grid',
+                              gap: spacing['10'],
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                            }}
+                          >
+                            <div style={infoChipStyle}>
+                              <span style={infoChipLabelStyle}>{copy.queue.reward}</span>
+                              <span style={infoChipValueStyle}>{rewardLabel(reward)}</span>
+                            </div>
+                            <div style={infoChipStyle}>
+                              <span style={infoChipLabelStyle}>{copy.queue.window}</span>
+                              <span style={infoChipValueStyle}>{formatDateRange(promotion.startAt, promotion.endAt)}</span>
+                            </div>
+                            <div style={infoChipStyle}>
+                              <span style={infoChipLabelStyle}>{copy.queue.conditions}</span>
+                              <span style={infoChipValueStyle}>{conditionsLabel(promotion.conditions)}</span>
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: spacing['12'],
+                              flexWrap: 'wrap',
+                              borderTop: `1px solid ${colors.border}`,
+                              paddingTop: spacing['12'],
+                            }}
+                          >
+                            <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
+                              {formatRelativeWindow(promotion.endAt)}
+                            </span>
+                            <Button tone='secondary' onClick={() => setSlideOver(promotion)}>
+                              Open campaign
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </Panel>
+          </>
+        }
+        rail={
+          <>
+            <Panel>
+              <AdminPanelHeader title='Campaign posture' subtitle='A fast summary of how the current promotion mix is structured.' />
+              <MetricList rows={railMetrics} />
+            </Panel>
+
+            <Panel>
+              <AdminPanelHeader title='Live campaign activity' subtitle='The currently active campaigns most likely to influence the next shopper session.' />
+              {activityItems.length === 0 ? (
+                <EmptyState title='No active campaigns' description='Launch a promotion to start populating this lane.' />
+              ) : (
+                <ActivityFeed items={activityItems} empty='No active campaigns' />
+              )}
+            </Panel>
+
+            <Panel tone='brand'>
+              <AdminPanelHeader title='Operator note' subtitle='Best practice for this page' />
+              <p
+                style={{
+                  margin: 0,
+                  color: colors.textSecondary,
+                  fontSize: typography.sm,
+                  lineHeight: 1.6,
+                }}
+              >
+                Keep the queue biased toward a few intentional campaigns. Too many overlapping offers weakens scanability for operators and erodes pricing clarity for shoppers.
+              </p>
+            </Panel>
+          </>
+        }
+      />
+
+      {slideOver !== undefined ? (
+        <PromotionSlideOver promotion={slideOver} onClose={() => setSlideOver(undefined)} onSave={handleSave} />
+      ) : null}
     </PageContainer>
   )
 }
+
+const formCardStyle = {
+  border: `1px solid ${colors.border}`,
+  borderRadius: radius.xl,
+  backgroundColor: colors.surfaceMuted,
+  padding: spacing['16'],
+  display: 'grid',
+  gap: spacing['12'],
+} as const
+
+const infoChipStyle = {
+  display: 'grid',
+  gap: spacing['4'],
+  padding: spacing['12'],
+  borderRadius: radius.xl,
+  backgroundColor: colors.surfaceMuted,
+  border: `1px solid ${colors.border}`,
+} as const
+
+const infoChipLabelStyle = {
+  color: colors.textSecondary,
+  fontSize: typography.xs,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+} as const
+
+const infoChipValueStyle = {
+  color: colors.textPrimary,
+  fontSize: typography.sm,
+  fontWeight: Number(fontWeights.semibold),
+  lineHeight: 1.45,
+} as const

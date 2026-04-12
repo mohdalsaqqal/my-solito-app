@@ -1,5 +1,73 @@
 [
   {
+    "id": "cache-1773820146326",
+    "action": "full_stack_flush",
+    "executedAt": "2026-03-18T07:49:06.326Z",
+    "executedBy": {
+      "userId": "u-2",
+      "email": "admin@realcosmetics.local",
+      "role": "admin"
+    },
+    "revalidatedPaths": [
+      "/",
+      "/shop",
+      "/sales",
+      "/search",
+      "/cart",
+      "/checkout",
+      "/account",
+      "/orders",
+      "/users",
+      "/admin",
+      "/pharmacist"
+    ],
+    "revalidatedTags": [
+      "home",
+      "shop",
+      "sales",
+      "search",
+      "cart",
+      "checkout",
+      "account",
+      "orders",
+      "users",
+      "admin",
+      "pharmacist"
+    ],
+    "cdn": {
+      "enabled": false,
+      "attempted": false,
+      "success": false,
+      "message": "CDN purge webhook is not configured."
+    },
+    "cooldownSeconds": 30
+  },
+  {
+    "id": "cache-1773740787823",
+    "action": "revalidate_home_shop",
+    "executedAt": "2026-03-17T09:46:27.823Z",
+    "executedBy": {
+      "userId": "u-2",
+      "email": "admin@realcosmetics.local",
+      "role": "admin"
+    },
+    "revalidatedPaths": [
+      "/",
+      "/shop"
+    ],
+    "revalidatedTags": [
+      "home",
+      "shop"
+    ],
+    "cdn": {
+      "enabled": false,
+      "attempted": false,
+      "success": false,
+      "message": "CDN purge webhook is not configured."
+    },
+    "cooldownSeconds": 30
+  },
+  {
     "id": "cache-1772611843649",
     "action": "full_stack_flush",
     "executedAt": "2026-03-04T08:10:43.649Z",

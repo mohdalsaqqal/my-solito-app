@@ -1,0 +1,30 @@
+{
+  "architecture_rules": {
+    "forbidden_patterns": {
+      "apiClient_in_Server_Components": "Server must use services, not HTTP client",
+      "direct_adapter_imports_in_UI": "UI imports providers, not adapters",
+      "className_in_packages_app": "App layer uses inline token styles",
+      "process_env_in_shared_packages": "No env access in shared packages",
+      "hex_literals_in_shared_UI": "Must use tokens from @real/tokens",
+      "Platform_OS_outside_useBreakpoint": "Single source of truth for platform branching",
+      "Touchable_in_active_shared_components": "Legacy primitive, replaced by RNR patterns",
+      "Server_Components_calling_internal_Route_Handlers": "Use services directly",
+      "External_BFF_layer": "Next.js IS the server layer"
+    },
+    "allowed_patterns": {
+      "Server_Components_fetching_via_services": "apps/next/server/services",
+      "Route_Handlers": "apps/next/app/api/**",
+      "Server_Actions": "Next.js server actions (delegating to services)",
+      "Cache_Components_with_tagged_caching": "Public reads in Next.js",
+      "Client_islands": "Mutations, browser-only state"
+    },
+    "non_negotiables": [
+      "Tokens over hardcoded values",
+      "Adapters over direct external calls",
+      "Providers over adapter imports",
+      "Server layer owns all data access",
+      "CMS controls content, not layout",
+      "Do not reintroduce public Touchable-style legacy primitives into the active shared UI contract"
+    ]
+  }
+}

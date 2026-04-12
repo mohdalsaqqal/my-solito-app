@@ -41,18 +41,43 @@ function localizePath(pathname: string, locale: AppLocale): string {
   return `/${segments.join('/')}`
 }
 
+function readWindowLocation() {
+  if (typeof window === 'undefined') return null
+
+  const location = (window as { location?: { href?: string; pathname?: string; search?: string; hash?: string } }).location
+  if (!location) return null
+
+  return {
+    href: typeof location.href === 'string' ? location.href : '',
+    pathname: typeof location.pathname === 'string' ? location.pathname : '/',
+    search: typeof location.search === 'string' ? location.search : '',
+    hash: typeof location.hash === 'string' ? location.hash : '',
+  }
+}
+
 function resolveInitialLocale(): AppLocale {
   if (typeof window !== 'undefined') {
-    const fromQuery = normalizeLocale(new URL(window.location.href).searchParams.get('locale'))
-    if (fromQuery) return fromQuery
+    const location = readWindowLocation()
+    if (location?.href) {
+      try {
+        const fromQuery = normalizeLocale(new URL(location.href).searchParams.get('locale'))
+        if (fromQuery) return fromQuery
+      } catch {
+        // Ignore malformed runtime URLs and continue through fallbacks.
+      }
+    }
 
     const fromCookie = readLocaleFromCookie()
     if (fromCookie) return fromCookie
 
-    const fromHtml = normalizeLocale(document.documentElement.lang)
+    const fromHtml = typeof document !== 'undefined'
+      ? normalizeLocale(document.documentElement.lang)
+      : null
     if (fromHtml) return fromHtml
 
-    const fromNavigator = normalizeLocale(window.navigator.language)
+    const fromNavigator = normalizeLocale(
+      typeof window.navigator?.language === 'string' ? window.navigator.language : null
+    )
     if (fromNavigator) return fromNavigator
   }
 
@@ -82,12 +107,15 @@ export function setCurrentLocale(locale: AppLocale) {
     document.documentElement.lang = locale
     document.cookie = `${COOKIE_KEY}=${encodeURIComponent(locale)}; path=/; max-age=31536000; SameSite=Lax`
 
-    const nextPath = localizePath(window.location.pathname, locale)
-    const nextUrl = `${nextPath}${window.location.search}${window.location.hash}`
-    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
-    if (currentUrl !== nextUrl) {
-      window.location.assign(nextUrl)
-      return
+    const location = readWindowLocation()
+    if (location) {
+      const nextPath = localizePath(location.pathname, locale)
+      const nextUrl = `${nextPath}${location.search}${location.hash}`
+      const currentUrl = `${location.pathname}${location.search}${location.hash}`
+      if (currentUrl !== nextUrl && typeof window.location?.assign === 'function') {
+        window.location.assign(nextUrl)
+        return
+      }
     }
   }
 

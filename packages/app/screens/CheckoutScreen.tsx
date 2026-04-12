@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Image, Platform, useWindowDimensions } from 'react-native'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { Image, Platform } from 'react-native'
+import { useTranslation } from 'react-i18next'
 import {
   AccountAddress,
   CheckoutPlaceOrderInput,
@@ -7,11 +8,12 @@ import {
   CheckoutQuoteResponse,
   LoyaltyWallet,
 } from '@real/app/lib/types'
-import { borderWidth, breakpoints, colors, componentTokens, radius, spacing } from '@real/tokens'
+import { borderWidth, componentTokens, radius, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Divider, Input, Text } from '@real/ui/primitives'
-import { Button, Card, PaymentBadges } from '@real/ui/components'
+import { Button, Card, PaymentBadges, CheckoutStepper } from '@real/ui/components'
 import { passThroughPricingService } from '@real/app/lib/pricing'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 
 type CheckoutItem = {
   id: string
@@ -80,7 +82,7 @@ type AddressLabel = 'Home' | 'Work' | 'Other'
 const DEFAULT_NOTICE = 'Shipping timelines are estimated and confirmed after payment.'
 const COUPON_STORAGE_KEY = 'rc_checkout_coupon_code'
 
-export function CheckoutScreen({
+export const CheckoutScreen = React.memo(function CheckoutScreen({
   items,
   loading = false,
   error = null,
@@ -95,48 +97,65 @@ export function CheckoutScreen({
   onPlaceOrder,
   onRetry,
 }: CheckoutScreenProps) {
-  const { width } = useWindowDimensions()
+  const profile = useBreakpoint()
+  const c = useThemeColors()
+  const { t } = useTranslation('checkout')
   const isNative = Platform.OS !== 'web'
-  const isDesktop = !isNative && (width >= breakpoints.desktopMin || width === 0)
-  const isCompact = width > 0 && width < breakpoints.tabletMin
+  const isDesktop = !isNative && profile.breakpoint === 'desktop'
+  const isCompact = profile.breakpoint === 'mobile'
   const checkoutTokens = componentTokens.storefrontCommerce.checkout
-  const loadErrorTitle = 'Unable to load checkout'
-  const emptyTitle = 'Your cart is empty'
-  const emptyMessage = 'Add products before checkout.'
-  const checkoutTitle = 'Checkout'
-  const contactTitle = 'Contact'
-  const fullNameLabel = 'Full name'
-  const fullNamePlaceholder = 'Your full name'
-  const phoneLabel = 'Phone'
-  const phonePlaceholder = 'Phone number'
-  const fulfillmentTitle = 'Fulfillment'
-  const noStockedBranchesLabel = 'No stocked branches are available right now.'
-  const selectedBranchOutLabel = 'Selected branch is no longer in stock.'
-  const deliveryAddressTitle = 'Delivery address'
-  const savedAddressesLabel = 'Saved addresses'
-  const cityLabel = 'City'
-  const areaLabel = 'Area'
-  const cityPlaceholder = 'City'
-  const areaPlaceholder = 'Area'
-  const buildingLabel = 'Building'
-  const buildingPlaceholder = 'Building and street'
-  const floorLabel = 'Floor (optional)'
-  const floorPlaceholder = 'Floor'
-  const apartmentLabel = 'Apartment (optional)'
-  const apartmentPlaceholder = 'Apartment'
-  const deliveryNotesLabel = 'Delivery notes (optional)'
-  const deliveryNotesPlaceholder = 'Any instructions for delivery'
-  const addressBookLabel = 'Address book'
-  const paymentTitle = 'Payment'
-  const noPaymentMethodsLabel = 'No payment methods are currently available for this fulfillment mode.'
-  const promotionTitle = 'Promotion code'
-  const couponLabel = 'Coupon code (optional)'
-  const couponPlaceholder = 'Enter coupon code'
-  const refreshingQuoteLabel = 'Refreshing quote...'
-  const loyaltyTitle = 'Loyalty redemption'
-  const orderSummaryTitle = 'Order summary'
-  const quoteRequiredLabel = 'Checkout quote is required. Refresh quote before placing order.'
-  const totalLabel = 'Total'
+  const loadErrorTitle = t('error.loadFailed')
+  const emptyTitle = t('empty.title')
+  const emptyMessage = t('empty.subtitle')
+  const checkoutTitle = t('title')
+  const contactTitle = t('contact.title')
+  const fullNameLabel = t('contact.fullName')
+  const fullNamePlaceholder = t('contact.fullNamePlaceholder')
+  const phoneLabel = t('contact.phone')
+  const phonePlaceholder = t('contact.phonePlaceholder')
+  const fulfillmentTitle = t('fulfillment.title')
+  const noStockedBranchesLabel = t('fulfillment.noStockedBranches')
+  const selectedBranchOutLabel = t('fulfillment.selectedBranchOut')
+  const deliveryAddressTitle = t('fulfillment.deliveryAddress')
+  const savedAddressesLabel = t('fulfillment.savedAddresses')
+  const cityLabel = t('address.city')
+  const areaLabel = t('address.area')
+  const cityPlaceholder = t('address.cityPlaceholder')
+  const areaPlaceholder = t('address.areaPlaceholder')
+  const buildingLabel = t('address.building')
+  const buildingPlaceholder = t('address.buildingPlaceholder')
+  const floorLabel = t('address.floor')
+  const floorPlaceholder = t('address.floorPlaceholder')
+  const apartmentLabel = t('address.apartment')
+  const apartmentPlaceholder = t('address.apartmentPlaceholder')
+  const deliveryNotesLabel = t('address.deliveryNotes')
+  const deliveryNotesPlaceholder = t('address.deliveryNotesPlaceholder')
+  const addressBookLabel = t('address.addressBook')
+  const paymentTitle = t('payment.title')
+  const noPaymentMethodsLabel = t('payment.noMethods')
+  const promotionTitle = t('promotion.title')
+  const couponLabel = t('promotion.coupon')
+  const couponPlaceholder = t('promotion.couponPlaceholder')
+  const refreshingQuoteLabel = t('promotion.refreshingQuote')
+  const loyaltyTitle = t('loyalty.title')
+  const orderSummaryTitle = t('summary.title')
+  const quoteRequiredLabel = t('summary.quoteRequired')
+  const totalLabel = t('summary.total')
+  const removeCouponLabel = t('promotion.removeCoupon')
+  const noRedemptionLabel = t('loyalty.noRedemption')
+  const estimatedDiscountLabel = t('loyalty.estimatedDiscount')
+  const placingOrderLabel = t('actions.placingOrder')
+  const placeOrderLabel = t('actions.placeOrder')
+  const retryLabel = t('actions.retry')
+  const appliedPromotionLabel = t('summary.appliedPromotion')
+  const subtotalLabel = t('summary.subtotal')
+  const promotionDiscountLabel = t('summary.promotionDiscount')
+  const shippingLabel = t('summary.shipping')
+  const loyaltyDiscountLabel = t('summary.loyaltyDiscount')
+  const pointsRedeemableLabel = t('loyalty.pointsRedeemable')
+  const saveAsNewLabel = t('address.saveAsNew')
+  const reuseMatchedLabel = t('address.reuseMatched')
+  const switchToLabel = t('fulfillment.switchTo')
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
@@ -181,23 +200,23 @@ export function CheckoutScreen({
       const allowPayNow = selectedBranch?.payNowEnabled !== false
 
       if (allowPayAtBranch) {
-        methods.push({ id: 'pay_at_branch', label: 'Pay at branch' })
+        methods.push({ id: 'pay_at_branch', label: t('payment.payAtBranch') })
       }
       if (allowPayNow && onlineCardEnabled) {
-        methods.push({ id: 'online_card', label: 'Pay now (online card)' })
+        methods.push({ id: 'online_card', label: t('payment.payNow') })
       }
       return methods
     }
 
     const methods: Array<{ id: CheckoutPaymentMethod; label: string }> = []
     if (codEnabled) {
-      methods.push({ id: 'cod', label: 'Cash on delivery' })
+      methods.push({ id: 'cod', label: t('payment.cashOnDelivery') })
     }
     if (cardOnDeliveryEnabled) {
-      methods.push({ id: 'card_on_delivery', label: 'Card on delivery (POS)' })
+      methods.push({ id: 'card_on_delivery', label: t('payment.cardOnDelivery') })
     }
     if (onlineCardEnabled) {
-      methods.push({ id: 'online_card', label: 'Online card' })
+      methods.push({ id: 'online_card', label: t('payment.onlineCard') })
     }
     return methods
   }, [
@@ -298,7 +317,7 @@ export function CheckoutScreen({
         .then((result) => setQuote(result))
         .catch((cause) => {
           setQuote(null)
-          setQuoteError(cause instanceof Error ? cause.message : 'Unable to create pricing quote.')
+          setQuoteError(cause instanceof Error ? cause.message : t('validation.quoteError'))
         })
         .finally(() => setQuoteLoading(false))
     }, 350)
@@ -333,28 +352,28 @@ export function CheckoutScreen({
   }, [availablePaymentMethods, paymentMethod])
 
   function getValidationError(): string | null {
-    if (items.length === 0) return 'Your cart is empty.'
-    if (!fullName.trim()) return 'Full name is required.'
-    if (!phone.trim()) return 'Phone is required.'
+    if (items.length === 0) return t('validation.emptyCart')
+    if (!fullName.trim()) return t('validation.fullNameRequired')
+    if (!phone.trim()) return t('validation.phoneRequired')
 
     if (fulfillmentMode === 'delivery') {
-      if (!city.trim()) return 'City is required for delivery.'
-      if (!area.trim()) return 'Area is required for delivery.'
-      if (!building.trim()) return 'Building is required for delivery.'
+      if (!city.trim()) return t('validation.cityRequired')
+      if (!area.trim()) return t('validation.areaRequired')
+      if (!building.trim()) return t('validation.buildingRequired')
     }
 
     if (fulfillmentMode === 'pickup' && !selectedBranch) {
-      return 'Please select a pickup branch.'
+      return t('fulfillment.selectBranch')
     }
     if (fulfillmentMode === 'pickup' && !selectedBranchInStock) {
-      return 'Selected branch is out of stock. Choose another branch.'
+      return t('fulfillment.selectedBranchOutOfStock')
     }
 
     if (availablePaymentMethods.length === 0) {
-      return 'No payment methods are available.'
+      return t('validation.noPaymentMethods')
     }
     if (!availablePaymentMethods.some((method) => method.id === paymentMethod)) {
-      return 'Please select a payment method.'
+      return t('fulfillment.selectPayment')
     }
 
     return null
@@ -416,7 +435,7 @@ export function CheckoutScreen({
     try {
       await onPlaceOrder?.(payload)
     } catch (cause) {
-      setSubmitError(cause instanceof Error ? cause.message : 'Unable to place order right now.')
+      setSubmitError(cause instanceof Error ? cause.message : t('validation.placeOrderError'))
     } finally {
       setSubmitting(false)
     }
@@ -443,11 +462,11 @@ export function CheckoutScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
-              <Text variant='h2'>{loadErrorTitle}</Text>
+              <Text variant='h1'>{loadErrorTitle}</Text>
               <Text tone='muted'>{error}</Text>
               <Box style={isCompact ? undefined : { width: spacing.xxl * 4 }}>
                 <Button variant='outline' onPress={onRetry}>
-                  Retry
+                  {retryLabel}
                 </Button>
               </Box>
             </Box>
@@ -463,7 +482,7 @@ export function CheckoutScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='md'>
-              <Text variant='h2'>{emptyTitle}</Text>
+              <Text variant='h1'>{emptyTitle}</Text>
               <Text tone='muted'>{emptyMessage}</Text>
             </Box>
           </Section>
@@ -484,33 +503,18 @@ export function CheckoutScreen({
         paddingBottom: !isDesktop ? spacing['96'] : 0,
       }}
     >
-      <Text variant='h2'>{checkoutTitle}</Text>
-      <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: checkoutTokens.paymentBadgeGap }}>
-        {[
-          { id: 'step-contact', label: '1. Contact' },
-          { id: 'step-fulfillment', label: `2. ${fulfillmentMode === 'pickup' ? 'Pickup' : 'Delivery'}` },
-          { id: 'step-payment', label: '3. Payment' },
-          { id: 'step-review', label: '4. Review' },
-        ].map((step, index) => (
-          <Box
-            key={step.id}
-            style={{
-              minHeight: checkoutTokens.stepChipMinHeight,
-              borderRadius: radius.full,
-              borderWidth: borderWidth.thin,
-              borderColor: index === 3 ? colors.textPrimary : colors.stroke,
-              backgroundColor: index === 3 ? colors.textPrimary : colors.surface,
-              paddingHorizontal: checkoutTokens.stepChipPaddingX,
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Text variant='caption' weight='700' tone={index === 3 ? 'inverse' : 'muted'}>
-              {step.label}
-            </Text>
-          </Box>
-        ))}
-      </Box>
+      <Text variant='h1'>{checkoutTitle}</Text>
+      
+      {/* Visual stepper instead of generic pill badges */}
+      <CheckoutStepper
+        steps={[
+          { id: 'step-contact', label: 'Contact' },
+          { id: 'step-fulfillment', label: fulfillmentMode === 'pickup' ? 'Pickup' : 'Delivery' },
+          { id: 'step-payment', label: 'Payment' },
+          { id: 'step-review', label: 'Review' },
+        ]}
+        currentStep={3} // Review step (0-indexed)
+      />
 
       <Box
         style={{
@@ -525,8 +529,8 @@ export function CheckoutScreen({
             style={{
               gap: spacing['16'],
               borderWidth: borderWidth.thin,
-              borderColor: colors.primary,
-              backgroundColor: colors.brandPrimarySubtle,
+              borderColor: c.primary,
+              backgroundColor: c.brandPrimarySubtle,
             }}
           >
             <Text variant='title'>{contactTitle}</Text>
@@ -733,7 +737,7 @@ export function CheckoutScreen({
             {couponCode.trim().length > 0 ? (
               <Box style={{ alignItems: 'flex-start' }}>
                 <Button size='sm' variant='outline' onPress={() => setCouponCode('')}>
-                  Remove coupon
+                  {removeCouponLabel}
                 </Button>
               </Box>
             ) : null}
@@ -753,7 +757,7 @@ export function CheckoutScreen({
                   variant={!selectedRedeemOption ? 'solid' : 'outline'}
                   onPress={() => onSelectRedeemPercent?.(undefined)}
                 >
-                  No redemption
+                  {noRedemptionLabel}
                 </Button>
                 {loyaltyWallet.redeemOptions.map((option) => (
                   <Button
@@ -793,7 +797,7 @@ export function CheckoutScreen({
             style={{
               gap: checkoutTokens.summaryGap,
               borderWidth: borderWidth.thin,
-              borderColor: colors.stroke,
+              borderColor: c.stroke,
               padding: checkoutTokens.summaryPanelPadding,
             }}
           >
@@ -812,9 +816,10 @@ export function CheckoutScreen({
                         height: '100%',
                         borderRadius: radius.sm,
                         borderWidth: borderWidth.thin,
-                        borderColor: colors.border,
-                        backgroundColor: colors.backgroundSecondary,
+                        borderColor: c.border,
+                        backgroundColor: c.backgroundSecondary,
                       }}
+                      {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                     />
                   ) : (
                     <Box
@@ -823,8 +828,8 @@ export function CheckoutScreen({
                         height: '100%',
                         borderRadius: radius.sm,
                         borderWidth: borderWidth.thin,
-                        borderColor: colors.border,
-                        backgroundColor: colors.backgroundSecondary,
+                        borderColor: c.border,
+                        backgroundColor: c.backgroundSecondary,
                       }}
                     />
                   )}
@@ -834,7 +839,7 @@ export function CheckoutScreen({
                         position: 'absolute',
                         top: -spacing['4'],
                         right: -spacing['4'],
-                        backgroundColor: colors.brandCrimson,
+                        backgroundColor: c.brandCrimson,
                         borderRadius: radius.full,
                         minWidth: 18,
                         height: 18,
@@ -842,7 +847,7 @@ export function CheckoutScreen({
                         justifyContent: 'center',
                         paddingHorizontal: 4,
                         borderWidth: 1,
-                        borderColor: colors.surface,
+                        borderColor: c.surface,
                       }}
                     >
                       <Text variant='meta' size={9} tone='inverse' weight='700'>
@@ -874,7 +879,7 @@ export function CheckoutScreen({
             ) : null}
           </Card>
 
-          <Card variant='flat' tone='subtle' style={{ gap: spacing['8'], borderWidth: borderWidth.thin, borderColor: colors.border }}>
+          <Card variant='flat' tone='subtle' style={{ gap: spacing['8'], borderWidth: borderWidth.thin, borderColor: c.border }}>
             <Text variant='caption' tone='muted'>{notice}</Text>
           </Card>
 
@@ -885,7 +890,7 @@ export function CheckoutScreen({
 
           {isDesktop ? (
             <Button disabled={!canPressPlaceOrder} onPress={handlePlaceOrder}>
-              {submitting ? 'Placing order...' : 'Place order'}
+              {submitting ? placingOrderLabel : placeOrderLabel}
             </Button>
           ) : null}
         </Box>
@@ -901,16 +906,16 @@ export function CheckoutScreen({
                   end: 0,
                   bottom: 0,
                   borderTopWidth: borderWidth.thin,
-                  borderColor: colors.border,
-                  backgroundColor: colors.surface,
+                  borderColor: c.border,
+                  backgroundColor: c.surface,
                   paddingHorizontal: spacing.pageX,
                   paddingVertical: checkoutTokens.mobileActionPaddingY,
                 }
               : {
                   marginTop: spacing['16'],
                   borderWidth: borderWidth.thin,
-                  borderColor: colors.border,
-                  backgroundColor: colors.surface,
+                  borderColor: c.border,
+                  backgroundColor: c.surface,
                   borderRadius: radius.sm,
                   paddingHorizontal: spacing['12'],
                   paddingVertical: checkoutTokens.mobileActionPaddingY,
@@ -924,7 +929,7 @@ export function CheckoutScreen({
             </Box>
             <Box style={isCompact ? { flex: 1 } : { minWidth: spacing.xxl * 4 }}>
               <Button disabled={!canPressPlaceOrder} onPress={handlePlaceOrder}>
-                {submitting ? 'Placing order...' : 'Place order'}
+                {submitting ? placingOrderLabel : placeOrderLabel}
               </Button>
             </Box>
           </Box>
@@ -937,7 +942,7 @@ export function CheckoutScreen({
   )
 
   return content
-}
+})
 
 function CheckoutInput({
   label,

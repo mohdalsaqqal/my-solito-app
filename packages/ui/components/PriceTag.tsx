@@ -1,3 +1,4 @@
+import React from 'react'
 import { View, ViewStyle } from 'react-native'
 import { spacing } from '@real/tokens'
 import { Text } from '../primitives/Text'
@@ -36,7 +37,7 @@ function formatPrice(amount: number, currency: string): string {
   }).format(amount)
 }
 
-export function PriceTag({
+export const PriceTag = React.memo(function PriceTag({
   price,
   compareAt,
   currency = 'SAR',
@@ -90,4 +91,4 @@ export function PriceTag({
       )}
     </View>
   )
-}
+})

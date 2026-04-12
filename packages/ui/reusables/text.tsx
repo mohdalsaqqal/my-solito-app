@@ -44,6 +44,12 @@ const textVariants = cva(
 type TextVariantProps = VariantProps<typeof textVariants>;
 
 type TextVariant = NonNullable<TextVariantProps['variant']>;
+type TextProps = React.ComponentPropsWithoutRef<typeof RNText> &
+  TextVariantProps & {
+    className?: string;
+  };
+
+const NativeText = RNText as unknown as React.ComponentType<any>;
 
 const ROLE: Partial<Record<TextVariant, Role>> = {
   h1: 'heading',
@@ -63,22 +69,14 @@ const ARIA_LEVEL: Partial<Record<TextVariant, string>> = {
 
 const TextClassContext = React.createContext<string | undefined>(undefined);
 
-type ReusableTextProps = React.ComponentProps<typeof RNText> &
-  TextVariantProps &
-  React.RefAttributes<RNText> & {
-    className?: string
-  }
-
-const RNTextWithClassName = RNText as any
-
 function Text({
   className,
   variant = 'default',
   ...props
-}: ReusableTextProps) {
+}: TextProps) {
   const textClass = React.useContext(TextClassContext);
   return (
-    <RNTextWithClassName
+    <NativeText
       className={cn(textVariants({ variant }), textClass, className)}
       role={variant ? ROLE[variant] : undefined}
       aria-level={variant ? ARIA_LEVEL[variant] : undefined}

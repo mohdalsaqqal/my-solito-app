@@ -1,6 +1,6 @@
-import { Fragment, useMemo } from 'react'
-import { colors, componentTokens } from '@real/tokens'
-import { useBreakpoint } from '@real/ui/responsive'
+import { Fragment, useCallback, useMemo } from 'react'
+import { componentTokens } from '@real/tokens'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 import { Box } from '@real/ui/primitives'
 import { AnnouncementTicker } from '@real/ui/components'
 import { resolveBlockString } from '../../sections/blocks/block-types'
@@ -16,6 +16,7 @@ import { renderMiscBlock } from './renderers/renderMiscBlock'
 import { renderRecentlyViewedBlock } from './renderers/renderRecentlyViewedBlock'
 import { renderFeatureBannerBlock } from './renderers/renderFeatureBannerBlock'
 import { renderBrandPanelBlock } from './renderers/renderBrandPanelBlock'
+import { renderBrandDealBannerBlock } from './renderers/renderBrandDealBannerBlock'
 import type {
   HomeBlockRendererRailAutoplaySettings,
   RegisteredHomePageBlock,
@@ -53,19 +54,13 @@ type DispatchProps = {
   onAddAllToCart?: (productIds: string[]) => void
 }
 
-/**
- * Routes an independent slot to its dedicated home renderer by block type.
- * This is the Phase 4 dispatcher — one function per block type family.
- */
-function dispatchHomeRenderer(p: DispatchProps) {
+function resolveHomeRenderer(p: DispatchProps) {
   const { block } = p.slot
 
-  // Hero family
   if (block.type === 'hero_carousel' || block.type === 'hero') {
     return renderHeroBlock({ slot: p.slot, onNavigate: p.onNavigate })
   }
 
-  // Product rail family
   if (block.type === 'product_slider' || block.type === 'personalized_rail') {
     return renderProductRailBlock({
       slot: p.slot,
@@ -79,12 +74,10 @@ function dispatchHomeRenderer(p: DispatchProps) {
     })
   }
 
-  // Category family
   if (block.type === 'category_shortcuts') {
     return renderCategoryBlock({ slot: p.slot, onNavigate: p.onNavigate })
   }
 
-  // Offer banners family
   if (
     block.type === 'offer_banners' ||
     block.type === 'education_banner' ||
@@ -94,7 +87,6 @@ function dispatchHomeRenderer(p: DispatchProps) {
     return renderOfferBannersBlock({ slot: p.slot, isDesktop: p.isDesktop, onNavigate: p.onNavigate })
   }
 
-  // Brand family — desktop uses two-column panel layout, mobile/tablet uses rail
   if (block.type === 'brand_spotlight') {
     if (p.isDesktop) {
       return renderBrandPanelBlock({ slot: p.slot, onNavigate: p.onNavigate })
@@ -124,12 +116,10 @@ function dispatchHomeRenderer(p: DispatchProps) {
     })
   }
 
-  // Flash sale
   if (block.type === 'flash_sale') {
     return renderFlashSaleBlock({ slot: p.slot, onNavigate: p.onNavigate })
   }
 
-  // Editorial hotspot
   if (block.type === 'editorial_hotspot') {
     return renderEditorialHotspotBlock({
       slot: p.slot,
@@ -140,12 +130,10 @@ function dispatchHomeRenderer(p: DispatchProps) {
     })
   }
 
-  // Misc family: newsletter_cta, top_brands, ugc_gallery
   if (block.type === 'newsletter_cta' || block.type === 'top_brands' || block.type === 'ugc_gallery') {
     return renderMiscBlock({ slot: p.slot, isDesktop: p.isDesktop, onNavigate: p.onNavigate })
   }
 
-  // Recently viewed / upsell rail
   if (block.type === 'cart_upsell_rail') {
     return renderRecentlyViewedBlock({
       slot: p.slot,
@@ -155,22 +143,26 @@ function dispatchHomeRenderer(p: DispatchProps) {
     })
   }
 
-  // Feature banner (PDP offer cluster used as homepage campaign slot)
   if (block.type === 'pdp_offer_cluster') {
     return renderFeatureBannerBlock({ slot: p.slot, onNavigate: p.onNavigate })
   }
 
-  // promo_strip as standalone (not paired) — AnnouncementTicker
+  if (block.type === 'brand_deal_banner') {
+    return renderBrandDealBannerBlock({ slot: p.slot, onNavigate: p.onNavigate })
+  }
+
   if (block.type === 'promo_strip') {
     return (
       <AnnouncementTicker
-        items={[{
-          id: block.id,
-          label: block.textValue ?? resolveBlockString(block.locale, block.text, ''),
-          href: block.href,
-          badgeLabel: block.locale === 'ar' ? 'حملة' : 'Campaign',
-          ctaLabel: block.locale === 'ar' ? 'تسوّق الآن' : 'Shop now',
-        }]}
+        items={[
+          {
+            id: block.id,
+            label: block.textValue ?? resolveBlockString(block.locale, block.text, ''),
+            href: block.href,
+            badgeLabel: block.locale === 'ar' ? 'حملة' : 'Campaign',
+            ctaLabel: block.locale === 'ar' ? 'تسوّق الآن' : 'Shop now',
+          },
+        ]}
         speedMs={p.tickerSpeedMs}
         variant='campaign'
         onPressItem={(href) => (href ? p.onNavigate?.(href) : undefined)}
@@ -181,16 +173,6 @@ function dispatchHomeRenderer(p: DispatchProps) {
   return null
 }
 
-/**
- * Client component that wires the home layout engine to dedicated home renderers.
- *
- * Phase 4: routes each resolved slot directly to its typed renderer function
- * instead of going through the generic BlockRenderer → block-registry path.
- *
- * - useBreakpoint() is the single source of truth for width-driven layout
- * - buildHomeLayout is pure and re-runs on every profile change
- * - Each renderer receives a typed IndependentRenderSlot (block + profile)
- */
 export function HomeBlocksRenderer({
   blocks,
   loading,
@@ -210,32 +192,61 @@ export function HomeBlocksRenderer({
   const railAutoplayMs = railAutoplay?.featured?.autoplayMs ?? 5000
   const brandAutoplayMs = railAutoplay?.brandSpotlights?.autoplayMs ?? 5200
 
-  const rawBlocks = useMemo(() => blocks.map((b) => b.props), [blocks])
-
   const slots = useMemo(
-    () => buildHomeLayout(rawBlocks, profile),
-    [rawBlocks, profile],
+    () => buildHomeLayout(blocks.map((b) => b.props), profile),
+    [blocks, profile],
+  )
+  const c = useThemeColors()
+
+  const dispatchHomeRenderer = useCallback(
+    (p: DispatchProps) => resolveHomeRenderer(p),
+    [],
   )
 
   return (
-    <Box style={{ width: '100%', backgroundColor: colors.background }}>
+    <Box style={{ width: '100%', backgroundColor: c.background }}>
       {slots.map((slot, index) => {
         if (slot.kind === 'paired') {
-          // Desktop: promo_strip fused above hero — both rendered as one visual unit
-          const stripRaw = rawBlocks[slot.stripIndex]
-          const heroRaw = rawBlocks[slot.heroIndex]
-          if (!stripRaw || !heroRaw) return null
-
-          const stripSlot: IndependentRenderSlot = { kind: 'independent', block: stripRaw, profile, index: slot.stripIndex }
-          const heroSlot: IndependentRenderSlot = { kind: 'independent', block: heroRaw, profile, index: slot.heroIndex }
+          const stripSlot: IndependentRenderSlot = {
+            kind: 'independent',
+            block: slot.strip,
+            profile,
+            index: slot.stripIndex,
+          }
+          const heroSlot: IndependentRenderSlot = {
+            kind: 'independent',
+            block: slot.hero,
+            profile,
+            index: slot.heroIndex,
+          }
 
           const stripNode = dispatchHomeRenderer({
-            slot: stripSlot, loading, error, tickerSpeedMs, railAutoplayMs,
-            isDesktop, brandAutoplayMs, onReload, onNavigate, onSelectProduct, onAddToCart, onAddAllToCart,
+            slot: stripSlot,
+            loading,
+            error,
+            tickerSpeedMs,
+            railAutoplayMs,
+            isDesktop,
+            brandAutoplayMs,
+            onReload,
+            onNavigate,
+            onSelectProduct,
+            onAddToCart,
+            onAddAllToCart,
           })
           const heroNode = dispatchHomeRenderer({
-            slot: heroSlot, loading, error, tickerSpeedMs, railAutoplayMs,
-            isDesktop, brandAutoplayMs, onReload, onNavigate, onSelectProduct, onAddToCart, onAddAllToCart,
+            slot: heroSlot,
+            loading,
+            error,
+            tickerSpeedMs,
+            railAutoplayMs,
+            isDesktop,
+            brandAutoplayMs,
+            onReload,
+            onNavigate,
+            onSelectProduct,
+            onAddToCart,
+            onAddAllToCart,
           })
 
           if (!stripNode && !heroNode) return null
@@ -250,14 +261,19 @@ export function HomeBlocksRenderer({
           )
         }
 
-        // Independent slot
-        const rawBlock = rawBlocks[slot.index]
-        if (!rawBlock) return null
-
         const node = dispatchHomeRenderer({
-          slot: { kind: 'independent', block: rawBlock, profile, index: slot.index },
-          loading, error, tickerSpeedMs, railAutoplayMs,
-          isDesktop, brandAutoplayMs, onReload, onNavigate, onSelectProduct, onAddToCart, onAddAllToCart,
+          slot,
+          loading,
+          error,
+          tickerSpeedMs,
+          railAutoplayMs,
+          isDesktop,
+          brandAutoplayMs,
+          onReload,
+          onNavigate,
+          onSelectProduct,
+          onAddToCart,
+          onAddAllToCart,
         })
 
         if (!node) return null

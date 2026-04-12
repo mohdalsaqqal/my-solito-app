@@ -22,23 +22,27 @@ export async function POST(request: Request) {
       return fail(result.error.code, result.error.message, 500)
     }
 
-    const state = await readAdminControlsState()
-    pushAudit(state, {
-      type: 'i18n',
-      targetId: 'translations.prefill',
-      actor: {
-        userId: session.userId,
-        email: session.email,
-      },
-      changes: {
-        action: 'translation.prefill',
-        dryRun: String(result.data.dryRun),
-        filledKeys: String(result.data.filledKeys),
-        missingBefore: String(result.data.missingBefore),
-        missingAfter: String(result.data.missingAfter),
-      },
-    })
-    await writeAdminControlsState(state)
+    try {
+      const state = await readAdminControlsState()
+      pushAudit(state, {
+        type: 'i18n',
+        targetId: 'translations.prefill',
+        actor: {
+          userId: session.userId,
+          email: session.email,
+        },
+        changes: {
+          action: 'translation.prefill',
+          dryRun: String(result.data.dryRun),
+          filledKeys: String(result.data.filledKeys),
+          missingBefore: String(result.data.missingBefore),
+          missingAfter: String(result.data.missingAfter),
+        },
+      })
+      await writeAdminControlsState(state)
+    } catch (auditCause) {
+      console.warn('[admin-i18n/prefill] Failed to persist audit entry', auditCause)
+    }
 
     return ok(result.data)
   } catch (cause) {

@@ -31,7 +31,8 @@ export function fail(
   code: string,
   message: string,
   status = 400,
-  meta?: FailMeta
+  meta?: FailMeta,
+  headers?: Record<string, string>,
 ) {
   if (meta?.cause !== undefined) {
     console.error('[BFF_FAIL]', {
@@ -51,5 +52,5 @@ export function fail(
     },
   }
 
-  return Response.json(payload, { status })
+  return Response.json(payload, { status, headers })
 }

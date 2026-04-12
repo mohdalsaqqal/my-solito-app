@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   ArrowUpRight,
   Eye,
@@ -70,7 +71,7 @@ type IconProps = {
   weight?: IconWeight
 }
 
-export function Icon({
+export const Icon = React.memo(function Icon({
   name,
   size = spacing['16'],
   color = colors.textPrimary,
@@ -78,4 +79,4 @@ export function Icon({
 }: IconProps) {
   const Glyph = ICON_BY_NAME[name] ?? ICON_BY_NAME.unknown
   return <Glyph size={size} color={color} weight={weight} />
-}
+})

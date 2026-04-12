@@ -1,0 +1,22 @@
+{
+  "empty": {
+    "title": "البحث",
+    "subtitle": "أدخل اسم منتج أو فئة أو علامة تجارية."
+  },
+  "actions": {
+    "browseShop": "تسوّق الآن"
+  },
+  "results": {
+    "title": "نتائج \"{{query}}\"",
+    "loadError": "تعذر تحميل نتائج البحث.",
+    "retry": "إعادة المحاولة",
+    "noResults": "لا توجد نتائج لـ \"{{query}}\"",
+    "noResultsSubtitle": "جرّب كلمة أخرى أو تصفح أقسام المتجر.",
+    "productsFound": "تم العثور على {{count}} منتجاً",
+    "productsFoundMeta": "تصفح مستمر"
+  },
+  "promo": {
+    "badge": "عروض البحث",
+    "subtitle": "واجهة اكتشاف كثيفة بترتيب يبرز العروض أولاً"
+  }
+}

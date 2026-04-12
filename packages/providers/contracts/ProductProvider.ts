@@ -22,7 +22,32 @@ export type Product = CanonicalEntity & {
   completeSetIds?: string[]
 }
 
+export type ProductPricingSnapshot = {
+  productId: string
+  unitPrice: number
+  currency: string
+  compareAtPrice?: number
+  source: 'catalog' | 'odoo'
+  resolvedAt: string
+}
+
+export type ProductInventorySnapshot = {
+  productId: string
+  availableQuantity: number
+  isInStock: boolean
+  source: 'catalog' | 'odoo'
+  resolvedAt: string
+}
+
+export type ProductIntegrationSnapshot = {
+  productId: string
+  externalProductId?: string
+  pricing: ProductPricingSnapshot
+  inventory: ProductInventorySnapshot
+}
+
 export interface ProductProvider {
   list(filters?: ProductFilter): Promise<ProviderResult<Product[]>>
   get(id: string): Promise<ProviderResult<Product>>
+  getIntegrationSnapshot?(id: string): Promise<ProviderResult<ProductIntegrationSnapshot>>
 }

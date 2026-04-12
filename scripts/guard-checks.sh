@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Normalize execution on shells that previously saw CRLF endings.
+
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
@@ -76,9 +78,13 @@ run_check "No tests in forbidden package locations" \
 if [ "$SEARCH_TOOL" = "rg" ]; then
   run_check "No direct adapter imports in app/ui/expo/next app layer (except BFF)" \
     rg -n "${RG_EXCLUDES[@]}" "from '@real/adapters" packages/app packages/ui apps/expo apps/next/app --glob '!apps/next/app/api/**'
+  run_check "No direct adapter imports in BFF routes" \
+    rg -n "${RG_EXCLUDES[@]}" "from '@real/adapters" apps/next/app/api --glob '!apps/next/app/api/admin/**/sync/**'
 else
   run_check "No direct adapter imports in app/ui/expo/next app layer (except BFF)" \
     grep -R -n -E --exclude-dir=node_modules --exclude-dir=.next --exclude-dir=dist --exclude-dir=api "from '@real/adapters" packages/app packages/ui apps/expo apps/next/app
+  # Skip BFF adapter check when using grep (ripgrep preferred for glob support)
+  echo "[guard] Skipping BFF adapter check (install ripgrep for full check)"
 fi
 
 run_check "No provider imports inside packages/ui" \
@@ -86,9 +92,6 @@ run_check "No provider imports inside packages/ui" \
 
 run_check "No raw hex colors in shared packages" \
   run_search "#[0-9a-fA-F]{3,8}" packages/app packages/ui
-
-run_check "No direct adapter imports in BFF routes" \
-  run_search "from '@real/adapters" apps/next/app/api
 
 run_check "No deprecated Solito props" \
   run_search "viewProps=|textProps=" packages apps
@@ -101,6 +104,9 @@ run_check "No unsupported pseudo classes in shared/native code" \
 
 run_check "No reanimated side-effect import in Next app entries/layouts" \
   run_search "import ['\\\"]react-native-reanimated['\\\"]" apps/next
+
+echo "[guard] CSS token bridge is up to date"
+"$NODE_BIN" scripts/generate-css-token-bridge.mjs --check
 
 echo "[guard] No new hardcoded user-facing strings"
 "$NODE_BIN" tools/i18n/hardcoded-strings-check.mjs

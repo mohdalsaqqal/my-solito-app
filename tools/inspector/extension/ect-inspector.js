@@ -277,8 +277,9 @@
 
   copyAskBtn.addEventListener('click', () => {
     if (!lastPayload) return
+    const component = lastPayload.nodeMarker || lastPayload.reactComponent || '(unknown)'
     const prompt =
-      'Please update this selected element based on my request.\n\n' +
+      'Component: ' + component + '\n' +
       '[ECT_INSPECT] ' + JSON.stringify(lastPayload) + '\n\n' +
       'Requested change:\n' +
       '- '

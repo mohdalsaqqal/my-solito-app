@@ -3,10 +3,13 @@ import { AuthRole } from '@real/app/lib/types'
 export type AdminDomain =
   | 'dashboard'
   | 'catalog'
+  | 'sales'
+  | 'inventory'
+  | 'marketplace'
   | 'marketing'
-  | 'orders'
   | 'customers'
   | 'operations'
+  | 'settings'
 
 export type AdminPanelRole = 'admin' | 'marketing' | 'catalog' | 'support' | 'ops'
 type PermissionValue = 'full' | 'read' | 'none'
@@ -17,42 +20,57 @@ const permissionMatrix: Record<AdminPanelRole, DomainMatrix> = {
   admin: {
     dashboard: 'full',
     catalog: 'full',
+    sales: 'full',
+    inventory: 'full',
+    marketplace: 'full',
     marketing: 'full',
-    orders: 'full',
     customers: 'full',
     operations: 'full',
+    settings: 'full',
   },
   marketing: {
     dashboard: 'read',
     catalog: 'read',
+    sales: 'read',
+    inventory: 'read',
+    marketplace: 'read',
     marketing: 'full',
-    orders: 'read',
     customers: 'read',
     operations: 'none',
+    settings: 'read',
   },
   catalog: {
     dashboard: 'read',
     catalog: 'full',
+    sales: 'read',
+    inventory: 'full',
+    marketplace: 'read',
     marketing: 'read',
-    orders: 'read',
     customers: 'read',
     operations: 'none',
+    settings: 'read',
   },
   support: {
     dashboard: 'read',
     catalog: 'read',
+    sales: 'full',
+    inventory: 'read',
+    marketplace: 'read',
     marketing: 'read',
-    orders: 'full',
     customers: 'full',
     operations: 'none',
+    settings: 'read',
   },
   ops: {
     dashboard: 'read',
     catalog: 'read',
+    sales: 'read',
+    inventory: 'read',
+    marketplace: 'read',
     marketing: 'read',
-    orders: 'read',
     customers: 'read',
     operations: 'full',
+    settings: 'read',
   },
 }
 
@@ -64,10 +82,6 @@ export function isAdminPanelRole(role: AuthRole): role is AdminPanelRole {
     role === 'support' ||
     role === 'ops'
   )
-}
-
-export function hasAdminDomainAccess(role: AuthRole, domain: AdminDomain) {
-  return hasAdminDomainPermission(role, domain, 'read')
 }
 
 export function hasAdminDomainPermission(

@@ -1,0 +1,335 @@
+:root {
+  --color-bg: 255 255 255;
+  --color-surface: 255 255 255;
+  --color-surface-soft: 246 248 252;
+  --color-fg: 15 15 17;
+  --color-muted: 108 112 126;
+
+  --color-brand: 216 31 52;
+  --color-brand-strong: 182 18 40;
+  --color-brand-contrast: 255 255 255;
+
+  --color-mint: 39 118 255;
+  --color-mint-strong: 28 85 214;
+  --color-sun: 255 225 236;
+  --color-ink: 15 15 17;
+  --color-ink-soft: 34 34 40;
+  --color-sky: 232 242 255;
+  --color-stroke: 223 227 236;
+  --color-accent: 77 89 118;
+  --color-danger: 182 18 40;
+  --color-rating: 214 162 31;
+  --color-luxury: 250 195 0;
+  --color-hero-luxury-ink: 15 23 41;
+
+  --color-pop-pink: 248 69 128;
+  --color-pop-coral: 255 108 86;
+  --color-pop-blush: 255 239 246;
+  --color-premium-blue: 44 104 255;
+  --color-premium-silver: 186 214 255;
+  --color-premium-mist: 240 247 255;
+
+  --color-payment-amex: 46 119 188;
+  --color-payment-mastercard: 245 158 11;
+  --color-payment-visa: 29 78 216;
+  --color-payment-visa-deep: 26 31 113;
+
+  --color-line-top: 223 227 236;
+  --color-line-right: 223 227 236;
+  --color-line-bottom: 223 227 236;
+  --color-line-left: 223 227 236;
+
+  --color-button-bg: 216 31 52;
+  --color-button-fg: 255 255 255;
+  --color-button-border: 216 31 52;
+  --color-button-hover-bg: 182 18 40;
+  --color-button-hover-border: 182 18 40;
+  --color-button-hover-fg: 255 255 255;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-hero-card: 8px;
+  --radius-promo-card: 10px;
+
+  --font-size-micro: 10px;
+  --line-height-micro: 14px;
+  --font-size-xxs: 11px;
+  --line-height-xxs: 16px;
+  --font-size-brand-mark: 38px;
+  --font-size-brand-mark-compact: 29px;
+  --font-size-brand-sub: 9px;
+  --line-height-brand-sub: 12px;
+  --font-size-footer-brand: 34px;
+  --line-height-footer-brand: 34px;
+  --font-size-hero-title: 28px;
+  --line-height-hero-title: 29px;
+  --font-size-fluid-promo: clamp(1.9rem, 3vw, 3rem);
+  --font-size-fluid-brand: clamp(2rem, 3vw, 3.5rem);
+
+  --tracking-tight-logo: -0.08em;
+  --tracking-tight-title: -0.05em;
+  --tracking-03: 0.03em;
+  --tracking-12: 0.12em;
+  --tracking-14: 0.14em;
+  --tracking-15: 0.15em;
+  --tracking-16: 0.16em;
+  --tracking-18: 0.18em;
+  --tracking-24: 0.24em;
+  --tracking-32: 0.32em;
+  --tracking-35: 0.35em;
+
+  --shadow-elevation-00: none;
+  --shadow-elevation-01: 0 1px 2px rgba(18, 18, 19, 0.06), 0 1px 1px rgba(18, 18, 19, 0.04);
+  --shadow-elevation-02: 0 2px 4px rgba(18, 18, 19, 0.08), 0 1px 2px rgba(18, 18, 19, 0.05);
+  --shadow-elevation-03: 0 4px 10px rgba(18, 18, 19, 0.1), 0 2px 4px rgba(18, 18, 19, 0.06);
+  --shadow-elevation-04: 0 10px 24px rgba(18, 18, 19, 0.1), 0 3px 6px rgba(18, 18, 19, 0.05);
+  --shadow-elevation-06: 0 14px 32px rgba(18, 18, 19, 0.12), 0 4px 8px rgba(18, 18, 19, 0.06);
+  --shadow-elevation-08: 0 18px 40px rgba(18, 18, 19, 0.14), 0 6px 12px rgba(18, 18, 19, 0.08);
+  --shadow-elevation-12: 0 24px 48px rgba(18, 18, 19, 0.16), 0 10px 18px rgba(18, 18, 19, 0.08);
+  --shadow-elevation-16: 0 32px 64px rgba(18, 18, 19, 0.18), 0 12px 20px rgba(18, 18, 19, 0.1);
+  --shadow-elevation-24: 0 40px 84px rgba(18, 18, 19, 0.22), 0 18px 32px rgba(18, 18, 19, 0.12);
+
+  --shadow-surface: var(--shadow-elevation-01);
+  --shadow-raised: var(--shadow-elevation-06);
+  --shadow-floating: var(--shadow-elevation-12);
+  --shadow-overlay: var(--shadow-elevation-24);
+
+  --z-layer-base: 0;
+  --z-layer-raised: 10;
+  --z-layer-floating: 20;
+  --z-layer-overlay: 30;
+
+  --gradient-hero-radial-field: radial-gradient(circle at top left, rgb(var(--color-pop-pink) / 0.08), transparent 28%),
+    radial-gradient(circle at bottom right, rgb(var(--color-premium-blue) / 0.09), transparent 30%);
+  --gradient-hero-panel-flash: linear-gradient(135deg, rgb(var(--color-surface)) 0%, #fff4f7 45%, #ffd6e2 100%);
+  --gradient-hero-panel-editorial: linear-gradient(135deg, rgb(var(--color-surface)) 0%, rgb(var(--color-premium-mist)) 50%, #dceaff 100%);
+  --gradient-hero-panel-new: linear-gradient(135deg, #ff5a8e 0%, #ff7d7d 48%, #ffb7ce 100%);
+  --gradient-hero-panel-luxury: linear-gradient(135deg, rgb(var(--color-surface)) 0%, #eef5ff 44%, #cadfff 100%);
+  --gradient-hero-panel-member: linear-gradient(135deg, #111217 0%, #1c2440 60%, #2f3f7a 100%);
+  --gradient-hero-overlay-flash: linear-gradient(to top, rgb(0 0 0 / 0.5), transparent 65%);
+  --gradient-hero-overlay-editorial: linear-gradient(to top, rgb(15 18 23 / 0.5), transparent 62%, rgb(255 255 255 / 0.1));
+  --gradient-hero-overlay-new: linear-gradient(to top, rgb(0 0 0 / 0.52), transparent 62%, rgb(0 0 0 / 0.05));
+  --gradient-hero-overlay-luxury: linear-gradient(to top, rgb(15 18 23 / 0.44), transparent 62%, rgb(255 255 255 / 0.1));
+  --gradient-hero-overlay-member: linear-gradient(to top, rgb(0 0 0 / 0.55), transparent 62%, rgb(0 0 0 / 0.1));
+  --gradient-promo-overlay-top-offer: linear-gradient(to right, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.38), transparent);
+  --gradient-promo-overlay-bundle-edit: linear-gradient(to right, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.38), transparent);
+  --gradient-promo-radial-top-offer: radial-gradient(circle at top right, rgb(var(--color-pop-pink) / 0.3), transparent 30%),
+    radial-gradient(circle at bottom left, rgb(var(--color-premium-blue) / 0.22), transparent 32%);
+  --gradient-promo-radial-bundle-edit: radial-gradient(circle at top right, rgb(var(--color-pop-pink) / 0.3), transparent 30%),
+    radial-gradient(circle at bottom left, rgb(var(--color-premium-blue) / 0.22), transparent 32%);
+  --gradient-brand-spotlight-overlay: linear-gradient(to right, rgb(0 0 0 / 0.72), rgb(0 0 0 / 0.28), transparent);
+  --gradient-brand-spotlight-radial: radial-gradient(circle at top right, rgb(255 255 255 / 0.2), transparent 32%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer utilities {
+  .rounded-hero-card {
+    border-radius: var(--radius-hero-card);
+  }
+
+  .rounded-promo-card {
+    border-radius: var(--radius-promo-card);
+  }
+
+  .text-token-micro {
+    font-size: var(--font-size-micro);
+    line-height: var(--line-height-micro);
+  }
+
+  .text-token-xxs {
+    font-size: var(--font-size-xxs);
+    line-height: var(--line-height-xxs);
+  }
+
+  .text-token-brand-mark {
+    font-size: var(--font-size-brand-mark);
+    line-height: var(--font-size-brand-mark);
+  }
+
+  .text-token-brand-mark-compact {
+    font-size: var(--font-size-brand-mark-compact);
+    line-height: var(--font-size-brand-mark-compact);
+  }
+
+  .text-token-brand-sub {
+    font-size: var(--font-size-brand-sub);
+    line-height: var(--line-height-brand-sub);
+  }
+
+  .text-token-footer-brand {
+    font-size: var(--font-size-footer-brand);
+    line-height: var(--line-height-footer-brand);
+  }
+
+  .text-token-hero-title {
+    font-size: var(--font-size-hero-title);
+    line-height: var(--line-height-hero-title);
+  }
+
+  .text-token-promo-sale {
+    font-size: var(--font-size-fluid-promo);
+  }
+
+  .text-token-brand-sale {
+    font-size: var(--font-size-fluid-brand);
+  }
+
+  .tracking-token-tight-logo {
+    letter-spacing: var(--tracking-tight-logo);
+  }
+
+  .tracking-token-tight-title {
+    letter-spacing: var(--tracking-tight-title);
+  }
+
+  .tracking-token-03 {
+    letter-spacing: var(--tracking-03);
+  }
+
+  .tracking-token-12 {
+    letter-spacing: var(--tracking-12);
+  }
+
+  .tracking-token-14 {
+    letter-spacing: var(--tracking-14);
+  }
+
+  .tracking-token-15 {
+    letter-spacing: var(--tracking-15);
+  }
+
+  .tracking-token-16 {
+    letter-spacing: var(--tracking-16);
+  }
+
+  .tracking-token-18 {
+    letter-spacing: var(--tracking-18);
+  }
+
+  .tracking-token-24 {
+    letter-spacing: var(--tracking-24);
+  }
+
+  .tracking-token-32 {
+    letter-spacing: var(--tracking-32);
+  }
+
+  .tracking-token-35 {
+    letter-spacing: var(--tracking-35);
+  }
+
+  .leading-token-tight-display {
+    line-height: 0.95;
+  }
+
+  .leading-token-hero-title {
+    line-height: var(--line-height-hero-title);
+  }
+
+  .bg-search-right-highlight {
+    background-image: radial-gradient(circle at center, rgb(var(--color-premium-blue) / 0.12), transparent 68%);
+  }
+
+  .bg-search-top-highlight {
+    background-image: linear-gradient(90deg, transparent, rgb(var(--color-pop-pink) / 0.55), transparent);
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .bg-hero-radial-field {
+    background-image: var(--gradient-hero-radial-field);
+  }
+
+  .bg-hero-panel-flash {
+    background-image: var(--gradient-hero-panel-flash);
+  }
+
+  .bg-hero-panel-editorial {
+    background-image: var(--gradient-hero-panel-editorial);
+  }
+
+  .bg-hero-panel-new {
+    background-image: var(--gradient-hero-panel-new);
+  }
+
+  .bg-hero-panel-luxury {
+    background-image: var(--gradient-hero-panel-luxury);
+  }
+
+  .bg-hero-panel-member {
+    background-image: var(--gradient-hero-panel-member);
+  }
+
+  .bg-hero-overlay-flash {
+    background-image: var(--gradient-hero-overlay-flash);
+  }
+
+  .bg-hero-overlay-editorial {
+    background-image: var(--gradient-hero-overlay-editorial);
+  }
+
+  .bg-hero-overlay-new {
+    background-image: var(--gradient-hero-overlay-new);
+  }
+
+  .bg-hero-overlay-luxury {
+    background-image: var(--gradient-hero-overlay-luxury);
+  }
+
+  .bg-hero-overlay-member {
+    background-image: var(--gradient-hero-overlay-member);
+  }
+
+  .bg-promo-overlay-top-offer {
+    background-image: var(--gradient-promo-overlay-top-offer);
+  }
+
+  .bg-promo-overlay-bundle-edit {
+    background-image: var(--gradient-promo-overlay-bundle-edit);
+  }
+
+  .bg-promo-radial-top-offer {
+    background-image: var(--gradient-promo-radial-top-offer);
+  }
+
+  .bg-promo-radial-bundle-edit {
+    background-image: var(--gradient-promo-radial-bundle-edit);
+  }
+
+  .bg-brand-spotlight-overlay {
+    background-image: var(--gradient-brand-spotlight-overlay);
+  }
+
+  .bg-brand-spotlight-radial {
+    background-image: var(--gradient-brand-spotlight-radial);
+  }
+
+  .bg-hero-luxury-ink {
+    background-color: rgb(var(--color-hero-luxury-ink));
+  }
+
+  .text-hero-luxury-ink {
+    color: rgb(var(--color-hero-luxury-ink));
+  }
+
+  .border-hero-luxury-ink {
+    border-color: rgb(var(--color-hero-luxury-ink));
+  }
+}

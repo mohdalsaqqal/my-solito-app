@@ -1,4 +1,6 @@
-import { ReactNode, useEffect, useRef, useState } from 'react'
+"use client"
+
+import React, { ReactNode, useEffect, useRef, useState } from 'react'
 import { Platform, View, ViewStyle } from 'react-native'
 import { motionDuration, motionEasing } from '@real/tokens'
 
@@ -9,7 +11,7 @@ type RevealOnScrollProps = {
   style?: ViewStyle
 }
 
-export function RevealOnScroll({
+export const RevealOnScroll = React.memo(function RevealOnScroll({
   children,
   delayMs = 0,
   liftY = 10,
@@ -70,5 +72,4 @@ export function RevealOnScroll({
       {children}
     </View>
   )
-}
-
+})

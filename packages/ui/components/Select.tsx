@@ -1,8 +1,11 @@
-import { useState } from 'react'
+"use client"
+
+import React, { useState } from 'react'
 import { Modal, Platform, Pressable, ScrollView, View } from 'react-native'
-import { borderWidth, colors, radius, spacing } from '@real/tokens'
+import { borderWidth, radius, spacing } from '@real/tokens'
 import { Text } from '../primitives'
 import { Icon } from './Icon'
+import { useThemeColors } from '../responsive'
 
 export type SelectOption = {
   label: string
@@ -16,7 +19,8 @@ type SelectProps = {
   placeholder?: string
 }
 
-export function Select({ value, onChange, options, placeholder = 'Select…' }: SelectProps) {
+export const Select = React.memo(function Select({ value, onChange, options, placeholder = 'Select…' }: SelectProps) {
+  const c = useThemeColors()
   const [open, setOpen] = useState(false)
   const selected = options.find((o) => o.value === value)
   const isWeb = Platform.OS === 'web'
@@ -29,9 +33,9 @@ export function Select({ value, onChange, options, placeholder = 'Select…' }: 
   const OptionList = (
     <View
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: c.surface,
         borderWidth: borderWidth.thin,
-        borderColor: colors.border,
+        borderColor: c.border,
         borderRadius: radius.md,
         overflow: 'hidden',
       }}
@@ -46,7 +50,7 @@ export function Select({ value, onChange, options, placeholder = 'Select…' }: 
               style={{
                 paddingHorizontal: spacing.md,
                 paddingVertical: spacing.sm,
-                backgroundColor: isSelected ? colors.backgroundSecondary : colors.surface,
+                backgroundColor: isSelected ? c.backgroundSecondary : c.surface,
               }}
             >
               <Text
@@ -76,9 +80,9 @@ export function Select({ value, onChange, options, placeholder = 'Select…' }: 
           paddingHorizontal: spacing.md,
           paddingVertical: spacing.sm,
           borderWidth: borderWidth.thin,
-          borderColor: open ? colors.textPrimary : colors.border,
+          borderColor: open ? c.textPrimary : c.border,
           borderRadius: radius.md,
-          backgroundColor: colors.surface,
+          backgroundColor: c.surface,
         }}
       >
         <Text
@@ -87,7 +91,7 @@ export function Select({ value, onChange, options, placeholder = 'Select…' }: 
         >
           {selected?.label ?? placeholder}
         </Text>
-        <Icon name='more' size={14} color={colors.textMuted} />
+        <Icon name='more' size={14} color={c.textMuted} />
       </Pressable>
 
       {/* Web: inline dropdown */}
@@ -117,7 +121,7 @@ export function Select({ value, onChange, options, placeholder = 'Select…' }: 
           <Pressable
             style={{
               flex: 1,
-              backgroundColor: colors.black,
+              backgroundColor: c.black,
               opacity: 0.5,
             }}
             onPress={() => setOpen(false)}
@@ -136,4 +140,4 @@ export function Select({ value, onChange, options, placeholder = 'Select…' }: 
       ) : null}
     </View>
   )
-}
+})

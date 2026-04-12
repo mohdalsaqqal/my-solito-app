@@ -1,12 +1,15 @@
 import { ReactNode } from 'react'
 import { Platform, Pressable, PressableProps, StyleProp, ViewStyle } from 'react-native'
 import { opacity, motion } from '@real/tokens'
+import { cn } from '../reusables/lib/utils'
 
+// Phase 1 migration shim: this keeps the repo's legacy press/link API stable
+// while aligning web interaction behavior with the RNR/Uniwind stack. Do not
+// expand this wrapper with new app-specific semantics unless the RNR contract
+// cannot express them.
 type TouchableProps = Omit<PressableProps, 'children'> & {
   children?: ReactNode | ((state: { pressed: boolean; hovered: boolean; focused: boolean }) => ReactNode)
-  disabledOpacity?: number
-  pressedOpacity?: number
-  hoveredOpacity?: number
+  className?: string
   href?: string
   target?: string
   rel?: string
@@ -17,9 +20,7 @@ export function Touchable({
   children,
   disabled,
   style,
-  disabledOpacity = opacity.disabled,
-  pressedOpacity = opacity.medium,
-  hoveredOpacity = opacity.high,
+  className,
   href,
   target,
   rel,
@@ -43,14 +44,22 @@ export function Touchable({
   return (
     <Pressable
       disabled={disabled}
+      className={cn(
+        Platform.OS === 'web' &&
+          'outline-none transition-[opacity,transform] focus-visible:ring-[4px] focus-visible:ring-ring/70 focus-visible:ring-offset-2',
+        Platform.OS === 'web' && !href && 'cursor-pointer',
+        Platform.OS === 'web' && href && 'cursor-pointer no-underline',
+        disabled && Platform.OS === 'web' && 'pointer-events-none cursor-default',
+        className,
+      )}
       {...webInteractionProps}
       style={(state) => {
         const dynamicOpacity = disabled
-          ? disabledOpacity
+          ? opacity.disabled
           : state.pressed
-            ? pressedOpacity
+            ? opacity.medium
             : state.hovered
-              ? hoveredOpacity
+              ? opacity.high
               : 1
 
         const baseStyle: ViewStyle & { transitionProperty?: string; transitionDuration?: string; transitionTimingFunction?: string } = {

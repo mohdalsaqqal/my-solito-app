@@ -5,12 +5,19 @@ import http from 'node:http'
 import request from 'supertest'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
-import { POST } from './route'
+import { fileURLToPath } from 'node:url'
+import { POST } from './route.ts'
 
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
+const APPS_NEXT_ROOT = path.resolve(TEST_DIR, '../../../..')
+const STORAGE_DIR = path.join(APPS_NEXT_ROOT, '.tmp')
 const CART_FILE = path.join(STORAGE_DIR, 'mock-cart.json')
 const QUOTE_FILE = path.join(STORAGE_DIR, 'mock-pricing-quotes.json')
 const PROMOTIONS_FILE = path.join(STORAGE_DIR, 'mock-promotions.json')
+const DATA_DIR = path.join(APPS_NEXT_ROOT, '.data')
+const PROGRAM_FILE = path.join(DATA_DIR, 'referral-program-store.json')
+const PROFILE_FILE = path.join(DATA_DIR, 'referral-profile-store.json')
+const TEST_PRODUCT_ID = '76959'
 
 async function setCart(items) {
   await fs.mkdir(STORAGE_DIR, { recursive: true })
@@ -20,6 +27,8 @@ async function setCart(items) {
 async function cleanup() {
   await fs.rm(QUOTE_FILE, { force: true })
   await fs.rm(PROMOTIONS_FILE, { force: true })
+  await fs.rm(PROGRAM_FILE, { force: true })
+  await fs.rm(PROFILE_FILE, { force: true })
 }
 
 async function seedPromotions() {
@@ -84,12 +93,12 @@ function createServer() {
 test('POST /api/checkout/quote returns quote and totals', { concurrency: false }, async () => {
   await cleanup()
   await seedPromotions()
-  await setCart([{ productId: '1', quantity: 2 }])
+  await setCart([{ productId: TEST_PRODUCT_ID, quantity: 2 }])
   const server = createServer()
 
   const response = await request(server)
     .post('/api/checkout/quote')
-    .send({ fulfillment: { mode: 'delivery' } })
+    .send({ fulfillment: { mode: 'delivery' }, items: [{ productId: TEST_PRODUCT_ID, quantity: 2 }] })
 
   assert.equal(response.status, 200)
   assert.equal(response.body.success, true)
@@ -101,18 +110,59 @@ test('POST /api/checkout/quote returns quote and totals', { concurrency: false }
 test('POST /api/checkout/quote applies coupon required promo', { concurrency: false }, async () => {
   await cleanup()
   await seedPromotions()
-  await setCart([{ productId: '1', quantity: 2 }])
+  await setCart([{ productId: TEST_PRODUCT_ID, quantity: 2 }])
   const server = createServer()
 
   const withoutCoupon = await request(server)
     .post('/api/checkout/quote')
-    .send({ fulfillment: { mode: 'delivery' } })
+    .send({ fulfillment: { mode: 'delivery' }, items: [{ productId: TEST_PRODUCT_ID, quantity: 2 }] })
 
   const withCoupon = await request(server)
     .post('/api/checkout/quote')
-    .send({ fulfillment: { mode: 'delivery' }, couponCode: 'SAVE5' })
+    .send({ fulfillment: { mode: 'delivery' }, couponCode: 'SAVE5', items: [{ productId: TEST_PRODUCT_ID, quantity: 2 }] })
 
   assert.equal(withoutCoupon.status, 200)
   assert.equal(withCoupon.status, 200)
   assert.equal(withCoupon.body.data.totals.appliedPromotion?.code, 'SAVE5')
+})
+
+test('POST /api/checkout/quote applies eligible referral code discount', { concurrency: false }, async () => {
+  await cleanup()
+  await seedPromotions()
+  await setCart([{ productId: TEST_PRODUCT_ID, quantity: 3 }])
+  const server = createServer()
+
+  const response = await request(server)
+    .post('/api/checkout/quote')
+    .send({
+      fulfillment: { mode: 'delivery' },
+      referralCode: 'GLOWWITHU1',
+      items: [{ productId: TEST_PRODUCT_ID, quantity: 3 }],
+    })
+
+  assert.equal(response.status, 200)
+  assert.equal(response.body.success, true)
+  assert.equal(response.body.data.referral.code, 'GLOWWITHU1')
+  assert.equal(response.body.data.referral.followerRewardType, 'percentage_discount')
+  assert.equal(typeof response.body.data.referral.followerDiscountAmount, 'number')
+  assert.equal(response.body.data.totals.finalTotal < response.body.data.totals.baseSubtotal + response.body.data.totals.shipping, true)
+})
+
+test('POST /api/checkout/quote rejects unapproved influencer-only referral code', { concurrency: false }, async () => {
+  await cleanup()
+  await seedPromotions()
+  await setCart([{ productId: TEST_PRODUCT_ID, quantity: 3 }])
+  const server = createServer()
+
+  const response = await request(server)
+    .post('/api/checkout/quote')
+    .send({
+      fulfillment: { mode: 'delivery' },
+      referralCode: 'SHAREU2',
+      items: [{ productId: TEST_PRODUCT_ID, quantity: 3 }],
+    })
+
+  assert.equal(response.status, 400)
+  assert.equal(response.body.success, false)
+  assert.equal(response.body.error.code, 'REFERRAL_PROFILE_NOT_APPROVED')
 })

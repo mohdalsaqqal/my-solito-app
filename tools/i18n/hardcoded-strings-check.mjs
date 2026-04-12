@@ -3,10 +3,12 @@ import path from 'node:path'
 
 const baselinePath = path.join(process.cwd(), 'tools', 'i18n', 'hardcoded-strings-baseline.json')
 const scanTargets = ['packages/app', 'apps/next', 'apps/expo']
-const allowedExtensions = new Set(['.ts', '.tsx', '.js', '.jsx'])
+const allowedExtensions = new Set(['.tsx', '.jsx'])
 const ignoredDirs = new Set(['node_modules', '.next', 'dist', '.git', '.expo'])
 const ignoredFileSuffixes = ['.test.ts', '.test.tsx']
-const detectionPattern = />([^<{]*[A-Za-z][^<{]*)<|placeholder=['"][A-Za-z][^'\"]*['"]/g
+const textNodePattern = /<[A-Za-z][^>]*>([^\n<{]*[A-Za-z][^\n<{]*)</g
+const fragmentTextPattern = /<>\s*([^\n<{]*[A-Za-z][^\n<{]*)\s*</g
+const placeholderPattern = /placeholder=['"][A-Za-z][^'\"]*['"]/g
 
 async function loadBaseline() {
   try {
@@ -53,13 +55,15 @@ async function collectViolations() {
   const violations = []
   for (const filePath of files) {
     const content = await fs.readFile(filePath, 'utf8')
-    detectionPattern.lastIndex = 0
-    let match = detectionPattern.exec(content)
-    while (match) {
-      const line = toLine(content, match.index)
-      const text = match[0].replace(/\s+/g, ' ').trim()
-      violations.push(`${path.relative(process.cwd(), filePath)}:${line}:${text}`)
-      match = detectionPattern.exec(content)
+    for (const pattern of [textNodePattern, fragmentTextPattern, placeholderPattern]) {
+      pattern.lastIndex = 0
+      let match = pattern.exec(content)
+      while (match) {
+        const line = toLine(content, match.index)
+        const text = match[0].replace(/\s+/g, ' ').trim()
+        violations.push(`${path.relative(process.cwd(), filePath)}:${line}:${text}`)
+        match = pattern.exec(content)
+      }
     }
   }
 

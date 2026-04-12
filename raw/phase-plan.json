@@ -1,0 +1,50 @@
+{
+  "phase_1": {
+    "name": "Real Cosmetics End-to-End Commerce Product",
+    "objective": "Deliver the full end-to-end commerce system for Real Cosmetics as a stable, branded, production-grade cosmetics marketplace",
+    "subphases": [
+      {"id": "1.1", "name": "Constitution and Spec Backfill"},
+      {"id": "1.2", "name": "Platform Architecture Baseline"},
+      {"id": "1.3", "name": "Shared UI System and Token Baseline"},
+      {"id": "1.4", "name": "CMS, Services, and Data Normalization"},
+      {"id": "1.5", "name": "Homepage Layout Engine Baseline"},
+      {"id": "1.6", "name": "Visual Redesign Foundation"},
+      {"id": "1.7", "name": "Homepage Redesign"},
+      {"id": "1.8", "name": "Storefront Discovery and Product Experience"},
+      {"id": "1.9", "name": "Commerce Core Flows"},
+      {"id": "1.10", "name": "Account and Retention Flows"},
+      {"id": "1.11", "name": "Pharmacist and Diagnostic/Test Flows"},
+      {"id": "1.12", "name": "Admin, CMS, Marketing, and Operations"},
+      {"id": "1.13", "name": "Mobile Parity"},
+      {"id": "1.14", "name": "Hardening and Release Readiness"}
+    ],
+    "exit_criteria": [
+      "Real Cosmetics works as a full end-to-end commerce product",
+      "Architecture is stable and spec-backed",
+      "Design language is implemented consistently",
+      "Critical storefront, commerce, account, pharmacist/test, admin, and mobile flows are production-ready",
+      "Phase 1 can serve as the stable baseline for Phase 2"
+    ]
+  },
+  "phase_2": {
+    "name": "SaaS Platform",
+    "objective": "Turn the Phase 1 commerce foundation into a reusable SaaS platform without changing or breaking the Real Cosmetics product",
+    "core_constraint": "Phase 2 must extend the system without changing the business behavior of Phase 1",
+    "subphases": [
+      {"id": "2.1", "name": "SaaS Constitution and Platform Scope"},
+      {"id": "2.2", "name": "Tenancy Model"},
+      {"id": "2.3", "name": "Product vs Platform Boundaries"},
+      {"id": "2.4", "name": "Branding and Configuration Layer"},
+      {"id": "2.5", "name": "Reusable Commerce Modules"},
+      {"id": "2.6", "name": "Platform Admin and Tenant Management"},
+      {"id": "2.7", "name": "Deployment, Packaging, and Environment Strategy"},
+      {"id": "2.8", "name": "Compatibility and Regression Safety"}
+    ],
+    "exit_criteria": [
+      "SaaS platform capabilities exist without breaking Phase 1",
+      "Real Cosmetics continues to run as the baseline tenant/product",
+      "Product-specific and platform-specific concerns are clearly separated",
+      "Platformization is spec-backed, migration-safe, and operationally coherent"
+    ]
+  }
+}

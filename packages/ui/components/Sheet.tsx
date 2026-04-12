@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { Modal, Pressable, View } from 'react-native'
-import { MotiView } from 'moti'
-import { colors, radius, spacing } from '@real/tokens'
+import { radius, spacing, opacity } from '@real/tokens'
+import { useThemeColors } from '../responsive'
 
 type SheetProps = {
   visible: boolean
@@ -10,13 +10,14 @@ type SheetProps = {
 }
 
 function SheetHandle() {
+  const c = useThemeColors()
   return (
     <View
       style={{
         width: 36,
         height: 4,
         borderRadius: radius.full,
-        backgroundColor: colors.border,
+        backgroundColor: c.border,
         alignSelf: 'center',
         marginBottom: spacing.md,
       }}
@@ -25,10 +26,11 @@ function SheetHandle() {
 }
 
 function SheetContent({ children }: { children?: ReactNode }) {
+  const c = useThemeColors()
   return (
     <View
       style={{
-        backgroundColor: colors.surface,
+        backgroundColor: c.surface,
         borderTopLeftRadius: radius.lg,
         borderTopRightRadius: radius.lg,
         paddingTop: spacing.sm,
@@ -42,11 +44,12 @@ function SheetContent({ children }: { children?: ReactNode }) {
 }
 
 function SheetRoot({ visible, onClose, children }: SheetProps) {
+  const c = useThemeColors()
   return (
     <Modal
       visible={visible}
       transparent
-      animationType='none'
+      animationType='slide'
       onRequestClose={onClose}
       statusBarTranslucent
     >
@@ -54,25 +57,17 @@ function SheetRoot({ visible, onClose, children }: SheetProps) {
       <Pressable
         onPress={onClose}
         style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: colors.black,
-          opacity: 0.5,
-        }}
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: c.black,
+  opacity: opacity.medium,
+}}
       />
       {/* Slide-up panel */}
-      <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <MotiView
-          from={{ translateY: 400 }}
-          animate={{ translateY: 0 }}
-          transition={{ type: 'timing', duration: 350 }}
-        >
-          {children}
-        </MotiView>
-      </View>
+      <View style={{ flex: 1, justifyContent: 'flex-end' }}>{children}</View>
     </Modal>
   )
 }

@@ -3,6 +3,9 @@ import { Platform, TextProps, TextStyle } from 'react-native'
 import { colors, fontFamilies, fontWeights, letterSpacing, lineHeights, typography } from '@real/tokens'
 import { Text as ReusableText } from '../reusables/text'
 
+// Phase 1 migration shim: preserve the legacy storefront text contract while the
+// app is migrated toward RNR-native component contracts. Do not add new variant
+// names here unless they map to a committed RNR end-state contract.
 type TextVariant =
   | 'display'
   | 'h1'
@@ -182,15 +185,6 @@ export function Text({
   const headingVariants: TextVariant[] = ['h1', 'h2', 'headline', 'title', 'subtitle']
   const utilityVariants: TextVariant[] = ['label', 'overline', 'meta', 'nav', 'caption']
   const commerceValueVariants: TextVariant[] = ['price']
-  const isArabicWeb =
-    Platform.OS === 'web' &&
-    typeof document !== 'undefined' &&
-    (document.documentElement.lang === 'ar' || document.documentElement.lang.startsWith('ar-'))
-
-  const arabicHeadingFont =
-    'var(--font-tajawal, "Tajawal"), var(--font-cairo, "Cairo"), -apple-system, system-ui, sans-serif'
-  const arabicBodyFont =
-    'var(--font-almarai, "Almarai"), var(--font-cairo, "Cairo"), -apple-system, system-ui, sans-serif'
 
   const defaultFontFamily = displayVariants.includes(variant)
     ? fontFamilies.display
@@ -201,12 +195,11 @@ export function Text({
       : utilityVariants.includes(variant)
         ? fontFamilies.secondary
       : fontFamilies.sans
-  const fontFamily = isArabicWeb
-    ? (displayVariants.includes(variant) || headingVariants.includes(variant) ? arabicHeadingFont : arabicBodyFont)
-    : defaultFontFamily
+  const fontFamily = defaultFontFamily
 
   return (
     <ReusableText
+      variant='default'
       style={[
         {
           color: toneColor(tone),

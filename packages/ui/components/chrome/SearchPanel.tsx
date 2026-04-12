@@ -1,8 +1,10 @@
+import React from 'react'
 import { Image, Modal, Platform, Pressable } from 'react-native'
-import { borderWidth, colors, motionDuration, motionEasing, radius, shadows, spacing, zIndex } from '@real/tokens'
-import { Box, Divider, Text, Touchable } from '../../primitives'
+import { borderWidth, motionDuration, motionEasing, radius, shadows, spacing, zIndex } from '@real/tokens'
+import { Box, Divider, Text } from '../../primitives'
 import { Card } from '../Card'
 import { Icon } from '../Icon'
+import { useThemeColors } from '../../responsive'
 
 type SearchItem = {
   id: string
@@ -58,7 +60,7 @@ type SearchPanelProps = {
   }
 }
 
-export function SearchPanel({
+export const SearchPanel = React.memo(function SearchPanel({
   open,
   query,
   panelRegionId,
@@ -81,6 +83,7 @@ export function SearchPanel({
   onClearRecents,
   copy,
 }: SearchPanelProps) {
+  const c = useThemeColors()
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -157,8 +160,8 @@ export function SearchPanel({
         style={{
           borderRadius: radius.xs,
           borderWidth: borderWidth.thin,
-          borderColor: colors.border,
-          backgroundColor: colors.surface,
+          borderColor: c.border,
+          backgroundColor: c.surface,
           overflow: 'hidden',
           ...(shadows.md as object),
           maxHeight: spacing.xxl * 11,
@@ -177,7 +180,7 @@ export function SearchPanel({
                 {titleTrending}
               </Text>
               {trendingSearches.map((item) => (
-                <Touchable
+                <Pressable
                   key={item}
                   onPress={() => onSelectRecent(item)}
                   accessibilityRole='button'
@@ -189,18 +192,18 @@ export function SearchPanel({
                     minHeight: spacing['48'],
                     paddingHorizontal: spacing['16'],
                     borderRadius: radius.xs,
-                    backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
+                    backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                     transitionProperty: 'background-color',
                     transitionDuration: `${motionDuration.microInteraction}ms`,
                     transitionTimingFunction: motionEasing.standard,
                   })}
                 >
-                  <Icon name='trending' size={spacing['16']} color={colors.textSecondary} />
+                  <Icon name='trending' size={spacing['16']} color={c.textSecondary} />
                   <Text variant='bodySm' style={{ flex: 1 }}>
                     {item}
                   </Text>
-                  <Icon name='trendArrow' size={spacing['16']} color={colors.textSecondary} />
-                </Touchable>
+                  <Icon name='trendArrow' size={spacing['16']} color={c.textSecondary} />
+                </Pressable>
               ))}
             </Box>
 
@@ -216,7 +219,7 @@ export function SearchPanel({
                 </Text>
               ) : (
                 popularBrandsDisplay.map((brand) => (
-                  <Touchable
+                  <Pressable
                     key={brand}
                     onPress={() => onSelectRecent(brand)}
                     accessibilityRole='button'
@@ -226,14 +229,14 @@ export function SearchPanel({
                       justifyContent: 'center',
                       paddingHorizontal: spacing['16'],
                       borderRadius: radius.xs,
-                      backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
+                      backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
                       transitionDuration: `${motionDuration.microInteraction}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
                     <Text variant='bodySm'>{brand}</Text>
-                  </Touchable>
+                  </Pressable>
                 ))
               )}
             </Box>
@@ -246,11 +249,11 @@ export function SearchPanel({
                   {titleRecent}
                 </Text>
                 {recents.length > 0 ? (
-                  <Touchable onPress={onClearRecents}>
+                  <Pressable onPress={onClearRecents}>
                     <Text variant='caption' tone='primary'>
                       {clearLabel}
                     </Text>
-                  </Touchable>
+                  </Pressable>
                 ) : null}
               </Box>
               {recents.length === 0 ? (
@@ -259,7 +262,7 @@ export function SearchPanel({
                 </Text>
               ) : (
                 recents.slice(0, compact ? 3 : recents.length).map((recentQuery) => (
-                  <Touchable
+                  <Pressable
                     key={recentQuery}
                     onPress={() => onSelectRecent(recentQuery)}
                     accessibilityRole='button'
@@ -269,14 +272,14 @@ export function SearchPanel({
                       justifyContent: 'center',
                       paddingHorizontal: spacing['16'],
                       borderRadius: radius.xs,
-                      backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
+                      backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
                       transitionDuration: `${motionDuration.microInteraction}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
                     <Text variant='bodySm'>{recentQuery}</Text>
-                  </Touchable>
+                  </Pressable>
                 ))
               )}
             </Box>
@@ -293,7 +296,7 @@ export function SearchPanel({
                 </Text>
               ) : (
                 termSuggestions.slice(0, compact ? 5 : 7).map((item) => (
-                  <Touchable
+                  <Pressable
                     key={item.id}
                     onPress={() => onSelectSuggestion(item)}
                     accessibilityRole='button'
@@ -307,16 +310,16 @@ export function SearchPanel({
                       paddingHorizontal: spacing['16'],
                       borderRadius: radius.xs,
                       borderBottomWidth: borderWidth.thin,
-                      borderColor: colors.border,
-                      backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
+                      borderColor: c.border,
+                      backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
                       transitionDuration: `${motionDuration.microInteraction}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
-                    <Icon name='search' size={spacing.md} color={colors.textSecondary} />
+                    <Icon name='search' size={spacing.md} color={c.textSecondary} />
                     <Text variant='body'>{item.label}</Text>
-                  </Touchable>
+                  </Pressable>
                 ))
               )}
             </Box>
@@ -333,7 +336,7 @@ export function SearchPanel({
                 </Text>
               ) : (
                 productSuggestions.slice(0, compact ? 5 : 7).map((item) => (
-                  <Touchable
+                  <Pressable
                     key={item.id}
                     onPress={() => onSelectSuggestion(item)}
                     accessibilityRole='button'
@@ -348,8 +351,8 @@ export function SearchPanel({
                       paddingHorizontal: spacing['16'],
                       borderRadius: radius.xs,
                       borderBottomWidth: borderWidth.thin,
-                      borderColor: colors.border,
-                      backgroundColor: hovered || focused ? colors.backgroundSecondary : 'transparent',
+                      borderColor: c.border,
+                      backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
                       transitionDuration: `${motionDuration.microInteraction}ms`,
                       transitionTimingFunction: motionEasing.standard,
@@ -364,9 +367,10 @@ export function SearchPanel({
                             height: spacing.xxl + spacing['16'],
                             borderRadius: radius.xs,
                             borderWidth: borderWidth.thin,
-                            borderColor: colors.border,
-                            backgroundColor: colors.backgroundSecondary,
+                            borderColor: c.border,
+                            backgroundColor: c.backgroundSecondary,
                           }}
+                          {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                         />
                       ) : (
                         <Box
@@ -375,8 +379,8 @@ export function SearchPanel({
                             height: spacing.xxl + spacing['16'],
                             borderRadius: radius.xs,
                             borderWidth: borderWidth.thin,
-                            borderColor: colors.border,
-                            backgroundColor: colors.backgroundSecondary,
+                            borderColor: c.border,
+                            backgroundColor: c.backgroundSecondary,
                           }}
                         />
                       )}
@@ -406,7 +410,7 @@ export function SearchPanel({
                         </Text>
                       ) : null}
                     </Box>
-                  </Touchable>
+                  </Pressable>
                 ))
               )}
             </Box>
@@ -433,4 +437,4 @@ export function SearchPanel({
   }
 
   return panelContent
-}
+})

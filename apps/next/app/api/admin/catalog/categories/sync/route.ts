@@ -6,13 +6,11 @@ import {
   slugify,
   AdminCategoryRecord,
 } from '../../../../_lib/admin-catalog-store'
-import { generatedMockProductRows } from '@real/adapters/mock/product/generated-mock-erp-data'
+import { productProvider } from '@real/providers'
 
-// Source row shape — real sources may also carry subcategory / path fields
+// Source row shape sourced from the product provider.
 type SourceRow = {
   category?: string
-  subcategory?: string   // optional second-level field (e.g. "moisturizers")
-  subsubcategory?: string // optional third-level field (e.g. "serums")
   image?: string
 }
 
@@ -41,17 +39,16 @@ function labelsFor(slug: string): { en: string; ar: string } {
 /**
  * Derives a list of category paths from product rows.
  *
- * Supported source shapes (auto-detected):
+ * Supported source shapes:
  *  1. category = "skincare"                       → ["skincare"]
  *  2. category = "skincare/moisturizers"          → ["skincare", "skincare/moisturizers"]
- *  3. category = "skincare", subcategory = "moisturizers"
- *                                                 → ["skincare", "skincare/moisturizers"]
- *  4. category + subcategory + subsubcategory     → 3-level path
  *
  * Returns a map of fullPath → { productCount, image }.
  * Parent paths get productCount = 0 when first auto-created (updated by children later).
  */
-function derivePathsFromProducts(): Map<string, { productCount: number; image?: string }> {
+function derivePathsFromProducts(
+  products: SourceRow[]
+): Map<string, { productCount: number; image?: string }> {
   const paths = new Map<string, { productCount: number; image?: string }>()
 
   const bump = (path: string, image?: string, countLeaf = false) => {
@@ -61,7 +58,7 @@ function derivePathsFromProducts(): Map<string, { productCount: number; image?: 
     paths.set(path, existing)
   }
 
-  for (const row of generatedMockProductRows as SourceRow[]) {
+  for (const row of products) {
     if (!row.category) continue
 
     const segments: string[] = []
@@ -70,10 +67,8 @@ function derivePathsFromProducts(): Map<string, { productCount: number; image?: 
       // Pattern 2: path string already encoded in category field
       segments.push(...row.category.split('/').map((s) => s.trim()).filter(Boolean))
     } else {
-      // Patterns 1, 3, 4: separate fields
+      // Pattern 1: single top-level category slug
       segments.push(row.category.trim())
-      if (row.subcategory?.trim()) segments.push(row.subcategory.trim())
-      if (row.subsubcategory?.trim()) segments.push(row.subsubcategory.trim())
     }
 
     // Ensure every ancestor path node exists (not counted as leaf)
@@ -95,12 +90,15 @@ export async function POST(request: Request) {
     const session = requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
-    const pathMap = derivePathsFromProducts()
+    const productsResult = await productProvider.list()
+    if (!productsResult.ok) return fail(productsResult.error.code, productsResult.error.message, 500)
+
+    const pathMap = derivePathsFromProducts(productsResult.data)
     const state = await readAdminCatalogState()
     const now = new Date().toISOString()
 
     // Sort paths so parents are always processed before children
-    const sortedPaths = [...pathMap.keys()].sort((a, b) => {
+    const sortedPaths = Array.from(pathMap.keys()).sort((a, b) => {
       const depthA = a.split('/').length
       const depthB = b.split('/').length
       return depthA !== depthB ? depthA - depthB : a.localeCompare(b)

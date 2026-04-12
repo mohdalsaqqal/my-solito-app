@@ -1,112 +1,97 @@
 import { Product, ProductProvider, ProductFilter } from '@real/providers/contracts'
+import { generatedMockProductRows } from './generated-mock-erp-data'
+import { buildCanonicalMetadata } from '../_shared/canonical-mapper'
 
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Yves Saint Laurent - Libre Berry Crush Eau De Parfum',
-    description: 'Floral berry fragrance.',
-    price: 42,
-    currency: 'USD',
-    image:
-      'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1200&h=1500&q=85',
-    rating: 4.8,
-    reviews: 212,
-    isNew: true,
-    stock: 15,
-    brand: 'yves-saint-laurent',
-    category: 'makeup',
-    manualRelatedIds: ['3', '4'],
-    crossSellIds: ['5'],
-    completeSetIds: ['3', '4', '5'],
-  },
-  {
-    id: '2',
-    name: 'IGK - Expensive Hi-Shine Gloss Treatment',
-    description: 'High-shine treatment for dull hair.',
-    price: 28,
-    currency: 'USD',
-    image:
-      'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=1200&h=1500&q=85',
-    rating: 4.5,
-    reviews: 98,
-    stock: 0,
-    brand: 'igk',
-    category: 'haircare',
-    manualRelatedIds: ['3'],
-    crossSellIds: ['6'],
-    completeSetIds: ['2', '6'],
-  },
-  {
-    id: '3',
-    name: 'Fenty Beauty - Gloss Bomb Stix High-Shine Gloss Stick',
-    description: 'Hydrating high-shine color.',
-    price: 24,
-    currency: 'USD',
-    image:
-      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=1200&h=1500&q=85',
-    rating: 4.7,
-    reviews: 184,
-    stock: 9,
-    brand: 'fenty-beauty',
-    category: 'makeup',
-    manualRelatedIds: ['4', '5'],
-    crossSellIds: ['1'],
-    completeSetIds: ['3', '4', '5'],
-  },
-  {
-    id: '4',
-    name: 'Huda Beauty - Faux Filler Extra Shine Lip Gloss',
-    description: 'Volumizing gloss finish.',
-    price: 21,
-    currency: 'USD',
-    image:
-      'https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=1200&h=1500&q=85',
-    rating: 4.4,
-    reviews: 142,
-    isLimited: true,
-    stock: 2,
-    brand: 'huda-beauty',
-    category: 'makeup',
-    manualRelatedIds: ['3', '5'],
-    crossSellIds: ['1'],
-    completeSetIds: ['3', '4', '5'],
-  },
-  {
-    id: '5',
-    name: 'Dior - Addict Lip Glow Oil Berry',
-    description: 'Tinted lip oil with shine.',
-    price: 34,
-    currency: 'USD',
-    image:
-      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=1200&h=1500&q=85',
-    rating: 4.9,
-    reviews: 301,
-    isLimited: true,
-    stock: 1,
-    brand: 'dior',
-    category: 'makeup',
-    manualRelatedIds: ['3', '4'],
-    crossSellIds: ['1'],
-    completeSetIds: ['3', '4', '5'],
-  },
-  {
-    id: '6',
-    name: 'Rare Beauty - Soft Pinch Tinted Lip Oil',
-    description: 'Lightweight oil tint.',
-    price: 22,
-    currency: 'USD',
-    image:
-      'https://images.unsplash.com/photo-1631214524020-3d3736ee2f53?auto=format&fit=crop&w=1200&h=1500&q=85',
-    rating: 4.3,
-    reviews: 77,
-    stock: 0,
-    brand: 'rare-beauty',
-    category: 'makeup',
-    manualRelatedIds: ['3', '4'],
-    crossSellIds: ['2'],
-    completeSetIds: ['2', '6'],
-  },
-]
+type SourceProductRow = {
+  id: string
+  name: string
+  description?: string
+  price: number
+  currency: string
+  image?: string
+  rating?: number
+  reviews?: number
+  isNew?: boolean
+  isLimited?: boolean
+  stock?: number
+  brand?: string
+  category?: string
+  manualRelatedIds?: string[]
+  crossSellIds?: string[]
+  completeSetIds?: string[]
+  external_product_id: string
+  vendor_sku: string
+  erp_line_code: string
+  inventory_bin?: string
+  formulation_family?: string
+  shelf_life_months?: number
+  compliance_tags?: string[]
+  price_band?: 'entry' | 'mid' | 'premium'
+  source_csv_item_id?: string
+  source_row_number?: number
+  meta_title?: string
+  meta_description?: string
+  key_features?: string[]
+  how_to_use?: string
+  seo_keywords?: string[]
+  product_tags?: string[]
+  csv_brand_label?: string
+  brand_confidence?: 'high' | 'low'
+}
+
+const sourceProducts: SourceProductRow[] = generatedMockProductRows as SourceProductRow[]
+
+const canonicalProductKeys = [
+  'id',
+  'name',
+  'description',
+  'price',
+  'currency',
+  'image',
+  'rating',
+  'reviews',
+  'isNew',
+  'isLimited',
+  'stock',
+  'brand',
+  'category',
+  'manualRelatedIds',
+  'crossSellIds',
+  'completeSetIds',
+] as const
+
+function toCanonicalProduct(row: SourceProductRow): Product {
+  const metadata = buildCanonicalMetadata({
+    row: row as unknown as Record<string, unknown>,
+    canonicalKeys: canonicalProductKeys,
+    system: 'mock-erp',
+    table: 'products',
+    schemaVersion: '2026-03-15',
+    externalIdField: 'external_product_id',
+  })
+
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    price: row.price,
+    currency: row.currency,
+    image: row.image,
+    rating: row.rating,
+    reviews: row.reviews,
+    isNew: row.isNew,
+    isLimited: row.isLimited,
+    stock: row.stock,
+    brand: row.brand,
+    category: row.category,
+    manualRelatedIds: row.manualRelatedIds,
+    crossSellIds: row.crossSellIds,
+    completeSetIds: row.completeSetIds,
+    ...metadata,
+  }
+}
+
+const mockProducts = sourceProducts.map(toCanonicalProduct)
 
 function normalizeSet(values?: string[]) {
   if (!values || values.length === 0) return null

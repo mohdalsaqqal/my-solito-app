@@ -23,6 +23,11 @@ export const layout = {
   // Mobile:        2 cols, 16px gutter, 16px margin  → page content = viewport − 32px
   // Desktop-1280: 12 cols, 32px gutter, 112px margin → content area = 1056px
   // Desktop-1920: 12 cols, 30px gutter, 240px margin → content area = 1440px
+  figmaCanvas: {
+    mobile: 320,
+    desktop1440: 1440,
+    dashboard1920: 1920,
+  },
   figmaGrid: {
     mobile:        { columns: 2,  gutter: 16, margin: 16  },
     desktop1280:   { columns: 12, gutter: 32, margin: 112 },
@@ -30,8 +35,9 @@ export const layout = {
   },
 
   // Content-area max widths derived from Figma grid margins
-  containerMaxWidth:        1440, // 1920 − (240 × 2) — widest Figma content area
+  containerMaxWidth:        1440, // storefront shell max width
   containerMaxWidthNarrow:  1056, // 1280 − (112 × 2) — standard Figma content area
+  containerMaxWidthWide:    1440, // 1920 − (240 × 2) — wide desktop content area
   containerPaddingX: 16,          // Figma mobile margin
 
   admin: {
@@ -43,7 +49,7 @@ export const layout = {
   },
   maxWidth: {
     editorial: 1280,
-    commerce: 1200,
+    commerce: 1440,
     account: 1120,
     cart: 960,
     checkout: 1100,
@@ -69,8 +75,10 @@ export const layout = {
   },
   header: {
     topBarHeight: 28,
-    mainRowHeight: 64,
-    navRowHeight: 40,
+    mainRowHeight: 72,
+    navRowHeight: 44,
+    mobileExpandedHeight: 156,
+    mobileStickyHeight: 56,
   },
 } as const
 

@@ -6,9 +6,8 @@ import {
   slugify,
   AdminBrandRecord,
 } from '../../../../_lib/admin-catalog-store'
-import { generatedMockProductRows } from '@real/adapters/mock/product/generated-mock-erp-data'
-
-type SourceRow = { brand?: string; csv_brand_label?: string }
+import { brandProvider, productProvider } from '@real/providers'
+import type { Brand, Product } from '@real/providers/contracts'
 
 function formatBrandName(slug: string, label?: string): string {
   if (label?.trim()) return label.trim()
@@ -19,16 +18,18 @@ function formatBrandName(slug: string, label?: string): string {
     .join(' ')
 }
 
-function deriveFromProducts(): Array<{ slug: string; nameEn: string; productCount: number }> {
+function deriveFromProducts(
+  products: Product[],
+  namesBySlug: Map<string, string>
+): Array<{ slug: string; nameEn: string; productCount: number }> {
   const grouped = new Map<string, { label?: string; productCount: number }>()
-  for (const row of generatedMockProductRows as SourceRow[]) {
+  for (const row of products) {
     if (!row.brand) continue
-    const current = grouped.get(row.brand) ?? { label: row.csv_brand_label, productCount: 0 }
-    current.label ||= row.csv_brand_label
+    const current = grouped.get(row.brand) ?? { label: namesBySlug.get(row.brand), productCount: 0 }
     current.productCount += 1
     grouped.set(row.brand, current)
   }
-  return [...grouped.entries()].map(([slug, entry]) => ({
+  return Array.from(grouped.entries()).map(([slug, entry]) => ({
     slug,
     nameEn: formatBrandName(slug, entry.label),
     productCount: entry.productCount,
@@ -40,7 +41,14 @@ export async function POST(request: Request) {
     const session = requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
-    const derived = deriveFromProducts()
+    const [brandsResult, productsResult] = await Promise.all([brandProvider.list(), productProvider.list()])
+    if (!brandsResult.ok) return fail(brandsResult.error.code, brandsResult.error.message, 500)
+    if (!productsResult.ok) return fail(productsResult.error.code, productsResult.error.message, 500)
+
+    const namesBySlug = new Map<string, string>(
+      brandsResult.data.map((brand: Brand) => [brand.slug, brand.name.en])
+    )
+    const derived = deriveFromProducts(productsResult.data, namesBySlug)
     const state = await readAdminCatalogState()
     const now = new Date().toISOString()
     let created = 0

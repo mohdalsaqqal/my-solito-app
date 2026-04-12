@@ -4,10 +4,10 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import test from 'node:test'
 
-import { radius } from './radius.ts'
-import { shadows } from './shadows.ts'
-import { elevation } from './elevation.ts'
-import { typography, fontFamilies, fontWeights, lineHeights } from './typography.ts'
+import { radius } from './radius'
+import { shadows } from './shadows'
+import { elevation } from './elevation'
+import { typography, fontFamilies, fontWeights, lineHeights } from './typography'
 
 // ── Radius ────────────────────────────────────────────────────────────────────
 

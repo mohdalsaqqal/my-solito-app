@@ -4,3 +4,4 @@ export default function AccountTestsPage() {
   redirect('/account?tab=tests')
 }
 
+

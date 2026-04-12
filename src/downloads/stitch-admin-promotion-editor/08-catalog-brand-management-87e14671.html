@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Catalog Brand Management - Real Cosmetics</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">tailwind.config = {darkMode: "class", theme: {extend: {colors: {primary: "#000000", "background-light": "#f7f7f7", "background-dark": "#191919"}, fontFamily: {display: "Inter"}, borderRadius: {DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px"}}}};</script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar (260px) -->
+<aside class="w-[260px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col fixed h-full z-20">
+<div class="p-6 flex items-center gap-3 border-b border-slate-100 dark:border-slate-800">
+<div class="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div>
+<h1 class="font-bold text-slate-900 dark:text-white leading-tight">Real Cosmetics</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">Admin System</p>
+</div>
+</div>
+<nav class="flex-1 p-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg" href="#">
+<span class="material-symbols-outlined text-[22px]">book_2</span>
+<span class="text-sm font-medium">Catalog</span>
+</a>
+<div class="ml-9 space-y-1 mt-1">
+<a class="block px-3 py-1.5 text-sm text-slate-500 hover:text-primary" href="#">Products</a>
+<a class="block px-3 py-1.5 text-sm font-semibold text-primary border-l-2 border-primary" href="#">Brands</a>
+<a class="block px-3 py-1.5 text-sm text-slate-500 hover:text-primary" href="#">Categories</a>
+</div>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">shopping_cart</span>
+<span class="text-sm font-medium">Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">group</span>
+<span class="text-sm font-medium">Customers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-100 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2">
+<div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+<div class="w-full h-full bg-gradient-to-tr from-primary to-blue-400" data-alt="User avatar profile picture"></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium truncate">Alex Admin</p>
+<p class="text-xs text-slate-500 truncate">Store Manager</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[20px]">logout</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[260px]">
+<!-- Sticky Header -->
+<header class="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+<div class="max-w-[1120px] mx-auto px-6 h-16 flex items-center justify-between">
+<div class="flex flex-col">
+<nav class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+<a class="hover:text-primary" href="#">Catalog</a>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-medium text-slate-900 dark:text-slate-100">Brands</span>
+</nav>
+<h2 class="text-lg font-bold text-slate-900 dark:text-white leading-none">Brand Management</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-sm shadow-primary/20">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                            Add Brand
+                        </button>
+</div>
+</div>
+</header>
+<!-- Page Container -->
+<div class="max-w-[1120px] mx-auto p-6 space-y-6">
+<!-- Action Row / Filters (Section 8.1) -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search brands by name..." type="text"/>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<div class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 min-w-[140px]">
+<span class="material-symbols-outlined text-slate-400 text-[20px]">filter_list</span>
+<select class="bg-transparent border-none text-sm font-medium focus:ring-0 p-0 w-full cursor-pointer">
+<option>Status: All</option>
+<option>Active</option>
+<option>Inactive</option>
+</select>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700">
+<span class="material-symbols-outlined text-[20px]">download</span>
+                            Export
+                        </button>
+</div>
+</div>
+<!-- Table Container -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<tr>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Brand Details</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Products</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Added Date</th>
+<th class="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Brand 1 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-2 border border-slate-200 dark:border-slate-700">
+<div class="w-full h-full bg-slate-400 opacity-20" data-alt="Luxe Glow minimalist brand logo"></div>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Luxe Glow</p>
+<p class="text-xs text-slate-500">Premium Skincare</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">142 items</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Oct 12, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Brand 2 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-2 border border-slate-200 dark:border-slate-700">
+<div class="w-full h-full bg-slate-400 opacity-20" data-alt="Pure Essence natural cosmetics logo"></div>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Pure Essence</p>
+<p class="text-xs text-slate-500">Organic Makeup</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">89 items</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Sep 28, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Brand 3 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-2 border border-slate-200 dark:border-slate-700">
+<div class="w-full h-full bg-slate-400 opacity-20" data-alt="Velvet Touch luxury hair care logo"></div>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Velvet Touch</p>
+<p class="text-xs text-slate-500">Hair Care</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">56 items</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        Inactive
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Aug 15, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Brand 4 -->
+<tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors group">
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center p-2 border border-slate-200 dark:border-slate-700">
+<div class="w-full h-full bg-slate-400 opacity-20" data-alt="Silk Road fragrance brand logo"></div>
+</div>
+<div>
+<p class="font-semibold text-slate-900 dark:text-white">Silk Road</p>
+<p class="text-xs text-slate-500">Fragrance</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4">
+<span class="text-sm font-medium">210 items</span>
+</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Active
+                                    </span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-500">Jul 02, 2023</td>
+<td class="px-6 py-4 text-right">
+<button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded transition-colors text-slate-400 hover:text-slate-600">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination (Footer of Table) -->
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<p class="text-xs text-slate-500">Showing 1 to 4 of 24 brands</p>
+<div class="flex items-center gap-2">
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="px-3 py-1 bg-primary text-white text-xs font-bold rounded-lg">1</button>
+<button class="px-3 py-1 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 text-xs font-bold rounded-lg">2</button>
+<button class="px-3 py-1 text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800 text-xs font-bold rounded-lg">3</button>
+<button class="p-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Footer Summary Info -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">verified</span>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Total Brands</p>
+<p class="text-2xl font-bold">24</p>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">inventory_2</span>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 uppercase tracking-wider">Live Products</p>
+<p class="text-2xl font-bold">1,842</p>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">trending_up</span>
+</div>
+<div>
+<p class="text-xs font-medium text-slate-500 uppercase tracking-wider">New this month</p>
+<p class="text-2xl font-bold">+3</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

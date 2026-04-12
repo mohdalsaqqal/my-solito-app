@@ -12,17 +12,20 @@ import {
 import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
 import { apiClient } from '../../apiClient'
 import {
+  AdminCommandBar,
+  AdminPanelHeader,
   Button,
   EmptyState,
   Field,
+  InlineLoading,
+  MetricList,
   PageContainer,
-  PageHeader,
   Panel,
-  Section,
   SelectInput,
   StatusPill,
   TableShell,
   TextInput,
+  WorkspaceLayout,
 } from './AdminPagePrimitives'
 
 type EntityType = 'products' | 'orders' | 'inventory' | 'vendors'
@@ -41,7 +44,9 @@ type BulkAction = {
 }
 
 type AdminEntityListPageProps<T extends { id: string }> = {
+  eyebrow?: string
   title: string
+  subtitle?: string
   entity: EntityType
   defaultColumns: string[]
   filters: FilterConfig[]
@@ -54,30 +59,53 @@ type AdminEntityListPageProps<T extends { id: string }> = {
   onExportJob?: () => Promise<void>
   pageActions?: ReactNode
   detailPanel?: ReactNode
+  detailPanelPlacement?: 'rail' | 'main'
   refreshKey?: string | number
-  rowStatus?: (row: T) => { tone: 'neutral' | 'success' | 'warning' | 'danger'; label: string } | null
-  /** Slot rendered above the auto-generated filter row (e.g. pill tabs, collapse toggle) */
+  rowStatus?: (
+    row: T,
+  ) => {
+    tone: 'neutral' | 'success' | 'warning' | 'danger'
+    label: string
+  } | null
   filterHeaderSlot?: ReactNode
-  /** When true, the auto-generated filter row is hidden until revealed by the consumer */
   hideAutoFilters?: boolean
+  summaryCards?: ReactNode
 }
 
 function statusTone(value?: string) {
   if (!value) return 'neutral' as const
   const normalized = value.toLowerCase()
-  if (normalized.includes('active') || normalized.includes('paid') || normalized.includes('fulfilled')) {
+  if (
+    normalized.includes('active') ||
+    normalized.includes('paid') ||
+    normalized.includes('fulfilled') ||
+    normalized.includes('approved')
+  ) {
     return 'success' as const
   }
-  if (normalized.includes('draft') || normalized.includes('pending') || normalized.includes('low')) {
+  if (
+    normalized.includes('draft') ||
+    normalized.includes('pending') ||
+    normalized.includes('low') ||
+    normalized.includes('hold')
+  ) {
     return 'warning' as const
   }
-  if (normalized.includes('cancel') || normalized.includes('reject') || normalized.includes('fail')) {
+  if (
+    normalized.includes('cancel') ||
+    normalized.includes('reject') ||
+    normalized.includes('fail') ||
+    normalized.includes('archive')
+  ) {
     return 'danger' as const
   }
   return 'neutral' as const
 }
 
-function resolveCapability(capabilities: CommerceCapabilities | null, path?: string) {
+function resolveCapability(
+  capabilities: CommerceCapabilities | null,
+  path?: string,
+) {
   if (!path || !capabilities) return true
   const parts = path.split('.').filter(Boolean)
   let current: unknown = capabilities
@@ -88,9 +116,17 @@ function resolveCapability(capabilities: CommerceCapabilities | null, path?: str
   return current === true
 }
 
-export function AdminEntityListPage<T extends { id: string }>(props: AdminEntityListPageProps<T>) {
+function entityLabel(input: string) {
+  return input.charAt(0).toUpperCase() + input.slice(1)
+}
+
+export function AdminEntityListPage<T extends { id: string }>(
+  props: AdminEntityListPageProps<T>,
+) {
   const {
+    eyebrow,
     title,
+    subtitle,
     entity,
     defaultColumns,
     filters,
@@ -103,11 +139,14 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
     onExportJob,
     pageActions,
     detailPanel,
+    detailPanelPlacement = 'rail',
     refreshKey,
     rowStatus,
     filterHeaderSlot,
     hideAutoFilters,
+    summaryCards,
   } = props
+
   const uiText = {
     columns: 'Columns',
     saveView: 'Save View',
@@ -118,17 +157,31 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
     descending: 'Descending',
     ascending: 'Ascending',
     all: 'All',
-    loadingTitle: 'Loading...',
-    loadingDescription: 'Fetching current page rows from server.',
+    loadingTitle: 'Loading workspace',
+    loadingDescription: 'Fetching the latest records from the admin layer.',
     emptyTitle: 'No results',
-    emptyDescription: 'Adjust filters or change search keywords.',
+    emptyDescription: 'Adjust filters, search terms, or saved views to widen the result set.',
     state: 'State',
     actions: 'Actions',
     previous: 'Previous',
     next: 'Next',
     selected: 'selected',
-    showingRecords: (count: number) => `Showing ${count} records`,
+    searchPlaceholder: `Search ${entity}...`,
+    controlsTitle: 'List controls',
+    controlsSubtitle:
+      'Tune saved views, filters, sort order, and visible fields without leaving the operational lane.',
+    tableTitle: `${entityLabel(entity)} queue`,
+    tableSubtitle:
+      'Use bulk actions for background work and open the right-side workspace for record-level intervention.',
+    visibilityTitle: 'Visible columns',
+    visibilitySubtitle:
+      'Show only the fields operators need for the current task.',
+    listStatus: (count: number) => `${count.toLocaleString()} records in the current page`,
+    resultsMeta: (selectedCount: number, views: number) =>
+      `${selectedCount.toLocaleString()} selected - ${views.toLocaleString()} saved views`,
+    savedViewActive: 'Saved view active',
   }
+
   const [rows, setRows] = useState<T[]>([])
   const [pageInfo, setPageInfo] = useState<AdminPagedResponse<T>['pageInfo']>({
     hasNextPage: false,
@@ -145,7 +198,9 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
   const [savedViews, setSavedViews] = useState<AdminSavedView[]>([])
   const [selectedViewId, setSelectedViewId] = useState('')
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-  const [capabilities, setCapabilities] = useState<CommerceCapabilities | null>(null)
+  const [capabilities, setCapabilities] = useState<CommerceCapabilities | null>(
+    null,
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -154,12 +209,16 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
 
   const selectedCount = useMemo(
     () => Object.values(selectedIds).filter(Boolean).length,
-    [selectedIds]
+    [selectedIds],
   )
 
   const allFields = useMemo(() => {
     if (!registry) return []
-    return [...registry.coreFields, ...registry.computedFields, ...registry.customFields]
+    return [
+      ...registry.coreFields,
+      ...registry.computedFields,
+      ...registry.customFields,
+    ]
   }, [registry])
 
   useEffect(() => {
@@ -177,7 +236,11 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
       })
       .catch((cause) => {
         if (cancelled) return
-        setError(cause instanceof Error ? cause.message : 'Unable to load table configuration.')
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Unable to load table configuration.',
+        )
       })
     return () => {
       cancelled = true
@@ -204,7 +267,9 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
       })
       .catch((cause) => {
         if (cancelled) return
-        setError(cause instanceof Error ? cause.message : 'Unable to load rows.')
+        setError(
+          cause instanceof Error ? cause.message : 'Unable to load rows.',
+        )
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -213,7 +278,17 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
     return () => {
       cancelled = true
     }
-  }, [activeFilters, cursor, fetchRows, refreshKey, search, selectedViewId, sortDirection, sortKey, visibleColumns])
+  }, [
+    activeFilters,
+    cursor,
+    fetchRows,
+    refreshKey,
+    search,
+    selectedViewId,
+    sortDirection,
+    sortKey,
+    visibleColumns,
+  ])
 
   const onNext = () => {
     if (!pageInfo.hasNextPage || !pageInfo.endCursor) return
@@ -231,13 +306,17 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
     })
   }
 
+  const resetPagination = () => {
+    setCursor(undefined)
+    setCursorHistory([])
+  }
+
   const toggleColumn = (key: string) => {
     setVisibleColumns((prev) => {
       if (prev.includes(key)) return prev.filter((entry) => entry !== key)
       return [...prev, key]
     })
-    setCursor(undefined)
-    setCursorHistory([])
+    resetPagination()
   }
 
   const toggleRow = (id: string) => {
@@ -268,7 +347,10 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
     }
     try {
       const created = await apiClient.admin.upsertSavedView(view)
-      setSavedViews((prev) => [created, ...prev.filter((entry) => entry.id !== created.id)])
+      setSavedViews((prev) => [
+        created,
+        ...prev.filter((entry) => entry.id !== created.id),
+      ])
       setSelectedViewId(created.id)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Unable to save view.')
@@ -285,8 +367,7 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
       setSortKey(view.sort.key)
       setSortDirection(view.sort.direction)
     }
-    setCursor(undefined)
-    setCursorHistory([])
+    resetPagination()
   }
 
   const runBulkAction = async (actionKey: string) => {
@@ -300,7 +381,9 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
       await onBulkAction(actionKey, ids)
       setSelectedIds({})
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to run bulk action.')
+      setError(
+        cause instanceof Error ? cause.message : 'Unable to run bulk action.',
+      )
     } finally {
       setWorkingActionKey(null)
     }
@@ -312,250 +395,343 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
     try {
       await onExportJob()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Unable to create export job.')
+      setError(
+        cause instanceof Error ? cause.message : 'Unable to create export job.',
+      )
     } finally {
       setExportingJob(false)
     }
   }
 
-  return (
-    <PageContainer>
-      <PageHeader
-        title={title}
-        actions={
-          <>
-            {pageActions}
-            <Button tone='secondary' onClick={() => setPickerOpen((prev) => !prev)}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
-                <Settings2 size={14} color={colors.textSecondary} />
-                {uiText.columns}
-              </span>
-            </Button>
-            <Button tone='secondary' onClick={saveView}>
-              {uiText.saveView}
-            </Button>
-          </>
-        }
-      />
-      {error ? <p style={{ marginTop: 0, color: colors.danger }}>{error}</p> : null}
-
-      <Section>
-        <Panel density='dense'>
-          <div
+  const commandActions = (
+    <>
+      {pageActions}
+      <Button tone='secondary' onClick={() => setPickerOpen((prev) => !prev)}>
+        <span
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: spacing['8'],
+          }}
+        >
+          <Settings2 size={14} color={colors.textSecondary} />
+          {uiText.columns}
+        </span>
+      </Button>
+      <Button tone='secondary' onClick={saveView}>
+        {uiText.saveView}
+      </Button>
+      {onExportJob ? (
+        <Button tone='secondary' onClick={() => void runExportJob()} disabled={exportingJob}>
+          <span
             style={{
-              borderBottom: `1px solid ${colors.border}`,
-              paddingBottom: spacing['16'],
-              marginBottom: spacing['16'],
-              display: 'grid',
-              gap: spacing['12'],
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: spacing['8'],
             }}
           >
-            <div
+            <Download size={14} color={colors.textSecondary} />
+            {exportingJob ? 'Creating Job...' : uiText.exportJob}
+          </span>
+        </Button>
+      ) : null}
+    </>
+  )
+
+  const controlPanel = (
+    <Panel tone='brand'>
+      <AdminPanelHeader
+        title={uiText.controlsTitle}
+        subtitle={uiText.controlsSubtitle}
+      />
+      <div style={{ display: 'grid', gap: spacing['16'] }}>
+        <div
+          style={{
+            display: 'grid',
+            gap: spacing['12'],
+            gridTemplateColumns: 'minmax(0, 1.4fr) repeat(3, minmax(160px, 0.7fr))',
+          }}
+        >
+          <div style={{ position: 'relative', minWidth: 0 }}>
+            <Search
+              size={16}
+              color={colors.textSecondary}
               style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: spacing['12'],
+                position: 'absolute',
+                insetInlineStart: 12,
+                top: 12,
+              }}
+            />
+            <input
+              className='admin-focus-ring'
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                resetPagination()
+              }}
+              placeholder={uiText.searchPlaceholder}
+              style={{
+                width: '100%',
+                minHeight: spacing['40'],
+                borderRadius: radius.xl,
+                border: `1px solid ${colors.border}`,
+                backgroundColor: colors.surface,
+                color: colors.textPrimary,
+                paddingInlineStart: spacing['32'] + spacing['8'],
+                paddingInlineEnd: spacing['12'],
+                fontSize: typography.sm,
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <Field label='Saved view'>
+            <SelectInput
+              value={selectedViewId}
+              onChange={(event) => applyView(event.target.value)}
+            >
+              <option value=''>{uiText.noSavedView}</option>
+              {savedViews.map((view) => (
+                <option key={view.id} value={view.id}>
+                  {view.name}
+                </option>
+              ))}
+            </SelectInput>
+          </Field>
+
+          <Field label={uiText.sort}>
+            <SelectInput
+              value={sortKey}
+              onChange={(event) => {
+                setSortKey(event.target.value)
+                resetPagination()
               }}
             >
-              <div style={{ position: 'relative', width: '100%', maxWidth: 320 }}>
-                <Search
-                  size={16}
-                  color={colors.textSecondary}
-                  style={{ position: 'absolute', insetInlineStart: 12, top: 12 }}
-                />
-                <input
-                  value={search}
-                  onChange={(event) => {
-                    setSearch(event.target.value)
-                    setCursor(undefined)
-                    setCursorHistory([])
-                  }}
-                  placeholder={`Search ${entity}...`}
-                  style={{
-                    width: '100%',
-                    minHeight: spacing['40'],
-                    borderRadius: radius.xl,
-                    border: `1px solid ${colors.border}`,
-                    backgroundColor: colors.surface,
-                    color: colors.textPrimary,
-                    paddingInlineStart: spacing['32'] + spacing['8'],
-                    paddingInlineEnd: spacing['12'],
-                    fontSize: typography.sm,
-                    outline: 'none',
-                  }}
-                />
-              </div>
+              {allFields
+                .filter((field) => field.sortable)
+                .map((field) => (
+                  <option key={field.key} value={field.key}>
+                    {field.label}
+                  </option>
+                ))}
+            </SelectInput>
+          </Field>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-                <SelectInput
-                  value={selectedViewId}
-                  onChange={(event) => applyView(event.target.value)}
-                  style={{ width: 220 }}
-                >
-                  <option value=''>{uiText.noSavedView}</option>
-                  {savedViews.map((view) => (
-                    <option key={view.id} value={view.id}>
-                      {view.name}
-                    </option>
-                  ))}
-                </SelectInput>
-                <Button tone='secondary' onClick={() => void runExportJob()} disabled={exportingJob}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
-                    <Download size={14} color={colors.textSecondary} />
-                    {exportingJob ? 'Creating Job...' : uiText.exportJob}
-                  </span>
-                </Button>
-              </div>
+          <Field label={uiText.direction}>
+            <SelectInput
+              value={sortDirection}
+              onChange={(event) => {
+                setSortDirection(event.target.value as 'asc' | 'desc')
+                resetPagination()
+              }}
+            >
+              <option value='desc'>{uiText.descending}</option>
+              <option value='asc'>{uiText.ascending}</option>
+            </SelectInput>
+          </Field>
+        </div>
+
+        {filterHeaderSlot ? filterHeaderSlot : null}
+
+        {!hideAutoFilters ? (
+          <div
+            style={{
+              display: 'grid',
+              gap: spacing['10'],
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            }}
+          >
+            {filters.map((filter) => {
+              if (filter.type === 'boolean') {
+                const checked = activeFilters[filter.key] === true
+                return (
+                  <label
+                    key={filter.key}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: spacing['8'],
+                      minHeight: spacing['40'],
+                      color: colors.textSecondary,
+                      fontSize: typography.sm,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radius.xl,
+                      backgroundColor: colors.surface,
+                      padding: `${spacing['10']}px ${spacing['12']}px`,
+                    }}
+                  >
+                    <input
+                      type='checkbox'
+                      className='admin-focus-ring'
+                      checked={checked}
+                      onChange={(event) => {
+                        setActiveFilters((prev) => ({
+                          ...prev,
+                          [filter.key]: event.target.checked || undefined,
+                        }))
+                        resetPagination()
+                      }}
+                    />
+                    <Filter size={14} />
+                    {filter.label}
+                  </label>
+                )
+              }
+
+              return (
+                <Field key={filter.key} label={filter.label}>
+                  {filter.type === 'select' ? (
+                    <SelectInput
+                      value={String(activeFilters[filter.key] ?? '')}
+                      onChange={(event) => {
+                        const nextValue = event.target.value || undefined
+                        setActiveFilters((prev) => ({
+                          ...prev,
+                          [filter.key]: nextValue,
+                        }))
+                        resetPagination()
+                      }}
+                    >
+                      <option value=''>{uiText.all}</option>
+                      {filter.options?.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </SelectInput>
+                  ) : (
+                    <TextInput
+                      value={String(activeFilters[filter.key] ?? '')}
+                      onChange={(event) => {
+                        const nextValue = event.target.value || undefined
+                        setActiveFilters((prev) => ({
+                          ...prev,
+                          [filter.key]: nextValue,
+                        }))
+                        resetPagination()
+                      }}
+                    />
+                  )}
+                </Field>
+              )
+            })}
+          </div>
+        ) : null}
+
+        {pickerOpen ? (
+          <div
+            style={{
+              border: `1px solid ${colors.border}`,
+              borderRadius: radius.xl,
+              backgroundColor: colors.surface,
+              padding: spacing['12'],
+              display: 'grid',
+              gap: spacing['10'],
+            }}
+          >
+            <div style={{ display: 'grid', gap: spacing['4'] }}>
+              <span
+                style={{
+                  color: colors.textPrimary,
+                  fontSize: typography.sm,
+                  fontWeight: Number(fontWeights.semibold),
+                }}
+              >
+                {uiText.visibilityTitle}
+              </span>
+              <span
+                style={{
+                  color: colors.textSecondary,
+                  fontSize: typography.xs,
+                }}
+              >
+                {uiText.visibilitySubtitle}
+              </span>
             </div>
-
-            {filterHeaderSlot ? filterHeaderSlot : null}
-
-            {!hideAutoFilters ? (
             <div
               style={{
                 display: 'grid',
                 gap: spacing['8'],
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                maxHeight: 240,
+                overflowY: 'auto',
               }}
             >
-              <Field label={uiText.sort}>
-                <SelectInput
-                  value={sortKey}
-                  onChange={(event) => {
-                    setSortKey(event.target.value)
-                    setCursor(undefined)
-                    setCursorHistory([])
+              {allFields.map((field) => (
+                <label
+                  key={field.key}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: spacing['8'],
+                    color: colors.textSecondary,
+                    fontSize: typography.sm,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: radius.lg,
+                    backgroundColor: colors.surfaceMuted,
+                    padding: `${spacing['10']}px ${spacing['12']}px`,
                   }}
                 >
-                  {allFields.filter((field) => field.sortable).map((field) => (
-                    <option key={field.key} value={field.key}>
-                      {field.label}
-                    </option>
-                  ))}
-                </SelectInput>
-              </Field>
-              <Field label={uiText.direction}>
-                <SelectInput
-                  value={sortDirection}
-                  onChange={(event) => {
-                    setSortDirection(event.target.value as 'asc' | 'desc')
-                    setCursor(undefined)
-                    setCursorHistory([])
-                  }}
-                >
-                  <option value='desc'>{uiText.descending}</option>
-                  <option value='asc'>{uiText.ascending}</option>
-                </SelectInput>
-              </Field>
-              {filters.map((filter) => {
-                if (filter.type === 'boolean') {
-                  const checked = activeFilters[filter.key] === true
-                  return (
-                    <label
-                      key={filter.key}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: spacing['8'],
-                        minHeight: spacing['40'],
-                        color: colors.textSecondary,
-                        fontSize: typography.sm,
-                        paddingTop: spacing['24'],
-                      }}
-                    >
-                      <input
-                        type='checkbox'
-                        checked={checked}
-                        onChange={(event) => {
-                          setActiveFilters((prev) => ({
-                            ...prev,
-                            [filter.key]: event.target.checked || undefined,
-                          }))
-                          setCursor(undefined)
-                          setCursorHistory([])
-                        }}
-                      />
-                      <Filter size={14} />
-                      {filter.label}
-                    </label>
-                  )
-                }
-
-                return (
-                  <Field key={filter.key} label={filter.label}>
-                    {filter.type === 'select' ? (
-                      <SelectInput
-                        value={String(activeFilters[filter.key] ?? '')}
-                        onChange={(event) => {
-                          const nextValue = event.target.value || undefined
-                          setActiveFilters((prev) => ({ ...prev, [filter.key]: nextValue }))
-                          setCursor(undefined)
-                          setCursorHistory([])
-                        }}
-                      >
-                        <option value=''>{uiText.all}</option>
-                        {filter.options?.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </SelectInput>
-                    ) : (
-                      <TextInput
-                        value={String(activeFilters[filter.key] ?? '')}
-                        onChange={(event) => {
-                          const nextValue = event.target.value || undefined
-                          setActiveFilters((prev) => ({ ...prev, [filter.key]: nextValue }))
-                          setCursor(undefined)
-                          setCursorHistory([])
-                        }}
-                      />
-                    )}
-                  </Field>
-                )
-              })}
+                  <input
+                    type='checkbox'
+                    className='admin-focus-ring'
+                    checked={visibleColumns.includes(field.key)}
+                    onChange={() => toggleColumn(field.key)}
+                  />
+                  {field.label}
+                </label>
+              ))}
             </div>
-            ) : null}
-
-            {pickerOpen ? (
-              <div
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radius.xl,
-                  backgroundColor: colors.surface,
-                  padding: spacing['12'],
-                  display: 'grid',
-                  gap: spacing['8'],
-                  maxHeight: 220,
-                  overflowY: 'auto',
-                }}
-              >
-                {allFields.map((field) => (
-                  <label
-                    key={field.key}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: spacing['8'],
-                      color: colors.textSecondary,
-                      fontSize: typography.sm,
-                    }}
-                  >
-                    <input
-                      type='checkbox'
-                      checked={visibleColumns.includes(field.key)}
-                      onChange={() => toggleColumn(field.key)}
-                    />
-                    {field.label}
-                  </label>
-                ))}
-              </div>
-            ) : null}
           </div>
+        ) : null}
+      </div>
+    </Panel>
+  )
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap', marginBottom: spacing['12'] }}>
+  const tablePanel = (
+    <Panel>
+      <AdminPanelHeader
+        title={uiText.tableTitle}
+        subtitle={uiText.tableSubtitle}
+        actions={
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing['8'],
+              flexWrap: 'wrap',
+            }}
+          >
+            <StatusPill tone='neutral'>{uiText.listStatus(rows.length)}</StatusPill>
+            <StatusPill tone={selectedCount > 0 ? 'warning' : 'neutral'}>
+              {uiText.resultsMeta(selectedCount, savedViews.length)}
+            </StatusPill>
+          </div>
+        }
+      />
+
+      <div style={{ display: 'grid', gap: spacing['16'] }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: spacing['12'],
+            flexWrap: 'wrap',
+            border: `1px solid ${colors.border}`,
+            borderRadius: radius.xl,
+            backgroundColor: colors.surfaceMuted,
+            padding: `${spacing['10']}px ${spacing['12']}px`,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing['8'],
+              flexWrap: 'wrap',
+            }}
+          >
             {bulkActions.map((action) => (
               <Button
                 key={action.key}
@@ -570,165 +746,244 @@ export function AdminEntityListPage<T extends { id: string }>(props: AdminEntity
                 {action.label}
               </Button>
             ))}
-            <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
-              {`${selectedCount} ${uiText.selected}`}
-            </span>
           </div>
+          <span
+            style={{
+              color: colors.textSecondary,
+              fontSize: typography.xs,
+            }}
+          >
+            {selectedCount.toLocaleString()} {uiText.selected}
+          </span>
+        </div>
 
-          {loading ? (
-            <EmptyState title={uiText.loadingTitle} description={uiText.loadingDescription} />
-          ) : rows.length === 0 ? (
-            <EmptyState title={uiText.emptyTitle} description={uiText.emptyDescription} />
-          ) : (
-            <>
-              <TableShell>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      <th
-                        style={{
-                          width: 40,
-                          height: spacing['48'],
-                          borderBottom: `1px solid ${colors.border}`,
-                          backgroundColor: colors.surfaceMuted,
-                        }}
-                      >
+        {loading ? (
+          <Panel density='dense'>
+            <InlineLoading label={uiText.loadingDescription} />
+          </Panel>
+        ) : rows.length === 0 ? (
+          <EmptyState
+            title={uiText.emptyTitle}
+            description={uiText.emptyDescription}
+          />
+        ) : (
+          <>
+            <TableShell
+              minHeight={520}
+              maxHeight='calc(100dvh - 300px)'
+            >
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                <thead>
+                  <tr>
+                    <th style={checkboxHeadCellStyle}>
+                      <input
+                        type='checkbox'
+                        className='admin-focus-ring'
+                        checked={rows.length > 0 && rows.every((row) => selectedIds[row.id])}
+                        onChange={toggleAllRows}
+                      />
+                    </th>
+                    {visibleColumns.map((column) => (
+                      <th key={column} style={headCellStyle}>
+                        {allFields.find((field) => field.key === column)?.label ?? column}
+                      </th>
+                    ))}
+                    {rowStatus ? <th style={headCellStyle}>{uiText.state}</th> : null}
+                    {rowActions ? <th style={headCellStyle}>{uiText.actions}</th> : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id}>
+                      <td style={checkboxCellStyle}>
                         <input
                           type='checkbox'
-                          checked={rows.length > 0 && rows.every((row) => selectedIds[row.id])}
-                          onChange={toggleAllRows}
+                          className='admin-focus-ring'
+                          checked={Boolean(selectedIds[row.id])}
+                          onChange={() => toggleRow(row.id)}
                         />
-                      </th>
+                      </td>
                       {visibleColumns.map((column) => (
-                        <th
-                          key={column}
-                          style={{
-                            height: spacing['48'],
-                            paddingInline: spacing['12'],
-                            textAlign: 'start',
-                            color: colors.textSecondary,
-                            fontSize: typography.xs,
-                            fontWeight: Number(fontWeights.medium),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                            borderBottom: `1px solid ${colors.border}`,
-                            backgroundColor: colors.surfaceMuted,
-                          }}
-                        >
-                          {allFields.find((field) => field.key === column)?.label ?? column}
-                        </th>
+                        <td key={column} style={bodyCellStyle}>
+                          {renderCell(row, column)}
+                        </td>
                       ))}
                       {rowStatus ? (
-                        <th
-                          style={{
-                            height: spacing['48'],
-                            paddingInline: spacing['12'],
-                            textAlign: 'start',
-                            color: colors.textSecondary,
-                            fontSize: typography.xs,
-                            fontWeight: Number(fontWeights.medium),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                            borderBottom: `1px solid ${colors.border}`,
-                            backgroundColor: colors.surfaceMuted,
-                          }}
-                        >
-                          {uiText.state}
-                        </th>
-                      ) : null}
-                      {rowActions ? (
-                        <th
-                          style={{
-                            height: spacing['48'],
-                            paddingInline: spacing['12'],
-                            textAlign: 'start',
-                            color: colors.textSecondary,
-                            fontSize: typography.xs,
-                            fontWeight: Number(fontWeights.medium),
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.06em',
-                            borderBottom: `1px solid ${colors.border}`,
-                            backgroundColor: colors.surfaceMuted,
-                          }}
-                        >
-                          {uiText.actions}
-                        </th>
-                      ) : null}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row) => (
-                      <tr key={row.id}>
-                        <td style={{ paddingInline: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                          <input
-                            type='checkbox'
-                            checked={Boolean(selectedIds[row.id])}
-                            onChange={() => toggleRow(row.id)}
-                          />
+                        <td style={bodyCellStyle}>
+                          {(() => {
+                            const status = rowStatus(row)
+                            if (!status) return null
+                            return (
+                              <StatusPill tone={status.tone ?? statusTone(status.label)}>
+                                {status.label}
+                              </StatusPill>
+                            )
+                          })()}
                         </td>
-                        {visibleColumns.map((column) => (
-                          <td
-                            key={column}
-                            style={{
-                              padding: spacing['12'],
-                              borderBottom: `1px solid ${colors.border}`,
-                              color: colors.textPrimary,
-                              fontSize: typography.sm,
-                            }}
-                          >
-                            {renderCell(row, column)}
-                          </td>
-                        ))}
-                        {rowStatus ? (
-                          <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                            {(() => {
-                              const status = rowStatus(row)
-                              if (!status) return null
-                              return (
-                                <StatusPill tone={status.tone ?? statusTone(status.label)}>
-                                  {status.label}
-                                </StatusPill>
-                              )
-                            })()}
-                          </td>
-                        ) : null}
-                        {rowActions ? (
-                          <td style={{ padding: spacing['12'], borderBottom: `1px solid ${colors.border}` }}>
-                            {rowActions(row)}
-                          </td>
-                        ) : null}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </TableShell>
+                      ) : null}
+                      {rowActions ? <td style={bodyCellStyle}>{rowActions(row)}</td> : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableShell>
 
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: spacing['12'],
-                  marginTop: spacing['12'],
-                }}
-              >
-                <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
-                  {uiText.showingRecords(rows.length)}
-                </span>
-                <div style={{ display: 'flex', gap: spacing['8'] }}>
-                  <Button tone='secondary' disabled={cursorHistory.length === 0} onClick={onPrevious}>
-                    {uiText.previous}
-                  </Button>
-                  <Button tone='secondary' disabled={!pageInfo.hasNextPage} onClick={onNext}>
-                    {uiText.next}
-                  </Button>
-                </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: spacing['12'],
+                flexWrap: 'wrap',
+              }}
+            >
+              <MetricList
+                rows={[
+                  {
+                    label: 'Visible fields',
+                    value: visibleColumns.length.toLocaleString(),
+                  },
+                  {
+                    label: 'Page records',
+                    value: rows.length.toLocaleString(),
+                  },
+                ]}
+              />
+              <div style={{ display: 'flex', gap: spacing['8'] }}>
+                <Button
+                  tone='secondary'
+                  disabled={cursorHistory.length === 0}
+                  onClick={onPrevious}
+                >
+                  {uiText.previous}
+                </Button>
+                <Button
+                  tone='secondary'
+                  disabled={!pageInfo.hasNextPage}
+                  onClick={onNext}
+                >
+                  {uiText.next}
+                </Button>
               </div>
-            </>
-          )}
+            </div>
+          </>
+        )}
+      </div>
+    </Panel>
+  )
+
+  const mainContent = (
+    <>
+      {controlPanel}
+      {tablePanel}
+      {detailPanel && detailPanelPlacement === 'main' ? detailPanel : null}
+    </>
+  )
+
+  return (
+    <PageContainer>
+      <AdminCommandBar
+        eyebrow={eyebrow ?? 'Operations Workspace'}
+        title={title}
+        subtitle={
+          subtitle ??
+          `Operate the ${entity} lane with saved views, structured filters, and a persistent right-side workspace.`
+        }
+        status={
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing['8'],
+              flexWrap: 'wrap',
+            }}
+          >
+            <StatusPill tone='neutral'>{entityLabel(entity)}</StatusPill>
+            <StatusPill tone={selectedCount > 0 ? 'warning' : 'neutral'}>
+              {selectedCount.toLocaleString()} selected
+            </StatusPill>
+            {selectedViewId ? (
+              <StatusPill tone='success'>{uiText.savedViewActive}</StatusPill>
+            ) : null}
+          </div>
+        }
+        actions={commandActions}
+      />
+
+      {error ? (
+        <Panel tone='danger'>
+          <div style={{ color: colors.danger, fontSize: typography.sm }}>{error}</div>
         </Panel>
-      </Section>
-      {detailPanel ? <Section>{detailPanel}</Section> : null}
+      ) : null}
+
+      {summaryCards ? <div style={{ marginBottom: spacing['24'] }}>{summaryCards}</div> : null}
+
+      <WorkspaceLayout
+        main={mainContent}
+        rail={
+          detailPanelPlacement === 'main' ? null : detailPanel ? (
+            <div style={{ display: 'grid', gap: spacing['20'] }}>{detailPanel}</div>
+          ) : (
+            <Panel>
+              <AdminPanelHeader
+                title='Workspace guidance'
+                subtitle='This lane supports saved views, bulk actions, and a focused record workspace when one is available.'
+              />
+              <MetricList
+                rows={[
+                  {
+                    label: 'Saved views',
+                    value: savedViews.length.toLocaleString(),
+                  },
+                  {
+                    label: 'Active filters',
+                    value: Object.values(activeFilters).filter(Boolean).length.toLocaleString(),
+                  },
+                  {
+                    label: 'Visible columns',
+                    value: visibleColumns.length.toLocaleString(),
+                  },
+                ]}
+              />
+            </Panel>
+          )
+        }
+      />
     </PageContainer>
   )
 }
+
+const headCellStyle = {
+  height: spacing['48'],
+  paddingInline: spacing['12'],
+  textAlign: 'start',
+  color: colors.textSecondary,
+  fontSize: typography.xs,
+  fontWeight: Number(fontWeights.medium),
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  borderBottom: `1px solid ${colors.border}`,
+  backgroundColor: colors.surfaceMuted,
+  position: 'sticky',
+  top: 0,
+  zIndex: 1,
+} as const
+
+const checkboxHeadCellStyle = {
+  ...headCellStyle,
+  width: 44,
+} as const
+
+const bodyCellStyle = {
+  padding: spacing['12'],
+  borderBottom: `1px solid ${colors.border}`,
+  color: colors.textPrimary,
+  fontSize: typography.sm,
+  verticalAlign: 'top',
+} as const
+
+const checkboxCellStyle = {
+  ...bodyCellStyle,
+  width: 44,
+  paddingInline: spacing['12'],
+} as const

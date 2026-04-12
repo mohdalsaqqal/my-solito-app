@@ -1,24 +1,33 @@
-import { Platform, useWindowDimensions } from 'react-native'
+import { Platform } from 'react-native'
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { borderWidth, breakpoints, colors, headerScrollShadow, layout, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, headerScrollShadow, layout, radius, spacing, zIndex } from '@real/tokens'
 import {
+  BottomNav,
   Box,
   CartDrawer,
-  CategoryRow,
-  HeaderMainRow,
+  Icon,
+  Input,
   MiniSearchBar,
   SearchOverlay,
   SearchPanel,
   Text,
-  Touchable,
-  TopPromoBar,
 } from '@real/ui'
-import { defaultQuickActions } from './defaults'
+import { Button as ReusableButton } from '@real/ui/reusables/button'
 import { SearchSuggestion } from './searchMock'
 import { useHeaderScroll } from './useHeaderScroll'
 import { useHeaderSearch } from './useHeaderSearch'
-import { CartLine, Direction, LocaleCode, NavItem, ShellContent } from './types'
-import { SocialLink } from './types'
+import { HeaderMegaMenu } from './HeaderMegaMenu'
+import {
+  CartLine,
+  Direction,
+  LocaleCode,
+  NavItem,
+  ShellContent,
+  ShellMegaMenuSection,
+  ShellMenuLink,
+  SocialLink,
+} from './types'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 
 type HeaderProps = {
   locale: LocaleCode
@@ -48,7 +57,22 @@ type HeaderProps = {
   onSearchSubmit?: (query: string) => void
   onLogoPress?: () => void
   onLocaleChange?: (nextLocale: LocaleCode) => void
+  onNativeCategoriesPress?: () => void
   onNativeAccountPress?: () => void
+}
+
+type LocalizedText = {
+  en: string
+  ar: string
+}
+
+type MenuAnalyticsPayload = {
+  key: string
+  kind: 'impression' | 'click'
+  zone: string
+  menuId?: string
+  itemId?: string
+  href?: string
 }
 
 function textForLocale(value: { en: string; ar: string } | undefined, locale: LocaleCode, fallback: string) {
@@ -58,14 +82,59 @@ function textForLocale(value: { en: string; ar: string } | undefined, locale: Lo
   return locale === 'ar' ? value.ar : value.en
 }
 
+function emitMenuAnalytics(payload: MenuAnalyticsPayload) {
+  if (Platform.OS !== 'web') {
+    return
+  }
+
+  const win = globalThis as {
+    dataLayer?: Array<Record<string, unknown>>
+    dispatchEvent?: (event: Event) => void
+    CustomEvent?: typeof CustomEvent
+  }
+
+  const eventName = payload.key
+  win.dataLayer?.push({
+    event: eventName,
+    analyticsType: 'menu',
+    kind: payload.kind,
+    zone: payload.zone,
+    menuId: payload.menuId,
+    itemId: payload.itemId,
+    href: payload.href,
+  })
+
+  if (typeof win.dispatchEvent === 'function' && typeof win.CustomEvent === 'function') {
+    win.dispatchEvent(
+      new win.CustomEvent('real-menu-analytics', {
+        detail: {
+          event: eventName,
+          analyticsType: 'menu',
+          kind: payload.kind,
+          zone: payload.zone,
+          menuId: payload.menuId,
+          itemId: payload.itemId,
+          href: payload.href,
+        },
+      }),
+    )
+  }
+}
+
 const ARABIC_LABELS = {
-  account: 'الحساب',
-  wishlist: 'المفضلة',
-  cart: 'السلة',
-  addedToCart: 'تمت الإضافة إلى السلة',
-  searchProducts: 'ابحث عن منتج',
-  searchProductsOrCategories: 'ابحث عن منتج أو فئة',
-  scopePrefix: 'تصفح',
+  account: '??????',
+  wishlist: '???????',
+  cart: '?????',
+  addedToCart: '??? ????? ?????? ??? ?????',
+  searchProducts: '???? ?? ????????',
+  searchProductsOrCategories: '???? ?? ???????? ?? ??????',
+  categories: '??????',
+  notifications: '?????????',
+  language: '?????',
+  deliveryTo: '??????? ???',
+  browseAll: '??? ????',
+  featuredBrands: '???????? ???????',
+  shopLuxury: '?????? ?????',
 }
 
 const ENGLISH_LABELS = {
@@ -75,7 +144,13 @@ const ENGLISH_LABELS = {
   addedToCart: 'Added to cart',
   searchProducts: 'Search products',
   searchProductsOrCategories: 'Search products or categories',
-  scopePrefix: 'Browsing',
+  categories: 'Categories',
+  notifications: 'Notifications',
+  language: 'Language',
+  deliveryTo: 'Deliver to',
+  browseAll: 'Browse all',
+  featuredBrands: 'Featured brands',
+  shopLuxury: 'Luxury products',
 }
 
 type MegaMenuGroup = {
@@ -125,6 +200,157 @@ const MEGA_MENU_DATA: Record<(typeof MEGA_MENU_CATEGORIES)[number]['id'], MegaMe
   ],
 }
 
+const MEGA_MENU_BRANDS: Record<(typeof MEGA_MENU_CATEGORIES)[number]['id'], string[]> = {
+  skincare: ['CeraVe', 'La Roche-Posay', 'The Ordinary', 'Bioderma', 'Av�ne'],
+  makeup: ['Maybelline', 'NYX', 'Huda Beauty', 'L�Or�al Paris', 'e.l.f.'],
+  hair: ['K�rastase', 'Olaplex', 'L�Or�al Professionnel', 'Mielle', 'Garnier'],
+  body: ['Sol de Janeiro', 'Nivea', 'Vaseline', 'Neutrogena', 'Dove'],
+  fragrance: ['Dior', 'YSL', 'Lattafa', 'Armaf', 'Carolina Herrera'],
+  'gift-sets': ['Laneige', 'Rare Beauty', 'Pixi', 'Bath & Body Works', 'Moroccanoil'],
+}
+
+const PRIMARY_BAR_LINKS: Array<{ id: string; href: string; label: LocalizedText; luxury?: boolean }> = [
+  { id: 'new-arrivals', href: '/shop/new', label: { en: 'New arrivals', ar: '??? ??????' } },
+  { id: 'best-selling', href: '/shop/best-sellers', label: { en: 'Best selling', ar: '?????? ??????' } },
+  { id: 'flash-offers', href: '/sales', label: { en: 'Flash offers %', ar: '???? ???? %' } },
+  { id: 'luxury', href: '/shop/luxury', label: { en: 'Luxury product', ar: '?????? ?????' }, luxury: true },
+] as const
+
+const SECONDARY_BAR_LINKS: Array<{ id: string; href: string; label: LocalizedText }> = [
+  { id: 'loyalty', href: '/account/loyalty', label: { en: 'Loyalty points', ar: '???? ??????' } },
+  { id: 'tests', href: '/account/tests', label: { en: 'Tests results', ar: '????? ????????' } },
+] as const
+
+const FALLBACK_HEADER_PRIMARY_LINKS: ShellMenuLink[] = PRIMARY_BAR_LINKS.map((item) => ({
+  id: item.id,
+  label: item.label.en,
+  href: item.href,
+  analytics: {
+    impressionKey: `menu.header_primary.${item.id}.impression`,
+    clickKey: `menu.header_primary.${item.id}.click`,
+  },
+  luxury: item.luxury,
+}))
+
+const FALLBACK_MEGA_MENU: {
+  analytics: { impressionKey: string; clickKey: string }
+  sections: ShellMegaMenuSection[]
+} = {
+  analytics: {
+    impressionKey: 'menu.header_mega_categories.impression',
+    clickKey: 'menu.header_mega_categories.click',
+  },
+  sections: MEGA_MENU_CATEGORIES.map((item) => ({
+    id: item.id,
+    label: item.label,
+    description:
+      item.id === 'skincare'
+        ? 'Serums, moisturizers, and SPF.'
+        : item.id === 'makeup'
+          ? 'Face, eye, and lip essentials.'
+          : item.id === 'hair'
+            ? 'Care, repair, and styling.'
+            : item.id === 'body'
+              ? 'Bath, hydration, and daily care.'
+              : item.id === 'fragrance'
+                ? 'Signature scents and travel sprays.'
+                : 'Ready-to-gift and seasonal sets.',
+    analytics: {
+      impressionKey: `menu.header_mega_categories.${item.id}.impression`,
+      clickKey: `menu.header_mega_categories.${item.id}.click`,
+    },
+    columns: (MEGA_MENU_DATA[item.id] ?? []).map((group) => ({
+      id: `${item.id}-${group.title.toLowerCase().replace(/\s+/g, '-')}`,
+      label: group.title,
+      analytics: {
+        impressionKey: `menu.header_mega_categories.${item.id}.${group.title.toLowerCase().replace(/\s+/g, '_')}.impression`,
+        clickKey: `menu.header_mega_categories.${item.id}.${group.title.toLowerCase().replace(/\s+/g, '_')}.click`,
+      },
+      children: group.links.map((link) => ({
+        id: `${item.id}-${link.toLowerCase().replace(/\s+/g, '-')}`,
+        label: link,
+        href: '/categories',
+        analytics: {
+          impressionKey: `menu.header_mega_categories.${item.id}.${link.toLowerCase().replace(/\s+/g, '_')}.impression`,
+          clickKey: `menu.header_mega_categories.${item.id}.${link.toLowerCase().replace(/\s+/g, '_')}.click`,
+        },
+      })),
+    })),
+    brandRail: {
+      title: 'Featured brands',
+      analytics: {
+        impressionKey: `menu.header_mega_categories.${item.id}.brands.impression`,
+        clickKey: `menu.header_mega_categories.${item.id}.brands.click`,
+      },
+      items: (MEGA_MENU_BRANDS[item.id] ?? []).map((brand) => ({
+        id: `${item.id}-${brand.toLowerCase().replace(/[\s']+/g, '-')}`,
+        label: brand,
+        href: `/shop?brands=${encodeURIComponent(brand.toLowerCase().replace(/[\s']+/g, '-'))}`,
+        analytics: {
+          impressionKey: `menu.header_mega_categories.${item.id}.${brand.toLowerCase().replace(/[\s']+/g, '_')}.impression`,
+          clickKey: `menu.header_mega_categories.${item.id}.${brand.toLowerCase().replace(/[\s']+/g, '_')}.click`,
+        },
+      })),
+    },
+  })),
+}
+
+function DesktopIconButton({
+  icon,
+  label,
+  count,
+  onPress,
+  active = false,
+}: {
+  icon: 'account' | 'wishlist' | 'cart' | 'notification' | 'categories'
+  label: string
+  count?: number
+  onPress?: () => void
+  active?: boolean
+}) {
+  const c = useThemeColors()
+  return (
+    <ReusableButton onPress={onPress} variant='ghost' size='icon' accessibilityLabel={label}>
+      <Box
+        style={{
+          width: 44,
+          height: 44,
+          borderRadius: radius.sm,
+          backgroundColor: active ? c.surfaceMuted : c.surface,
+          borderWidth: borderWidth.thin,
+          borderColor: active ? c.textPrimary : c.divider,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Box style={{ position: 'relative', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name={icon} size={20} color={c.textPrimary} weight={active ? 'fill' : 'regular'} />
+          {typeof count === 'number' && count > 0 ? (
+            <Box
+              style={{
+                position: 'absolute',
+                top: -8,
+                end: -10,
+                minWidth: 18,
+                height: 18,
+                borderRadius: radius.full,
+                backgroundColor: c.brandPrimary,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: spacing['4'],
+              }}
+            >
+              <Text variant='meta' tone='inverse' weight='700'>
+                {count > 9 ? '9+' : String(count)}
+              </Text>
+            </Box>
+          ) : null}
+        </Box>
+      </Box>
+    </ReusableButton>
+  )
+}
+
 export function Header({
   locale,
   dir,
@@ -153,24 +379,26 @@ export function Header({
   onSearchSubmit,
   onLogoPress,
   onLocaleChange,
+  onNativeCategoriesPress,
   onNativeAccountPress,
 }: HeaderProps) {
   void logoSrc
-  const { width } = useWindowDimensions()
+  void socialLinks
+  void categories
+  const profile = useBreakpoint()
+  const c = useThemeColors()
   const isWeb = Platform.OS === 'web'
-  const isDesktopViewport = width >= breakpoints.desktopMin
-  // Keep first SSR/hydration pass deterministic on web to avoid mobile/desktop tree mismatch.
-  const isDesktop = isDesktopViewport || (isWeb && width === 0)
+  const isDesktop = profile.breakpoint === 'desktop'
   const { isAtTop } = useHeaderScroll()
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false)
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
   const [showCartToast, setShowCartToast] = useState(false)
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
-  const [activeMegaCategoryId, setActiveMegaCategoryId] = useState<(typeof MEGA_MENU_CATEGORIES)[number]['id']>(
-    MEGA_MENU_CATEGORIES[0].id
-  )
+  const [activeMegaCategoryId, setActiveMegaCategoryId] = useState('')
+  const [utilityActiveIndex, setUtilityActiveIndex] = useState(0)
   const lastCartFeedbackKeyRef = useRef<number | undefined>(undefined)
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const seenMenuImpressionsRef = useRef<Set<string>>(new Set())
   const labels = locale === 'ar' ? ARABIC_LABELS : ENGLISH_LABELS
 
   const {
@@ -189,72 +417,139 @@ export function Header({
     clearRecents,
   } = useHeaderSearch()
 
-  const promoText =
-    campaignText ?? textForLocale(shellContent?.topBar?.message, locale, 'Free shipping on selected orders')
-  const promoSecondaryText = textForLocale(shellContent?.topBar?.secondaryMessage, locale, '')
-  const promoTertiaryText = textForLocale(shellContent?.topBar?.tertiaryMessage, locale, '')
+  void campaignText
   void campaignLink
-  const cmsCategories = (shellContent?.navigation?.categories ?? []).flatMap((item) => {
-    if (!item?.id || !item?.label) {
-      return []
-    }
-
-    return [{
+  const utilityItems =
+    shellContent?.topBar?.items?.map((item) => ({
       id: item.id,
       label: locale === 'ar' ? item.label.ar : item.label.en,
-      href: item.href ?? '#',
-      group: item.group,
-      description: item.description ? (locale === 'ar' ? item.description.ar : item.description.en) : undefined,
-    }]
-  })
-  const cmsQuickActions = (shellContent?.navigation?.quickActions ?? []).flatMap((item) => {
-    if (!item?.id || !item?.label) {
-      return []
-    }
-
-    return [{
-      id: item.id,
-      label: locale === 'ar' ? item.label.ar : item.label.en,
-      href: item.href ?? '#',
-    }]
-  })
-  const effectiveCategories = cmsCategories.length > 0 ? cmsCategories : categories
-  const effectiveQuickActions = cmsQuickActions.length > 0 ? cmsQuickActions : defaultQuickActions
+      href: item.href,
+      highlight: item.highlight,
+    })) ?? []
+  const deliveryLabel = textForLocale(shellContent?.mobileHeader?.deliveryLabel, locale, labels.deliveryTo)
+  const deliveryLocation = textForLocale(shellContent?.mobileHeader?.deliveryLocation, locale, 'Home, Amman')
+  const mobileSearchPlaceholder = textForLocale(shellContent?.mobileHeader?.searchPlaceholder, locale, labels.searchProducts)
   const searchCopy = {
     titles: {
-      trendingSearches: textForLocale(shellContent?.search?.panelTitles?.trendingSearches, locale, locale === 'ar' ? 'عمليات البحث الرائجة' : 'Trending Searches'),
-      popularBrands: textForLocale(shellContent?.search?.panelTitles?.popularBrands, locale, locale === 'ar' ? 'العلامات التجارية الشائعة' : 'Popular Brands'),
-      recentSearches: textForLocale(shellContent?.search?.panelTitles?.recentSearches, locale, locale === 'ar' ? 'عمليات البحث الأخيرة' : 'Recent Searches'),
-      suggestions: textForLocale(shellContent?.search?.panelTitles?.suggestions, locale, locale === 'ar' ? 'اقتراحات البحث' : 'Search Suggestions'),
-      products: textForLocale(shellContent?.search?.panelTitles?.products, locale, locale === 'ar' ? 'المنتجات' : 'Products'),
+      trendingSearches: textForLocale(shellContent?.search?.panelTitles?.trendingSearches, locale, locale === 'ar' ? '?????? ????? ???????' : 'Trending Searches'),
+      popularBrands: textForLocale(shellContent?.search?.panelTitles?.popularBrands, locale, locale === 'ar' ? '???????? ???????? ???????' : 'Popular Brands'),
+      recentSearches: textForLocale(shellContent?.search?.panelTitles?.recentSearches, locale, locale === 'ar' ? '?????? ????? ???????' : 'Recent Searches'),
+      suggestions: textForLocale(shellContent?.search?.panelTitles?.suggestions, locale, locale === 'ar' ? '???????? ?????' : 'Search Suggestions'),
+      products: textForLocale(shellContent?.search?.panelTitles?.products, locale, locale === 'ar' ? '????????' : 'Products'),
     },
     messages: {
-      loadingSuggestions: textForLocale(shellContent?.search?.panelMessages?.loadingSuggestions, locale, locale === 'ar' ? 'جاري تحميل الاقتراحات…' : 'Loading suggestions…'),
-      unavailableSuggestions: textForLocale(shellContent?.search?.panelMessages?.unavailableSuggestions, locale, locale === 'ar' ? 'لا توجد اقتراحات حالياً.' : 'No suggestions right now.'),
-      noMatchingSuggestions: textForLocale(shellContent?.search?.panelMessages?.noMatchingSuggestions, locale, locale === 'ar' ? 'لا توجد اقتراحات مطابقة.' : 'No matching suggestions.'),
-      noProductSuggestions: textForLocale(shellContent?.search?.panelMessages?.noProductSuggestions, locale, locale === 'ar' ? 'لا توجد اقتراحات منتجات.' : 'No product suggestions.'),
-      noPopularBrands: textForLocale(shellContent?.search?.panelMessages?.noPopularBrands, locale, locale === 'ar' ? 'لا توجد علامات شائعة.' : 'No popular brands.'),
-      noRecentSearches: textForLocale(shellContent?.search?.panelMessages?.noRecentSearches, locale, locale === 'ar' ? 'لا توجد عمليات بحث حديثة.' : 'No recent searches.'),
+      loadingSuggestions: textForLocale(shellContent?.search?.panelMessages?.loadingSuggestions, locale, locale === 'ar' ? '???? ????? ??????????...' : 'Loading suggestions...'),
+      unavailableSuggestions: textForLocale(shellContent?.search?.panelMessages?.unavailableSuggestions, locale, locale === 'ar' ? '?? ???? ???????? ??????.' : 'No suggestions right now.'),
+      noMatchingSuggestions: textForLocale(shellContent?.search?.panelMessages?.noMatchingSuggestions, locale, locale === 'ar' ? '?? ???? ???????? ??????.' : 'No matching suggestions.'),
+      noProductSuggestions: textForLocale(shellContent?.search?.panelMessages?.noProductSuggestions, locale, locale === 'ar' ? '?? ???? ???????? ??????.' : 'No product suggestions.'),
+      noPopularBrands: textForLocale(shellContent?.search?.panelMessages?.noPopularBrands, locale, locale === 'ar' ? '?? ???? ?????? ?????.' : 'No popular brands.'),
+      noRecentSearches: textForLocale(shellContent?.search?.panelMessages?.noRecentSearches, locale, locale === 'ar' ? '?? ???? ?????? ??? ?????.' : 'No recent searches.'),
     },
-    clearRecentLabel: textForLocale(shellContent?.search?.clearRecentLabel, locale, locale === 'ar' ? 'مسح' : 'Clear'),
+    clearRecentLabel: textForLocale(shellContent?.search?.clearRecentLabel, locale, locale === 'ar' ? '???' : 'Clear'),
   }
-  const pathname = isWeb ? (globalThis as { location?: { pathname?: string } }).location?.pathname ?? '/' : '/'
-  const categoriesWithShop = [
-    { id: 'cat-shop', label: locale === 'ar' ? 'تسوق' : 'Shop', href: '/shop' },
-    ...effectiveCategories.filter((item) => item?.href && item.href !== '/shop'),
-  ]
-  const activeCategory = categoriesWithShop.find((item) => item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`)))
-  const activeQuickAction = effectiveQuickActions.find(
-    (item) => item.href && (pathname === item.href || pathname.startsWith(`${item.href}/`))
-  )
-  const activeCategoryId = activeCategory?.id
-  const activeQuickActionId = activeQuickAction?.id
-  const activeMegaColumns = MEGA_MENU_DATA[activeMegaCategoryId] ?? MEGA_MENU_DATA.skincare
-  const stickyBlockHeight = layout.header.mainRowHeight + layout.header.navRowHeight
-  const mobileSearchPanelTopOffset = layout.header.mainRowHeight + spacing['40']
+  const resolvedHeaderPrimaryLinks =
+    shellContent?.navigation?.menus?.headerPrimary?.length
+      ? shellContent.navigation.menus.headerPrimary
+      : FALLBACK_HEADER_PRIMARY_LINKS
+  const resolvedHeaderMegaMenu =
+    shellContent?.navigation?.menus?.headerMegaCategories?.sections?.length
+      ? shellContent.navigation.menus.headerMegaCategories
+      : FALLBACK_MEGA_MENU
+  const megaSections = resolvedHeaderMegaMenu?.sections ?? []
+  const activeMegaSection =
+    megaSections.find((section) => section.id === activeMegaCategoryId) ?? megaSections[0]
+  const activeMegaFeaturedSlot = activeMegaSection?.featuredSlot
+  const menuVisible = isDesktop ? isMegaMenuOpen : false
+  const mobileSearchPanelTopOffset = spacing['40'] + spacing['32']
   const searchRegionId = 'header-search-region'
   const searchPanelRegionId = 'header-search-panel-region'
   const megaMenuPanelRegionId = 'header-mega-menu-panel-region'
+
+  const trackMenuEvent = (payload: MenuAnalyticsPayload) => {
+    const analyticsKey = payload.kind === 'click' ? payload.key : `${payload.key}::${payload.zone}`
+    if (payload.kind === 'impression') {
+      if (seenMenuImpressionsRef.current.has(analyticsKey)) {
+        return
+      }
+      seenMenuImpressionsRef.current.add(analyticsKey)
+    }
+    emitMenuAnalytics(payload)
+  }
+
+  useEffect(() => {
+    if (!activeMegaCategoryId && megaSections.length > 0) {
+      setActiveMegaCategoryId(megaSections[0].id)
+      return
+    }
+
+    if (activeMegaCategoryId && !megaSections.some((section) => section.id === activeMegaCategoryId)) {
+      setActiveMegaCategoryId(megaSections[0]?.id ?? '')
+    }
+  }, [activeMegaCategoryId, megaSections])
+
+  useEffect(() => {
+    if (!isDesktop) {
+      setIsMegaMenuOpen(false)
+    }
+  }, [isDesktop])
+
+  useEffect(() => {
+    resolvedHeaderPrimaryLinks.forEach((item) => {
+      if (!item.analytics?.impressionKey) {
+        return
+      }
+      trackMenuEvent({
+        key: item.analytics.impressionKey,
+        kind: 'impression',
+        zone: 'header_primary',
+        itemId: item.id,
+        href: item.href,
+      })
+    })
+  }, [resolvedHeaderPrimaryLinks])
+
+  useEffect(() => {
+    if (!menuVisible || megaSections.length === 0) {
+      return
+    }
+
+    if (resolvedHeaderMegaMenu?.analytics?.impressionKey) {
+      trackMenuEvent({
+        key: resolvedHeaderMegaMenu.analytics.impressionKey,
+        kind: 'impression',
+        zone: 'header_mega_categories',
+      })
+    }
+
+    if (activeMegaSection?.analytics?.impressionKey) {
+      trackMenuEvent({
+        key: activeMegaSection.analytics.impressionKey,
+        kind: 'impression',
+        zone: 'header_mega_categories.section',
+        itemId: activeMegaSection.id,
+        href: activeMegaSection.href,
+      })
+    }
+
+    if (activeMegaSection?.brandRail?.analytics?.impressionKey) {
+      trackMenuEvent({
+        key: activeMegaSection.brandRail.analytics.impressionKey,
+        kind: 'impression',
+        zone: 'header_mega_categories.brand_rail',
+        itemId: activeMegaSection.id,
+      })
+    }
+
+    if (activeMegaFeaturedSlot?.analytics?.impressionKey) {
+      trackMenuEvent({
+        key: activeMegaFeaturedSlot.analytics.impressionKey,
+        kind: 'impression',
+        zone: 'header_mega_categories.featured_slot',
+        itemId: activeMegaFeaturedSlot.id,
+        href: activeMegaFeaturedSlot.href,
+      })
+    }
+  }, [activeMegaFeaturedSlot, activeMegaSection, megaSections.length, menuVisible, resolvedHeaderMegaMenu])
 
   useEffect(() => {
     if (!isWeb || !open) {
@@ -368,6 +663,15 @@ export function Header({
     }
   }, [])
 
+  // Utility bar center rotation
+  useEffect(() => {
+    if (utilityItems.length <= 1) return
+    const timer = setInterval(() => {
+      setUtilityActiveIndex((current) => (current + 1) % utilityItems.length)
+    }, 4000)
+    return () => clearInterval(timer)
+  }, [utilityItems.length])
+
   // Fix 2: reset search overlay when user scrolls back to top
   useEffect(() => {
     if (isAtTop && searchOverlayOpen) {
@@ -383,7 +687,7 @@ export function Header({
       transform: isAtTop ? 'translateY(0)' : 'translateY(-100%)',
       transition: 'transform 300ms cubic-bezier(0.16, 1, 0.3, 1)',
       zIndex: zIndex.sticky + 5,
-      backgroundColor: colors.surface,
+      backgroundColor: c.surface,
     }),
     [isAtTop]
   )
@@ -449,11 +753,6 @@ export function Header({
     }
   }
 
-  const handleCategorySelect = (id: string) => {
-    setOpen(false)
-    setIsMegaMenuOpen(false)
-  }
-
   const navigateToHref = (href?: string) => {
     if (!href || Platform.OS !== 'web') {
       return
@@ -480,93 +779,228 @@ export function Header({
     onSearchSubmit?.(normalized)
   }
 
+  const handleMegaSectionPress = (section: ShellMegaMenuSection) => {
+    setActiveMegaCategoryId(section.id)
+    if (section.analytics?.clickKey) {
+      trackMenuEvent({
+        key: section.analytics.clickKey,
+        kind: 'click',
+        zone: 'header_mega_categories.section',
+        itemId: section.id,
+        href: section.href,
+      })
+    }
+  }
+
+  const handleMegaLinkPress = (link: {
+    id: string
+    href?: string
+    analytics?: { clickKey?: string; impressionKey?: string }
+  }) => {
+    if (link.analytics?.clickKey) {
+      trackMenuEvent({
+        key: link.analytics.clickKey,
+        kind: 'click',
+        zone: 'header_mega_categories.link',
+        itemId: link.id,
+        href: link.href,
+      })
+    }
+  }
+
+  const handleBrandPress = (brand: {
+    id: string
+    href?: string
+    analytics?: { clickKey?: string; impressionKey?: string }
+  }) => {
+    if (brand.analytics?.clickKey) {
+      trackMenuEvent({
+        key: brand.analytics.clickKey,
+        kind: 'click',
+        zone: 'header_mega_categories.brand_rail',
+        itemId: brand.id,
+        href: brand.href,
+      })
+    }
+  }
+
+  const handleFeaturedSlotPress = (slot: {
+    id: string
+    href?: string
+    analytics?: { clickKey?: string; impressionKey?: string }
+  }) => {
+    if (slot.analytics?.clickKey) {
+      trackMenuEvent({
+        key: slot.analytics.clickKey,
+        kind: 'click',
+        zone: 'header_mega_categories.featured_slot',
+        itemId: slot.id,
+        href: slot.href,
+      })
+    }
+  }
+
   if (!isDesktop) {
     return (
-      <Box style={{ backgroundColor: colors.surface, direction: dir }}>
-        {/* Full header — slides out on scroll (web), always visible (native) */}
+      <Box style={{ backgroundColor: c.surface, direction: dir }}>
         {isWeb ? (
           <div style={slideOutStyle as any}>
-            <HeaderMainRow
-              mobile
-              logoText={logoAlt}
-              onPressLogo={undefined}
-              logoHref='/'
-              searchValue={query}
-              searchPlaceholder={labels.searchProducts}
-              onSearchChange={setQuery}
-              onSearchFocus={() => setSearchOverlayOpen(true)}
-              onSearchBlur={() => undefined}
-              onSearchSubmit={handleCommitSearch}
-              searchRegionId={searchRegionId}
-              localeLabel={locale.toUpperCase()}
-              accountLabel={labels.account}
-              wishlistLabel={labels.wishlist}
-              cartLabel={labels.cart}
-              onPressLocale={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
-              onPressAccount={handleAccountPress}
-              cartCount={cartCount}
-              accountCount={accountCount}
-              wishlistCount={wishlistCount}
-              cartPulse={showCartToast}
-              onPressCart={onMobileCartNavigate ?? onCartClick}
-            />
-            <CategoryRow
-              items={categoriesWithShop}
-              activeId={activeCategoryId}
-              scopeLabel={activeCategory ? `${labels.scopePrefix}: ${activeCategory.label}` : undefined}
-              mobile
-              onSelect={handleCategorySelect}
-            />
+            <Box
+              style={{
+                backgroundColor: c.surface,
+                borderBottomWidth: borderWidth.thin,
+                borderColor: c.divider,
+              }}
+            >
+              <Box
+                style={{
+                  minHeight: 34,
+                  paddingHorizontal: spacing.pageX,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: c.inkBlack,
+                }}
+              >
+                <Text variant='meta' tone='inverse'>
+                  {deliveryLabel}
+                </Text>
+                <Text variant='meta' tone='inverse' weight='700'>
+                  {deliveryLocation}
+                </Text>
+              </Box>
+              <Box
+                style={{
+                  minHeight: 72,
+                  paddingHorizontal: spacing.pageX,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing['10'],
+                }}
+              >
+                <Box style={{ flex: 1 }}>
+                  <Box nativeID={searchRegionId} style={{ position: 'relative' }}>
+                    <Box style={{ position: 'absolute', start: spacing['12'], top: 13, zIndex: 1 }}>
+                      <Icon name='search' size={18} color={c.textSecondary} />
+                    </Box>
+                    <Input
+                      value={query}
+                      onChangeText={setQuery}
+                      onFocus={() => setSearchOverlayOpen(true)}
+                      onSubmitEditing={handleCommitSearch}
+                      accessibilityLabel={labels.searchProducts}
+                      radiusKey='full'
+                      placeholder={mobileSearchPlaceholder}
+                      style={{
+                        minHeight: 46,
+                        height: 46,
+                        paddingStart: spacing['40'],
+                        paddingEnd: spacing['16'],
+                        backgroundColor: c.surfaceMuted,
+                        borderColor: c.divider,
+                      }}
+                    />
+                  </Box>
+                </Box>
+                <DesktopIconButton
+                  icon='categories'
+                  label={labels.categories}
+                  onPress={() => navigateToHref('/categories')}
+                />
+                <DesktopIconButton icon='notification' label={labels.notifications} onPress={handleAccountPress} />
+              </Box>
+            </Box>
           </div>
         ) : (
-          <Box style={{ position: 'relative' }}>
-            <HeaderMainRow
-              mobile
-              logoText={logoAlt}
-              onPressLogo={handleLogoPress}
-              logoHref='/'
-              searchValue={query}
-              searchPlaceholder={labels.searchProducts}
-              onSearchChange={setQuery}
-              onSearchFocus={() => setOpen(true)}
-              onSearchBlur={() => setOpen(false)}
-              onSearchSubmit={handleCommitSearch}
-              searchRegionId={searchRegionId}
-              localeLabel={locale.toUpperCase()}
-              accountLabel={labels.account}
-              wishlistLabel={labels.wishlist}
-              cartLabel={labels.cart}
-              onPressLocale={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
-              onPressAccount={handleAccountPress}
-              cartCount={cartCount}
-              accountCount={accountCount}
-              wishlistCount={wishlistCount}
-              cartPulse={showCartToast}
-              onPressCart={onMobileCartNavigate ?? onCartClick}
-            />
-            <SearchPanel
-              open={open}
-              query={query}
-              panelRegionId={searchPanelRegionId}
-              fixed
-              topOffset={mobileSearchPanelTopOffset}
-              onRequestClose={() => setOpen(false)}
-              loading={loading}
-              error={error}
-              suggestions={suggestions}
-              trendingSearches={discovery.trendingSearches}
-              popularBrands={discovery.popularBrands}
-              recents={recents}
-              onSelectSuggestion={handleSelectSuggestion}
-              onSelectRecent={selectRecent}
-              onClearRecents={clearRecents}
-              copy={searchCopy}
-            />
+          <Box
+            style={{
+              backgroundColor: c.surface,
+              borderBottomWidth: borderWidth.thin,
+              borderColor: c.divider,
+            }}
+          >
+            <Box
+              style={{
+                minHeight: 34,
+                paddingHorizontal: spacing.pageX,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: c.inkBlack,
+              }}
+            >
+              <Text variant='meta' tone='inverse'>
+                {deliveryLabel}
+              </Text>
+              <Text variant='meta' tone='inverse' weight='700'>
+                {deliveryLocation}
+              </Text>
+            </Box>
+            <Box
+              style={{
+                minHeight: 72,
+                paddingHorizontal: spacing.pageX,
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing['10'],
+              }}
+            >
+              <Box style={{ flex: 1 }}>
+                <Box nativeID={searchRegionId} style={{ position: 'relative' }}>
+                  <Box style={{ position: 'absolute', start: spacing['12'], top: 13, zIndex: 1 }}>
+                    <Icon name='search' size={18} color={c.textSecondary} />
+                  </Box>
+                  <Input
+                    value={query}
+                    onChangeText={setQuery}
+                    onFocus={() => setOpen(true)}
+                    onBlur={() => setOpen(false)}
+                    onSubmitEditing={handleCommitSearch}
+                    accessibilityLabel={labels.searchProducts}
+                    radiusKey='full'
+                    placeholder={mobileSearchPlaceholder}
+                    style={{
+                      minHeight: 46,
+                      height: 46,
+                      paddingStart: spacing['40'],
+                      paddingEnd: spacing['16'],
+                      backgroundColor: c.surfaceMuted,
+                      borderColor: c.divider,
+                    }}
+                  />
+                </Box>
+              </Box>
+              <DesktopIconButton
+                icon='categories'
+                label={labels.categories}
+                onPress={() => onNativeCategoriesPress?.()}
+              />
+              <DesktopIconButton icon='notification' label={labels.notifications} onPress={handleAccountPress} />
+            </Box>
+            <Box style={{ position: 'relative', paddingHorizontal: spacing.pageX, paddingBottom: spacing['12'] }}>
+              <SearchPanel
+                open={open}
+                query={query}
+                panelRegionId={searchPanelRegionId}
+                fixed={false}
+                topOffset={mobileSearchPanelTopOffset}
+                onRequestClose={() => setOpen(false)}
+                loading={loading}
+                error={error}
+                suggestions={suggestions}
+                trendingSearches={discovery.trendingSearches}
+                popularBrands={discovery.popularBrands}
+                recents={recents}
+                onSelectSuggestion={handleSelectSuggestion}
+                onSelectRecent={selectRecent}
+                onClearRecents={clearRecents}
+                copy={searchCopy}
+              />
+            </Box>
           </Box>
         )}
 
-        {/* Mini search bar — always mounted on web mobile, fades in when header slides away */}
-        {isWeb && (
+        {isWeb ? (
           <div
             style={{
               position: 'fixed' as any,
@@ -579,20 +1013,15 @@ export function Header({
               transition: 'opacity 300ms cubic-bezier(0.16, 1, 0.3, 1)',
             } as any}
           >
-            <MiniSearchBar
-              placeholder={labels.searchProducts}
-              onPress={() => setSearchOverlayOpen(true)}
-              dir={dir}
-            />
+            <MiniSearchBar placeholder={mobileSearchPlaceholder} onPress={() => setSearchOverlayOpen(true)} dir={dir} />
           </div>
-        )}
+        ) : null}
 
-        {/* Full-screen search overlay (web mobile only) */}
-        {isWeb && (
+        {isWeb ? (
           <SearchOverlay
             open={searchOverlayOpen}
             query={query}
-            placeholder={labels.searchProductsOrCategories ?? labels.searchProducts}
+            placeholder={labels.searchProductsOrCategories}
             onClose={() => setSearchOverlayOpen(false)}
             onQueryChange={setQuery}
             onSubmit={() => {
@@ -601,12 +1030,36 @@ export function Header({
             }}
             onSelectSuggestion={(item) => {
               setSearchOverlayOpen(false)
-              handleSelectSuggestion(item as any)
+              handleSelectSuggestion(item as SearchSuggestion)
             }}
             suggestions={suggestions}
             loading={loading}
             error={error}
             dir={dir}
+          />
+        ) : null}
+
+        {isWeb ? (
+          <div
+            style={{
+              position: 'fixed' as any,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: zIndex.sticky + 20,
+            }}
+          >
+            <BottomNav
+              activeTab='home'
+              cartCount={cartCount}
+              onPressTab={(tab) => navigateToHref(tab === 'home' ? '/' : `/${tab}`)}
+            />
+          </div>
+        ) : (
+          <BottomNav
+            activeTab='home'
+            cartCount={cartCount}
+            onPressTab={(tab) => navigateToHref(tab === 'home' ? '/' : `/${tab}`)}
           />
         )}
       </Box>
@@ -616,194 +1069,289 @@ export function Header({
   if (isWeb && isDesktop) {
     return (
       <>
-        {/* Top promo bar — collapses on scroll */}
         <div
           style={{
             maxHeight: isAtTop ? `${layout.header.topBarHeight}px` : '0px',
             overflow: 'hidden',
             transition: 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
             direction: dir,
+            backgroundColor: c.inkBlack,
           }}
         >
-          <TopPromoBar
-            message={promoText}
-            secondaryMessage={promoSecondaryText || undefined}
-            tertiaryMessage={promoTertiaryText || undefined}
-            socialItems={socialLinks}
-            onPressSocial={(id) => {
-              const item = socialLinks.find((entry) => entry.id === id)
-              if (!item) return
-              const win = (globalThis as { open?: (url?: string, target?: string, features?: string) => void }).open
-              win?.(item.href, '_blank', 'noopener,noreferrer')
+          <Box
+            style={{
+              width: '100%',
+              maxWidth: layout.containerMaxWidth,
+              alignSelf: 'center',
+              minHeight: layout.header.topBarHeight,
+              paddingHorizontal: spacing.pageX,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing['16'],
             }}
-          />
+          >
+            {/* LEFT: utility links */}
+            <Box style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing['12'], flexWrap: 'wrap' }}>
+              {utilityItems.map((item, index) => (
+                <Box key={item.id} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['12'] }}>
+                  {item.href ? (
+                    <ReusableButton href={item.href} variant='ghost' size='sm'>
+                      <Text variant='meta' tone='inverse' weight='700'>
+                        {item.label}
+                      </Text>
+                    </ReusableButton>
+                  ) : (
+                    <Text variant='meta' tone='inverse' weight='700'>
+                      {item.label}
+                    </Text>
+                  )}
+                  {index < utilityItems.length - 1 ? (
+                    <Text variant='meta' tone='inverse' style={{ opacity: 0.35 }}>
+                      |
+                    </Text>
+                  ) : null}
+                </Box>
+              ))}
+            </Box>
+            {/* CENTER: rotating campaign line */}
+            <Box style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              {utilityItems.length > 0 ? (
+                <Text variant='meta' tone='inverse' weight='700' style={{ textAlign: 'center' }}>
+                  {utilityItems[utilityActiveIndex % Math.max(1, utilityItems.length)]?.label ?? ''}
+                </Text>
+              ) : null}
+            </Box>
+            {/* RIGHT: delivery location + language toggle */}
+            <Box style={{ flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing['12'] }}>
+              <ReusableButton href='/account/addresses' variant='ghost' size='sm'>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['6'] }}>
+                  <Icon name='location' size={14} color={c.textInverted} />
+                  <Text variant='meta' tone='inverse'>
+                    {deliveryLocation}
+                  </Text>
+                </Box>
+              </ReusableButton>
+              <Text variant='meta' tone='inverse' style={{ opacity: 0.35 }}>|</Text>
+              <ReusableButton
+                onPress={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
+                variant='ghost'
+                size='sm'
+                accessibilityLabel={labels.language}
+              >
+                <Text variant='meta' tone='inverse' weight='700'>
+                  {locale.toUpperCase()}
+                </Text>
+              </ReusableButton>
+            </Box>
+          </Box>
         </div>
 
-        {/* Main row + nav row — sticky at top */}
+        {/* Main row + nav row � sticky at top */}
         <div
+          data-shell-breakpoint={profile.breakpoint}
           style={{
             position: 'sticky',
             top: 0,
             zIndex: zIndex.sticky + 10,
-            backgroundColor: colors.surface,
+            backgroundColor: c.surface,
             boxShadow: scrollShadow,
             transition: 'box-shadow 0.2s ease',
             direction: dir,
           }}
         >
-          {/* Main logo/search/cart row */}
-          <div nativeID={searchRegionId} style={{ position: 'relative', zIndex: zIndex.searchTop + 2 } as any}>
-            <HeaderMainRow
-              variant='mega-search'
-              logoText={logoAlt}
-              onPressLogo={undefined}
-              logoHref='/'
-              searchValue={query}
-              searchPlaceholder={locale === 'ar' ? 'ابحث في أكثر من 15,000 منتج...' : 'Search 15,000+ products...'}
-              onSearchChange={setQuery}
-              onSearchFocus={() => setOpen(true)}
-              onSearchSubmit={handleCommitSearch}
-              searchRegionId={undefined}
-              localeLabel={locale.toUpperCase()}
-              departmentsLabel={locale === 'ar' ? 'كل الفئات' : 'All Categories'}
-              accountLabel={labels.account}
-              wishlistLabel={labels.wishlist}
-              cartLabel={labels.cart}
-              onPressLocale={() => onLocaleChange?.(locale === 'ar' ? 'en' : 'ar')}
-              onPressDepartments={() => {
-                if (!isMegaMenuOpen) setActiveMegaCategoryId(MEGA_MENU_CATEGORIES[0].id)
-                setIsMegaMenuOpen((c) => !c)
-              }}
-              onPressAccount={handleAccountPress}
-              cartCount={cartCount}
-              accountCount={accountCount}
-              wishlistCount={wishlistCount}
-              cartPulse={showCartToast}
-              departmentsActive={isMegaMenuOpen}
-              onPressCart={() => setCartDrawerOpen(true)}
-            />
-            <Box style={{ paddingHorizontal: spacing.pageX }}>
-              <Box style={{ marginStart: '25%' as any, width: '50%' as any }}>
-                <SearchPanel
-                  open={open}
-                  query={query}
-                  panelRegionId={searchPanelRegionId}
-                  compact
-                  onRequestClose={() => setOpen(false)}
-                  loading={loading}
-                  error={error}
-                  suggestions={suggestions}
-                  trendingSearches={discovery.trendingSearches}
-                  popularBrands={discovery.popularBrands}
-                  recents={recents}
-                  onSelectSuggestion={handleSelectSuggestion}
-                  onSelectRecent={selectRecent}
-                  onClearRecents={clearRecents}
-                  copy={searchCopy}
-                />
-              </Box>
-            </Box>
-          </div>
-
-          {/* Nav/quick-actions row — collapses on scroll */}
-          <div
+          <Box
+            id={searchRegionId}
             style={{
-              maxHeight: isAtTop ? `${layout.header.navRowHeight}px` : '0px',
-              overflow: 'hidden',
-              transition: 'max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              width: '100%',
+              maxWidth: layout.containerMaxWidth,
+              alignSelf: 'center',
+              paddingHorizontal: spacing.pageX,
+              minHeight: 88,
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing['12'],
             }}
           >
-            <CategoryRow
-              items={effectiveQuickActions}
-              activeId={activeQuickActionId}
-              variant='quickActions'
-              onSelect={handleCategorySelect}
-            />
-          </div>
+            <ReusableButton onPress={handleLogoPress} variant='ghost' size='default'>
+              <Box style={{ minWidth: 156, gap: spacing['4'] }}>
+                <Text variant='title' weight='700'>
+                  {logoAlt}
+                </Text>
+                <Text variant='meta' tone='muted'>
+                  {locale === 'ar' ? '????? ??????? ??????' : 'Your daily beauty destination'}
+                </Text>
+              </Box>
+            </ReusableButton>
 
-          {/* Mega menu */}
-          {isMegaMenuOpen ? (
-            <Box
-              nativeID={megaMenuPanelRegionId}
-              style={{
-                borderTopWidth: borderWidth.thin,
-                borderColor: colors.divider,
-                backgroundColor: colors.surfaceMuted,
+            <ReusableButton
+              onPress={() => {
+                if (megaSections.length === 0) {
+                  navigateToHref('/categories')
+                  return
+                }
+                if (!isMegaMenuOpen) setActiveMegaCategoryId(megaSections[0]?.id ?? '')
+                setIsMegaMenuOpen((current) => !current)
               }}
+              variant='ghost'
+              size='default'
+              accessibilityLabel={labels.categories}
             >
               <Box
                 style={{
-                  width: '100%',
-                  maxWidth: layout.containerMaxWidth,
-                  alignSelf: 'center',
+                  minWidth: 156,
+                  minHeight: 48,
+                  borderRadius: radius.full,
+                  backgroundColor: c.textPrimary,
                   paddingHorizontal: spacing['16'],
-                  paddingVertical: spacing['24'],
                   flexDirection: 'row',
-                  gap: spacing['24'],
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: spacing['8'],
                 }}
               >
-                <Box
-                  style={{
-                    width: 220,
-                    borderEndWidth: borderWidth.thin,
-                    borderColor: colors.divider,
-                    paddingEnd: spacing['16'],
-                    gap: spacing['4'],
-                  }}
-                >
-                  {MEGA_MENU_CATEGORIES.map((item) => {
-                    const active = item.id === activeMegaCategoryId
-                    return (
-                      <Touchable
-                        key={item.id}
-                        onHoverIn={() => setActiveMegaCategoryId(item.id)}
-                        onFocus={() => setActiveMegaCategoryId(item.id)}
-                        onPress={() => setActiveMegaCategoryId(item.id)}
-                      >
-                        {({ hovered, focused }) => {
-                          const interactive = active || hovered || focused
-                          return (
-                            <Box
-                              style={{
-                                minHeight: 40,
-                                borderRadius: radius.md,
-                                ...(interactive ? { backgroundColor: colors.brandPrimarySubtle } : {}),
-                                paddingHorizontal: spacing['8'],
-                                paddingVertical: spacing['8'],
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                              }}
-                            >
-                              <Text variant='bodySm' tone={interactive ? 'default' : 'muted'}>{item.label}</Text>
-                              <Text variant='meta' tone={interactive ? 'default' : 'muted'}>v</Text>
-                            </Box>
-                          )
-                        }}
-                      </Touchable>
-                    )
-                  })}
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+                  <Icon name='categories' size={18} color={c.textInverted} />
+                  <Text tone='inverse' weight='700'>
+                    {labels.categories}
+                  </Text>
                 </Box>
-                <Box style={{ flex: 1, flexDirection: 'row', gap: spacing['24'] }}>
-                  {activeMegaColumns.map((group) => (
-                    <Box key={group.title} style={{ flex: 1, gap: spacing['8'] }}>
-                      <Text variant='meta' weight='700' style={{ textTransform: 'uppercase', letterSpacing: 1.2 }}>
-                        {group.title}
+                <Icon name={isMegaMenuOpen ? 'caretDown' : 'caretRight'} size={14} color={c.textInverted} />
+              </Box>
+            </ReusableButton>
+
+            <Box style={{ flex: 1, position: 'relative' }}>
+              <Box style={{ position: 'absolute', start: spacing['12'], top: 14, zIndex: 1 }}>
+                <Icon name='search' size={18} color={c.textSecondary} />
+              </Box>
+              <Input
+                value={query}
+                onChangeText={setQuery}
+                onFocus={() => setOpen(true)}
+                onSubmitEditing={handleCommitSearch}
+                accessibilityLabel={labels.searchProducts}
+                radiusKey='full'
+                placeholder={locale === 'ar' ? '???? ?? ???? ?? 15000 ????' : 'Search 15,000+ products, brands, and routines'}
+                style={{
+                  minHeight: 48,
+                  height: 48,
+                  paddingStart: spacing['40'],
+                  paddingEnd: spacing['16'],
+                  backgroundColor: c.surfaceMuted,
+                  borderColor: c.divider,
+                }}
+              />
+              <SearchPanel
+                open={open}
+                query={query}
+                panelRegionId={searchPanelRegionId}
+                compact
+                onRequestClose={() => setOpen(false)}
+                loading={loading}
+                error={error}
+                suggestions={suggestions}
+                trendingSearches={discovery.trendingSearches}
+                popularBrands={discovery.popularBrands}
+                recents={recents}
+                onSelectSuggestion={handleSelectSuggestion}
+                onSelectRecent={selectRecent}
+                onClearRecents={clearRecents}
+                copy={searchCopy}
+              />
+            </Box>
+
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['10'] }}>
+              <DesktopIconButton icon='account' label={labels.account} onPress={handleAccountPress} />
+              <DesktopIconButton icon='wishlist' label={labels.wishlist} count={wishlistCount} onPress={() => navigateToHref('/wishlist')} />
+              <DesktopIconButton icon='cart' label={labels.cart} count={cartCount} active={showCartToast} onPress={() => setCartDrawerOpen(true)} />
+            </Box>
+          </Box>
+
+          <Box
+            style={{
+              borderTopWidth: borderWidth.thin,
+              borderBottomWidth: borderWidth.thin,
+              borderColor: c.divider,
+              backgroundColor: c.surfaceLowest,
+            }}
+          >
+            <Box
+              style={{
+                width: '100%',
+                maxWidth: layout.containerMaxWidth,
+                alignSelf: 'center',
+                minHeight: 52,
+                paddingHorizontal: spacing.pageX,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: spacing['16'],
+              }}
+            >
+              <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['12'] }}>
+                {resolvedHeaderPrimaryLinks.map((item) => (
+                  <ReusableButton
+                    key={item.id}
+                    href={item.href}
+                    onPress={() => {
+                      if (item.analytics?.clickKey) {
+                        trackMenuEvent({
+                          key: item.analytics.clickKey,
+                          kind: 'click',
+                          zone: 'header_primary',
+                          itemId: item.id,
+                          href: item.href,
+                        })
+                      }
+                    }}
+                    variant='ghost'
+                    size='sm'
+                  >
+                    <Box
+                      style={{
+                        minHeight: 44,
+                        paddingHorizontal: spacing['12'],
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Text variant='bodySm' weight='700' tone={item.luxury ? 'primary' : 'default'}>
+                        {item.luxury ? '? ' : ''}{item.label}
                       </Text>
-                      <Box style={{ gap: spacing['4'] }}>
-                        {group.links.map((link) => (
-                          <Touchable key={link} onPress={() => setIsMegaMenuOpen(false)}>
-                            {({ hovered, focused }) => (
-                              <Text tone={hovered || focused ? 'default' : 'muted'} variant='bodySm'>{link}</Text>
-                            )}
-                          </Touchable>
-                        ))}
-                      </Box>
                     </Box>
-                  ))}
-                </Box>
+                  </ReusableButton>
+                ))}
+              </Box>
+
+              <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+                {SECONDARY_BAR_LINKS.map((item) => (
+                  <ReusableButton key={item.id} href={item.href} variant='ghost' size='sm'>
+                    <Box style={{ minHeight: 44, paddingHorizontal: spacing['8'], flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                      <Text variant='bodySm' weight='700' tone='muted'>
+                        {locale === 'ar' ? item.label.ar : item.label.en}
+                      </Text>
+                    </Box>
+                  </ReusableButton>
+                ))}
               </Box>
             </Box>
+          </Box>
+
+          {/* Mega menu */}
+          {isMegaMenuOpen ? (
+            <HeaderMegaMenu
+              activeSectionId={activeMegaCategoryId}
+              browseAllLabel={labels.browseAll}
+              featuredBrandsLabel={labels.featuredBrands}
+              panelRegionId={megaMenuPanelRegionId}
+              sections={megaSections}
+              onClose={() => setIsMegaMenuOpen(false)}
+              onSectionHover={setActiveMegaCategoryId}
+              onSectionPress={handleMegaSectionPress}
+              onLinkPress={handleMegaLinkPress}
+              onBrandPress={handleBrandPress}
+              onFeaturedSlotPress={handleFeaturedSlotPress}
+            />
           ) : null}
         </div>
 
@@ -817,8 +1365,8 @@ export function Header({
             end: spacing.pageX,
             zIndex: zIndex.searchTop + 5,
             borderWidth: borderWidth.thin,
-            borderColor: colors.border,
-            backgroundColor: colors.surface,
+            borderColor: c.border,
+            backgroundColor: c.surface,
             paddingHorizontal: spacing.md,
             paddingVertical: spacing.xs,
             transition: 'top 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -857,4 +1405,5 @@ export function Header({
 
   return null
 }
+
 

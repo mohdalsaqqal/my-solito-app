@@ -1,0 +1,12 @@
+{
+  "name": "visual-audit-tests",
+  "version": "1.0.0",
+  "scripts": {
+    "test:visual": "playwright test visual-audit.spec.ts --reporter=html --output=test-results",
+    "test:visual:headed": "playwright test visual-audit.spec.ts --headed --reporter=html --output=test-results",
+    "test:visual:debug": "playwright test visual-audit.spec.ts --headed --debug"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  }
+}

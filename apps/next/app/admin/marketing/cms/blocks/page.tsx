@@ -4,11 +4,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { AlertCircle, AlignLeft, CheckCircle2, Eye, EyeOff, ExternalLink, GripVertical, Image as ImageIcon, LayoutList, Plus, Save, Star, Trash2, Type, Upload, X } from 'lucide-react'
 import { parseHomeBlock } from '@real/app/lib/cms/blocks'
-import { DEFAULT_PAGE_BLOCK_SCOPE } from '@real/app/lib/layout/page-types'
+import { DEFAULT_PAGE_BLOCK_SCOPE, type AdminPageBlockScope } from '@real/app/lib/layout/page-types'
 import { AdminPageBlockRecord, AdminReleaseRecord, ProductQuery, ProductRow } from '@real/app/lib/types'
 import { apiClient } from '../../../../apiClient'
-import { colors, spacing, typography, fontWeights, radius, componentTokens } from '@real/tokens'
+import { colors, elevation, spacing, typography, fontWeights, radius, componentTokens } from '@real/tokens'
 import { AdminFormScaffold, Button, EmptyState, InlineLoading, PageContainer, Panel } from '../../../_components/AdminPagePrimitives'
+import { AdminLoadingSkeleton, AdminErrorState } from '../../../_components/AdminLoadingFeedback'
+import { UploadZone, blockEditorChromeTokens } from './_components/UploadZone'
+import { FieldLabel, ErrorHint, LocalizedPair, FullWidthField, SectionDivider } from './_components/BlockEditorChrome'
+import { QueryDropdown } from './_components/QueryDropdown'
 
 type BlockType =
   | 'hero'
@@ -508,530 +512,6 @@ if (typeof document !== 'undefined') {
   }
 }
 
-function UploadZone({
-  imageUrl,
-  uploading,
-  onPick,
-  onClear,
-  onDropFile,
-  aspectW = 16,
-  aspectH = 9,
-  frameWidth,
-  frameHeight,
-  previewFit = 'contain',
-}: {
-  imageUrl: string
-  uploading: boolean
-  onPick: () => void
-  onClear: () => void
-  onDropFile?: (file: File) => void
-  aspectW?: number
-  aspectH?: number
-  frameWidth?: number
-  frameHeight?: number
-  previewFit?: 'contain' | 'cover'
-}) {
-  const [hovered, setHovered] = useState(false)
-  const [dragOver, setDragOver] = useState(false)
-  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
-  const active = hovered || dragOver
-
-  useEffect(() => {
-    if (!imageUrl) {
-      setNaturalSize(null)
-      return
-    }
-
-    let cancelled = false
-    const image = new window.Image()
-    image.onload = () => {
-      if (!cancelled) {
-        setNaturalSize({ width: image.naturalWidth, height: image.naturalHeight })
-      }
-    }
-    image.onerror = () => {
-      if (!cancelled) {
-        setNaturalSize(null)
-      }
-    }
-    image.src = imageUrl
-
-    return () => {
-      cancelled = true
-    }
-  }, [imageUrl])
-
-  return (
-    <div
-      className='admin-focus-ring'
-      role='button'
-      tabIndex={0}
-      aria-label='Upload image'
-      onClick={uploading ? undefined : onPick}
-      onKeyDown={(e) => {
-        if (!uploading && (e.key === 'Enter' || e.key === ' ')) {
-          e.preventDefault()
-          onPick()
-        }
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) onDropFile?.(f) }}
-      style={{
-        position: 'relative',
-        width: frameWidth ?? '100%',
-        height: frameHeight,
-        maxWidth: frameWidth ? undefined : '100%',
-        marginInline: frameWidth ? 'auto' : undefined,
-        aspectRatio: frameHeight ? undefined : `${aspectW} / ${aspectH}`,
-        minHeight: frameHeight ?? 220,
-        borderRadius: radius.xl,
-        overflow: 'hidden',
-        cursor: uploading ? 'not-allowed' : 'pointer',
-        border: `2px dashed ${dragOver ? colors.brandPrimary : active ? colors.textSecondary : colors.border}`,
-        transition: 'border-color 160ms ease',
-        backgroundColor: dragOver ? colors.brandPrimarySubtle : colors.surfaceMuted,
-        boxSizing: 'border-box',
-        flex: frameWidth ? `0 0 ${frameWidth}px` : undefined,
-      }}
-    >
-      {imageUrl ? (
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            minHeight: frameHeight ?? 220,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: previewFit === 'cover' ? 0 : spacing['12'],
-            boxSizing: 'border-box',
-            backgroundColor: colors.surfaceMuted,
-          }}
-        >
-          <img
-            src={imageUrl}
-            alt=''
-            style={{
-              width: previewFit === 'cover' ? '100%' : 'auto',
-              height: previewFit === 'cover' ? '100%' : 'auto',
-              maxWidth: '100%',
-              maxHeight: '100%',
-              objectFit: previewFit,
-              display: 'block',
-              borderRadius: previewFit === 'cover' ? 0 : radius.lg,
-            }}
-          />
-        </div>
-      ) : (
-        <div style={{ width: '100%', height: '100%', minHeight: frameHeight ?? 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: spacing['8'] }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: radius.full,
-            backgroundColor: active ? colors.brandPrimarySubtle : colors.surface,
-            border: `1px solid ${active ? colors.brandPrimary : colors.border}`,
-            display: 'grid', placeItems: 'center',
-            transition: 'background-color 160ms, border-color 160ms',
-          }}>
-            <Upload size={18} color={active ? colors.brandPrimary : colors.textSecondary} />
-          </div>
-          <span style={{ fontSize: typography.xs, color: active ? colors.brandPrimary : colors.textSecondary, fontWeight: Number(fontWeights.medium), transition: 'color 160ms', textAlign: 'center', paddingInline: spacing['12'] }}>
-            {dragOver ? 'Drop to upload' : 'Click or drag image here'}
-          </span>
-          <span style={{ fontSize: typography.xs, color: colors.textSecondary, opacity: 0.7 }}>{UI_STRINGS.fileUploadTypes}</span>
-        </div>
-      )}
-
-      {/* Hover overlay */}
-      {imageUrl && active && !uploading ? (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 60%, transparent 100%)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: spacing['12'],
-        }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: spacing['6'],
-            backgroundColor: colors.textPrimary, color: colors.textInverted,
-            borderRadius: radius.full, paddingInline: spacing['16'], paddingBlock: spacing['8'],
-            fontSize: typography.xs, fontWeight: Number(fontWeights.semibold),
-            letterSpacing: '0.04em', textTransform: 'uppercase',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.35)', pointerEvents: 'none',
-          }}>
-            <Upload size={12} /> Replace image
-          </div>
-        </div>
-      ) : null}
-
-      {/* Uploading spinner */}
-      {uploading ? (
-        <div style={{
-          position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.75)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: spacing['8'],
-          backdropFilter: 'blur(4px)',
-        }}>
-          <div style={{
-            width: 28, height: 28, borderRadius: radius.full,
-            border: `3px solid ${colors.border}`, borderTopColor: colors.brandPrimary,
-            animation: 'spin 0.7s linear infinite',
-          }} />
-          <span style={{ fontSize: typography.xs, color: colors.textSecondary, fontWeight: Number(fontWeights.medium) }}>{UI_STRINGS.uploading}</span>
-        </div>
-      ) : null}
-
-      {imageUrl ? (
-        <div
-          style={{
-            position: 'absolute',
-            top: spacing['8'],
-            right: spacing['8'],
-            display: 'grid',
-            gap: spacing['4'],
-            pointerEvents: 'none',
-            justifyItems: 'end',
-          }}
-        >
-          {naturalSize ? (
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: spacing['4'],
-                backgroundColor: 'rgba(0,0,0,0.66)',
-                color: colors.textInverted,
-                borderRadius: radius.full,
-                padding: `${spacing['4']}px ${spacing['8']}px`,
-                fontSize: typography.xs,
-                fontWeight: Number(fontWeights.medium),
-              }}
-            >
-              {naturalSize.width} x {naturalSize.height}
-            </span>
-          ) : null}
-          <span
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: spacing['4'],
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              color: colors.textInverted,
-              borderRadius: radius.full,
-              padding: `${spacing['4']}px ${spacing['8']}px`,
-              fontSize: typography.xs,
-            }}
-          >
-            Recommended frame {aspectW}:{aspectH}
-          </span>
-        </div>
-      ) : null}
-
-      {/* Clear button */}
-      {imageUrl && !uploading ? (
-        <button
-          type='button'
-          aria-label='Remove image'
-          onClick={(e) => { e.stopPropagation(); onClear() }}
-          style={{
-            position: 'absolute', top: spacing['8'], right: spacing['8'],
-            left: spacing['8'], right: 'auto',
-            width: 24, height: 24, borderRadius: radius.full, border: 'none',
-            backgroundColor: 'rgba(0,0,0,0.55)', color: '#fff',
-            display: 'grid', placeItems: 'center', cursor: 'pointer',
-            backdropFilter: 'blur(4px)', transition: 'background-color 150ms',
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.82)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.55)' }}
-        >
-          <X size={12} />
-        </button>
-      ) : null}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
-  return (
-    <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.medium) }}>
-      {children}
-      {required ? <span style={{ color: colors.danger, marginLeft: 2 }}>*</span> : null}
-    </span>
-  )
-}
-
-function ErrorHint({ message }: { message: string | null }) {
-  if (!message) return null
-  return (
-    <span style={{ color: colors.danger, fontSize: typography.xs, marginTop: 2 }}>{message}</span>
-  )
-}
-
-function LocalizedPair({
-  labelEn,
-  labelAr,
-  valueEn,
-  valueAr,
-  onChangeEn,
-  onChangeAr,
-  required,
-  errorEn,
-  errorAr,
-}: {
-  labelEn: string
-  labelAr: string
-  valueEn: string
-  valueAr: string
-  onChangeEn: (v: string) => void
-  onChangeAr: (v: string) => void
-  required?: boolean
-  errorEn?: string | null
-  errorAr?: string | null
-}) {
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing['12'] }}>
-      <label style={{ display: 'grid', gap: spacing['4'] }}>
-        <FieldLabel required={required}>{labelEn}</FieldLabel>
-        <input className='admin-focus-ring' value={valueEn} onChange={(e) => onChangeEn(e.target.value)} style={inputStyle} />
-        <ErrorHint message={errorEn ?? null} />
-      </label>
-      <label style={{ display: 'grid', gap: spacing['4'] }}>
-        <FieldLabel>{labelAr}</FieldLabel>
-        <input className='admin-focus-ring' value={valueAr} onChange={(e) => onChangeAr(e.target.value)} dir="rtl" lang="ar" style={inputStyle} />
-        <ErrorHint message={errorAr ?? null} />
-      </label>
-    </div>
-  )
-}
-
-function FullWidthField({
-  label,
-  value,
-  onChange,
-  placeholder,
-  required,
-  errorMsg,
-  type: inputType,
-}: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  required?: boolean
-  errorMsg?: string | null
-  type?: string
-}) {
-  return (
-    <label style={{ display: 'grid', gap: spacing['4'] }}>
-      <FieldLabel required={required}>{label}</FieldLabel>
-      <input className='admin-focus-ring' type={inputType} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} style={inputStyle} />
-      <ErrorHint message={errorMsg ?? null} />
-    </label>
-  )
-}
-
-function QueryDropdown({
-  value,
-  onChange,
-  queries,
-  required,
-  errorMsg,
-  loading,
-  loadError,
-}: {
-  value: string
-  onChange: (v: string) => void
-  queries: ProductQuery[]
-  required?: boolean
-  errorMsg?: string | null
-  loading?: boolean
-  loadError?: string | null
-}) {
-  const [search, setSearch] = useState('')
-  const selected = queries.find((query) => query.slug === value) ?? null
-  const filteredQueries = useMemo(() => {
-    const needle = search.trim().toLowerCase()
-    if (!needle) return queries
-    return queries.filter((query) => {
-      const titleEn = query.title?.en ?? ''
-      const titleAr = query.title?.ar ?? ''
-      return `${query.slug} ${titleEn} ${titleAr}`.toLowerCase().includes(needle)
-    })
-  }, [queries, search])
-
-  return (
-    <label style={{ display: 'grid', gap: spacing['4'] }}>
-      <FieldLabel required={required}>{UI_STRINGS.queryLabel}</FieldLabel>
-      <div
-        style={{
-          display: 'grid',
-          gap: spacing['8'],
-          border: `1px solid ${errorMsg ? colors.danger : colors.border}`,
-          borderRadius: radius.xl,
-          padding: spacing['12'],
-          backgroundColor: colors.surface,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: spacing['8'], flexWrap: 'wrap' }}>
-          <div style={{ display: 'grid', gap: 2 }}>
-            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>
-              {UI_STRINGS.querySelectedLabel}
-            </span>
-            <span style={{ fontSize: typography.sm, color: colors.textPrimary, fontWeight: Number(fontWeights.medium) }}>
-              {selected?.title?.en || selected?.slug || (required ? UI_STRINGS.querySelectRequiredPlaceholder : UI_STRINGS.querySelectOptionalPlaceholder)}
-            </span>
-            {selected ? (
-              <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>
-                {selected.slug}
-              </span>
-            ) : null}
-          </div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['6'], flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {selected && !selected.active ? (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  borderRadius: radius.full,
-                  backgroundColor: colors.surfaceMuted,
-                  color: colors.textSecondary,
-                  padding: `2px ${spacing['8']}px`,
-                  fontSize: typography.xs,
-                }}
-              >
-                {UI_STRINGS.queryInactiveLabel}
-              </span>
-            ) : null}
-            {!required && value ? (
-              <button
-                type='button'
-                onClick={() => onChange('')}
-                style={{
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radius.full,
-                  backgroundColor: colors.surface,
-                  color: colors.textSecondary,
-                  padding: `4px ${spacing['10']}px`,
-                  fontSize: typography.xs,
-                  cursor: 'pointer',
-                }}
-              >
-                {UI_STRINGS.queryClearButton}
-              </button>
-            ) : null}
-            <a
-              href='/admin/marketing/cms/queries'
-              target='_blank'
-              rel='noopener noreferrer'
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: spacing['4'],
-                color: colors.textSecondary,
-                fontSize: typography.xs,
-                textDecoration: 'none',
-              }}
-            >
-              <ExternalLink size={12} />
-              {UI_STRINGS.queryOpenLink}
-            </a>
-          </div>
-        </div>
-
-        <input
-          className='admin-focus-ring'
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={UI_STRINGS.querySearchPlaceholder}
-          style={{ ...inputStyle, fontSize: typography.sm }}
-        />
-
-        <div
-          style={{
-            display: 'grid',
-            gap: spacing['8'],
-            maxHeight: 220,
-            overflowY: 'auto',
-            paddingInlineEnd: spacing['4'],
-          }}
-        >
-          {loading ? (
-            <InlineLoading label={UI_STRINGS.queryLoading} />
-          ) : loadError ? (
-            <span style={{ fontSize: typography.xs, color: colors.danger }}>{loadError}</span>
-          ) : queries.length === 0 ? (
-            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>{UI_STRINGS.queryNoQueries}</span>
-          ) : filteredQueries.length === 0 ? (
-            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>{UI_STRINGS.queryNoMatches}</span>
-          ) : (
-            filteredQueries.map((query) => {
-              const active = query.slug === value
-              return (
-                <button
-                  key={query.slug}
-                  type='button'
-                  onClick={() => onChange(query.slug)}
-                  style={{
-                    border: `1px solid ${active ? colors.brandPrimary : colors.border}`,
-                    borderRadius: radius.lg,
-                    backgroundColor: active ? colors.brandPrimarySubtle : colors.surface,
-                    color: colors.textPrimary,
-                    padding: spacing['12'],
-                    display: 'grid',
-                    gap: spacing['6'],
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: spacing['10'] }}>
-                    <div style={{ display: 'grid', gap: spacing['2'], minWidth: 0, flex: 1 }}>
-                      <span style={{ fontSize: typography.sm, fontWeight: Number(fontWeights.semibold), lineHeight: 1.35 }}>
-                        {query.title?.en || query.slug}
-                      </span>
-                      <span style={{ fontSize: typography.xs, color: colors.textSecondary, fontFamily: 'monospace', lineHeight: 1.4 }}>
-                        {query.slug}
-                      </span>
-                    </div>
-                    {!query.active ? (
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          borderRadius: radius.full,
-                          backgroundColor: colors.surfaceMuted,
-                          color: colors.textSecondary,
-                          padding: `2px ${spacing['8']}px`,
-                          fontSize: typography.xs,
-                          flexShrink: 0,
-                          marginTop: 1,
-                        }}
-                      >
-                        {UI_STRINGS.queryInactiveLabel}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-              )
-            })
-          )}
-        </div>
-      </div>
-      <ErrorHint message={errorMsg ?? null} />
-    </label>
-  )
-}
-
-function SectionDivider({ label }: { label: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], marginTop: spacing['4'] }}>
-      <span style={{ color: colors.textSecondary, fontSize: typography.xs, fontWeight: Number(fontWeights.semibold), whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{ flex: 1, height: 1, backgroundColor: colors.border }} />
-    </div>
-  )
-}
-
 // ---------------------------------------------------------------------------
 // Main page component
 // ---------------------------------------------------------------------------
@@ -1041,7 +521,7 @@ export default function AdminCmsBlocksPage() {
   const requestedReleaseId = searchParams.get('releaseId')?.trim() ?? ''
   const [releases, setReleases] = useState<AdminReleaseRecord[]>([])
   const [releaseId, setReleaseId] = useState('')
-  const [pageScope, setPageScope] = useState(DEFAULT_PAGE_BLOCK_SCOPE)
+  const [pageScope, setPageScope] = useState<AdminPageBlockScope>(DEFAULT_PAGE_BLOCK_SCOPE)
   const [blocks, setBlocks] = useState<AdminPageBlockRecord[]>([])
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [position, setPosition] = useState('1')
@@ -1669,23 +1149,28 @@ export default function AdminCmsBlocksPage() {
     if (missing.length === 0) return existing
 
     let nextPos = existing.length > 0 ? Math.max(...existing.map((b) => b.position)) + 1 : 1
-    const created: AdminReleaseBlockRecord[] = []
+    const created: AdminPageBlockRecord[] = []
 
     for (const blockType of missing) {
       try {
         const payloadJson = buildDefaultPayload(blockType, nextPos)
-        const res = await fetch(
-          `/api/admin/release-blocks?storeId=${encodeURIComponent(pageScope.storeId)}&slug=${encodeURIComponent(pageScope.slug)}&pageType=${encodeURIComponent(pageScope.pageType)}`,
-          {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ releaseId: targetReleaseId, position: nextPos, type: blockType, payloadJson }),
-          },
-        )
-        const json = await res.json() as { success: boolean; data?: AdminPageBlockRecord }
-        if (json.success && json.data) {
-          created.push(json.data)
+        const createdBlock = await apiClient.admin.createReleaseBlock({
+          releaseId: targetReleaseId,
+          position: nextPos,
+          type: blockType,
+          payloadJson,
+          storeId: pageScope.storeId,
+          slug: pageScope.slug,
+          pageType: pageScope.pageType,
+        })
+        if (createdBlock) {
+          created.push({
+            ...createdBlock,
+            storeId: pageScope.storeId,
+            slug: pageScope.slug,
+            pageType: pageScope.pageType,
+            version: 'v1',
+          })
           nextPos++
         }
       } catch {
@@ -1912,12 +1397,9 @@ export default function AdminCmsBlocksPage() {
     setUploading(true)
     setError(null)
     try {
-      const form = new FormData()
-      form.append('file', file)
-      const res = await fetch('/api/admin/cms/blocks/upload', { method: 'POST', body: form, credentials: 'include' })
-      const json = await res.json() as { success: boolean; data?: { url: string }; error?: { message?: string } }
-      if (!json.success || !json.data?.url) throw new Error(json.error?.message ?? 'Upload failed')
-      onDone(json.data.url)
+      const upload = await apiClient.admin.uploadCmsBlockImage(file)
+      if (!upload?.url) throw new Error('Upload failed')
+      onDone(upload.url)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Upload failed.')
     } finally {
@@ -1931,12 +1413,9 @@ export default function AdminCmsBlocksPage() {
     setUploading(true)
     setError(null)
     try {
-      const form = new FormData()
-      form.append('file', file)
-      const res = await fetch('/api/admin/cms/blocks/upload', { method: 'POST', body: form, credentials: 'include' })
-      const json = await res.json() as { success: boolean; data?: { url: string }; error?: { message?: string } }
-      if (!json.success || !json.data?.url) throw new Error(json.error?.message ?? 'Upload failed')
-      setHeroCarouselFields((f) => ({ ...f, cards: f.cards.map((c, idx) => idx === cardIdx ? { ...c, imageUrl: json.data!.url } : c) }))
+      const upload = await apiClient.admin.uploadCmsBlockImage(file)
+      if (!upload?.url) throw new Error('Upload failed')
+      setHeroCarouselFields((f) => ({ ...f, cards: f.cards.map((c, idx) => idx === cardIdx ? { ...c, imageUrl: upload.url } : c) }))
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Upload failed.')
     } finally {
@@ -2252,9 +1731,9 @@ export default function AdminCmsBlocksPage() {
                       <AlertCircle size={14} color={colors.danger} />
                     )}
                     {(block.enabled ?? true) ? (
-                      <Eye size={14} color={colors.success} title="Enabled" />
+                      <Eye size={14} color={colors.success} />
                     ) : (
-                      <EyeOff size={14} color={colors.textSecondary} title="Disabled" />
+                      <EyeOff size={14} color={colors.textSecondary} />
                     )}
                     {active && isDirty ? (
                       <span style={{ width: 6, height: 6, borderRadius: radius.full, backgroundColor: '#f59e0b', flexShrink: 0 }} title="Unsaved changes" />
@@ -2304,13 +1783,9 @@ export default function AdminCmsBlocksPage() {
                     setPreviewTokenLoading(true)
                     setPreviewToken(null)
                     try {
-                      const res = await fetch(
-                        `/api/admin/preview-token?releaseId=${encodeURIComponent(releaseId)}&storeId=${encodeURIComponent(pageScope.storeId)}`,
-                        { credentials: 'include' },
-                      )
-                      const json = await res.json() as { success: boolean; data?: { token: string }; error?: { message: string } }
-                      if (json.success && json.data?.token) setPreviewToken(json.data.token)
-                      else setError(json.error?.message ?? 'Could not get preview token.')
+                      const preview = await apiClient.admin.getPreviewToken(releaseId, pageScope.storeId)
+                      if (preview?.token) setPreviewToken(preview.token)
+                      else setError('Could not get preview token.')
                     } catch {
                       setError('Could not get preview token.')
                     } finally {
@@ -2330,19 +1805,13 @@ export default function AdminCmsBlocksPage() {
                     if (!selected) return
                     const next = !(selected.enabled ?? true)
                     try {
-                      const res = await fetch(
-                        `/api/admin/release-blocks/${selected.id}?storeId=${encodeURIComponent(pageScope.storeId)}&slug=${encodeURIComponent(pageScope.slug)}&pageType=${encodeURIComponent(pageScope.pageType)}`,
-                        {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({ enabled: next }),
-                        },
-                      )
-                      const json = await res.json() as { success: boolean; data?: AdminPageBlockRecord }
-                      if (json.success && json.data) {
-                        setBlocks((prev) => prev.map((b) => b.id === selected.id ? { ...b, enabled: next } : b))
-                      }
+                      await apiClient.admin.updateReleaseBlock(selected.id, {
+                        enabled: next,
+                        storeId: pageScope.storeId,
+                        slug: pageScope.slug,
+                        pageType: pageScope.pageType,
+                      })
+                      setBlocks((prev) => prev.map((b) => b.id === selected.id ? { ...b, enabled: next } : b))
                     } catch {
                       setError('Could not update block status.')
                     }

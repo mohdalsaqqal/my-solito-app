@@ -1,9 +1,26 @@
-import { Platform, ScrollView } from 'react-native'
+import React from 'react'
+import { Platform, Pressable, ScrollView } from 'react-native'
 import { borderWidth, colors, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import { Box, Text } from '../../primitives'
 import { Button } from '../Button'
 import { Card } from '../Card'
-import { ProductCard } from '../ProductCard'
+import { ProductCard, ProductCardSkeleton } from '../ProductCard'
+import type { ProductCardModel } from '../ProductCard.types'
+
+function shopProductToCardModel(product: ShopProductCardItem): ProductCardModel {
+  return {
+    id: product.id,
+    slug: product.id,
+    href: `/product/${product.id}`,
+    title: product.name,
+    brand: { name: product.brand },
+    image: { url: product.imageUrl ?? '', alt: product.name },
+    price: { amount: product.price, currency: 'USD', formatted: `$${product.price.toFixed(2)}` },
+    badges: product.badge ? [{ kind: 'discount' as const, label: product.badge }] : [],
+    inStock: !product.outOfStock,
+    requiresVariantSelection: false,
+  }
+}
 
 export type ShopSortKey = 'best_selling' | 'newest' | 'price_asc' | 'price_desc'
 export type ShopPriceBucket = 'all' | 'under_25' | '25_50' | '50_100' | 'over_100'
@@ -96,7 +113,7 @@ type ShopCatalogViewProps = {
   }
 }
 
-export function ShopCatalogView({
+export const ShopCatalogView = React.memo(function ShopCatalogView({
   disabled = false,
   isDesktop,
   mobileFiltersOpen,
@@ -209,7 +226,7 @@ export function ShopCatalogView({
         <Box style={{ gap: spacing['8'] }}>
           <Text variant='label'>{filterCategoryTitle}</Text>
         {availableCategories.map((category) => (
-          <Touchable
+          <Pressable
             key={category}
             disabled={disabled}
             onPress={() => onToggleCategory(category)}
@@ -227,14 +244,14 @@ export function ShopCatalogView({
             >
               <Text variant='bodySm'>{category}</Text>
             </Box>
-          </Touchable>
+          </Pressable>
         ))}
         </Box>
 
         <Box style={{ gap: spacing['8'] }}>
           <Text variant='label'>{filterBrandTitle}</Text>
         {availableBrands.slice(0, 8).map((brand) => (
-          <Touchable
+          <Pressable
             key={brand}
             disabled={disabled}
             onPress={() => onToggleBrand(brand)}
@@ -252,7 +269,7 @@ export function ShopCatalogView({
             >
               <Text variant='bodySm'>{brand}</Text>
             </Box>
-          </Touchable>
+          </Pressable>
         ))}
         </Box>
 
@@ -265,7 +282,7 @@ export function ShopCatalogView({
           { id: '50_100', label: priceLabel50To100 },
           { id: 'over_100', label: priceLabelOver100 },
         ].map((item) => (
-          <Touchable
+          <Pressable
             key={item.id}
             disabled={disabled}
             onPress={() => onSetPriceBucket(item.id as ShopPriceBucket)}
@@ -283,13 +300,13 @@ export function ShopCatalogView({
             >
               <Text variant='bodySm'>{item.label}</Text>
             </Box>
-          </Touchable>
+          </Pressable>
         ))}
         </Box>
 
         <Box style={{ gap: spacing['8'] }}>
           <Text variant='label'>{filterSpecialTitle}</Text>
-        <Touchable disabled={disabled} onPress={onToggleSaleOnly}>
+        <Pressable disabled={disabled} onPress={onToggleSaleOnly}>
           <Box
             style={{
               minHeight: spacing['40'],
@@ -303,8 +320,8 @@ export function ShopCatalogView({
           >
             <Text variant='bodySm'>{saleOnlyLabel}</Text>
           </Box>
-        </Touchable>
-        <Touchable disabled={disabled} onPress={onToggleBundleOnly}>
+        </Pressable>
+        <Pressable disabled={disabled} onPress={onToggleBundleOnly}>
           <Box
             style={{
               minHeight: spacing['40'],
@@ -318,7 +335,7 @@ export function ShopCatalogView({
           >
             <Text variant='bodySm'>{bundleOnlyLabel}</Text>
           </Box>
-        </Touchable>
+        </Pressable>
         </Box>
 
         {showClearAction ? (
@@ -395,7 +412,7 @@ export function ShopCatalogView({
               { id: 'price_asc', label: sortPriceAsc },
               { id: 'price_desc', label: sortPriceDesc },
             ].map((item) => (
-              <Touchable
+              <Pressable
                 key={item.id}
                 disabled={disabled}
                 onPress={() => onSetSort(item.id as ShopSortKey)}
@@ -415,7 +432,7 @@ export function ShopCatalogView({
                 <Text variant='caption' tone={queryState.sort === item.id ? 'inverse' : 'default'} style={{ textTransform: 'uppercase' }}>
                   {item.label}
                 </Text>
-              </Touchable>
+              </Pressable>
             ))}
           </Box>
         </Box>
@@ -431,7 +448,7 @@ export function ShopCatalogView({
             {hasActiveFilters ? (
               <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['8'], alignItems: 'center' }}>
                 {activeFilterChips.map((chip) => (
-                  <Touchable key={chip.id} onPress={chip.onRemove}>
+                  <Pressable key={chip.id} onPress={chip.onRemove}>
                     <Box
                       style={{
                         minHeight: spacing['40'],
@@ -448,7 +465,7 @@ export function ShopCatalogView({
                       <Text variant='caption' style={{ textTransform: 'uppercase' }}>{chip.label}</Text>
                       <Text variant='caption' tone='muted'>x</Text>
                     </Box>
-                  </Touchable>
+                  </Pressable>
                 ))}
                 <Button variant='ghost' onPress={onClearAll}>
                   {clearFiltersLabel}
@@ -473,13 +490,9 @@ export function ShopCatalogView({
                   <ProductCard
                     key={product.id}
                     width={cardWidth}
-                    item={product}
-                    state={disabled ? 'disabled' : 'default'}
-                    outOfStock={Boolean(product.outOfStock)}
-                    onPress={(item) => onSelectProduct?.(item.id)}
-                    onQuickView={(item) => onSelectProduct?.(item.id)}
-                    onAddToCart={(item) => onAddToCart?.(item.id)}
-                    urgencyLabel={product.urgencyLabel}
+                    item={shopProductToCardModel(product)}
+                    onPress={() => onSelectProduct?.(product.id)}
+                    onPressAdd={() => onAddToCart?.(product.id)}
                   />
                 ))}
               </Box>
@@ -490,7 +503,7 @@ export function ShopCatalogView({
                 const page = index + 1
                 const active = page === safePage
                 return (
-                  <Touchable
+                  <Pressable
                     key={`page-${page}`}
                     disabled={disabled}
                     onPress={() => onSetPage(page)}
@@ -507,7 +520,7 @@ export function ShopCatalogView({
                     }}
                   >
                     <Text variant='caption' tone={active ? 'inverse' : 'default'}>{String(page)}</Text>
-                  </Touchable>
+                  </Pressable>
                 )
               })}
             </Box>
@@ -528,7 +541,7 @@ export function ShopCatalogView({
             zIndex: zIndex.overlay,
           } as any}
         >
-          <Touchable style={{ flex: 1 }} onPress={() => setMobileFiltersOpen(false)} />
+          <Pressable style={{ flex: 1 }} onPress={() => setMobileFiltersOpen(false)} />
           <Box
             style={{
               position: 'absolute',
@@ -568,4 +581,4 @@ export function ShopCatalogView({
       ) : null}
     </ScrollView>
   )
-}
+})

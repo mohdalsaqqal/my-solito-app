@@ -1,7 +1,8 @@
-import { ReactNode } from 'react'
+import React, { ReactNode } from 'react'
 import { Modal, View } from 'react-native'
 import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
-import { Touchable } from '../primitives/Touchable'
+import { Button as ReusableButton } from '../reusables/button'
+import { useThemeColors } from '../responsive'
 
 type DrawerProps = {
   open: boolean
@@ -10,30 +11,35 @@ type DrawerProps = {
   maxHeightPercent?: number
 }
 
-export function Drawer({ open, onClose, children, maxHeightPercent = 85 }: DrawerProps) {
+export const Drawer = React.memo(function Drawer({ open, onClose, children, maxHeightPercent = 85 }: DrawerProps) {
+  const c = useThemeColors()
   return (
     <Modal animationType='slide' transparent visible={open} onRequestClose={onClose}>
       <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-        <Touchable
+        <ReusableButton
           onPress={onClose}
+          accessibilityLabel='Close drawer'
+          variant='ghost'
           style={{
             position: 'absolute',
             top: 0,
             bottom: 0,
             start: 0,
             end: 0,
-            backgroundColor: `rgba(0,0,0,${opacity.overlayLight})`,
+            backgroundColor: c.black,
+            opacity: opacity.overlayLight,
+            borderRadius: 0,
           }}
         />
         <View
           style={{
-            backgroundColor: colors.surface,
+            backgroundColor: c.surface,
             padding: spacing.lg,
             borderTopStartRadius: radius.lg,
             borderTopEndRadius: radius.lg,
             maxHeight: `${maxHeightPercent}%`,
             borderTopWidth: borderWidth.thin,
-            borderColor: colors.border,
+            borderColor: c.border,
           }}
         >
           {children}
@@ -41,4 +47,4 @@ export function Drawer({ open, onClose, children, maxHeightPercent = 85 }: Drawe
       </View>
     </Modal>
   )
-}
+})

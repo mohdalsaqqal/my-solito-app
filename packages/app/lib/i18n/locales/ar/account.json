@@ -1,4 +1,125 @@
 {
+  "title": "الحساب",
+  "welcome": "مرحباً، {{name}}",
+  "tabs": {
+    "dashboard": "لوحة التحكم",
+    "orders": "الطلبات",
+    "tests": "الفحوصات",
+    "addresses": "العناوين",
+    "loyalty": "الولاء",
+    "wishlist": "المفضلة",
+    "settings": "الإعدادات"
+  },
+  "signOut": {
+    "label": "تسجيل الخروج",
+    "signingOut": "جارٍ تسجيل الخروج..."
+  },
+  "promo": {
+    "title": "الولاء يفتح روتينات أفضل",
+    "subtitle": "اكسب نقاطاً على كل عملية شراء واستبدلها بالأساسيات."
+  },
+  "error": {
+    "loadFailed": "تعذر تحميل بيانات الحساب."
+  },
+  "metrics": {
+    "tier": "المستوى",
+    "points": "النقاط",
+    "redeemable": "قابل للاسترداد",
+    "lastOrder": "آخر طلب",
+    "noOrders": "لا توجد طلبات"
+  },
+  "orders": {
+    "title": "الطلبات",
+    "empty": "لا توجد طلبات بعد.",
+    "viewAll": "عرض الكل",
+    "viewOrder": "عرض الطلب",
+    "orderLabel": "الطلب {{id}}",
+    "accessibilityLabel": "فتح الطلب {{id}}"
+  },
+  "tests": {
+    "title": "فحوصات التشخيص",
+    "empty": "لم يتم تسجيل أي فحوصات بعد.",
+    "openTests": "فتح الفحوصات",
+    "viewResult": "عرض النتيجة",
+    "recommendations": "{{count}} توصيات",
+    "purchasedFromRecommendations": "تم شراؤها من التوصيات: {{count}}",
+    "qr": {
+      "title": "رمز QR الخاص بي",
+      "subtitle": "يمكن للصيدلي مسح هذا الرمز لفتح ملفك الشخصي فوراً."
+    }
+  },
+  "addresses": {
+    "title": "العناوين",
+    "empty": "لا توجد عناوين محفوظة بعد.",
+    "add": "إضافة عنوان",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "confirmDelete": "تأكيد الحذف",
+    "cancelDelete": "إلغاء",
+    "setAsDefault": "تعيين كافتراضي",
+    "default": "افتراضي",
+    "deleteWarning": "لا يمكن التراجع عن هذا الإجراء.",
+    "form": {
+      "addTitle": "إضافة عنوان جديد",
+      "editTitle": "تعديل العنوان",
+      "closeForm": "إغلاق النموذج",
+      "label": "التسمية (المنزل، العمل، إلخ)",
+      "city": "المدينة",
+      "area": "الحي",
+      "building": "المبنى",
+      "floor": "الطابق (اختياري)",
+      "apartment": "الشقة (اختياري)",
+      "save": "حفظ العنوان",
+      "saving": "جارٍ الحفظ...",
+      "update": "تحديث العنوان",
+      "cancel": "إلغاء",
+      "validationError": "التسمية والمدينة والحي والمبنى مطلوبة.",
+      "saveError": "تعذر حفظ العنوان."
+    }
+  },
+  "loyalty": {
+    "title": "محفظة الولاء",
+    "notAvailable": "الولاء غير متاح لهذا الحساب بعد.",
+    "tier": "المستوى: {{tier}}",
+    "pointsBalance": "رصيد النقاط: {{points}}",
+    "redeemableValue": "القيمة القابلة للاسترداد: {{value}}",
+    "history": {
+      "title": "السجل",
+      "empty": "لا يوجد نشاط ولاء بعد."
+    },
+    "tierProgress": {
+      "current": "الحالي: {{tier}}",
+      "next": "التالي: {{tier}}",
+      "topTier": "تم الوصول إلى أعلى مستوى",
+      "pointsToNext": "{{points}} نقطة للوصول إلى {{tier}}"
+    },
+    "expiringSoon": "تنتهي قريباً: {{points}} نقاط{{date, select, other { بحلول {{date}}}}}",
+    "inStoreBarcode": "رمز المتجر: {{code}} (ينتهي {{date}})",
+    "redeemOptions": {
+      "title": "خيارات الاستبدال المتاحة",
+      "option": "{{percent}}% ({{points}} نقطة)"
+    }
+  },
+  "wishlist": {
+    "title": "المفضلة",
+    "empty": "لا توجد عناصر محفوظة بعد.",
+    "addToCart": "إضافة إلى السلة",
+    "accessibilityLabel": "فتح المنتج {{name}}",
+    "imgPlaceholder": "صورة"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "notifications": {
+      "title": "الإشعارات",
+      "subtitle": "تفضيلات البريد الإلكتروني والحملات.",
+      "manage": "إدارة الإشعارات"
+    },
+    "password": {
+      "title": "كلمة المرور",
+      "subtitle": "تحديث كلمة مرور وأمان حسابك.",
+      "change": "تغيير كلمة المرور"
+    }
+  },
   "actions": {
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -7,5 +128,27 @@
   "state": {
     "loading": "جار التحميل...",
     "empty": "لا توجد بيانات"
+  },
+  "testDetail": {
+    "notFound": "لم يتم العثور على الفحص.",
+    "loadError": "تعذر تحميل تفاصيل الفحص.",
+    "retry": "إعادة المحاولة",
+    "title": "تفاصيل الفحص",
+    "backToTests": "العودة إلى الفحوصات",
+    "resultSummary": "ملخص النتيجة",
+    "recommendedProducts": "المنتجات الموصى بها",
+    "noRecommendedProducts": "لا توجد منتجات موصى بها لهذا الفحص.",
+    "outOfStock": "غير متوفر",
+    "adding": "جارٍ الإضافة...",
+    "added": "تمت الإضافة",
+    "addToCart": "إضافة إلى السلة",
+    "addAll": "إضافة الكل",
+    "viewProduct": "عرض المنتج",
+    "testId": "معرف الفحص: {{id}}",
+    "date": "التاريخ: {{date}}",
+    "pharmacist": "الصيدلي: {{name}}",
+    "branch": "الفرع: {{name}}",
+    "status": "الحالة: {{status}}",
+    "notes": "ملاحظات: {{notes}}"
   }
 }

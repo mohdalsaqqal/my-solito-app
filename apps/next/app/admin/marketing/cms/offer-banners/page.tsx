@@ -1,11 +1,12 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Image as ImageIcon, Plus, Save, Trash2, Upload, X } from 'lucide-react'
+import { Eye, EyeOff, Image as ImageIcon, Plus, Save, Trash2, Upload, X } from 'lucide-react'
 import { AdminOfferBannerRecord } from '@real/app/lib/types'
 import { apiClient } from '../../../../apiClient'
-import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
-import { Button, EmptyState, PageContainer, PageHeader, Panel } from '../../../_components/AdminPagePrimitives'
+import { colors, elevation, spacing, typography, fontWeights, radius, status } from '@real/tokens'
+import { AdminFormScaffold, Button, EmptyState, Field, PageContainer, Panel, TextInput } from '../../../_components/AdminPagePrimitives'
+import { AdminLoadingSkeleton, AdminErrorState } from '../../../_components/AdminLoadingFeedback'
 
 // Exact banner dimensions from tokens: (1320 - 24*2 - rowGap:20) / 2 = 626 wide, 214 tall
 const BANNER_W = 626
@@ -13,6 +14,15 @@ const BANNER_H = 214
 const ASPECT = BANNER_W / BANNER_H // ~2.925
 
 const MAX_BANNERS = 4
+const offerBannerTokens = {
+  enabledBadgeBackground: status.success.subtle,
+  uploadOverlay:
+    'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 60%, transparent 100%)',
+  uploadOverlayActionShadow: elevation.sm,
+  uploadProcessingOverlay: 'rgba(255,255,255,0.75)',
+  clearButtonBackground: 'rgba(0,0,0,0.55)',
+  clearButtonHoverBackground: 'rgba(0,0,0,0.82)',
+} as const
 
 /** Crop + resize the image to exactly BANNER_W×BANNER_H using Canvas (center-crop). */
 function cropToCanvas(file: File): Promise<Blob> {
@@ -72,6 +82,7 @@ function BannerCard({
   const isEnabled = banner.enabled !== false
   return (
     <button
+      className='admin-focus-ring'
       type='button'
       onClick={onSelect}
       style={{
@@ -132,7 +143,7 @@ function BannerCard({
         fontSize: typography.xs,
         fontWeight: Number(fontWeights.medium),
         color: isEnabled ? colors.success : colors.textSecondary,
-        backgroundColor: isEnabled ? 'rgba(34,197,94,0.10)' : colors.surfaceMuted,
+        backgroundColor: isEnabled ? offerBannerTokens.enabledBadgeBackground : colors.surfaceMuted,
         borderRadius: radius.full,
         padding: '2px 8px',
         flexShrink: 0,
@@ -170,11 +181,17 @@ function UploadZone({
 
   return (
     <div
+      className='admin-focus-ring'
       role='button'
       tabIndex={0}
       aria-label='Upload banner image'
       onClick={uploading ? undefined : onPick}
-      onKeyDown={(e) => { if (!uploading && (e.key === 'Enter' || e.key === ' ')) onPick() }}
+      onKeyDown={(e) => {
+        if (!uploading && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onPick()
+        }
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
@@ -208,7 +225,7 @@ function UploadZone({
         }}>
           <div style={{
             width: 44, height: 44,
-            borderRadius: radius.full,
+            borderRadius: radius.md,
             backgroundColor: active ? colors.brandPrimarySubtle : colors.surface,
             border: `1px solid ${active ? colors.brandPrimary : colors.border}`,
             display: 'grid', placeItems: 'center',
@@ -231,7 +248,7 @@ function UploadZone({
       {imageUrl && active && !uploading ? (
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.18) 60%, transparent 100%)',
+          background: offerBannerTokens.uploadOverlay,
           display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
           paddingBottom: spacing['16'],
           gap: spacing['8'],
@@ -240,14 +257,14 @@ function UploadZone({
             display: 'inline-flex', alignItems: 'center', gap: spacing['6'],
             backgroundColor: colors.textPrimary,
             color: colors.textInverted,
-            borderRadius: radius.full,
+            borderRadius: radius.md,
             paddingInline: spacing['16'],
             paddingBlock: spacing['8'],
             fontSize: typography.xs,
             fontWeight: Number(fontWeights.semibold),
             letterSpacing: '0.04em',
             textTransform: 'uppercase',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.35)',
+            boxShadow: offerBannerTokens.uploadOverlayActionShadow,
             pointerEvents: 'none',
           }}>
             <Upload size={12} />
@@ -260,7 +277,7 @@ function UploadZone({
       {uploading ? (
         <div style={{
           position: 'absolute', inset: 0,
-          backgroundColor: 'rgba(255,255,255,0.75)',
+          backgroundColor: offerBannerTokens.uploadProcessingOverlay,
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           gap: spacing['8'],
@@ -290,15 +307,15 @@ function UploadZone({
             width: 24, height: 24,
             borderRadius: radius.full,
             border: 'none',
-            backgroundColor: 'rgba(0,0,0,0.55)',
-            color: '#fff',
+            backgroundColor: offerBannerTokens.clearButtonBackground,
+            color: colors.textInverted,
             display: 'grid', placeItems: 'center',
             cursor: 'pointer',
             backdropFilter: 'blur(4px)',
             transition: 'background-color 150ms',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.82)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(0,0,0,0.55)' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = offerBannerTokens.clearButtonHoverBackground }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = offerBannerTokens.clearButtonBackground }}
         >
           <X size={12} />
         </button>
@@ -374,16 +391,11 @@ export default function AdminOfferBannersPage() {
     setUploading(true)
     try {
       const cropped = await cropToCanvas(file)
-      const form = new FormData()
-      form.append('file', new File([cropped], 'banner.jpg', { type: 'image/jpeg' }))
-      const res = await fetch('/api/admin/cms/offer-banners/upload', {
-        method: 'POST',
-        body: form,
-        credentials: 'include',
-      })
-      const json = await res.json() as { ok: boolean; data?: { url: string }; message?: string }
-      if (!json.ok || !json.data?.url) throw new Error(json.message ?? 'Upload failed')
-      setImageUrl(json.data.url)
+      const upload = await apiClient.admin.uploadOfferBannerImage(
+        new File([cropped], 'banner.jpg', { type: 'image/jpeg' })
+      )
+      if (!upload?.url) throw new Error('Upload failed')
+      setImageUrl(upload.url)
       setMessage(`Uploaded & cropped to ${BANNER_W}×${BANNER_H}px`)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Upload failed.')
@@ -463,9 +475,16 @@ export default function AdminOfferBannersPage() {
 
   return (
     <PageContainer dense>
-      <PageHeader
+      <AdminFormScaffold
         title='Offer Banners'
         subtitle='Up to 4 promotional banners for the homepage — connects to CMS.'
+        notice={
+          error
+            ? { tone: 'danger', message: error }
+            : message
+              ? { tone: 'success', message }
+              : undefined
+        }
         actions={
           <div style={{ display: 'flex', gap: spacing['8'], alignItems: 'center' }}>
             <span style={{ fontSize: typography.xs, fontWeight: Number(fontWeights.medium), backgroundColor: colors.surfaceMuted, borderRadius: radius.full, padding: '2px 10px', color: colors.textSecondary }}>
@@ -489,20 +508,9 @@ export default function AdminOfferBannersPage() {
             </Button>
           </div>
         }
-      />
-
-      {error ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], color: colors.danger, marginBottom: spacing['8'], fontSize: typography.sm }}>
-          <AlertCircle size={14} />
-          {error}
-        </div>
-      ) : null}
-      {message ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], color: colors.success, marginBottom: spacing['8'], fontSize: typography.sm }}>
-          <CheckCircle2 size={14} />
-          {message}
-        </div>
-      ) : null}
+      >
+        <div />
+      </AdminFormScaffold>
 
       <div
         style={{
@@ -520,7 +528,7 @@ export default function AdminOfferBannersPage() {
             </span>
           </div>
           {loading ? (
-            <div style={{ color: colors.textSecondary, fontSize: typography.sm }}>Loading…</div>
+            <AdminLoadingSkeleton />
           ) : banners.length === 0 ? (
             <EmptyState title='No banners yet' description='Add up to 4 offer banners shown on the home page.' />
           ) : (
@@ -539,53 +547,44 @@ export default function AdminOfferBannersPage() {
         </Panel>
 
         {/* Edit panel */}
-        <Panel density='dense'>
-          {!selected ? (
+        {!selected ? (
+          <AdminFormScaffold
+            title='Banner Editor'
+            subtitle='Choose a banner from the list to edit its image, link, and CTA.'
+          >
             <EmptyState title='Select a banner to edit' description='Choose a banner from the list to edit its image, link, and CTA.' />
-          ) : (
-            <>
-              <div
-                style={{
-                  borderBottom: `1px solid ${colors.border}`,
-                  marginBottom: spacing['16'],
-                  paddingBottom: spacing['12'],
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: spacing['12'],
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div style={{ display: 'grid', gap: spacing['2'] }}>
-                  <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>Editing</span>
-                  <span style={{ color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.semibold) }}>
-                    {selected.id}
+          </AdminFormScaffold>
+        ) : (
+          <AdminFormScaffold
+            title='Banner Editor'
+            subtitle={selected.id}
+            actions={
+              <div style={{ display: 'inline-flex', gap: spacing['8'] }}>
+                <Button
+                  tone='secondary'
+                  onClick={() => handleToggle(selected.id, selected.enabled === false)}
+                  aria-pressed={selected.enabled !== false}
+                >
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
+                    {selected.enabled !== false ? <EyeOff size={14} /> : <Eye size={14} />}
+                    {selected.enabled !== false ? 'Disable' : 'Enable'}
                   </span>
-                </div>
-                <div style={{ display: 'inline-flex', gap: spacing['8'] }}>
-                  <Button
-                    tone='secondary'
-                    onClick={() => handleToggle(selected.id, selected.enabled === false)}
-                  >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-                      {selected.enabled !== false ? <EyeOff size={14} /> : <Eye size={14} />}
-                      {selected.enabled !== false ? 'Disable' : 'Enable'}
-                    </span>
-                  </Button>
-                  <Button tone='danger' disabled={saving} onClick={handleDelete}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-                      <Trash2 size={14} color={colors.textInverted} />
-                      Delete
-                    </span>
-                  </Button>
-                  <Button tone='primary' disabled={saving || uploading} onClick={handleSave}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
-                      <Save size={14} color={colors.textInverted} />
-                      {saving ? 'Saving…' : 'Save'}
-                    </span>
-                  </Button>
-                </div>
+                </Button>
+                <Button tone='danger' disabled={saving} onClick={handleDelete}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
+                    <Trash2 size={14} color={colors.textInverted} />
+                    Delete
+                  </span>
+                </Button>
+                <Button tone='primary' disabled={saving || uploading} onClick={handleSave}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['4'] }}>
+                    <Save size={14} color={colors.textInverted} />
+                    {saving ? 'Saving…' : 'Save'}
+                  </span>
+                </Button>
               </div>
+            }
+          >
 
               {/* Image section */}
               <div style={{ marginBottom: spacing['16'] }}>
@@ -619,25 +618,23 @@ export default function AdminOfferBannersPage() {
               </div>
 
               <div style={{ display: 'grid', gap: spacing['12'] }}>
-                <label style={{ display: 'grid', gap: spacing['4'] }}>
-                  <span style={labelStyle}>Image URL</span>
-                  <input
+                <Field label='Image URL'>
+                  <TextInput
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder='https://… or /uploads/offer-banners/…'
+                    placeholder={'https://… or /uploads/offer-banners/…'}
                     style={inputStyle}
                   />
-                </label>
+                </Field>
 
-                <label style={{ display: 'grid', gap: spacing['4'] }}>
-                  <span style={labelStyle}>Banner Link (href)</span>
-                  <input
+                <Field label='Banner Link (href)'>
+                  <TextInput
                     value={href}
                     onChange={(e) => setHref(e.target.value)}
-                    placeholder='/shop/categories/skincare'
+                    placeholder='/shop?categories=skincare'
                     style={inputStyle}
                   />
-                </label>
+                </Field>
 
                 <div
                   style={{
@@ -646,24 +643,24 @@ export default function AdminOfferBannersPage() {
                     gap: spacing['12'],
                   }}
                 >
-                  <label style={{ display: 'grid', gap: spacing['4'] }}>
-                    <span style={labelStyle}>CTA Label (EN)</span>
-                    <input
+                  <Field label='CTA Label (EN)'>
+                    <TextInput
                       value={ctaEn}
                       onChange={(e) => setCtaEn(e.target.value)}
-                      placeholder='Shop Skincare'
+                      placeholder={'Shop Skincare'}
                       style={inputStyle}
                     />
-                  </label>
-                  <label style={{ display: 'grid', gap: spacing['4'] }}>
-                    <span style={labelStyle}>CTA Label (AR)</span>
-                    <input
+                  </Field>
+                  <Field label='CTA Label (AR)'>
+                    <TextInput
                       value={ctaAr}
                       onChange={(e) => setCtaAr(e.target.value)}
                       placeholder='تسوق العناية بالبشرة'
                       style={{ ...inputStyle, direction: 'rtl' }}
+                      dir='rtl'
+                      lang='ar'
                     />
-                  </label>
+                  </Field>
                 </div>
 
                 <label style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], cursor: 'pointer' }}>
@@ -671,9 +668,10 @@ export default function AdminOfferBannersPage() {
                     type='checkbox'
                     checked={enabled}
                     onChange={(e) => setEnabled(e.target.checked)}
+                    className='admin-focus-ring'
                     style={{ width: 16, height: 16, cursor: 'pointer' }}
                   />
-                  <span style={{ fontSize: typography.sm, color: colors.textPrimary }}>Enabled (visible on home page)</span>
+                  <span style={{ fontSize: typography.sm, color: colors.textPrimary }}>{'Enabled (visible on home page)'}</span>
                 </label>
 
                 {selected.updatedAt ? (
@@ -682,9 +680,8 @@ export default function AdminOfferBannersPage() {
                   </p>
                 ) : null}
               </div>
-            </>
-          )}
-        </Panel>
+          </AdminFormScaffold>
+        )}
       </div>
     </PageContainer>
   )

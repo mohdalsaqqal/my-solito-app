@@ -2,20 +2,20 @@ import { spacing } from '@real/tokens'
 import { Box, Text } from '../../primitives'
 import { Button } from '../Button'
 import { HorizontalRailState } from '../HorizontalRailState'
-import { ProductCard } from '../ProductCard'
-import { HomeProductItem } from '../home/types'
+import { ProductCard, ProductCardSkeleton } from '../ProductCard'
+import type { ProductCardModel } from '../ProductCard.types'
 
 type CompleteSetBlockProps = {
   title: string
   subtitle?: string
   ctaLabel?: string
-  items: HomeProductItem[]
+  items: ProductCardModel[]
   loading?: boolean
   error?: string | null
   onRetry?: () => void
   onPressCta?: () => void
-  onPressProduct?: (item: HomeProductItem) => void
-  onAddToCart?: (item: HomeProductItem) => void
+  onPressProduct?: (item: ProductCardModel) => void
+  onAddToCart?: (item: ProductCardModel) => void
 }
 
 export function CompleteSetBlock({
@@ -51,16 +51,17 @@ export function CompleteSetBlock({
         onRetry={onRetry}
         emptyMessage='No complete set items available right now.'
         loadingCount={3}
-        loadingItem={(key) => <ProductCard key={key} state='loading' width={spacing.xxl * 6} />}
+        loadingItem={(key) => <ProductCardSkeleton key={key} width={spacing.xxl * 6} variant='featured' />}
       >
         <>
           {items.map((item) => (
             <ProductCard
               key={item.id}
               item={item}
+              variant='featured'
               width={spacing.xxl * 6}
-              onPress={onPressProduct}
-              onAddToCart={onAddToCart}
+              onPress={() => onPressProduct?.(item)}
+              onPressAdd={() => onAddToCart?.(item)}
             />
           ))}
         </>

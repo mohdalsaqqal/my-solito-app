@@ -34,6 +34,8 @@ function createServer() {
         headers: {
           cookie: req.headers.cookie || '',
           'content-type': 'application/json',
+          origin: 'http://localhost',
+          'sec-fetch-site': 'same-origin',
         },
         body,
       })

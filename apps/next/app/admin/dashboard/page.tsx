@@ -1,46 +1,37 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useEffect, useMemo, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
-  ArrowDownRight,
   ArrowUpRight,
-  CheckCircle,
+  CheckCircle2,
   Package,
   RefreshCw,
   ShoppingBag,
+  Sparkles,
   Users,
   Zap,
 } from 'lucide-react'
-import { apiClient } from '../../apiClient'
 import { AdminOpsAuditEntry, OrderSummary } from '@real/app/lib/types'
 import { colors, fontWeights, radius, spacing, typography } from '@real/tokens'
+import { apiClient } from '../../apiClient'
 import {
+  ActivityFeed,
+  AdminCommandBar,
+  AdminKpiCard,
+  AdminKpiGrid,
+  AdminPanelHeader,
+  AdminTrendPill,
+  Button,
+  EmptyState,
+  InlineLoading,
+  MetricList,
   PageContainer,
-  PageHeader,
   Panel,
-  Section,
+  WorkspaceLayout,
 } from '../_components/AdminPagePrimitives'
-
-type Trend = 'up' | 'down'
-
-type SeriesPoint = {
-  label: string
-  revenue: number
-  orders: number
-}
-
-type TopItemStat = {
-  id: string
-  name: string
-  sales: number
-  revenue: number
-}
-
-type Period = '7d' | '30d' | '3m' | '12m'
-type ChartMode = 'revenue' | 'orders' | 'both'
 
 function formatCurrency(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
@@ -50,955 +41,676 @@ function formatCurrency(value: number, currency = 'USD') {
   }).format(value)
 }
 
-function formatKpiChange(value: number) {
-  const sign = value >= 0 ? '+' : ''
-  return `${sign}${value.toFixed(1)}%`
+function formatRelativeTime(input: string) {
+  const diffMs = Date.now() - new Date(input).getTime()
+  const diffMins = Math.max(0, Math.floor(diffMs / 60000))
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`
+  return `${Math.floor(diffMins / 1440)}d ago`
 }
 
-function buildLast12MonthsSeries(orders: OrderSummary[]): SeriesPoint[] {
-  const monthMap = new Map<string, { revenue: number; orders: number }>()
-  const now = new Date()
-
-  for (let index = 11; index >= 0; index -= 1) {
-    const date = new Date(now.getFullYear(), now.getMonth() - index, 1)
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-    monthMap.set(key, { revenue: 0, orders: 0 })
-  }
-
-  for (const order of orders) {
-    const createdAt = new Date(order.createdAt)
-    const key = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`
-    if (!monthMap.has(key)) continue
-    const current = monthMap.get(key)!
-    current.revenue += Number(order.total || 0)
-    current.orders += 1
-  }
-
-  return Array.from(monthMap.entries()).map(([key, row]) => {
-    const [year, month] = key.split('-')
-    return {
-      label: `${month}/${year.slice(2)}`,
-      revenue: row.revenue,
-      orders: row.orders,
-    }
-  })
+function formatCompactNumber(value: number) {
+  return new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(value)
 }
 
-
-function buildPeriodSeries(orders: OrderSummary[], period: Period): SeriesPoint[] {
-  const now = new Date()
-
-  if (period === '7d') {
-    const points: SeriesPoint[] = []
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(now)
-      d.setDate(d.getDate() - i)
-      const key = d.toISOString().slice(0, 10)
-      const label = `${d.getMonth() + 1}/${d.getDate()}`
-      const dayOrders = orders.filter((o) => o.createdAt.slice(0, 10) === key)
-      points.push({
-        label,
-        revenue: dayOrders.reduce((s, o) => s + Number(o.total || 0), 0),
-        orders: dayOrders.length,
-      })
-    }
-    return points
-  }
-
-  if (period === '30d') {
-    const points: SeriesPoint[] = []
-    for (let i = 5; i >= 0; i--) {
-      const endD = new Date(now)
-      endD.setDate(endD.getDate() - i * 5)
-      const startD = new Date(endD)
-      startD.setDate(startD.getDate() - 4)
-      const label = `${startD.getMonth() + 1}/${startD.getDate()}`
-      const bucketOrders = orders.filter((o) => {
-        const t = new Date(o.createdAt).getTime()
-        return t >= startD.getTime() && t <= endD.getTime()
-      })
-      points.push({
-        label,
-        revenue: bucketOrders.reduce((s, o) => s + Number(o.total || 0), 0),
-        orders: bucketOrders.length,
-      })
-    }
-    return points
-  }
-
-  if (period === '3m') {
-    const points: SeriesPoint[] = []
-    for (let i = 2; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      const label = d.toLocaleString('default', { month: 'short' })
-      const monthOrders = orders.filter((o) => o.createdAt.startsWith(key))
-      points.push({
-        label,
-        revenue: monthOrders.reduce((s, o) => s + Number(o.total || 0), 0),
-        orders: monthOrders.length,
-      })
-    }
-    return points
-  }
-
-  return buildLast12MonthsSeries(orders)
+type TopItemStat = {
+  id: string
+  name: string
+  sales: number
+  revenue: number
 }
 
-const KPI_ACCENT: Record<string, string> = {
-  revenue: colors.brandPrimary,
-  users: colors.info,
-  pending: colors.warning,
-  health: colors.success,
+const copy = {
+  eyebrow: 'Control Room',
+  title: 'Admin Dashboard',
+  subtitle:
+    'Track commercial momentum, queue pressure, and operator activity across the first-store launch.',
+  loading: 'Loading dashboard signal...',
+  error: 'Unable to load dashboard data.',
+  refresh: 'Refresh dashboard',
+  refreshing: 'Refreshing...',
+  sections: {
+    pulse: 'Commercial pulse',
+    pulseSubtitle:
+      'Topline trading and service signals for the current mock operating baseline.',
+    topProducts: 'Top products',
+    topProductsSubtitle:
+      'Highest-contributing items by realized revenue across current orders.',
+    actionBoard: 'Action board',
+    actionBoardSubtitle:
+      'Recommended next actions based on order pressure and delivery health.',
+    recentActivity: 'Recent activity',
+    recentActivitySubtitle:
+      'Latest operator actions recorded in the audit feed.',
+    quickActions: 'Quick actions',
+    quickActionsSubtitle:
+      'Jump straight into the highest-frequency admin tasks.',
+    healthRail: 'Ops health',
+    healthRailSubtitle:
+      'Live status signals for throughput, fulfillment, and operator cadence.',
+  },
+  empty: {
+    topProductsTitle: 'No top products yet',
+    topProductsDescription:
+      'Once orders start flowing, the best-performing items will surface here.',
+    activityTitle: 'No recent activity',
+    activityDescription:
+      'Operator actions will appear here after the next merchandising or ops change.',
+  },
 }
 
-function KpiCard({
-  title,
-  value,
-  change,
-  trend,
-  icon: Icon,
-  href,
-  accentKey,
-}: {
-  title: string
-  value: string
-  change: string
-  trend: Trend
-  icon: React.ComponentType<{ size?: number; color?: string }>
-  href: string
-  accentKey: 'revenue' | 'users' | 'pending' | 'health'
-}) {
-  const accent = KPI_ACCENT[accentKey]
-  return (
-    <Link href={href} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-      <div
-        style={{
-          border: `1px solid ${colors.border}`,
-          borderRadius: radius.xl,
-          backgroundColor: colors.surface,
-          padding: `${spacing['16']}px ${spacing['20']}px`,
-          boxShadow: '0 1px 3px rgba(0,0,0,0.07)',
-          borderInlineStart: `3px solid ${accent}`,
-          transition: 'box-shadow 160ms ease, transform 160ms ease',
-          cursor: 'pointer',
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLDivElement
-          el.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)'
-          el.style.transform = 'translateY(-2px)'
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLDivElement
-          el.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'
-          el.style.transform = 'translateY(0)'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: spacing['12'] }}>
-          <span style={{ fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textSecondary }}>
-            {title}
-          </span>
-          <div
-            style={{
-              borderRadius: radius.full,
-              backgroundColor: accent + '18',
-              width: spacing['32'],
-              height: spacing['32'],
-              display: 'grid',
-              placeItems: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Icon size={16} color={accent} />
-          </div>
-        </div>
-        <div
-          style={{
-            fontSize: typography['2xl'],
-            fontWeight: Number(fontWeights.bold),
-            color: colors.textPrimary,
-            lineHeight: 1.1,
-            marginBottom: spacing['8'],
-          }}
-        >
-          {value}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'], fontSize: typography.xs }}>
-          {trend === 'up' ? (
-            <ArrowUpRight size={14} color={colors.success} />
-          ) : (
-            <ArrowDownRight size={14} color={colors.danger} />
-          )}
-          <span style={{ fontWeight: Number(fontWeights.medium), color: trend === 'up' ? colors.success : colors.danger }}>
-            {change}
-          </span>
-          <span style={{ color: colors.textSecondary }}>vs last period</span>
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-function AlertItem({
-  title,
-  description,
-  severity,
-}: {
-  title: string
-  description: string
-  severity: 'high' | 'medium'
-}) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: spacing['12'],
-        borderBottom: `1px solid ${colors.border}`,
-        paddingBlock: spacing['12'],
-      }}
-    >
-      <AlertTriangle size={20} color={severity === 'high' ? colors.danger : colors.warning} />
-      <div>
-        <p style={{ margin: 0, color: colors.textPrimary, fontSize: typography.sm, fontWeight: Number(fontWeights.medium) }}>
-          {title}
-        </p>
-        <p style={{ margin: `${spacing['4']}px 0 0`, color: colors.textSecondary, fontSize: typography.xs }}>
-          {description}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function AnalyticsChart({
-  series,
-  showSeries,
-}: {
-  series: SeriesPoint[]
-  showSeries: ChartMode
-}) {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-  const width = 900
-  const height = 220
-  const padX = 48
-  const padY = 16
-  const padBottom = 28
-  const chartW = width - padX * 2
-  const chartH = height - padY - padBottom
-  const maxRevenue = Math.max(...series.map((r) => r.revenue), 1)
-  const maxOrders = Math.max(...series.map((r) => r.orders), 1)
-  const step = series.length > 1 ? chartW / (series.length - 1) : chartW
-  const barWidth = Math.max(8, Math.min(24, step * 0.5))
-
-  const linePoints = series
-    .map((row, i) => {
-      const x = padX + step * i
-      const y = padY + chartH - (row.orders / maxOrders) * chartH
-      return `${x},${y}`
-    })
-    .join(' ')
-
-  return (
-    <div>
-      <div style={{ position: 'relative', overflow: 'visible' }}>
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          width='100%'
-          role='img'
-          aria-label='Revenue and orders chart'
-          style={{ display: 'block', overflow: 'visible' }}
-        >
-          <rect x='0' y='0' width={width} height={height} fill={colors.surface} />
-          {[0, 1, 2, 3].map((tick) => {
-            const y = padY + (chartH / 3) * tick
-            return (
-              <g key={`grid-${tick}`}>
-                <line x1={padX} x2={width - padX} y1={y} y2={y} stroke={colors.border} strokeDasharray='4 4' />
-                {(showSeries === 'revenue' || showSeries === 'both') && (
-                  <text x={padX - 6} y={y + 4} textAnchor='end' fill={colors.textSecondary} fontSize={10}>
-                    {formatCurrency(maxRevenue - (maxRevenue / 3) * tick)}
-                  </text>
-                )}
-                {(showSeries === 'orders' || showSeries === 'both') && (
-                  <text x={width - padX + 6} y={y + 4} textAnchor='start' fill={colors.info} fontSize={10}>
-                    {String(Math.round(maxOrders - (maxOrders / 3) * tick))}
-                  </text>
-                )}
-              </g>
-            )
-          })}
-
-          {(showSeries === 'revenue' || showSeries === 'both') &&
-            series.map((row, i) => {
-              const x = padX + step * i
-              const barH = (row.revenue / maxRevenue) * chartH
-              const y = padY + chartH - barH
-              const isHovered = hoveredIndex === i
-              return (
-                <rect
-                  key={`bar-${i}`}
-                  x={x - barWidth / 2}
-                  y={y}
-                  width={barWidth}
-                  height={Math.max(barH, 2)}
-                  rx={3}
-                  fill={colors.brandPrimary}
-                  opacity={isHovered ? 1 : 0.65}
-                />
-              )
-            })}
-
-          {(showSeries === 'orders' || showSeries === 'both') && (
-            <>
-              <polyline
-                points={linePoints}
-                fill='none'
-                stroke={colors.info}
-                strokeWidth='2.5'
-                strokeLinecap='round'
-                strokeLinejoin='round'
-              />
-              {series.map((row, i) => {
-                const x = padX + step * i
-                const y = padY + chartH - (row.orders / maxOrders) * chartH
-                return (
-                  <circle
-                    key={`dot-${i}`}
-                    cx={x}
-                    cy={y}
-                    r={hoveredIndex === i ? 5 : 3}
-                    fill={colors.surface}
-                    stroke={colors.info}
-                    strokeWidth='2'
-                  />
-                )
-              })}
-            </>
-          )}
-
-          {series.map((row, i) => {
-            const x = padX + step * i
-            return (
-              <g key={`hit-${i}`}>
-                <rect
-                  x={Math.max(0, x - step / 2)}
-                  y={0}
-                  width={step}
-                  height={height - padBottom + 8}
-                  fill='transparent'
-                  onMouseEnter={() => setHoveredIndex(i)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  style={{ cursor: 'crosshair' }}
-                />
-                <text x={x} y={height - 8} textAnchor='middle' fill={colors.textSecondary} fontSize={10}>
-                  {row.label}
-                </text>
-              </g>
-            )
-          })}
-        </svg>
-
-        {hoveredIndex !== null && series[hoveredIndex] && (
-          <div
-            style={{
-              position: 'absolute',
-              top: 16,
-              left: `calc(${((padX + step * hoveredIndex) / 900) * 100}% + 8px)`,
-              backgroundColor: colors.textPrimary,
-              color: colors.textInverted,
-              borderRadius: radius.md,
-              padding: `${spacing['4']}px ${spacing['8']}px`,
-              fontSize: typography.xs,
-              pointerEvents: 'none',
-              whiteSpace: 'nowrap',
-              zIndex: 10,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.18)',
-            }}
-          >
-            <div style={{ fontWeight: Number(fontWeights.semibold) }}>{series[hoveredIndex]!.label}</div>
-            {(showSeries === 'revenue' || showSeries === 'both') && (
-              <div>{formatCurrency(series[hoveredIndex]!.revenue)}</div>
-            )}
-            {(showSeries === 'orders' || showSeries === 'both') && (
-              <div style={{ color: colors.info }}>{series[hoveredIndex]!.orders} orders</div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: 'flex', gap: spacing['16'], marginTop: spacing['12'] }}>
-        {(showSeries === 'revenue' || showSeries === 'both') && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: colors.brandPrimary, display: 'inline-block' }} />
-            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>Revenue</span>
-          </div>
-        )}
-        {(showSeries === 'orders' || showSeries === 'both') && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: spacing['4'] }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: colors.info, display: 'inline-block' }} />
-            <span style={{ fontSize: typography.xs, color: colors.textSecondary }}>Orders</span>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function AlertBanner({ pending, health }: { pending: number; health: number }) {
-  const alerts: { label: string; severity: 'high' | 'medium' }[] = []
-  if (pending > 10) alerts.push({ label: `${pending} pending orders need attention`, severity: 'high' })
-  if (health < 90) alerts.push({ label: `System health is at ${health.toFixed(1)}%`, severity: 'medium' })
-
-  if (alerts.length === 0) return null
-
-  return (
-    <div
-      style={{
-        marginBottom: spacing['16'],
-        borderRadius: radius.xl,
-        border: `1px solid ${colors.warning}44`,
-        backgroundColor: `${colors.warning}10`,
-        padding: `${spacing['12']}px ${spacing['16']}px`,
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: spacing['12'],
-      }}
-    >
-      <AlertTriangle size={18} color={colors.warning} style={{ flexShrink: 0, marginTop: 1 }} />
-      <div style={{ display: 'grid', gap: spacing['4'] }}>
-        {alerts.map((a) => (
-          <p key={a.label} style={{ margin: 0, fontSize: typography.sm, color: colors.textPrimary }}>
-            <span
-              style={{
-                display: 'inline-block',
-                marginInlineEnd: spacing['8'],
-                fontSize: typography.xs,
-                fontWeight: Number(fontWeights.semibold),
-                color: a.severity === 'high' ? colors.danger : colors.warning,
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
-              }}
-            >
-              {a.severity}
-            </span>
-            {a.label}
-          </p>
-        ))}
-      </div>
-    </div>
-  )
-}
+const dashboardSurfaceTokens = {
+  revenuePanelBackground: colors.surfaceLowest,
+  revenueBarFill: colors.brandPrimary,
+} as const
 
 export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<OrderSummary[]>([])
   const [audit, setAudit] = useState<AdminOpsAuditEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [period, setPeriod] = useState<Period>('30d')
-  const [chartMode, setChartMode] = useState<ChartMode>('both')
-  const [isFlushing, setIsFlushing] = useState(false)
-  const [flushDone, setFlushDone] = useState(false)
+  const [lastRefreshedAt, setLastRefreshedAt] = useState<string | null>(null)
 
-  const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-  const handleFlushCache = async () => {
-    setIsFlushing(true)
+  const loadDashboardData = async (mode: 'initial' | 'refresh' = 'initial') => {
+    if (mode === 'initial') {
+      setLoading(true)
+    } else {
+      setIsRefreshing(true)
+    }
+    setError(null)
     try {
-      await apiClient.admin.runCacheAction({ action: 'revalidate_home_shop', confirmation: 'confirm' })
-      setFlushDone(true)
-      setTimeout(() => setFlushDone(false), 3000)
-    } catch {
-      // ignore
+      const [nextOrders, nextAudit] = await Promise.all([
+        apiClient.orders.list(),
+        apiClient.admin.opsAudit().catch(() => []),
+      ])
+      setOrders(nextOrders)
+      setAudit(nextAudit)
+      setLastRefreshedAt(
+        new Date().toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+        }),
+      )
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : copy.error)
     } finally {
-      setIsFlushing(false)
+      if (mode === 'initial') {
+        setLoading(false)
+      } else {
+        setIsRefreshing(false)
+      }
     }
   }
 
   useEffect(() => {
-    void apiClient.orders
-      .list()
-      .then((rows) => setOrders(rows))
-      .catch((cause) => {
-        setError(cause instanceof Error ? cause.message : 'Unable to load dashboard orders.')
-      })
-      .finally(() => setLoading(false))
-
-    void apiClient.admin
-      .opsAudit()
-      .then((rows) => setAudit(rows))
-      .catch(() => setAudit([]))
+    void loadDashboardData('initial')
   }, [])
 
-  const safeFilteredOrders = orders
-
-  const currency = safeFilteredOrders[0]?.currency ?? 'USD'
+  const currency = orders[0]?.currency ?? 'USD'
 
   const summary = useMemo(() => {
-    const revenue = safeFilteredOrders.reduce((acc, order) => acc + Number(order.total || 0), 0)
-    const pending = safeFilteredOrders.filter((order) => order.status === 'placed').length
-    const delivered = safeFilteredOrders.filter((order) => order.status === 'delivered').length
-    const users = new Set(safeFilteredOrders.map((order) => order.ownerUserId).filter(Boolean)).size
-    const health = safeFilteredOrders.length === 0 ? 100 : Math.min(100, 85 + (delivered / safeFilteredOrders.length) * 15)
+    const revenue = orders.reduce((acc, order) => acc + Number(order.total || 0), 0)
+    const pending = orders.filter((order) => order.status === 'placed').length
+    const delivered = orders.filter((order) => order.status === 'delivered').length
+    const users = new Set(orders.map((order) => order.ownerUserId).filter(Boolean)).size
+    const health = orders.length === 0 ? 100 : Math.min(100, 85 + (delivered / orders.length) * 15)
     return { revenue, pending, delivered, users, health }
-  }, [safeFilteredOrders])
-
-  const previousBaseline = Math.max(1, orders.length)
-  const revenueChange = ((summary.revenue - previousBaseline * 40) / (previousBaseline * 40)) * 100
-  const usersChange = ((summary.users - previousBaseline * 0.4) / Math.max(1, previousBaseline * 0.4)) * 100
-  const pendingChange = ((summary.pending - previousBaseline * 0.2) / Math.max(1, previousBaseline * 0.2)) * 100
-  const healthChange = summary.health - 95
+  }, [orders])
 
   const topItems = useMemo<TopItemStat[]>(() => {
     const map = new Map<string, TopItemStat>()
-    for (const order of safeFilteredOrders) {
+    for (const order of orders) {
       for (const item of order.items ?? []) {
         const key = item.productId || item.name
-        const existing = map.get(key)
         const revenue = item.price * item.quantity
+        const existing = map.get(key)
         if (!existing) {
-          map.set(key, {
-            id: key,
-            name: item.name,
-            sales: item.quantity,
-            revenue,
-          })
+          map.set(key, { id: key, name: item.name, sales: item.quantity, revenue })
           continue
         }
         existing.sales += item.quantity
         existing.revenue += revenue
       }
     }
-    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue).slice(0, 5)
-  }, [safeFilteredOrders])
+    return Array.from(map.values())
+      .sort((left, right) => right.revenue - left.revenue)
+      .slice(0, 5)
+  }, [orders])
 
-  const periodSeries = useMemo(() => buildPeriodSeries(safeFilteredOrders, period), [safeFilteredOrders, period])
+  const alerts = useMemo(() => {
+    const nextAlerts: Array<{ id: string; label: string; value: string; tone: 'danger' | 'warning' | 'success' }> = []
+    if (summary.pending > 10) {
+      nextAlerts.push({
+        id: 'pending',
+        label: 'Pending order pressure',
+        value: `${summary.pending} open orders need triage`,
+        tone: 'danger',
+      })
+    }
+    if (summary.health < 92) {
+      nextAlerts.push({
+        id: 'health',
+        label: 'Fulfillment health softened',
+        value: `${summary.health.toFixed(1)}% delivery health`,
+        tone: 'warning',
+      })
+    }
+    if (nextAlerts.length === 0) {
+      nextAlerts.push({
+        id: 'healthy',
+        label: 'System operating cleanly',
+        value: 'Queues and delivery health are within target.',
+        tone: 'success',
+      })
+    }
+    return nextAlerts
+  }, [summary.health, summary.pending])
+
+  const auditItems = useMemo(
+    () =>
+      audit.slice(0, 6).map((entry) => ({
+        id: entry.id,
+        title: `${entry.actor.email.split('@')[0]} updated ${entry.type}`,
+        detail: entry.targetId ? `Target ${entry.targetId}` : 'Admin system activity',
+        meta: formatRelativeTime(entry.at),
+      })),
+    [audit],
+  )
+
+  const healthRows = [
+    {
+      label: 'Orders placed',
+      value: orders.length.toLocaleString(),
+    },
+    {
+      label: 'Delivered',
+      value: summary.delivered.toLocaleString(),
+      tone: 'success' as const,
+    },
+    {
+      label: 'Pending',
+      value: summary.pending.toLocaleString(),
+      tone: summary.pending > 10 ? ('warning' as const) : ('default' as const),
+    },
+    {
+      label: 'Unique customers',
+      value: summary.users.toLocaleString(),
+    },
+  ]
+
+  const quickActions = [
+    { label: 'Open referrals', href: '/admin/marketing/referrals' },
+    { label: 'Manage promotions', href: '/admin/marketing/promotions' },
+    { label: 'Review orders', href: '/admin/orders' },
+    { label: 'Check cache controls', href: '/admin/operations/cache' },
+  ]
 
   return (
     <PageContainer>
-      <PageHeader
-        title='Dashboard'
-        subtitle={`${greeting} · ${todayLabel}`}
-      />
-
-      {loading ? <p style={{ margin: 0, color: colors.textSecondary }}>Loading dashboard...</p> : null}
-      {error ? <p style={{ margin: `${spacing['8']}px 0 0`, color: colors.danger }}>{error}</p> : null}
-      {!loading && <AlertBanner pending={summary.pending} health={summary.health} />}
-
-      <Section>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: spacing['16'],
-          }}
-        >
-          <KpiCard
-            title='Total Revenue'
-            value={formatCurrency(summary.revenue, currency)}
-            change={formatKpiChange(revenueChange)}
-            trend={revenueChange >= 0 ? 'up' : 'down'}
-            icon={ShoppingBag}
-            href='/admin/orders'
-            accentKey='revenue'
-          />
-          <KpiCard
-            title='Active Users'
-            value={String(summary.users)}
-            change={formatKpiChange(usersChange)}
-            trend={usersChange >= 0 ? 'up' : 'down'}
-            icon={Users}
-            href='/admin/customers'
-            accentKey='users'
-          />
-          <KpiCard
-            title='Pending Orders'
-            value={String(summary.pending)}
-            change={formatKpiChange(pendingChange)}
-            trend={pendingChange <= 0 ? 'up' : 'down'}
-            icon={Package}
-            href='/admin/orders'
-            accentKey='pending'
-          />
-          <KpiCard
-            title='System Health'
-            value={`${summary.health.toFixed(1)}%`}
-            change={formatKpiChange(healthChange)}
-            trend={healthChange >= 0 ? 'up' : 'down'}
-            icon={Activity}
-            href='/admin/operations/audit'
-            accentKey='health'
-          />
-        </div>
-      </Section>
-
-      <Section>
-        <Panel>
+      <AdminCommandBar
+        eyebrow={copy.eyebrow}
+        title={copy.title}
+        subtitle={copy.subtitle}
+        status={
           <div
             style={{
-              marginBottom: spacing['16'],
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: spacing['12'],
+              gap: spacing['8'],
               flexWrap: 'wrap',
             }}
           >
-            <h3
-              style={{
-                margin: 0,
-                color: colors.textPrimary,
-                fontSize: typography.base,
-                fontWeight: Number(fontWeights.semibold),
-              }}
-            >
-              Revenue & Orders
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], flexWrap: 'wrap' }}>
-              {/* Period tabs */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: spacing['4'],
-                  backgroundColor: colors.surfaceMuted,
-                  borderRadius: radius.full,
-                  padding: spacing['4'],
-                }}
-              >
-                {(['7d', '30d', '3m', '12m'] as const).map((p) => (
-                  <button
-                    key={p}
-                    type='button'
-                    onClick={() => setPeriod(p)}
-                    style={{
-                      border: 0,
-                      borderRadius: radius.full,
-                      padding: `${spacing['4']}px ${spacing['12']}px`,
-                      fontSize: typography.xs,
-                      fontWeight: Number(fontWeights.medium),
-                      cursor: 'pointer',
-                      backgroundColor: period === p ? colors.surface : 'transparent',
-                      color: period === p ? colors.textPrimary : colors.textSecondary,
-                      boxShadow: period === p ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                      transition: 'all 160ms ease',
-                    }}
-                  >
-                    {p === '7d' ? '7D' : p === '30d' ? '30D' : p === '3m' ? '3M' : '12M'}
-                  </button>
-                ))}
-              </div>
-              {/* Series toggle */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: spacing['4'],
-                  backgroundColor: colors.surfaceMuted,
-                  borderRadius: radius.full,
-                  padding: spacing['4'],
-                }}
-              >
-                {(['both', 'revenue', 'orders'] as const).map((s) => (
-                  <button
-                    key={s}
-                    type='button'
-                    onClick={() => setChartMode(s)}
-                    style={{
-                      border: 0,
-                      borderRadius: radius.full,
-                      padding: `${spacing['4']}px ${spacing['12']}px`,
-                      fontSize: typography.xs,
-                      fontWeight: Number(fontWeights.medium),
-                      cursor: 'pointer',
-                      backgroundColor: chartMode === s ? colors.surface : 'transparent',
-                      color: chartMode === s ? colors.textPrimary : colors.textSecondary,
-                      boxShadow: chartMode === s ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                      transition: 'all 160ms ease',
-                      textTransform: 'capitalize',
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
+            <AdminTrendPill
+              value={summary.health >= 92 ? 'Healthy service lane' : 'Review ops health'}
+              tone={summary.health >= 92 ? 'success' : 'warning'}
+            />
+            {lastRefreshedAt ? (
+              <span style={{ color: colors.textSecondary, fontSize: typography.xs }}>
+                Last synced {lastRefreshedAt}
+              </span>
+            ) : null}
           </div>
-          {safeFilteredOrders.length === 0 ? (
-            <div
-              style={{
-                padding: `${spacing['32']}px 0`,
-                textAlign: 'center',
-                color: colors.textSecondary,
-                fontSize: typography.sm,
-              }}
-            >
-              No orders in this period
-            </div>
-          ) : (
-            <AnalyticsChart series={periodSeries} showSeries={chartMode} />
-          )}
+        }
+        actions={
+          <Button onClick={() => void loadDashboardData('refresh')} disabled={isRefreshing}>
+            {isRefreshing ? copy.refreshing : copy.refresh}
+          </Button>
+        }
+      />
+
+      {loading ? (
+        <Panel>
+          <InlineLoading label={copy.loading} />
         </Panel>
-      </Section>
+      ) : null}
 
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
-          gap: spacing['24'],
-          marginBottom: spacing['24'],
-        }}
-      >
-        {/* LEFT COLUMN */}
-        <div style={{ display: 'grid', gap: spacing['24'], alignContent: 'start' }}>
-          {/* Top Products */}
-          <Panel>
-            <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
-                Top Products
-              </h3>
-              <Link href='/admin/catalog/products' style={inlineLinkStyle}>View all →</Link>
-            </div>
-            {topItems.length === 0 ? (
-              <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.sm }}>No sales yet</p>
-            ) : (
-              topItems.map((item, index) => {
-                const rankColor = index === 0 ? colors.brandPrimary : index === 1 ? colors.warning : colors.textSecondary
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      borderBottom: `1px solid ${colors.border}`,
-                      paddingBlock: spacing['8'],
-                      gap: spacing['12'],
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: spacing['12'] }}>
-                      <span
-                        style={{
-                          width: spacing['24'],
-                          height: spacing['24'],
-                          borderRadius: radius.full,
-                          backgroundColor: index < 3 ? rankColor + '18' : colors.surfaceMuted,
-                          color: index < 3 ? rankColor : colors.textSecondary,
-                          display: 'grid',
-                          placeItems: 'center',
-                          fontSize: typography.xs,
-                          fontWeight: Number(fontWeights.bold),
-                          flexShrink: 0,
-                        }}
-                      >
-                        {index + 1}
-                      </span>
-                      <div>
-                        <p style={{ margin: 0, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textPrimary }}>
-                          {item.name}
-                        </p>
-                        <p style={{ margin: 0, fontSize: typography.xs, color: colors.textSecondary }}>
-                          {item.sales.toLocaleString()} units
-                        </p>
-                      </div>
-                    </div>
-                    <span style={{ fontSize: typography.sm, fontWeight: Number(fontWeights.semibold), color: colors.textPrimary, flexShrink: 0 }}>
-                      {formatCurrency(item.revenue)}
-                    </span>
-                  </div>
-                )
-              })
-            )}
-          </Panel>
+      {error ? (
+        <Panel tone='danger'>
+          <div style={{ color: colors.danger, fontSize: typography.sm }}>{error}</div>
+        </Panel>
+      ) : null}
 
-          {/* Recent Audit Log */}
-          <Panel>
-            <div style={{ marginBottom: spacing['16'], display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <h3 style={{ margin: 0, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
-                Recent Activity
-              </h3>
-              <Link href='/admin/operations/audit' style={inlineLinkStyle}>View all →</Link>
-            </div>
-            {audit.length === 0 ? (
-              <p style={{ margin: 0, color: colors.textSecondary, fontSize: typography.sm }}>No recent activity</p>
-            ) : (
-              audit.slice(0, 5).map((entry) => {
-                const diffMs = Date.now() - new Date(entry.at).getTime()
-                const diffMins = Math.floor(diffMs / 60000)
-                const relTime = diffMins < 60
-                  ? `${diffMins}m ago`
-                  : diffMins < 1440
-                  ? `${Math.floor(diffMins / 60)}h ago`
-                  : `${Math.floor(diffMins / 1440)}d ago`
-                return (
+      {!loading ? (
+        <>
+          <AdminKpiGrid>
+            <AdminKpiCard
+              label='Revenue tracked'
+              value={formatCurrency(summary.revenue, currency)}
+              meta='Realized order value across current dataset'
+              icon={Sparkles}
+              tone='brand'
+              trend={<AdminTrendPill value='Merchandise pulse' tone='neutral' />}
+            />
+            <AdminKpiCard
+              label='Customers engaged'
+              value={summary.users.toLocaleString()}
+              meta='Distinct buyers visible in current order flow'
+              icon={Users}
+              trend={<AdminTrendPill value='Audience signal' tone='neutral' />}
+            />
+            <AdminKpiCard
+              label='Pending queue'
+              value={summary.pending.toLocaleString()}
+              meta='Orders still waiting for the next fulfillment step'
+              icon={Package}
+              tone={summary.pending > 10 ? 'warning' : 'default'}
+              trend={
+                <AdminTrendPill
+                  value={summary.pending > 10 ? 'Needs action' : 'Stable'}
+                  tone={summary.pending > 10 ? 'warning' : 'success'}
+                />
+              }
+            />
+            <AdminKpiCard
+              label='Delivery health'
+              value={`${summary.health.toFixed(1)}%`}
+              meta='Derived from delivered order share'
+              icon={CheckCircle2}
+              tone={summary.health >= 92 ? 'success' : 'warning'}
+              trend={
+                <AdminTrendPill
+                  value={summary.health >= 92 ? 'On target' : 'Under target'}
+                  tone={summary.health >= 92 ? 'success' : 'warning'}
+                />
+              }
+            />
+          </AdminKpiGrid>
+
+          <WorkspaceLayout
+            main={
+              <>
+                <Panel tone='brand'>
+                  <AdminPanelHeader
+                    title={copy.sections.pulse}
+                    subtitle={copy.sections.pulseSubtitle}
+                  />
                   <div
-                    key={entry.id}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: spacing['12'],
-                      borderBottom: `1px solid ${colors.border}`,
-                      paddingBlock: spacing['8'],
+                      display: 'grid',
+                      gap: spacing['16'],
+                      gridTemplateColumns: 'minmax(0, 1.15fr) minmax(280px, 0.85fr)',
+                      alignItems: 'stretch',
                     }}
                   >
                     <div
                       style={{
-                        width: spacing['32'],
-                        height: spacing['32'],
-                        borderRadius: radius.full,
-                        backgroundColor: colors.brandPrimarySubtle,
-                        color: colors.brandPrimary,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radius.xl + 6,
+                        background: dashboardSurfaceTokens.revenuePanelBackground,
+                        padding: spacing['16'],
                         display: 'grid',
-                        placeItems: 'center',
-                        fontSize: typography.xs,
-                        fontWeight: Number(fontWeights.bold),
-                        flexShrink: 0,
+                        gap: spacing['16'],
                       }}
                     >
-                      {entry.actor.email.charAt(0).toUpperCase()}
+                      <div style={{ display: 'grid', gap: spacing['6'] }}>
+                        <span
+                          style={{
+                            color: colors.textSecondary,
+                            fontSize: typography.xs,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                            fontWeight: Number(fontWeights.semibold),
+                          }}
+                        >
+                          Revenue control
+                        </span>
+                        <div
+                          style={{
+                            color: colors.textPrimary,
+                            fontSize: `clamp(${typography['3xl']}px, 4vw, ${typography.h1}px)`,
+                            lineHeight: 0.95,
+                            letterSpacing: '-0.04em',
+                            fontWeight: Number(fontWeights.bold),
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {formatCurrency(summary.revenue, currency)}
+                        </div>
+                        <p
+                          style={{
+                            margin: 0,
+                            color: colors.textSecondary,
+                            fontSize: typography.sm,
+                            lineHeight: 1.6,
+                            maxWidth: 520,
+                          }}
+                        >
+                          Current revenue signal across the active first-store dataset. Use this
+                          surface to judge whether merchandising and fulfillment are moving in sync.
+                        </p>
+                      </div>
+                      <div
+                        style={{
+                          display: 'grid',
+                          gap: spacing['10'],
+                          gridTemplateColumns:
+                            'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
+                        }}
+                      >
+                        {[
+                          { label: 'Customers', value: formatCompactNumber(summary.users) },
+                          { label: 'Pending', value: formatCompactNumber(summary.pending) },
+                          { label: 'Delivered', value: formatCompactNumber(summary.delivered) },
+                        ].map((item) => (
+                          <div
+                            key={item.label}
+                            style={{
+                              borderRadius: radius.xl,
+                              backgroundColor: colors.surfaceMuted,
+                              border: `1px solid ${colors.border}`,
+                              padding: spacing['12'],
+                              display: 'grid',
+                              gap: spacing['4'],
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: colors.textSecondary,
+                                fontSize: typography.xs,
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.06em',
+                              }}
+                            >
+                              {item.label}
+                            </span>
+                            <span
+                              style={{
+                                color: colors.textPrimary,
+                                fontSize: typography.xl,
+                                fontWeight: Number(fontWeights.bold),
+                                fontVariantNumeric: 'tabular-nums',
+                              }}
+                            >
+                              {item.value}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: typography.sm, color: colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        <span style={{ fontWeight: Number(fontWeights.medium) }}>{entry.actor.email.split('@')[0]}</span>
-                        {' · '}
-                        <span style={{ color: colors.textSecondary }}>{entry.type}</span>
-                      </p>
-                    </div>
-                    <span style={{ fontSize: typography.xs, color: colors.textSecondary, flexShrink: 0 }}>{relTime}</span>
-                  </div>
-                )
-              })
-            )}
-          </Panel>
-        </div>
 
-        {/* RIGHT COLUMN */}
-        <div style={{ display: 'grid', gap: spacing['24'], alignContent: 'start' }}>
-          {/* Quick Actions */}
-          <Panel>
-            <h3 style={{ margin: `0 0 ${spacing['16']}px`, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
-              Quick Actions
-            </h3>
-            <div style={{ display: 'grid', gap: spacing['8'] }}>
-              {([
-                { label: 'New Promotion', icon: Zap, href: '/admin/marketing/promotions' },
-                { label: 'Manage Banners', icon: Package, href: '/admin/marketing/cms/offer-banners' },
-                { label: 'View Orders', icon: ShoppingBag, href: '/admin/orders' },
-              ] as Array<{ label: string; icon: React.ComponentType<{ size?: number; color?: string }>; href: string }>).map(({ label, href, icon: ActionIcon }) => (
-                <Link key={label} href={href} style={{ textDecoration: 'none' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: spacing['12'],
-                      padding: `${spacing['8']}px ${spacing['12']}px`,
-                      borderRadius: radius.xl,
-                      border: `1px solid ${colors.border}`,
-                      backgroundColor: colors.surface,
-                      color: colors.textPrimary,
-                      fontSize: typography.sm,
-                      fontWeight: Number(fontWeights.medium),
-                      cursor: 'pointer',
-                      transition: 'background-color 140ms ease, border-color 140ms ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      const el = e.currentTarget as HTMLDivElement
-                      el.style.backgroundColor = colors.brandPrimarySubtle
-                      el.style.borderColor = colors.brandPrimary + '44'
-                    }}
-                    onMouseLeave={(e) => {
-                      const el = e.currentTarget as HTMLDivElement
-                      el.style.backgroundColor = colors.surface
-                      el.style.borderColor = colors.border
-                    }}
-                  >
-                    <ActionIcon size={16} color={colors.brandPrimary} />
-                    {label}
+                    <div style={{ display: 'grid', gap: spacing['10'] }}>
+                      {alerts.map((alert) => (
+                        <div
+                          key={alert.id}
+                          style={{
+                            border: `1px solid ${
+                              alert.tone === 'danger'
+                                ? colors.danger + '22'
+                                : alert.tone === 'warning'
+                                  ? colors.warning + '22'
+                                  : colors.success + '22'
+                            }`,
+                            borderRadius: radius.xl,
+                            backgroundColor: colors.surface,
+                            padding: spacing['12'],
+                            display: 'grid',
+                            gap: spacing['6'],
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: spacing['8'],
+                            }}
+                          >
+                            {alert.tone === 'danger' ? (
+                              <AlertTriangle size={16} color={colors.danger} />
+                            ) : alert.tone === 'warning' ? (
+                              <Activity size={16} color={colors.warning} />
+                            ) : (
+                              <CheckCircle2 size={16} color={colors.success} />
+                            )}
+                            <span
+                              style={{
+                                color: colors.textPrimary,
+                                fontSize: typography.sm,
+                                fontWeight: Number(fontWeights.semibold),
+                              }}
+                            >
+                              {alert.label}
+                            </span>
+                          </div>
+                          <span
+                            style={{
+                              color: colors.textSecondary,
+                              fontSize: typography.sm,
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            {alert.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </Link>
-              ))}
-              <button
-                type='button'
-                onClick={() => void handleFlushCache()}
-                disabled={isFlushing}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing['12'],
-                  padding: `${spacing['8']}px ${spacing['12']}px`,
-                  borderRadius: radius.xl,
-                  border: `1px solid ${flushDone ? colors.success + '44' : colors.border}`,
-                  backgroundColor: flushDone ? colors.success + '10' : colors.surface,
-                  color: flushDone ? colors.success : colors.textPrimary,
-                  fontSize: typography.sm,
-                  fontWeight: Number(fontWeights.medium),
-                  cursor: isFlushing ? 'not-allowed' : 'pointer',
-                  opacity: isFlushing ? 0.7 : 1,
-                  transition: 'all 140ms ease',
-                  width: '100%',
-                  textAlign: 'start',
-                }}
-              >
-                <RefreshCw size={16} color={flushDone ? colors.success : colors.brandPrimary} />
-                {flushDone ? 'Cache flushed ✓' : isFlushing ? 'Flushing...' : 'Flush Cache'}
-              </button>
-            </div>
-          </Panel>
+                </Panel>
 
-          {/* System Status */}
-          <Panel>
-            <h3 style={{ margin: `0 0 ${spacing['16']}px`, color: colors.textPrimary, fontSize: typography.base, fontWeight: Number(fontWeights.semibold) }}>
-              System Status
-            </h3>
-            {summary.pending <= 10 && summary.health >= 90 ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: spacing['8'], color: colors.success, fontSize: typography.sm }}>
-                <CheckCircle size={16} color={colors.success} />
-                All systems healthy
-              </div>
-            ) : (
-              <div style={{ display: 'grid', gap: spacing['8'] }}>
-                {summary.pending > 10 && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing['8'], paddingBlock: spacing['8'], borderBottom: `1px solid ${colors.border}` }}>
-                    <AlertTriangle size={16} color={colors.danger} style={{ flexShrink: 0, marginTop: 1 }} />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textPrimary }}>
-                        {summary.pending} pending orders
-                      </p>
-                      <p style={{ margin: `${spacing['4']}px 0 0`, fontSize: typography.xs, color: colors.textSecondary }}>
-                        High volume of unprocessed orders
-                      </p>
+                <Panel>
+                  <AdminPanelHeader
+                    title={copy.sections.topProducts}
+                    subtitle={copy.sections.topProductsSubtitle}
+                    actions={
+                      <Link href='/admin/catalog/products' style={linkStyle}>
+                        Open catalog
+                      </Link>
+                    }
+                  />
+                  {topItems.length === 0 ? (
+                    <EmptyState
+                      title={copy.empty.topProductsTitle}
+                      description={copy.empty.topProductsDescription}
+                    />
+                  ) : (
+                    <div style={{ display: 'grid', gap: spacing['10'] }}>
+                      {topItems.map((item, index) => (
+                        <div
+                          key={item.id}
+                          style={{
+                            display: 'grid',
+                            gap: spacing['8'],
+                            border: `1px solid ${colors.border}`,
+                            borderRadius: radius.xl,
+                            backgroundColor: colors.surfaceMuted,
+                            padding: spacing['12'],
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: spacing['12'],
+                              flexWrap: 'wrap',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: spacing['10'] }}>
+                              <div
+                                style={{
+                                  width: spacing['32'],
+                                  height: spacing['32'],
+                                  borderRadius: radius.full,
+                                  backgroundColor: index === 0 ? colors.brandPrimarySubtle : colors.surface,
+                                  color: index === 0 ? colors.brandPrimary : colors.textSecondary,
+                                  display: 'grid',
+                                  placeItems: 'center',
+                                  fontSize: typography.xs,
+                                  fontWeight: Number(fontWeights.bold),
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {index + 1}
+                              </div>
+                              <div>
+                                <div
+                                  style={{
+                                    color: colors.textPrimary,
+                                    fontSize: typography.sm,
+                                    fontWeight: Number(fontWeights.semibold),
+                                  }}
+                                >
+                                  {item.name}
+                                </div>
+                                <div
+                                  style={{
+                                    color: colors.textSecondary,
+                                    fontSize: typography.xs,
+                                  }}
+                                >
+                                  {item.sales.toLocaleString()} units moved
+                                </div>
+                              </div>
+                            </div>
+                            <AdminTrendPill value={formatCurrency(item.revenue, currency)} tone='neutral' />
+                          </div>
+                          <div
+                            style={{
+                              width: '100%',
+                              height: 6,
+                              borderRadius: radius.full,
+                              backgroundColor: colors.surface,
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${Math.max(18, (item.revenue / Math.max(topItems[0]?.revenue || 1, 1)) * 100)}%`,
+                                height: '100%',
+                                borderRadius: radius.full,
+                                background: dashboardSurfaceTokens.revenueBarFill,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <span style={{ fontSize: typography.xs, fontWeight: Number(fontWeights.semibold), color: colors.danger, flexShrink: 0 }}>HIGH</span>
+                  )}
+                </Panel>
+              </>
+            }
+            rail={
+              <>
+                <Panel>
+                  <AdminPanelHeader
+                    title={copy.sections.actionBoard}
+                    subtitle={copy.sections.actionBoardSubtitle}
+                  />
+                  <MetricList
+                    rows={[
+                      {
+                        label: 'Triage queue',
+                        value:
+                          summary.pending > 10
+                            ? `${summary.pending} orders need review`
+                            : 'Queue is under control',
+                        tone: summary.pending > 10 ? 'warning' : 'success',
+                      },
+                      {
+                        label: 'Referral follow-up',
+                        value: 'Review creator approvals and attribution status',
+                        tone: 'brand',
+                      },
+                      {
+                        label: 'Promotion readiness',
+                        value: 'Open live campaigns before the next merchandising push',
+                      },
+                    ]}
+                  />
+                </Panel>
+
+                <Panel>
+                  <AdminPanelHeader
+                    title={copy.sections.quickActions}
+                    subtitle={copy.sections.quickActionsSubtitle}
+                  />
+                  <div style={{ display: 'grid', gap: spacing['10'] }}>
+                    {quickActions.map((action) => (
+                      <Link key={action.label} href={action.href} style={actionLinkStyle}>
+                        <span>{action.label}</span>
+                        <ArrowUpRight size={15} color={colors.brandPrimary} />
+                      </Link>
+                    ))}
                   </div>
-                )}
-                {summary.health < 90 && (
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: spacing['8'], paddingBlock: spacing['8'] }}>
-                    <AlertTriangle size={16} color={colors.warning} style={{ flexShrink: 0, marginTop: 1 }} />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ margin: 0, fontSize: typography.sm, fontWeight: Number(fontWeights.medium), color: colors.textPrimary }}>
-                        Health at {summary.health.toFixed(1)}%
-                      </p>
-                      <p style={{ margin: `${spacing['4']}px 0 0`, fontSize: typography.xs, color: colors.textSecondary }}>
-                        Below 90% threshold
-                      </p>
-                    </div>
-                    <span style={{ fontSize: typography.xs, fontWeight: Number(fontWeights.semibold), color: colors.warning, flexShrink: 0 }}>MED</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </Panel>
-        </div>
-      </div>
+                </Panel>
+
+                <Panel>
+                  <AdminPanelHeader
+                    title={copy.sections.healthRail}
+                    subtitle={copy.sections.healthRailSubtitle}
+                  />
+                  <MetricList rows={healthRows} />
+                </Panel>
+
+                <Panel>
+                  <AdminPanelHeader
+                    title={copy.sections.recentActivity}
+                    subtitle={copy.sections.recentActivitySubtitle}
+                    actions={
+                      <Link href='/admin/operations/audit' style={linkStyle}>
+                        Open audit
+                      </Link>
+                    }
+                  />
+                  {auditItems.length === 0 ? (
+                    <EmptyState
+                      title={copy.empty.activityTitle}
+                      description={copy.empty.activityDescription}
+                    />
+                  ) : (
+                    <ActivityFeed items={auditItems} empty={copy.empty.activityDescription} />
+                  )}
+                </Panel>
+              </>
+            }
+          />
+        </>
+      ) : null}
     </PageContainer>
   )
 }
 
-const inlineLinkStyle = {
+const linkStyle = {
   color: colors.brandPrimary,
+  textDecoration: 'none',
   fontSize: typography.sm,
   fontWeight: Number(fontWeights.medium),
-  textDecoration: 'none',
 } as const
 
-
+const actionLinkStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: spacing['12'],
+  border: `1px solid ${colors.border}`,
+  borderRadius: radius.xl,
+  backgroundColor: colors.surfaceMuted,
+  padding: `${spacing['12']}px ${spacing['12']}px`,
+  textDecoration: 'none',
+  color: colors.textPrimary,
+  fontSize: typography.sm,
+  fontWeight: Number(fontWeights.medium),
+} as const

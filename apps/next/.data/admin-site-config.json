@@ -1,0 +1,31 @@
+{
+  "branding": {
+    "en": {
+      "logoUrl": "/uploads/site-branding/logo-en.png",
+      "logoAlt": "Real Cosmetics",
+      "logoSize": "lg"
+    },
+    "ar": {
+      "logoUrl": "",
+      "logoAlt": "ريال كوزمتكس",
+      "logoSize": "md"
+    }
+  },
+  "topBar": {
+    "messageEn": "",
+    "messageAr": "",
+    "ctaLabelEn": "",
+    "ctaLabelAr": "",
+    "ctaHref": ""
+  },
+  "footer": {
+    "newsletterTitleEn": "",
+    "newsletterTitleAr": "",
+    "legalEn": "",
+    "legalAr": ""
+  },
+  "search": {
+    "panelTitleEn": "",
+    "panelTitleAr": ""
+  }
+}

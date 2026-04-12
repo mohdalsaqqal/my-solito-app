@@ -7,5 +7,156 @@
   "state": {
     "loading": "جار التحميل...",
     "empty": "لا توجد بيانات"
+  },
+  "audit": {
+    "title": "مسار التدقيق",
+    "loadError": "تعذر تحميل تدقيق ذاكرة التخزين المؤقت.",
+    "empty": "لم يتم تسجيل أي عمليات لذاكرة التخزين المؤقت بعد."
+  },
+  "opsAudit": {
+    "title": "تدقيق عمليات المسؤول",
+    "loadError": "تعذر تحميل تدقيق العمليات.",
+    "empty": "لا توجد إدخالات تدقيق عمليات المسؤول بعد."
+  },
+  "navigation": {
+    "title": "تنقل المسؤول",
+    "quickActions": "إجراءات سريعة",
+    "goToOrders": "الانتقال إلى الطلبات",
+    "goToCms": "الانتقال إلى عناصر تحكم CMS",
+    "goToUsers": "الانتقال إلى المستخدمين والأدوار",
+    "goToCache": "الانتقال إلى ذاكرة التخزين المؤقت وإعادة التحقق"
+  },
+  "orders": {
+    "title": "عمليات الطلبات",
+    "loadError": "تعذر تحميل الطلبات.",
+    "empty": "لم يتم العثور على طلبات.",
+    "markAs": "تحديد كـ {{status}}",
+    "terminalStatus": "حالة نهائية. لا توجد انتقالات إضافية."
+  },
+  "cms": {
+    "tabs": "علامات تبويب CMS",
+    "toggles": {
+      "title": "مفاتيح تبديل CMS",
+      "empty": "لم يتم تحميل تكوين التبديل.",
+      "active": "{{active}}/{{total}} نشط",
+      "enable": "تفعيل",
+      "disable": "تعطيل",
+      "enabled": "مفعّل",
+      "disabled": "معطّل",
+      "surface": "السطح: {{surface}}"
+    },
+    "spotlights": {
+      "title": "مدير تسليط الضوء على العلامة التجارية",
+      "add": "إضافة تسليط ضوء",
+      "adding": "جارٍ الإضافة...",
+      "noRecords": "لا توجد سجلات تسليط ضوء بعد.",
+      "refresh": "تحديث",
+      "saving": "جارٍ الحفظ...",
+      "delete": "حذف",
+      "moveUp": "تحريك لأعلى",
+      "moveDown": "تحريك لأسفل"
+    },
+    "preview": {
+      "title": "معاينة التسويق الرئيسية",
+      "noRails": "لم يتم تكوين أي مسارات.",
+      "noSpotlights": "لم يتم تكوين أي تسليط ضوء للعلامة التجارية."
+    },
+    "marketingBlocks": {
+      "title": "كتل التسويق الرئيسية",
+      "noRails": "لم يتم تكوين أي مسارات.",
+      "noSpotlights": "لم يتم تكوين أي تسليط ضوء للعلامة التجارية."
+    },
+    "placeholders": {
+      "spotlightId": "معرف اختياري (مثال: spotlight-new)",
+      "bannerTitleEn": "عنوان اللافتة (EN)",
+      "bannerTitleAr": "عنوان اللافتة (AR)",
+      "railTitleEn": "عنوان المسار (EN)",
+      "railTitleAr": "عنوان المسار (AR)",
+      "brandNamesCsv": "CSV أسماء العلامات التجارية (مثال: Fenty Beauty, Huda Beauty)",
+      "bannerImageUrl": "عنوان URL لصورة اللافتة",
+      "bannerHref": "رابط اللافتة (مثال: /shop)",
+      "brandNamesCsvShort": "CSV أسماء العلامات التجارية",
+      "bannerHrefShort": "رابط اللافتة"
+    }
+  },
+  "sourceOptions": {
+    "bestSellers": "الأكثر مبيعاً",
+    "newArrivals": "الوافدون الجدد",
+    "bundleOnly": "الحزم فقط",
+    "manualIds": "معرفات يدوية"
+  },
+  "users": {
+    "permissionsMatrix": "مصفوفة الأذونات",
+    "permissionsHint": "يتم تطبيق التحديثات فوراً عند النقر. استخدم الفلاتر لتضييق المستخدمين.",
+    "noUsersMatchFilter": "لا يوجد مستخدمون يطابقون هذا الفلتر.",
+    "cmsToggles": "مفاتيح تبديل CMS",
+    "usersLabel": "المستخدمون",
+    "cacheOps": "عمليات ذاكرة التخزين المؤقت",
+    "usersRolePreview": "المستخدمون ومعاينة الأدوار",
+    "allow": "سماح",
+    "deny": "رفض",
+    "setActive": "تعيين كنشط",
+    "setInvited": "تعيين كمدعو",
+    "setDisabled": "تعيين كمعطل",
+    "role": {
+      "customer": "عميل",
+      "pharmacist": "صيدلي",
+      "admin": "مسؤول"
+    }
+  },
+  "cache": {
+    "title": "عمليات ذاكرة التخزين المؤقت وإعادة التحقق",
+    "flushHint": "اكتب FLUSH ثم نفذ. يتم فرض فترة تهدئة من جانب الخادم لكل مستخدم مسؤول.",
+    "flushConfirmationPlaceholder": "اكتب FLUSH للتأكيد",
+    "runOperation": "تشغيل العملية",
+    "running": "جار التشغيل...",
+    "refreshAudit": "تحديث التدقيق"
+  },
+  "menus": {
+    "title": "قوائم CMS",
+    "subtitle": "إنشاء قوائم الرأس، وتعيين المواقع، وإدارة التنقل وبيانات البيع.",
+    "createMenu": "إنشاء قائمة",
+    "saveMenu": "حفظ القائمة",
+    "deleteMenu": "حذف القائمة",
+    "saving": "جار الحفظ...",
+    "emptyTitle": "لا توجد قوائم بعد",
+    "emptyDescription": "أنشئ القائمة الأولى لتنقل الرأس أو بيع القائمة الضخمة.",
+    "menuDetails": "تفاصيل القائمة",
+    "menuStructure": "هيكل القائمة",
+    "megaConfig": "تكوين القائمة الضخمة",
+    "validationHint": "القوائم الضخمة محدودة بعمق 3. يفرض التحقق عند الحفظ العمق وموضع الفتحة المميزة وقواعد شريط العلامات التجارية.",
+    "listTitle": "القوائم",
+    "noSelectionTitle": "اختر أو أنشئ قائمة",
+    "noSelectionDescription": "اختر قائمة من القائمة أو أنشئ واحدة جديدة لتكوين عناصرها.",
+    "loadingMenus": "جار تحميل القوائم...",
+    "menuId": "معرف القائمة",
+    "name": "الاسم",
+    "slug": "الرابط",
+    "location": "الموقع",
+    "displayStyle": "نمط العرض",
+    "impressionAnalyticsKey": "مفتاح تحليلات الظهور",
+    "clickAnalyticsKey": "مفتاح تحليلات النقر",
+    "enabled": "مفعّل",
+    "itemsJson": "عناصر JSON",
+    "megaMenuConfigJson": "تكوين القائمة الضخمة JSON",
+    "deleteConfirm": "حذف القائمة \"{{name}}\"؟",
+    "menuCreated": "تم إنشاء القائمة.",
+    "menuSaved": "تم حفظ القائمة.",
+    "itemsJsonInvalid": "عناصر JSON أو تكوين القائمة الضخمة JSON غير صالح.",
+    "locationOptions": {
+      "headerPrimary": "header_primary",
+      "headerMegaCategories": "header_mega_categories"
+    },
+    "displayStyleOptions": {
+      "default": "default",
+      "megaCategory": "mega_category"
+    },
+    "placeholders": {
+      "menuId": "menu-header-mega",
+      "name": "Header Mega Categories",
+      "slug": "header-mega-categories",
+      "impressionKey": "menu.header_mega_categories.impression",
+      "clickKey": "menu.header_mega_categories.click"
+    }
   }
 }

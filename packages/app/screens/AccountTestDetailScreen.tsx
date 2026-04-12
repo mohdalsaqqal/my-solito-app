@@ -1,10 +1,13 @@
-import { useMemo } from 'react'
-import { Image, useWindowDimensions } from 'react-native'
-import { borderWidth, breakpoints, colors, radius, spacing } from '@real/tokens'
+import React, { useMemo } from 'react'
+import { Image, Platform } from 'react-native'
+import { useTranslation } from 'react-i18next'
+import { borderWidth, radius, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
-import { Box, Text, Touchable } from '@real/ui/primitives'
+import { Box, Text } from '@real/ui/primitives'
+import { Touchable } from '@real/ui/primitives/Touchable'
 import { Button, Card } from '@real/ui/components'
 import { AccountTestDetail } from '@real/app/lib/types'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 
 type AccountTestDetailScreenProps = {
   test?: AccountTestDetail | null
@@ -38,7 +41,7 @@ function splitProductName(rawName: string) {
   }
 }
 
-export function AccountTestDetailScreen({
+export const AccountTestDetailScreen = React.memo(function AccountTestDetailScreen({
   test = null,
   loading = false,
   error = null,
@@ -51,8 +54,10 @@ export function AccountTestDetailScreen({
   onAddAll,
   onViewProduct,
 }: AccountTestDetailScreenProps) {
-  const { width } = useWindowDimensions()
-  const isCompact = width > 0 && width < breakpoints.tabletMin
+  const profile = useBreakpoint()
+  const c = useThemeColors()
+  const { t } = useTranslation('account')
+  const isCompact = profile.breakpoint === 'mobile'
 
   const inStockProducts = useMemo(
     () => (test?.recommendedProducts ?? []).filter((item) => item.inStock !== false),
@@ -80,10 +85,10 @@ export function AccountTestDetailScreen({
         <PageScaffold.Body>
           <Section>
             <Card tone='subtle' style={{ gap: spacing['8'] }}>
-              <Text tone='danger'>Unable to load test details.</Text>
+              <Text tone='danger'>{t('testDetail.loadError')}</Text>
               <Text tone='muted' variant='bodySm'>{error}</Text>
               <Box style={isCompact ? undefined : { width: spacing['128'] }}>
-                <Button variant='outline' onPress={onReload}>Retry</Button>
+                <Button variant='outline' onPress={onReload}>{t('testDetail.retry')}</Button>
               </Box>
             </Card>
           </Section>
@@ -98,7 +103,7 @@ export function AccountTestDetailScreen({
         <PageScaffold.Body>
           <Section>
             <Card tone='subtle'>
-              <Text tone='muted'>Test not found.</Text>
+              <Text tone='muted'>{t('testDetail.notFound')}</Text>
             </Card>
           </Section>
         </PageScaffold.Body>
@@ -119,25 +124,25 @@ export function AccountTestDetailScreen({
           gap: spacing['8'],
         }}
       >
-        <Text variant='h2'>Test details</Text>
+        <Text variant='h1'>{t('testDetail.title')}</Text>
         <Touchable onPress={onBack}>
-          <Text variant='label' tone='primary'>Back to tests</Text>
+          <Text variant='label' tone='primary'>{t('testDetail.backToTests')}</Text>
         </Touchable>
       </Box>
 
       <Card variant='raised' style={{ gap: spacing['8'] }}>
         <Text variant='title'>{test.title}</Text>
-        <Text tone='muted' variant='caption'>Test ID: {test.id}</Text>
-        <Text tone='muted' variant='caption'>Date: {new Date(test.createdAt).toLocaleDateString()}</Text>
-        <Text tone='muted' variant='caption'>Pharmacist: {test.pharmacistName}</Text>
-        <Text tone='muted' variant='caption'>Branch: {test.branchName}</Text>
-        <Text tone='muted' variant='caption'>Status: {test.status}</Text>
+        <Text tone='muted' variant='caption'>{t('testDetail.testId', { id: test.id })}</Text>
+        <Text tone='muted' variant='caption'>{t('testDetail.date', { date: new Date(test.createdAt).toLocaleDateString() })}</Text>
+        <Text tone='muted' variant='caption'>{t('testDetail.pharmacist', { name: test.pharmacistName })}</Text>
+        <Text tone='muted' variant='caption'>{t('testDetail.branch', { name: test.branchName })}</Text>
+        <Text tone='muted' variant='caption'>{t('testDetail.status', { status: test.status })}</Text>
       </Card>
 
       <Card variant='flat' style={{ gap: spacing['8'] }}>
-        <Text variant='title'>Result summary</Text>
+        <Text variant='title'>{t('testDetail.resultSummary')}</Text>
         <Text tone='muted'>{test.summary}</Text>
-        {test.notes ? <Text tone='muted' variant='bodySm'>Notes: {test.notes}</Text> : null}
+        {test.notes ? <Text tone='muted' variant='bodySm'>{t('testDetail.notes', { notes: test.notes })}</Text> : null}
         <Box style={{ gap: spacing['8'] }}>
           {test.metrics.map((metric) => (
             <Box
@@ -146,7 +151,7 @@ export function AccountTestDetailScreen({
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                borderBottomColor: colors.divider,
+                borderBottomColor: c.divider,
                 borderBottomWidth: borderWidth.thin,
                 paddingVertical: spacing['8'],
               }}
@@ -167,20 +172,20 @@ export function AccountTestDetailScreen({
             gap: spacing['8'],
           }}
         >
-          <Text variant='title'>Recommended products</Text>
+          <Text variant='title'>{t('testDetail.recommendedProducts')}</Text>
           <Box style={isCompact ? undefined : { width: spacing['128'] }}>
             <Button
               size='sm'
               disabled={addingAll || inStockProducts.length === 0}
               onPress={onAddAll}
             >
-              {addingAll ? 'Adding...' : 'Add all'}
+              {addingAll ? t('testDetail.adding') : t('testDetail.addAll')}
             </Button>
           </Box>
         </Box>
 
         {test.recommendedProducts.length === 0 ? (
-          <Text tone='muted'>No recommended products for this test.</Text>
+          <Text tone='muted'>{t('testDetail.noRecommendedProducts')}</Text>
         ) : (
           <Box style={{ gap: spacing['8'] }}>
             {test.recommendedProducts.map((item) => {
@@ -202,11 +207,11 @@ export function AccountTestDetailScreen({
                         width: spacing['48'],
                         height: spacing['48'],
                         borderRadius: radius.sm,
-                        backgroundColor: colors.surfaceMuted,
+                        backgroundColor: c.surfaceMuted,
                         overflow: 'hidden',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        borderColor: colors.divider,
+                        borderColor: c.divider,
                         borderWidth: borderWidth.thin,
                       }}
                     >
@@ -215,9 +220,10 @@ export function AccountTestDetailScreen({
                           source={{ uri: item.imageUrl }}
                           style={{ width: spacing['48'], height: spacing['48'] }}
                           resizeMode='cover'
+                          {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                         />
                       ) : (
-                        <Text tone='muted' variant='caption'>IMG</Text>
+                        <Text tone='muted' variant='caption'>{'IMG'}</Text>
                       )}
                     </Box>
 
@@ -225,7 +231,7 @@ export function AccountTestDetailScreen({
                       <Text tone='muted' variant='caption'>{item.brand || split.brand}</Text>
                       <Text variant='label'>{item.brand ? split.name : item.name}</Text>
                       <Text tone='primary' variant='label'>{formatMoney(item.price, item.currency)}</Text>
-                      {isOutOfStock ? <Text tone='danger' variant='caption'>Out of stock</Text> : null}
+                      {isOutOfStock ? <Text tone='danger' variant='caption'>{t('testDetail.outOfStock')}</Text> : null}
                     </Box>
                   </Box>
 
@@ -236,12 +242,12 @@ export function AccountTestDetailScreen({
                         disabled={isOutOfStock || alreadyInCart || isAddingCurrent}
                         onPress={() => onAddProduct?.(item.productId)}
                       >
-                        {alreadyInCart ? 'Added' : isAddingCurrent ? 'Adding...' : 'Add to cart'}
+                        {alreadyInCart ? t('testDetail.added') : isAddingCurrent ? t('testDetail.adding') : t('testDetail.addToCart')}
                       </Button>
                     </Box>
                     <Box style={isCompact ? undefined : { width: spacing['128'] }}>
                       <Button size='sm' variant='outline' onPress={() => onViewProduct?.(item.productId)}>
-                        View product
+                        {t('testDetail.viewProduct')}
                       </Button>
                     </Box>
                   </Box>
@@ -256,4 +262,4 @@ export function AccountTestDetailScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

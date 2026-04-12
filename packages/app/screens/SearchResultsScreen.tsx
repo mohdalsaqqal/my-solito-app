@@ -1,13 +1,41 @@
-import { useMemo } from 'react'
-import { useWindowDimensions } from 'react-native'
+import React, { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { BlockRenderer } from '@real/app/sections/blocks/BlockRenderer'
 import { SearchResult, SearchSuggestion } from '@real/app/lib/types'
-import { breakpoints, layout, spacing } from '@real/tokens'
+import { layout, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
-import { Button, MarketplacePromoStrip, MarketplaceSectionHeader, ProductCard } from '@real/ui/components'
+import { Button, MarketplacePromoStrip, MarketplaceSectionHeader, ProductCard, ProductCardSkeleton } from '@real/ui/components'
+import type { ProductCardModel } from '@real/ui/components/ProductCard.types'
 import { HomeProductItem } from '@real/ui/components/home/types'
 import { Box, Text } from '@real/ui/primitives'
 import { passThroughPricingService } from '@real/app/lib/pricing'
+import { useBreakpoint } from '@real/ui/responsive'
+import Link from 'next/link'
+
+function homeProductToCardModel(item: HomeProductItem): ProductCardModel {
+  const fmt = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: item.currency || 'USD',
+    minimumFractionDigits: 2,
+  })
+  const formattedPrice = fmt.format(item.price)
+
+  return {
+    id: item.id,
+    slug: item.id,
+    href: item.href ?? `/product/${item.id}`,
+    title: item.displayTitle ?? item.name,
+    brand: { name: item.brand },
+    image: { url: item.imageUrl ?? '', alt: item.name },
+    price: { amount: item.price, currency: item.currency ?? 'USD', formatted: formattedPrice },
+    compareAtPrice: item.compareAtPrice
+      ? { amount: item.compareAtPrice, formatted: fmt.format(item.compareAtPrice) }
+      : undefined,
+    badges: item.badge ? [{ kind: 'discount' as const, label: item.badge }] : [],
+    inStock: !item.outOfStock,
+    requiresVariantSelection: item.requiresVariantSelection ?? false,
+  }
+}
 
 type SearchResultsScreenProps = {
   query: string
@@ -45,7 +73,7 @@ function toProductItem(suggestion: SearchSuggestion): HomeProductItem | null {
   }
 }
 
-export function SearchResultsScreen({
+export const SearchResultsScreen = React.memo(function SearchResultsScreen({
   query,
   suggestions,
   page,
@@ -57,9 +85,10 @@ export function SearchResultsScreen({
   onSelectProduct,
   onAddToCart,
 }: SearchResultsScreenProps) {
-  const { width } = useWindowDimensions()
-  const isDesktop = width >= breakpoints.desktopMin
-  const safeWidth = Math.max(Math.min(width - layout.gutterX.md * 2, layout.maxWidth.commerce), spacing.xxl * 4)
+  const { t } = useTranslation('search')
+  const profile = useBreakpoint()
+  const isDesktop = profile.breakpoint === 'desktop'
+  const safeWidth = Math.max(Math.min(layout.maxWidth.commerce, spacing.xxl * 4), spacing.xxl * 4)
   const columns = isDesktop ? 5 : 2
   const cardWidth = Math.max(
     Math.floor((safeWidth - spacing['16'] * (columns - 1)) / columns),
@@ -74,20 +103,17 @@ export function SearchResultsScreen({
     [suggestions]
   )
   const searchPageBlocks = page?.blocks ?? []
-  const emptySearchTitle = locale === 'ar' ? 'البحث' : 'Search'
-  const emptySearchSubtitle =
-    locale === 'ar' ? 'أدخل اسم منتج أو فئة أو علامة تجارية.' : 'Enter a product name, category, or brand.'
-  const resultsTitle = locale === 'ar' ? `نتائج "${query}"` : `Results for "${query}"`
-  const loadErrorTitle = locale === 'ar' ? 'تعذر تحميل نتائج البحث.' : 'Unable to load search results.'
-  const retryLabel = locale === 'ar' ? 'إعادة المحاولة' : 'Retry'
-  const noResultsTitle = locale === 'ar' ? `لا توجد نتائج لـ "${query}"` : `No results for "${query}"`
-  const noResultsSubtitle =
-    locale === 'ar' ? 'جرّب كلمة أخرى أو تصفح أقسام المتجر.' : 'Try another keyword or browse the shop categories.'
-  const promoBadge = locale === 'ar' ? 'عروض البحث' : 'Search deals'
-  const promoSubtitle =
-    locale === 'ar' ? 'واجهة اكتشاف كثيفة بترتيب يبرز العروض أولاً' : 'Dense discovery view with offer-first ranking'
-  const productsFoundTitle = locale === 'ar' ? `تم العثور على ${products.length} منتجاً` : `${products.length} products found`
-  const productsFoundMeta = locale === 'ar' ? 'تصفح مستمر' : 'Continuous browse'
+  const emptySearchTitle = t('empty.title')
+  const emptySearchSubtitle = t('empty.subtitle')
+  const resultsTitle = t('results.title', { query })
+  const loadErrorTitle = t('results.loadError')
+  const retryLabel = t('results.retry')
+  const noResultsTitle = t('results.noResults', { query })
+  const noResultsSubtitle = t('results.noResultsSubtitle')
+  const promoBadge = t('promo.badge')
+  const promoSubtitle = t('promo.subtitle')
+  const productsFoundTitle = t('results.productsFound', { count: products.length })
+  const productsFoundMeta = t('results.productsFoundMeta')
 
   if (!query.trim()) {
     return (
@@ -99,6 +125,9 @@ export function SearchResultsScreen({
               <Text variant='bodySm' tone='muted'>
                 {emptySearchSubtitle}
               </Text>
+              <Link href='/shop' passHref>
+                <Button size='sm'>{t('actions.browseShop')}</Button>
+              </Link>
             </Box>
           </Section>
         </PageScaffold.Body>
@@ -112,10 +141,10 @@ export function SearchResultsScreen({
         <PageScaffold.Body>
           <Section>
             <Box gap='12'>
-              <Text variant='h2'>{resultsTitle}</Text>
+              <Text variant='h1'>{resultsTitle}</Text>
               <Box style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing['16'] }}>
                 {Array.from({ length: isDesktop ? 8 : 4 }, (_, idx) => (
-                  <ProductCard key={`search-loading-${idx}`} state='loading' density="minimal" width={cardWidth} />
+                  <ProductCardSkeleton key={`search-loading-${idx}`} width={cardWidth} />
                 ))}
               </Box>
             </Box>
@@ -157,6 +186,9 @@ export function SearchResultsScreen({
               <Text variant='bodySm' tone='muted'>
                 {noResultsSubtitle}
               </Text>
+              <Link href='/shop' passHref>
+                <Button size='sm'>{t('actions.browseShop')}</Button>
+              </Link>
             </Box>
           </Section>
         </PageScaffold.Body>
@@ -198,12 +230,10 @@ export function SearchResultsScreen({
               {products.map((item) => (
                 <ProductCard
                   key={item.id}
-                  item={item}
-                  density="minimal"
+                  item={homeProductToCardModel(item)}
                   width={cardWidth}
-                  urgencyLabel={item.badge}
-                  onPress={(next) => onSelectProduct?.(next.id)}
-                  onAddToCart={(next) => onAddToCart?.(next.id)}
+                  onPress={() => onSelectProduct?.(item.id)}
+                  onPressAdd={() => onAddToCart?.(item.id)}
                 />
               ))}
             </Box>
@@ -212,4 +242,4 @@ export function SearchResultsScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

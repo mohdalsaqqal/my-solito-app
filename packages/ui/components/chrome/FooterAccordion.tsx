@@ -1,5 +1,8 @@
-import { borderWidth, colors, motionDuration, radius, spacing } from '@real/tokens'
-import { Box, Divider, Text, Touchable } from '../../primitives'
+import React from 'react'
+import { borderWidth, radius, spacing } from '@real/tokens'
+import { Box, Divider, Text } from '../../primitives'
+import { useThemeColors } from '../../responsive'
+import { Button as ReusableButton } from '../../reusables/button'
 
 type FooterLinkItem = {
   id: string
@@ -20,13 +23,14 @@ type FooterAccordionProps = {
   state?: 'loading' | 'empty' | 'error' | 'disabled' | 'default'
 }
 
-export function FooterAccordion({
+export const FooterAccordion = React.memo(function FooterAccordion({
   sections,
   openSectionId,
   onToggleSection,
   onPressLink,
   state = 'default',
 }: FooterAccordionProps) {
+  const c = useThemeColors()
   if (state === 'loading') {
     return <Text tone='muted'>Loading sections...</Text>
   }
@@ -49,44 +53,43 @@ export function FooterAccordion({
             key={section.id}
             style={{
               borderWidth: borderWidth.thin,
-              borderColor: colors.border,
+              borderColor: c.border,
               borderRadius: radius.md,
               padding: spacing.sm,
               gap: spacing.xs,
             }}
           >
-            <Touchable disabled={state === 'disabled'} onPress={() => onToggleSection(section.id)}>
+            <ReusableButton
+              disabled={state === 'disabled'}
+              onPress={() => onToggleSection(section.id)}
+              variant='ghost'
+              size='sm'
+              style={{ justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row' }}
+            >
               <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text variant='label'>{section.title}</Text>
                 <Text variant='caption' tone='muted'>
                   {open ? '-' : '+'}
                 </Text>
               </Box>
-            </Touchable>
+            </ReusableButton>
             {open ? (
               <>
                 <Divider tone='muted' />
                 <Box style={{ gap: spacing.xs }}>
                   {section.links.map((link) => (
-                    <Touchable key={link.id} disabled={state === 'disabled'} onPress={() => onPressLink?.(link.id)}>
-                      {({ hovered, focused }) => (
-                        <Box style={{ alignItems: 'flex-start', gap: spacing.xxs }}>
-                          <Text tone='muted' variant='footer'>
-                            {link.label}
-                          </Text>
-                          <Box
-                            style={{
-                              height: 2,
-                              width: hovered || focused ? '100%' : 0,
-                              borderRadius: 2,
-                              backgroundColor: colors.brandPrimary,
-                              transitionProperty: 'width',
-                              transitionDuration: `${motionDuration.normal}ms`,
-                            }}
-                          />
-                        </Box>
-                      )}
-                    </Touchable>
+                    <ReusableButton
+                      key={link.id}
+                      disabled={state === 'disabled'}
+                      onPress={() => onPressLink?.(link.id)}
+                      variant='link'
+                      size='sm'
+                      style={{ alignItems: 'flex-start', justifyContent: 'flex-start', paddingHorizontal: 0 }}
+                    >
+                      <Text tone='muted' variant='footer'>
+                        {link.label}
+                      </Text>
+                    </ReusableButton>
                   ))}
                 </Box>
               </>
@@ -96,4 +99,4 @@ export function FooterAccordion({
       })}
     </Box>
   )
-}
+})

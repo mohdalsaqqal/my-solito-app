@@ -1,0 +1,140 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - link "FREE Rare Beauty Trial Size with $30+ Spend.* Online only. *Terms apply. Use code RARELIGHT ▸" [ref=e8] [cursor=pointer]:
+      - /url: /beauty/new-beauty-products?icid2=global_persistentbanner1_nbo_promogwp_slotting_default_us_rwd_promo_040426_rarelight
+      - paragraph [ref=e12]:
+        - generic [ref=e13]: FREE Rare Beauty Trial Size with $30+ Spend.* Online only. *Terms apply. Use code RARELIGHT ▸
+    - generic [ref=e14]:
+      - generic [ref=e16]:
+        - link "Sephora Homepage" [ref=e17] [cursor=pointer]:
+          - /url: /
+          - img [ref=e18]
+        - search [ref=e22]:
+          - generic [ref=e23]: Search
+          - combobox [ref=e24]:
+            - searchbox "Search" [ref=e28]
+            - img
+        - generic [ref=e29]:
+          - generic [ref=e30]:
+            - button "Shop Store & Delivery Choose your store & location" [ref=e32] [cursor=pointer]:
+              - img [ref=e34]
+              - generic [ref=e40]:
+                - text: Shop Store & Delivery
+                - generic [ref=e41]: Choose your store & location
+            - button "Services & Events" [ref=e43] [cursor=pointer]:
+              - img [ref=e44]
+              - generic [ref=e48]: Services & Events
+            - button "Sign In for FREE Shipping 🚚" [ref=e51] [cursor=pointer]:
+              - generic [ref=e52]:
+                - generic [ref=e53]: Sign In
+                - generic [ref=e54]: for FREE Shipping 🚚
+          - link "Loves" [ref=e58] [cursor=pointer]:
+            - /url: /profile/Lists
+            - img [ref=e60]
+          - link "Go To Basket" [ref=e64] [cursor=pointer]:
+            - /url: /basket
+            - img "Go To Basket" [ref=e67]
+      - navigation [ref=e72]:
+        - link "New" [ref=e74] [cursor=pointer]:
+          - /url: /beauty/new-beauty-products
+          - text: New
+        - link "Makeup" [ref=e78] [cursor=pointer]:
+          - /url: /shop/makeup-cosmetics
+          - text: Makeup
+        - link "Skincare" [ref=e82] [cursor=pointer]:
+          - /url: /shop/skincare
+          - text: Skincare
+        - link "Fragrance" [ref=e86] [cursor=pointer]:
+          - /url: /shop/fragrance
+          - text: Fragrance
+        - link "Hair" [ref=e90] [cursor=pointer]:
+          - /url: /shop/hair-products
+          - text: Hair
+        - link "Tools & Brushes" [ref=e94] [cursor=pointer]:
+          - /url: /shop/makeup-tools
+          - text: Tools & Brushes
+        - link "Bath & Body" [ref=e98] [cursor=pointer]:
+          - /url: /shop/bath-body
+          - text: Bath & Body
+        - link "Mini Size" [ref=e102] [cursor=pointer]:
+          - /url: /shop/travel-size-toiletries
+          - text: Mini Size
+        - link "Brands" [ref=e106] [cursor=pointer]:
+          - /url: /brands-list
+          - text: Brands
+        - link "Gifts & Value Sets" [ref=e110] [cursor=pointer]:
+          - /url: /shop/gifts
+          - text: Gifts & Value Sets
+        - link "Gift Cards" [ref=e114] [cursor=pointer]:
+          - /url: /beauty/giftcards
+          - text: Gift Cards
+        - button "Sale & Offers" [ref=e118] [cursor=pointer]: Sale & Offers
+  - generic [ref=e122]:
+    - heading "Sephora Homepage" [level=1] [ref=e123]
+    - generic [ref=e129]:
+      - list [ref=e130]:
+        - listitem [ref=e131]
+        - listitem [ref=e132]:
+          - link "New Glossier You Soie Spritz on this beachy, solar scent from dawn ’til dusk. Only at Sephora. SHOP NOW ▸ notes of bergamot, rice milk & jasmine" [ref=e135] [cursor=pointer]:
+            - /url: /product/P520355?icid2=homepage_slideshow_fragance_program_brand-sku-launch_glossieryousoie_fy265385_broadcast_us_rwd_banner_040426
+            - generic [ref=e136]:
+              - generic [ref=e138]:
+                - heading "New Glossier You Soie" [level=3] [ref=e139]
+                - paragraph [ref=e140]:
+                  - generic [ref=e141]: Spritz on this beachy, solar scent from dawn ’til dusk. Only at Sephora.
+                - paragraph [ref=e142]:
+                  - generic [ref=e143]: SHOP NOW ▸
+              - img "notes of bergamot, rice milk & jasmine" [ref=e147]
+        - listitem [ref=e148]:
+          - link "Liner + Lippie = Perfect Lip Everything you need for the perfect lip. SHOP NOW ▸" [ref=e151] [cursor=pointer]:
+            - /url: /beauty/makeup-math?icid2=homepage_slideshow_color_animation_febmakeup0226_fy264859_us_rwd_banner_040326_definedlips
+            - generic [ref=e154]:
+              - heading "Liner + Lippie = Perfect Lip" [level=3] [ref=e155]
+              - paragraph [ref=e156]: Everything you need for the perfect lip.
+              - paragraph [ref=e157]:
+                - generic [ref=e158]: SHOP NOW ▸
+        - listitem [ref=e162]:
+          - link "New from Rare Beauty Snag the True to Myself Foundation and get 4X points†† with code 4XRAREPTS. SHOP NOW ▸ BEAUY INSIDER 4X 1 POINT PER DOLLAR†† | Combinable with other offers. Online and in store. ††Exclusions/terms apply. | only at Sephora." [ref=e165] [cursor=pointer]:
+            - /url: /product/P521996?icid2=homepage_slideshow_color_program_rarebeautytruetomyself_fy265307_broadcast_us_rwd_banner_040226
+            - generic [ref=e166]:
+              - generic [ref=e168]:
+                - heading "New from Rare Beauty" [level=3] [ref=e169]
+                - paragraph [ref=e170]:
+                  - generic [ref=e171]:
+                    - text: Snag the True to Myself Foundation and get 4X points
+                    - superscript [ref=e172]: ††
+                    - text: with code 4XRAREPTS.
+                - paragraph [ref=e173]:
+                  - generic [ref=e174]: SHOP NOW ▸
+              - img "BEAUY INSIDER 4X 1 POINT PER DOLLAR†† | Combinable with other offers. Online and in store. ††Exclusions/terms apply. | only at Sephora." [ref=e178]
+        - listitem [ref=e179]:
+          - link "The Only Hair Edit You Need Everyone’s obsessed with these Clean at Sephora picks. You’re next. SHOP NOW ▸ CLEAN AT SEPHORA" [ref=e182] [cursor=pointer]:
+            - /url: /beauty/trending-hair-products?icid2=homepage_slideshow_hair_program_marchcultfaves0326_fy264894_broadcast_us_rwd_banner_040126_v2clean
+            - generic [ref=e183]:
+              - generic [ref=e185]:
+                - heading "The Only Hair Edit You Need" [level=3] [ref=e186]
+                - paragraph [ref=e187]: Everyone’s obsessed with these Clean at Sephora picks. You’re next.
+                - paragraph [ref=e188]:
+                  - generic [ref=e189]: SHOP NOW ▸
+              - img "CLEAN AT SEPHORA" [ref=e193]
+        - listitem [ref=e194]
+      - button "Previous slide" [disabled]:
+        - img
+      - button "Next slide" [ref=e195] [cursor=pointer]:
+        - img [ref=e196]
+  - dialog [ref=e214]:
+    - generic [ref=e216]:
+      - paragraph [ref=e217]:
+        - text: Looks like you are trying to access
+        - button "Sephora.com" [ref=e218] [cursor=pointer]
+        - text: (USA & Canada)
+        - text: from another country.
+      - paragraph [ref=e219]: This site does not ship to your country.
+      - button "View Sephora International Websites" [ref=e220] [cursor=pointer]
+      - paragraph [ref=e221]:
+        - text: Continue to
+        - button "Sephora.com" [ref=e222] [cursor=pointer]
+        - text: .
+    - button "Close modal" [ref=e223] [cursor=pointer]:
+      - img [ref=e224]
+  - textbox

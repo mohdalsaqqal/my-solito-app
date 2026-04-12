@@ -6,10 +6,14 @@ import { colors, spacing, typography, fontWeights, radius } from '@real/tokens'
 
 const TABS = [
   { label: 'Promotions', href: '/admin/marketing/promotions' },
+  { label: 'Referrals', href: '/admin/marketing/referrals' },
   { label: 'Releases', href: '/admin/marketing/cms/releases' },
   { label: 'Blocks', href: '/admin/marketing/cms/blocks' },
   { label: 'Banners', href: '/admin/marketing/cms/offer-banners' },
   { label: 'Queries', href: '/admin/marketing/cms/queries' },
+  { label: 'Site Config', href: '/admin/marketing/cms/site-config' },
+  { label: 'Ticker & Banners', href: '/admin/marketing/cms/banners' },
+  { label: 'UGC Gallery', href: '/admin/marketing/cms/ugc' },
 ]
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {

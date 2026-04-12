@@ -126,18 +126,29 @@ function addFinding(ruleId, severity, path, message, principle) {
   findings.push({ ruleId, severity, path: path || 'repo-root', message, principle })
 }
 
+function readActiveGitignoreEntries() {
+  const gitignorePath = join(ROOT, '.gitignore')
+  if (!existsSync(gitignorePath)) return null
+
+  const lines = readFileSync(gitignorePath, 'utf8').split(/\r?\n/)
+  return new Set(
+    lines
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .filter(line => !line.startsWith('#')),
+  )
+}
+
 // ─── Rule Check Implementations ──────────────────────────────────────
 
 function checkVendorGitignore() {
-  const gitignorePath = join(ROOT, '.gitignore')
-  if (!existsSync(gitignorePath)) {
+  const entries = readActiveGitignoreEntries()
+  if (!entries) {
     addFinding('HY-001', 'FAIL', '.gitignore', '.gitignore file missing', 'XV')
     return
   }
-  const content = readFileSync(gitignorePath, 'utf8')
   for (const dir of VENDOR_DIRS) {
-    const name = dir.replace('/', '')
-    if (!content.includes(name)) {
+    if (!entries.has(dir)) {
       addFinding('HY-001', 'FAIL', '.gitignore', `${dir} not in .gitignore. (Constitution Principle XV)`, 'XV')
     }
   }
@@ -206,13 +217,11 @@ function checkAuditFiles() {
 }
 
 function checkBuildArtifactGitignore() {
-  const gitignorePath = join(ROOT, '.gitignore')
-  if (!existsSync(gitignorePath)) return
-  const content = readFileSync(gitignorePath, 'utf8')
+  const entries = readActiveGitignoreEntries()
+  if (!entries) return
   const artifacts = ['.next/', 'dist/', '.turbo/', 'coverage/']
   for (const artifact of artifacts) {
-    const name = artifact.replace('/', '')
-    if (!content.includes(name)) {
+    if (!entries.has(artifact)) {
       addFinding('HY-007', 'FAIL', '.gitignore',
         `${artifact} MUST be gitignored. (Constitution Principle XV)`, 'XV')
     }

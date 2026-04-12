@@ -1,7 +1,10 @@
-import { createContext, ReactNode, useContext, useState } from 'react'
+"use client"
+
+import React, { createContext, ReactNode, useContext, useState } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
-import { colors, radius, spacing } from '@real/tokens'
+import { colors, radius, spacing, borderWidth } from '@real/tokens'
 import { Text } from '../primitives'
+import { useThemeColors } from '../responsive'
 
 type TabsContextValue = {
   value: string
@@ -20,7 +23,7 @@ type TabsRootProps = {
   children?: ReactNode
 }
 
-function TabsRoot({ defaultValue = '', value: controlled, onChange, children }: TabsRootProps) {
+const TabsRoot = React.memo(function TabsRoot({ defaultValue = '', value: controlled, onChange, children }: TabsRootProps) {
   const [internal, setInternal] = useState(defaultValue)
   const value = controlled ?? internal
   const handleChange = (v: string) => {
@@ -32,16 +35,17 @@ function TabsRoot({ defaultValue = '', value: controlled, onChange, children }: 
       {children}
     </TabsContext.Provider>
   )
-}
+})
 
 function TabsList({ children }: { children?: ReactNode }) {
+  const c = useThemeColors()
   return (
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
       style={{
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        borderBottomWidth: borderWidth.thin,
+        borderBottomColor: c.border,
       }}
     >
       <View style={{ flexDirection: 'row' }}>
@@ -52,6 +56,7 @@ function TabsList({ children }: { children?: ReactNode }) {
 }
 
 function TabsTrigger({ value, children }: { value: string; children?: ReactNode }) {
+  const c = useThemeColors()
   const ctx = useContext(TabsContext)
   const active = ctx.value === value
   return (
@@ -80,7 +85,7 @@ function TabsTrigger({ value, children }: { value: string; children?: ReactNode 
             left: spacing.md,
             right: spacing.md,
             height: 2,
-            backgroundColor: colors.brandPrimary,
+            backgroundColor: c.brandPrimary,
             borderRadius: radius.full,
           }}
         />

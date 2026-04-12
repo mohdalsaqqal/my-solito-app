@@ -138,7 +138,7 @@
   ].join(';')
 
   panel.innerHTML =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+    '<div id="ect-inspector-drag-handle" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;cursor:move;user-select:none;">' +
     '<strong style="font-size:12px;color:#0f172a;">ECT Inspector</strong>' +
     '<button id="ect-inspector-close" style="border:1px solid #cbd5e1;background:#fff;padding:4px 8px;cursor:pointer;">Close</button>' +
     '</div>' +
@@ -170,6 +170,7 @@
   document.body.appendChild(highlightBox)
 
   const body = panel.querySelector('#ect-inspector-body')
+  const dragHandle = panel.querySelector('#ect-inspector-drag-handle')
   const closeBtn = panel.querySelector('#ect-inspector-close')
   const toggleBtn = panel.querySelector('#ect-inspector-toggle')
   const copySelectorBtn = panel.querySelector('#ect-copy-selector')
@@ -179,6 +180,9 @@
 
   let lastPayload = null
   let inspectMode = true
+  let dragging = false
+  let dragOffsetX = 0
+  let dragOffsetY = 0
 
   function render(payload) {
     if (!payload) return
@@ -210,6 +214,8 @@
   }
 
   function teardown() {
+    window.removeEventListener('mousemove', onDragMove, true)
+    window.removeEventListener('mouseup', onDragEnd, true)
     window.removeEventListener('mousemove', onMouseMove, true)
     window.removeEventListener('click', onClick, true)
     window.removeEventListener('keydown', onKeyDown, true)
@@ -220,6 +226,34 @@
   }
 
   window.__ECT_INSPECTOR_TEARDOWN__ = teardown
+
+  function onDragStart(event) {
+    if (!(event.target instanceof HTMLElement)) return
+    if (event.target.closest('button')) return
+    dragging = true
+    const rect = panel.getBoundingClientRect()
+    dragOffsetX = event.clientX - rect.left
+    dragOffsetY = event.clientY - rect.top
+    panel.style.left = `${rect.left}px`
+    panel.style.top = `${rect.top}px`
+    panel.style.right = 'auto'
+    panel.style.bottom = 'auto'
+    event.preventDefault()
+  }
+
+  function onDragMove(event) {
+    if (!dragging) return
+    panel.style.left = `${Math.max(0, event.clientX - dragOffsetX)}px`
+    panel.style.top = `${Math.max(0, event.clientY - dragOffsetY)}px`
+  }
+
+  function onDragEnd() {
+    dragging = false
+  }
+
+  dragHandle.addEventListener('mousedown', onDragStart)
+  window.addEventListener('mousemove', onDragMove, true)
+  window.addEventListener('mouseup', onDragEnd, true)
 
   closeBtn.addEventListener('click', () => {
     teardown()
@@ -243,8 +277,9 @@
 
   copyAskBtn.addEventListener('click', () => {
     if (!lastPayload) return
+    const component = lastPayload.nodeMarker || lastPayload.reactComponent || '(unknown)'
     const prompt =
-      'Please update this selected element based on my request.\n\n' +
+      'Component: ' + component + '\n' +
       '[ECT_INSPECT] ' + JSON.stringify(lastPayload) + '\n\n' +
       'Requested change:\n' +
       '- '

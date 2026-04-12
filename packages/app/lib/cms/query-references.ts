@@ -62,6 +62,12 @@ export function getProductQueryResolverInput(
 
   if (!reference || !querySlug) return null
 
+  // Exhaustive type guard — ensures all QueryBoundBlockType values are handled above
+  const validTypes: QueryBoundBlockType[] = ['product_slider', 'brand_promo', 'brand_spotlight', 'personalized_rail', 'cart_upsell_rail']
+  if (!validTypes.includes(reference.blockType as QueryBoundBlockType)) {
+    return null
+  }
+
   return {
     storeId: context.storeId,
     blockId: context.blockId ?? block.id,

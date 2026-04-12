@@ -1,9 +1,14 @@
-import { colors, letterSpacing, motionDuration, spacing } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import React from 'react'
+import { Platform } from 'react-native'
+import { letterSpacing, motionDuration, spacing } from '@real/tokens'
+import { Box, Text } from '../../primitives'
+import { Button as ReusableButton } from '../../reusables/button'
+import { useThemeColors } from '../../responsive'
 
 type FooterLinkItem = {
   id: string
   label: string
+  href?: string
 }
 
 type FooterColumnItem = {
@@ -18,9 +23,10 @@ type FooterColumnsProps = {
   state?: 'loading' | 'empty' | 'error' | 'disabled' | 'default'
 }
 
-export function FooterColumns({ columns, onPressLink, state = 'default' }: FooterColumnsProps) {
+export const FooterColumns = React.memo(function FooterColumns({ columns, onPressLink, state = 'default' }: FooterColumnsProps) {
+  const c = useThemeColors()
   if (state === 'loading') {
-    return <Text tone='muted'>Loading footer links...</Text>
+    return <Text tone='muted'>Loading footer links…</Text>
   }
 
   if (state === 'error') {
@@ -38,15 +44,34 @@ export function FooterColumns({ columns, onPressLink, state = 'default' }: Foote
           <Text
             variant='label'
             weight='700'
+            tone='inverse'
             style={{ textTransform: 'uppercase', letterSpacing: letterSpacing.caps }}
           >
             {column.title}
           </Text>
           {column.links.map((link) => (
-            <Touchable key={link.id} disabled={state === 'disabled'} onPress={() => onPressLink?.(link.id)}>
+            <ReusableButton
+              key={link.id}
+              disabled={state === 'disabled'}
+              href={link.href}
+              target={link.href?.startsWith('http') ? '_blank' : undefined}
+              rel={link.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
+              variant='ghost'
+              onPress={() => {
+                if (Platform.OS !== 'web' || !link.href) {
+                  onPressLink?.(link.id)
+                }
+              }}
+              style={{ paddingHorizontal: 0, paddingVertical: 0, alignItems: 'flex-start' }}
+            >
               {({ hovered, focused }) => (
                 <Box style={{ alignItems: 'flex-start', gap: spacing.xs }}>
-                  <Text tone={hovered || focused ? 'default' : 'muted'} variant='footer' weight={hovered || focused ? '600' : '400'}>
+                  <Text
+                    tone='inverse'
+                    variant='footer'
+                    weight={hovered || focused ? '600' : '400'}
+                    style={{ opacity: hovered || focused ? 1 : 0.78 }}
+                  >
                     {link.label}
                   </Text>
                   <Box
@@ -54,17 +79,17 @@ export function FooterColumns({ columns, onPressLink, state = 'default' }: Foote
                       height: 2,
                       width: hovered || focused ? spacing['24'] : 0,
                       borderRadius: 2,
-                      backgroundColor: colors.brandPrimary,
+                      backgroundColor: c.white,
                       transitionProperty: 'width',
                       transitionDuration: `${motionDuration.normal}ms`,
                     }}
                   />
                 </Box>
               )}
-            </Touchable>
+            </ReusableButton>
           ))}
         </Box>
       ))}
     </Box>
   )
-}
+})

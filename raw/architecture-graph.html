@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solito v5 Architecture Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        .content {
+            padding: 2rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+        .section h2 {
+            color: #2563eb;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #2563eb;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .stat-card .label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+        .footer {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 0.85rem;
+            border-top: 1px solid #e2e8f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Solito v5 Architecture Graph</h1>
+            <p>Premium Cosmetics Commerce Platform — Real Cosmetics</p>
+        </div>
+        
+        <div class="content">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="number">5</div>
+                    <div class="label">Core Packages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">2</div>
+                    <div class="label">App Targets (Web + Mobile)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">14</div>
+                    <div class="label">Phase 1 Subphases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">8</div>
+                    <div class="label">Phase 2 Subphases</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number">9</div>
+                    <div class="label">Forbidden Patterns</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📊 Monorepo Structure & Data Flow</h2>
+                <div class="mermaid">
+graph TB
+    subgraph Apps
+        Next["apps/next<br/>Next.js 16 Web App + Server Layer"]
+        Expo["apps/expo<br/>Expo 54 Mobile App"]
+    end
+
+    subgraph Packages
+        App["packages/app<br/>Shared Screens & Logic"]
+        UI["packages/ui<br/>Shared RNR Component System"]
+        Tokens["packages/tokens<br/>Design Tokens"]
+        Providers["packages/providers<br/>Contracts + Registry"]
+        Adapters["packages/adapters<br/>External Integrations"]
+    end
+
+    subgraph Server_Layer["apps/next/server"]
+        Services["services/<br/>Business Logic"]
+        Routes["Route Handlers<br/>app/api/**"]
+        Actions["Server Actions"]
+    end
+
+    Next -->|Imports| Services
+    Next -->|Uses| Routes
+    Next -->|Uses| Actions
+    
+    Expo -->|Uses| App
+    Expo -->|Uses| UI
+    Expo -->|Uses| Tokens
+    
+    App -->|Uses| UI
+    App -->|Uses| Providers
+    App -->|Uses| Tokens
+    
+    UI -->|Uses| Tokens
+    UI -->|Uses| Providers
+    
+    Services -->|Calls| Providers
+    Providers -->|Registry| Adapters
+    
+    classDef app fill:#2563eb,stroke:#1e40af,color:#fff
+    classDef pkg fill:#059669,stroke:#047857,color:#fff
+    classDef server fill:#7c3aed,stroke:#6d28d9,color:#fff
+    
+    class Next,Expo app
+    class App,UI,Tokens,Providers,Adapters pkg
+    class Services,Routes,Actions server
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🔄 Homepage Layout Engine Pipeline</h2>
+                <div class="mermaid">
+graph LR
+    CMS["CMS<br/>Strapi"] -->|Content| Server["Server Layer<br/>Normalization"]
+    Server -->|Blocks| Builder["buildHomeLayout<br/>Layout Profile"]
+    Builder -->|Slots| Dispatcher["dispatchHomeRenderer"]
+    Dispatcher -->|Hero| Hero["Hero<br/>Renderer"]
+    Dispatcher -->|Rail| Rail["Product Rail<br/>Renderer"]
+    Dispatcher -->|Promo| Promo["Brand Promo<br/>Renderer"]
+    Hero --> HomeScreen["HomeScreen"]
+    Rail --> HomeScreen
+    Promo --> HomeScreen
+    
+    classDef cms fill:#ea580c,stroke:#c2410c,color:#fff
+    classDef process fill:#7c3aed,stroke:#6d28d9,color:#fff
+    classDef render fill:#059669,stroke:#047857,color:#fff
+    classDef final fill:#2563eb,stroke:#1e40af,color:#fff
+    
+    class CMS cms
+    class Server,Builder,Dispatcher process
+    class Hero,Rail,Promo render
+    class HomeScreen final
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>✅ Allowed vs ❌ Forbidden Patterns</h2>
+                <div class="mermaid">
+graph TB
+    subgraph Allowed["✅ Allowed Patterns"]
+        A1["Server Components via services"]
+        A2["Route Handlers thin transport"]
+        A3["Server Actions delegate to services"]
+        A4["Cache Components tagged caching"]
+        A5["Client islands mutations"]
+    end
+
+    subgraph Forbidden["❌ Forbidden Patterns"]
+        F1["apiClient in Server Components"]
+        F2["Direct adapter imports in UI"]
+        F3["className in packages/app"]
+        F4["process.env in shared packages"]
+        F5["Hex literals in shared UI"]
+        F6["Platform.OS outside useBreakpoint"]
+        F7["Touchable in active components"]
+        F8["Server Components calling Route Handlers"]
+        F9["External BFF layer"]
+    end
+
+    classDef allowed fill:#059669,stroke:#047857,color:#fff
+    classDef forbidden fill:#dc2626,stroke:#b91c1c,color:#fff
+    
+    class A1,A2,A3,A4,A5 allowed
+    class F1,F2,F3,F4,F5,F6,F7,F8,F9 forbidden
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📅 Phase 1 & 2 Dependency Graph</h2>
+                <div class="mermaid">
+graph TB
+    subgraph Phase1["Phase 1: Real Cosmetics Product (14 Subphases)"]
+        direction TB
+        P1_1["1.1 Constitution"] --> P1_2["1.2 Architecture"]
+        P1_2 --> P1_3["1.3 Shared UI"]
+        P1_3 --> P1_4["1.4 CMS/Services"]
+        P1_4 --> P1_5["1.5 Homepage Engine"]
+        P1_5 --> P1_6["1.6 Visual Foundation"]
+        P1_6 --> P1_7["1.7 Homepage Redesign"]
+        P1_7 --> P1_8["1.8 Storefront"]
+        P1_8 --> P1_9["1.9 Commerce Flows"]
+        P1_9 --> P1_10["1.10 Account"]
+        P1_10 --> P1_11["1.11 Pharmacist"]
+        P1_11 --> P1_12["1.12 Admin/CMS"]
+        P1_12 --> P1_13["1.13 Mobile Parity"]
+        P1_13 --> P1_14["1.14 Hardening"]
+    end
+
+    subgraph Phase2["Phase 2: SaaS Platform (8 Subphases)"]
+        direction TB
+        P2_1["2.1 SaaS Constitution"] --> P2_2["2.2 Tenancy Model"]
+        P2_2 --> P2_3["2.3 Product vs Platform"]
+        P2_3 --> P2_4["2.4 Branding Config"]
+        P2_4 --> P2_5["2.5 Reusable Modules"]
+        P2_5 --> P2_6["2.6 Platform Admin"]
+        P2_6 --> P2_7["2.7 Deployment Strategy"]
+        P2_7 --> P2_8["2.8 Regression Safety"]
+    end
+
+    P1_14 -->|Stable Baseline| P2_1
+    
+    classDef p1 fill:#2563eb,stroke:#1e40af,color:#fff
+    classDef p2 fill:#059669,stroke:#047857,color:#fff
+    classDef connector fill:#dc2626,stroke:#b91c1c,color:#fff
+    
+    class P1_1,P1_2,P1_3,P1_4,P1_5,P1_6,P1_7,P1_8,P1_9,P1_10,P1_11,P1_12,P1_13,P1_14 p1
+    class P2_1,P2_2,P2_3,P2_4,P2_5,P2_6,P2_7,P2_8 p2
+    class P1_14 connector
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>🎨 Token System Hierarchy</h2>
+                <div class="mermaid">
+graph TB
+    Tokens["@real/tokens"] --> Colors["colors.xxx<br/>Primary: #222222<br/>Purchase: #a8000d"]
+    Tokens --> Spacing["spacing.xxx<br/>Never raw numbers"]
+    Tokens --> Radius["radius.xxx<br/>Never hardcoded"]
+    Tokens --> Typography["typography.xxx<br/>Manrope sans-serif<br/>14px/12px/10-11px"]
+    Tokens --> Shadows["shadows.xxx<br/>9-level xs to xl"]
+    Tokens --> Motion["motion.xxx<br/>300ms micro<br/>600ms page"]
+    
+    classDef root fill:#7c3aed,stroke:#6d28d9,color:#fff,font-size:16px
+    classDef token fill:#0891b2,stroke:#0e7490,color:#fff
+    
+    class Tokens root
+    class Colors,Spacing,Radius,Typography,Shadows,Motion token
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Generated: 2026-04-09 | Sources: QWEN.md, AGENTS.md, plan.md, requirements.md
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

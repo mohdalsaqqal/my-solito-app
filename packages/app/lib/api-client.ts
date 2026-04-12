@@ -1,5 +1,13 @@
 import { endpoints } from './endpoints'
 import {
+  ReferralAccountSummary,
+  ReferralApplyResponse,
+  ReferralLedgerEntry,
+  ReferralProfile,
+  ReferralProgramSettings,
+  ReferralValidationResponse,
+} from './referral/referral-types'
+import {
   ApiResponse,
   AdminCatalogColumn,
   AdminCacheAction,
@@ -12,6 +20,7 @@ import {
   AdminReleaseRecord,
   AdminBrandSpotlightRecord,
   AdminOfferBannerRecord,
+  AdminMenuRecord,
   AdminUserControlRecord,
   AuthAck,
   AuthSession,
@@ -73,20 +82,70 @@ import {
 
 export type ApiClientConfig = {
   baseUrl: string
+  defaultHeaders?: HeadersInit
 }
 
 function normalizeBaseUrl(baseUrl: string) {
   return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
 }
 
+type AdminCmsTickerItem = {
+  id: string
+  messageEn: string
+  messageAr: string
+  active: boolean
+}
+
+type AdminCmsEducationBanner = {
+  id: string
+  titleEn: string
+  titleAr: string
+  bodyEn: string
+  bodyAr: string
+  targetPage: string
+  active: boolean
+}
+
+type AdminCmsBannersState = {
+  ticker: {
+    items: AdminCmsTickerItem[]
+    speedMs: number
+  }
+  educationBanners: AdminCmsEducationBanner[]
+}
+
+type AdminCmsUgcItem = {
+  id: string
+  imageUrl: string
+  caption: string
+  sourceHandle: string
+  active: boolean
+  order: number
+}
+
+type AdminCmsUgcState = {
+  items: AdminCmsUgcItem[]
+}
+
+type AdminCmsSiteConfigState = Record<string, unknown>
+
 export const createApiClient = (cfg: ApiClientConfig) => {
   const baseUrl = normalizeBaseUrl(cfg.baseUrl)
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
+    const headers = new Headers(cfg.defaultHeaders)
+    if (init?.headers) {
+      const requestHeaders = new Headers(init.headers)
+      requestHeaders.forEach((value, key) => {
+        headers.set(key, value)
+      })
+    }
+
     const response = await fetch(`${baseUrl}${path}`, {
       credentials: 'include',
       cache: 'no-store',
       ...init,
+      headers,
     })
     let json: ApiResponse<T> | null = null
     try {
@@ -314,10 +373,30 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           wallet: LoyaltyWallet | null
           history: LoyaltyHistoryEntry[]
         }>(endpoints.accountLoyalty),
+      referral: () => request<ReferralAccountSummary>(endpoints.accountReferral),
       wishlist: () => request<WishlistItem[]>(endpoints.accountWishlist),
       tests: () => request<AccountTestRecord[]>(endpoints.accountTests),
       test: (id: string) => request<AccountTestDetail>(endpoints.accountTest(id)),
       qr: () => request<AccountQr>(endpoints.accountQr),
+    },
+    referral: {
+      validate: (input: { code?: string; cartSubtotal?: number; currency?: string }) =>
+        request<ReferralValidationResponse>(endpoints.referralValidate, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      apply: (input: {
+        code?: string
+        orderId?: string
+        cartSubtotal?: number
+        currency?: string
+      }) =>
+        request<ReferralApplyResponse>(endpoints.referralApply, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
     },
     admin: {
       listProducts: (input: AdminListInput) => {
@@ -481,6 +560,14 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
         }),
+      getCacheSettings: () =>
+        request<{ enabled: boolean; updatedAt: string; updatedBy: string }>(endpoints.adminCacheSettings),
+      setCacheSettings: (input: { enabled: boolean }) =>
+        request<{ enabled: boolean; updatedAt: string; updatedBy: string }>(endpoints.adminCacheSettings, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
       listCmsToggles: () => request<AdminControlToggleUpdate[]>(endpoints.adminCmsToggles),
       updateCmsToggle: (id: string, enabled: boolean) =>
         request<AdminControlToggleUpdate>(endpoints.adminCmsToggle(id), {
@@ -541,8 +628,52 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         request<{ id: string; deleted: true }>(endpoints.adminCmsBrandSpotlight(id), {
           method: 'DELETE',
         }),
+      getCmsBanners: () =>
+        request<AdminCmsBannersState>(endpoints.adminCmsBanners),
+      updateCmsBanners: (input: AdminCmsBannersState) =>
+        request<AdminCmsBannersState>(endpoints.adminCmsBanners, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      getCmsUgc: () =>
+        request<AdminCmsUgcState>(endpoints.adminCmsUgc),
+      updateCmsUgc: (input: AdminCmsUgcState) =>
+        request<AdminCmsUgcState>(endpoints.adminCmsUgc, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      getCmsSiteConfig: () =>
+        request<AdminCmsSiteConfigState>(endpoints.adminCmsSiteConfig),
+      updateCmsSiteConfig: (input: Partial<AdminCmsSiteConfigState>) =>
+        request<AdminCmsSiteConfigState>(endpoints.adminCmsSiteConfig, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      uploadCmsSiteConfigLogo: (locale: 'en' | 'ar', file: Blob) => {
+        const formData = new FormData()
+        formData.append('locale', locale)
+        formData.append('file', file)
+        return request<{ locale: 'en' | 'ar'; filename: string; url: string }>(
+          endpoints.adminCmsSiteConfigLogoUpload,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        )
+      },
       listOfferBanners: () =>
         request<AdminOfferBannerRecord[]>(endpoints.adminCmsOfferBanners),
+      uploadOfferBannerImage: (file: Blob) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return request<{ url: string }>(endpoints.adminCmsOfferBannersUpload, {
+          method: 'POST',
+          body: formData,
+        })
+      },
       createOfferBanner: (input: {
         id?: string
         enabled?: boolean
@@ -572,6 +703,129 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         }),
       deleteOfferBanner: (id: string) =>
         request<{ id: string; deleted: true }>(endpoints.adminCmsOfferBanner(id), {
+          method: 'DELETE',
+        }),
+      uploadCmsBlockImage: (file: Blob) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return request<{ url: string }>(endpoints.adminCmsBlocksUpload, {
+          method: 'POST',
+          body: formData,
+        })
+      },
+      listMenus: () => request<AdminMenuRecord[]>(endpoints.adminCmsMenus),
+      getMenu: (id: string) => request<AdminMenuRecord>(endpoints.adminCmsMenu(id)),
+      createMenu: (input: {
+        id: string
+        name: string
+        slug: string
+        location: 'header_primary' | 'header_mega_categories'
+        displayStyle: 'default' | 'mega_category'
+        enabled?: boolean
+        analytics?: {
+          impressionKey?: string
+          clickKey?: string
+        }
+        items?: Array<{
+          id: string
+          parentId?: string | null
+          label: { en: string; ar: string }
+          description?: { en: string; ar: string }
+          ref: {
+            sourceType: 'category' | 'query' | 'brand' | 'custom_link'
+            sourceId?: string
+            href?: string
+          }
+          order: number
+          enabled: boolean
+          analytics?: {
+            impressionKey?: string
+            clickKey?: string
+          }
+          featuredSlot?: {
+            id: string
+            type: 'banner' | 'product' | 'campaign'
+            sourceId: string
+            title?: { en: string; ar: string }
+            subtitle?: { en: string; ar: string }
+            ctaLabel?: { en: string; ar: string }
+            href?: string
+            imageUrl?: string
+            analytics?: {
+              impressionKey?: string
+              clickKey?: string
+            }
+          }
+          children?: unknown[]
+        }>
+        megaMenuConfig?: Array<{
+          categoryItemId: string
+          brandRail?:
+            | {
+                mode: 'static'
+                title?: { en: string; ar: string }
+                analytics?: {
+                  impressionKey?: string
+                  clickKey?: string
+                }
+                brands: Array<{
+                  id: string
+                  label: { en: string; ar: string }
+                  href: string
+                  analytics?: {
+                    impressionKey?: string
+                    clickKey?: string
+                  }
+                }>
+              }
+            | {
+                mode: 'query'
+                title?: { en: string; ar: string }
+                analytics?: {
+                  impressionKey?: string
+                  clickKey?: string
+                }
+                queryId: string
+              }
+            | {
+                mode: 'campaign_override'
+                title?: { en: string; ar: string }
+                analytics?: {
+                  impressionKey?: string
+                  clickKey?: string
+                }
+                campaignId: string
+              }
+        }>
+      }) =>
+        request<AdminMenuRecord>(endpoints.adminCmsMenus, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      updateMenu: (
+        id: string,
+        input: Partial<{
+          name: string
+          slug: string
+          location: 'header_primary' | 'header_mega_categories'
+          displayStyle: 'default' | 'mega_category'
+          enabled: boolean
+          analytics: {
+            impressionKey?: string
+            clickKey?: string
+          }
+          items: unknown[]
+          megaMenuConfig: unknown[]
+        }>
+      ) =>
+        request<AdminMenuRecord>(endpoints.adminCmsMenu(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      deleteMenu: (id: string) =>
+        request<{ id: string; deleted: true }>(endpoints.adminCmsMenu(id), {
           method: 'DELETE',
         }),
       listUsers: () => request<AdminUserControlRecord[]>(endpoints.adminUsers),
@@ -633,6 +887,10 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
         }),
+      getPreviewToken: (releaseId: string, storeId: string) =>
+        request<{ token: string }>(
+          `${endpoints.adminPreviewToken}?releaseId=${encodeURIComponent(releaseId)}&storeId=${encodeURIComponent(storeId)}`
+        ),
       listReleaseBlocks: (releaseId: string) =>
         request<AdminReleaseBlockRecord[]>(`${endpoints.adminReleaseBlocks}?releaseId=${encodeURIComponent(releaseId)}`),
       listPageBlocks: (input: {
@@ -796,6 +1054,54 @@ export const createApiClient = (cfg: ApiClientConfig) => {
         request<{ id: string; deleted: true }>(endpoints.adminPromotion(id), {
           method: 'DELETE',
         }),
+      referralSettings: () =>
+        request<ReferralProgramSettings>(endpoints.adminReferralSettings),
+      updateReferralSettings: (input: Partial<ReferralProgramSettings>) =>
+        request<ReferralProgramSettings>(endpoints.adminReferralSettings, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      referralProfiles: () =>
+        request<ReferralProfile[]>(endpoints.adminReferralProfiles),
+      createReferralProfile: (input: {
+        userId: string
+        displayName: string
+        actorType?: ReferralProfile['actorType']
+        approved?: boolean
+        audienceCount?: number
+      }) =>
+        request<ReferralProfile>(endpoints.adminReferralProfiles, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      updateReferralProfile: (
+        id: string,
+        input: Partial<
+          Pick<
+            ReferralProfile,
+            'actorType' | 'approved' | 'displayName' | 'audienceCount' | 'code' | 'shareLink'
+          >
+        >
+      ) =>
+        request<ReferralProfile>(endpoints.adminReferralProfile(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      regenerateReferralProfile: (id: string) =>
+        request<ReferralProfile>(endpoints.adminReferralProfileRegenerate(id), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        }),
+      referralLedger: (profileId?: string) =>
+        request<ReferralLedgerEntry[]>(
+          profileId
+            ? `${endpoints.adminReferralLedger}?profileId=${encodeURIComponent(profileId)}`
+            : endpoints.adminReferralLedger
+        ),
 
       // Catalog: Categories
       listCategories: () =>

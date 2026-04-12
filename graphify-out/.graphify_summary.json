@@ -1,0 +1,101 @@
+{
+  "nodes": 220,
+  "edges": 317,
+  "communities": 27,
+  "god_nodes": [
+    {
+      "id": "route_post",
+      "label": "POST()",
+      "edges": 13
+    },
+    {
+      "id": "route_patch",
+      "label": "PATCH()",
+      "edges": 7
+    },
+    {
+      "id": "referral_profile_store_readprofiles",
+      "label": "readProfiles()",
+      "edges": 6
+    },
+    {
+      "id": "referral_profile_store_listreferralprofiles",
+      "label": "listReferralProfiles()",
+      "edges": 6
+    },
+    {
+      "id": "request_auth_requireauthsessionwithoptions",
+      "label": "requireAuthSessionWithOptions()",
+      "edges": 6
+    }
+  ],
+  "surprises": [
+    {
+      "source": "POST()",
+      "target": "deriveFromProducts()",
+      "source_files": [
+        "apps\\next\\app\\api\\reviews\\route.ts",
+        "apps\\next\\app\\api\\admin\\catalog\\brands\\sync\\route.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `deriveFromProducts()` unexpectedly reaches hub `POST()`"
+    },
+    {
+      "source": "POST()",
+      "target": "derivePathsFromProducts()",
+      "source_files": [
+        "apps\\next\\app\\api\\reviews\\route.ts",
+        "apps\\next\\app\\api\\admin\\catalog\\categories\\sync\\route.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `derivePathsFromProducts()` unexpectedly reaches hub `POST()`"
+    },
+    {
+      "source": "POST()",
+      "target": "resolveLocale()",
+      "source_files": [
+        "apps\\next\\app\\api\\reviews\\route.ts",
+        "apps\\next\\app\\api\\admin\\cms\\site-config\\logo-upload\\route.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `resolveLocale()` unexpectedly reaches hub `POST()`"
+    },
+    {
+      "source": "POST()",
+      "target": "resolveExtension()",
+      "source_files": [
+        "apps\\next\\app\\api\\reviews\\route.ts",
+        "apps\\next\\app\\api\\admin\\cms\\site-config\\logo-upload\\route.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `resolveExtension()` unexpectedly reaches hub `POST()`"
+    },
+    {
+      "source": "POST()",
+      "target": "validatePromotionsPayload()",
+      "source_files": [
+        "apps\\next\\app\\api\\reviews\\route.ts",
+        "apps\\next\\app\\api\\admin\\promotions\\route.ts"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories; peripheral node `validatePromotionsPayload()` unexpectedly reaches hub `POST()`"
+    }
+  ],
+  "questions": [
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 0` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Community 1` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.11 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

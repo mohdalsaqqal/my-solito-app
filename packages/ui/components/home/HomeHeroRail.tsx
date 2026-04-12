@@ -110,13 +110,14 @@ export function HomeHeroRail({
         }}
       >
         {items.map((item) => (
-          <HeroSlideCard
-            key={item.id}
-            item={item}
-            width={cardWidth}
-            imageAspectRatio={3 / 2}
-            onPress={onPressItem}
-          />
+          <Box key={item.id} role='group' aria-roledescription='slide'>
+            <HeroSlideCard
+              item={item}
+              width={cardWidth}
+              imageAspectRatio={3 / 2}
+              onPress={onPressItem}
+            />
+          </Box>
         ))}
       </ScrollView>
       {isDesktop && showNavControls ? (

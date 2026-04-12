@@ -1,8 +1,11 @@
-import { ReactNode } from 'react'
+'use client'
+
+import React, { ReactNode, useEffect, useRef } from 'react'
 import { ScrollView } from 'react-native'
 import { spacing } from '@real/tokens'
-import { Box, Text, Touchable } from '../primitives'
+import { Box, Text } from '../primitives'
 import { Card } from './Card'
+import { Button } from './Button'
 
 type HorizontalRailStateProps = {
   loading?: boolean
@@ -13,9 +16,13 @@ type HorizontalRailStateProps = {
   loadingCount: number
   loadingItem: (key: number) => ReactNode
   children: ReactNode
+  autoplay?: boolean
+  autoplayMs?: number
+  itemCount?: number
+  stepDistance?: number
 }
 
-export function HorizontalRailState({
+export const HorizontalRailState = React.memo(function HorizontalRailState({
   loading = false,
   error,
   isEmpty = false,
@@ -24,10 +31,33 @@ export function HorizontalRailState({
   loadingCount,
   loadingItem,
   children,
+  autoplay = false,
+  autoplayMs = 4200,
+  itemCount = 0,
+  stepDistance = 240,
 }: HorizontalRailStateProps) {
+  const railRef = useRef<ScrollView | null>(null)
+  const offsetRef = useRef(0)
+  const viewportRef = useRef(0)
+  const contentRef = useRef(0)
+
+  useEffect(() => {
+    if (!autoplay || itemCount <= 1) return
+    const timer = setInterval(() => {
+      const maxOffset = Math.max(0, contentRef.current - viewportRef.current)
+      const next = offsetRef.current + stepDistance
+      const target = next > maxOffset ? 0 : next
+      railRef.current?.scrollTo({ x: target, animated: true })
+      offsetRef.current = target
+    }, Math.max(1800, autoplayMs))
+
+    return () => clearInterval(timer)
+  }, [autoplay, autoplayMs, itemCount, stepDistance])
+
   if (loading) {
     return (
       <ScrollView
+        ref={railRef}
         horizontal
         nestedScrollEnabled
         directionalLockEnabled
@@ -46,11 +76,9 @@ export function HorizontalRailState({
           <Text tone='danger' variant='bodySm'>
             {error}
           </Text>
-          <Touchable onPress={onRetry}>
-            <Text tone='primary' variant='label'>
-              Retry
-            </Text>
-          </Touchable>
+          <Button onPress={onRetry} size='sm' variant='ghost'>
+            Retry
+          </Button>
         </Box>
       </Card>
     )
@@ -66,13 +94,23 @@ export function HorizontalRailState({
 
   return (
     <ScrollView
+      ref={railRef}
       horizontal
       nestedScrollEnabled
       directionalLockEnabled
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ gap: spacing.xs }}
+      onLayout={(event) => {
+        viewportRef.current = event.nativeEvent.layout.width
+      }}
+      onContentSizeChange={(width) => {
+        contentRef.current = width
+      }}
+      onMomentumScrollEnd={(event) => {
+        offsetRef.current = event.nativeEvent.contentOffset?.x ?? 0
+      }}
     >
       {children}
     </ScrollView>
   )
-}
+})

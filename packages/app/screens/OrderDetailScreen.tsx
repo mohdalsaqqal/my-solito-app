@@ -1,10 +1,13 @@
-import { Image, useWindowDimensions } from 'react-native'
-import { borderWidth, breakpoints, colors, radius, spacing } from '@real/tokens'
+import React from 'react'
+import { Image, Platform } from 'react-native'
+import { borderWidth, radius, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Card } from '@real/ui/components'
-import { Box, Text, Touchable } from '@real/ui/primitives'
+import { Box, Text } from '@real/ui/primitives'
+import { Touchable } from '@real/ui/primitives/Touchable'
 import { OrderStatus, OrderSummary } from '@real/app/lib/types'
 import { passThroughPricingService } from '@real/app/lib/pricing'
+import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 
 type OrderDetailScreenProps = {
   order?: OrderSummary | null
@@ -14,15 +17,16 @@ type OrderDetailScreenProps = {
   onReload?: () => void
 }
 
-export function OrderDetailScreen({
+export const OrderDetailScreen = React.memo(function OrderDetailScreen({
   order,
   loading = false,
   error = null,
   onBack,
   onReload,
 }: OrderDetailScreenProps) {
-  const { width } = useWindowDimensions()
-  const isCompact = width > 0 && width < breakpoints.tabletMin
+  const profile = useBreakpoint()
+  const c = useThemeColors()
+  const isCompact = profile.breakpoint === 'mobile'
 
   const formatMoney = (value: number, currency: string) => `${currency} ${value.toFixed(2)}`
   const statusSteps: OrderStatus[] = ['placed', 'shipped', 'delivered']
@@ -89,30 +93,30 @@ export function OrderDetailScreen({
           gap: spacing['8'],
         }}
       >
-        <Text variant='h2'>Order Details</Text>
+        <Text variant='h2'>{'Order Details'}</Text>
         <Touchable onPress={onBack}>
-          <Text variant='label' tone='primary'>Back to orders</Text>
+          <Text variant='label' tone='primary'>{'Back to orders'}</Text>
         </Touchable>
       </Box>
 
       {error ? (
         <Card tone='subtle' style={{ gap: spacing.sm }}>
-          <Text tone='danger'>Unable to load order.</Text>
+          <Text tone='danger'>{'Unable to load order.'}</Text>
           <Text tone='muted' variant='bodySm'>{error}</Text>
           <Touchable onPress={onReload}>
-            <Text variant='label' tone='primary'>Retry</Text>
+            <Text variant='label' tone='primary'>{'Retry'}</Text>
           </Touchable>
         </Card>
       ) : !order ? (
         <Card tone='subtle'>
-          <Text tone='muted'>Order not found.</Text>
+          <Text tone='muted'>{'Order not found.'}</Text>
         </Card>
       ) : (
         <Card variant='raised' style={{ gap: spacing['12'] }}>
           <Text variant='title'>Order {order.id}</Text>
           <Text variant='bodySm' tone='muted'>Status: {order.status}</Text>
           <Card tone='subtle' style={{ gap: spacing['8'] }}>
-            <Text variant='caption' tone='muted'>Order journey</Text>
+            <Text variant='caption' tone='muted'>{'Order journey'}</Text>
             {order.status === 'cancelled' ? (
               <Box style={{ flexDirection: 'row', gap: spacing['8'], alignItems: 'center', flexWrap: 'wrap' }}>
                 {statusSteps.map((step) => (
@@ -123,8 +127,8 @@ export function OrderDetailScreen({
                       paddingHorizontal: spacing['8'],
                       borderRadius: radius.xs,
                       borderWidth: borderWidth.thin,
-                      borderColor: colors.divider,
-                      backgroundColor: colors.surface,
+                      borderColor: c.divider,
+                      backgroundColor: c.surface,
                     }}
                   >
                     <Text variant='caption' tone='muted' style={{ textTransform: 'capitalize' }}>
@@ -138,8 +142,8 @@ export function OrderDetailScreen({
                     paddingHorizontal: spacing['8'],
                     borderRadius: radius.xs,
                     borderWidth: borderWidth.thin,
-                    borderColor: colors.brandPrimary,
-                    backgroundColor: colors.brandPrimarySubtle,
+                    borderColor: c.brandPrimary,
+                    backgroundColor: c.brandPrimarySubtle,
                   }}
                 >
                   <Text variant='caption' tone='danger' style={{ textTransform: 'capitalize' }}>
@@ -159,8 +163,8 @@ export function OrderDetailScreen({
                         paddingHorizontal: spacing['8'],
                         borderRadius: radius.xs,
                         borderWidth: borderWidth.thin,
-                        borderColor: completed ? colors.brandPrimary : colors.divider,
-                        backgroundColor: completed ? colors.brandPrimarySubtle : colors.surface,
+                        borderColor: completed ? c.brandPrimary : c.divider,
+                        backgroundColor: completed ? c.brandPrimarySubtle : c.surface,
                       }}
                     >
                       <Text
@@ -179,7 +183,7 @@ export function OrderDetailScreen({
           <Text variant='bodySm' tone='muted'>Date: {new Date(order.createdAt).toLocaleDateString()}</Text>
 
           <Card tone='subtle' style={{ gap: spacing['8'] }}>
-            <Text variant='title'>Delivery & payment</Text>
+            <Text variant='title'>{'Delivery & payment'}</Text>
             <Text variant='bodySm' tone='muted'>
               {`Fulfillment: ${order.fulfillment?.mode === 'pickup' ? 'Branch pickup' : 'Delivery'}`}
             </Text>
@@ -206,7 +210,7 @@ export function OrderDetailScreen({
           </Card>
 
           <Card tone='subtle' style={{ gap: spacing['8'] }}>
-            <Text variant='title'>Pricing</Text>
+            <Text variant='title'>{'Pricing'}</Text>
             {(() => {
               const pricing = order.pricing ?? getFallbackPricing(order)
               return (
@@ -228,9 +232,9 @@ export function OrderDetailScreen({
             })()}
           </Card>
 
-          <Text variant='title'>Items</Text>
+          <Text variant='title'>{'Items'}</Text>
           {!order.items || order.items.length === 0 ? (
-            <Text tone='muted' variant='caption'>No order items available yet.</Text>
+            <Text tone='muted' variant='caption'>{'No order items available yet.'}</Text>
           ) : (
             <Box style={{ gap: spacing['8'] }}>
               {order.items.map((item) => {
@@ -249,11 +253,11 @@ export function OrderDetailScreen({
                           width: spacing['48'],
                           height: spacing['48'],
                           borderRadius: radius.sm,
-                          backgroundColor: colors.surfaceMuted,
+                          backgroundColor: c.surfaceMuted,
                           overflow: 'hidden',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          borderColor: colors.divider,
+                          borderColor: c.divider,
                           borderWidth: borderWidth.thin,
                         }}
                       >
@@ -262,9 +266,10 @@ export function OrderDetailScreen({
                             source={{ uri: item.imageUrl }}
                             style={{ width: spacing['48'], height: spacing['48'] }}
                             resizeMode='cover'
+                            {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
                           />
                         ) : (
-                          <Text tone='muted' variant='caption'>IMG</Text>
+                          <Text tone='muted' variant='caption'>{'IMG'}</Text>
                         )}
                       </Box>
                     <Box style={{ flex: 1, gap: spacing['4'] }}>
@@ -287,4 +292,4 @@ export function OrderDetailScreen({
       </PageScaffold.Body>
     </PageScaffold>
   )
-}
+})

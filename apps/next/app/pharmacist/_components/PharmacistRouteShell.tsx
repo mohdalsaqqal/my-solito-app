@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useCallback, useEffect, useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Layout,
@@ -16,47 +16,22 @@ import { spacing } from '@real/tokens'
 import { apiClient } from '../../apiClient'
 import { setCurrentLocale, useCurrentLocale } from '@real/app/lib/i18n/client'
 import { resolveDirection } from '@real/app/lib/rtl-manager'
+import type { AuthSession } from '@real/providers/contracts'
 
 type PharmacistRouteShellProps = {
   title: string
   subtitle?: string
   children: ReactNode
+  session: AuthSession | null
+  cmsHome: CMSHome | null
 }
 
-export function PharmacistRouteShell({ title, subtitle, children }: PharmacistRouteShellProps) {
+export function PharmacistRouteShell({ title, subtitle, children, session, cmsHome }: PharmacistRouteShellProps) {
   const router = useRouter()
-  const [cmsHome, setCmsHome] = useState<CMSHome | null>(null)
-  const [sessionName, setSessionName] = useState('')
-  const [sessionEmail, setSessionEmail] = useState('')
   const [signingOut, setSigningOut] = useState(false)
-  const [checkingAuth, setCheckingAuth] = useState(true)
 
   const locale = useCurrentLocale()
   const dir = resolveDirection(locale)
-
-  const loadShell = useCallback(async () => {
-    const [session, result] = await Promise.all([apiClient.auth.session(), apiClient.cms.home()])
-    if (!session) {
-      router.replace('/auth/login?next=/pharmacist/scan')
-      return
-    }
-    if (session.role !== 'pharmacist' && session.role !== 'admin') {
-      router.replace('/')
-      return
-    }
-    setSessionName(session.name)
-    setSessionEmail(session.email)
-    setCmsHome(result)
-    setCheckingAuth(false)
-  }, [router])
-
-  useEffect(() => {
-    void loadShell()
-  }, [loadShell])
-
-  if (checkingAuth) {
-    return null
-  }
 
   return (
     <Layout
@@ -100,7 +75,7 @@ export function PharmacistRouteShell({ title, subtitle, children }: PharmacistRo
               <Text variant='h2'>{title}</Text>
               {subtitle ? <Text tone='muted'>{subtitle}</Text> : null}
               <Text variant='caption' tone='muted'>
-                Signed in as {sessionName}{sessionEmail ? ` (${sessionEmail})` : ''}
+                Signed in as {session?.name ?? 'Pharmacist'}{session?.email ? ` (${session.email})` : ''}
               </Text>
             </Box>
             <Box style={{ width: '100%', maxWidth: spacing['128'] }}>

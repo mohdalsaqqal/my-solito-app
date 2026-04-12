@@ -1,8 +1,12 @@
-import { Platform, ScrollView, View } from 'react-native'
-import { borderWidth, colors, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
-import { Box, Text, Touchable } from '../../primitives'
+import React from 'react'
+import { Platform, Pressable, ScrollView, View } from 'react-native'
+import { borderWidth, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
+import { Box, Text } from '../../primitives'
 import { SearchField } from '../SearchField'
 import { Icon } from '../Icon'
+import { useFocusTrap } from '../useFocusTrap'
+import { useThemeColors } from '../../responsive'
+import { Button as ReusableButton } from '../../reusables/button'
 
 export type SearchSuggestionItem = {
   id: string
@@ -27,32 +31,40 @@ export type SearchOverlayProps = {
 }
 
 // Web overlay: CSS transition — no Reanimated/moti (worklets fail in Next.js web bundle)
-const webOverlayStyle = {
-  position: 'fixed' as any,
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  zIndex: zIndex.modal,
-  backgroundColor: colors.background,
-  transitionProperty: 'opacity, transform',
-  transitionTimingFunction: motionEasing.standard,
-  display: 'flex',
-  flexDirection: 'column' as const,
+function getWebOverlayStyle(open: boolean, motionDur: number, dir: 'ltr' | 'rtl') {
+  return {
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: zIndex.modal,
+    opacity: open ? 1 : 0,
+    transform: open ? 'translateY(0)' : 'translateY(-24px)',
+    pointerEvents: open ? 'auto' : 'none',
+    transitionProperty: 'opacity, transform',
+    transitionTimingFunction: motionEasing.standard,
+    transitionDuration: `${motionDur}ms`,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    direction: dir as 'ltr' | 'rtl',
+  }
 }
 
 // Native overlay: absolute fill, no CSS transitions
-const nativeOverlayStyle = {
-  position: 'absolute' as const,
-  top: 0,
-  start: 0,
-  end: 0,
-  bottom: 0,
-  zIndex: zIndex.modal,
-  backgroundColor: colors.background,
+function getNativeOverlayStyle(dir: string) {
+  return {
+    position: 'absolute' as const,
+    top: 0,
+    start: 0,
+    end: 0,
+    bottom: 0,
+    zIndex: zIndex.modal,
+    direction: dir as any,
+  }
 }
 
-export function SearchOverlay({
+export const SearchOverlay = React.memo(function SearchOverlay({
   open,
   query,
   placeholder,
@@ -65,21 +77,21 @@ export function SearchOverlay({
   error,
   dir = 'ltr',
 }: SearchOverlayProps) {
+  const c = useThemeColors()
   const isWeb = Platform.OS === 'web'
+  const containerRef = React.useRef<HTMLDivElement | View | null>(null)
+  useFocusTrap(containerRef as React.RefObject<HTMLElement | null>, open)
 
   if (isWeb) {
     // Web: always mounted, CSS opacity+transform transition (no worklets)
     return (
       <div
+        ref={containerRef as React.RefObject<HTMLDivElement>}
         data-ect-node="SearchOverlay"
         style={{
-          ...webOverlayStyle,
-          opacity: open ? 1 : 0,
-          transform: open ? 'translateY(0)' : 'translateY(-24px)',
-          pointerEvents: open ? 'auto' : 'none',
-          transitionDuration: `${motionDuration.normal}ms`,
-          direction: dir,
-        }}
+          ...getWebOverlayStyle(open, motionDuration.normal, dir),
+          backgroundColor: c.background,
+        } as React.CSSProperties}
         role="dialog"
         aria-modal="true"
         aria-label="Search"
@@ -104,7 +116,11 @@ export function SearchOverlay({
   if (!open) return null
 
   return (
-    <View data-ect-node="SearchOverlay" style={{ ...nativeOverlayStyle, direction: dir as any }}>
+    <View
+      ref={containerRef as any}
+      data-ect-node="SearchOverlay"
+      style={{ ...getNativeOverlayStyle(dir), backgroundColor: c.background }}
+    >
       <OverlayContent
         query={query}
         placeholder={placeholder}
@@ -119,7 +135,7 @@ export function SearchOverlay({
       />
     </View>
   )
-}
+})
 
 // ── Shared content (web + native) ─────────────────────────────────────────────
 
@@ -137,6 +153,7 @@ function OverlayContent({
   error,
   dir = 'ltr',
 }: OverlayContentProps) {
+  const c = useThemeColors()
   return (
     <>
       {/* Header row: search input + close button */}
@@ -149,7 +166,7 @@ function OverlayContent({
           paddingTop: spacing['16'],
           paddingBottom: spacing['12'],
           borderBottomWidth: borderWidth.thin,
-          borderColor: colors.border,
+          borderColor: c.border,
         }}
       >
         <View style={{ flex: 1 }}>
@@ -163,17 +180,21 @@ function OverlayContent({
           />
         </View>
 
-        <Touchable
+        <ReusableButton
           onPress={onClose}
           accessibilityRole='button'
           accessibilityLabel='Close search'
+          variant='ghost'
+          size='icon'
           style={{
-            width: spacing['40'],
-            height: spacing['40'],
+            width: 44,
+            height: 44,
+            minWidth: 44,
+            minHeight: 44,
             alignItems: 'center',
             justifyContent: 'center',
             borderRadius: radius.full,
-            backgroundColor: colors.surfaceMuted,
+            backgroundColor: c.surfaceMuted,
             flexShrink: 0,
           }}
         >
@@ -184,7 +205,7 @@ function OverlayContent({
           >
             ×
           </Text>
-        </Touchable>
+        </ReusableButton>
       </Box>
 
       {/* Suggestions body */}
@@ -213,7 +234,7 @@ function OverlayContent({
           </Box>
         ) : (
           suggestions.map((item) => (
-            <Touchable
+            <Pressable
               key={item.id}
               onPress={() => onSelectSuggestion(item)}
               accessibilityRole='button'
@@ -226,18 +247,18 @@ function OverlayContent({
                 paddingVertical: spacing['12'],
                 paddingHorizontal: spacing['16'],
                 borderBottomWidth: borderWidth.thin,
-                borderColor: colors.border,
-                ...(hovered || focused ? { backgroundColor: colors.surfaceMuted } : {}),
+                borderColor: c.border,
+                ...(hovered || focused ? { backgroundColor: c.surfaceMuted } : {}),
                 transitionProperty: 'background-color',
                 transitionDuration: `${motionDuration.microInteraction}ms`,
                 transitionTimingFunction: motionEasing.standard,
               })}
             >
-              <Icon name='search' size={spacing['16']} color={colors.textSecondary} />
+              <Icon name='search' size={spacing['16']} color={c.textSecondary} />
               <Text variant='body' style={{ flex: 1 }} numberOfLines={1}>
                 {item.label}
               </Text>
-            </Touchable>
+            </Pressable>
           ))
         )}
       </ScrollView>

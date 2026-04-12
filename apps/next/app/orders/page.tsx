@@ -4,3 +4,4 @@ export default function OrdersPage() {
   redirect('/account?tab=orders')
 }
 
+

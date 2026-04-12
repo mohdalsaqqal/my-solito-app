@@ -20,13 +20,15 @@ export function toCartLines(cart: Cart | null, products: Product[]): CartLine[] 
         quantity: line.quantity,
         price: resolved.unitPrice,
         currency: resolved.currency,
-      }
+        imageUrl: product.image,
+        brand: product.brand,
+      } as CartLine
     })
-    .filter((item): item is CartLine => Boolean(item))
+    .filter((item): item is CartLine => item !== null)
 }
 
-export function cartCount(cart: Cart | null): number {
-  return cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0
+export function cartCount(lines: CartLine[]): number {
+  return lines.reduce((sum, line) => sum + line.quantity, 0)
 }
 
 export function cartSubtotal(lines: CartLine[]): number {

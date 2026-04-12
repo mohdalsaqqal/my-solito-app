@@ -1,4 +1,5 @@
 import { ProviderResult } from './types'
+import { FollowerRewardType, InfluencerRewardType, ReferralActorType } from './ReferralProvider'
 
 export type PromotionCondition =
   | { type: 'min_cart_total'; amount: number }
@@ -57,6 +58,16 @@ export type PricingQuote = {
     branchId?: string
     shippingBaseline: number
     cartHash: string
+    referral?: {
+      code: string
+      profileId: string
+      actorType: ReferralActorType
+      followerRewardType: FollowerRewardType
+      followerRewardValue: number
+      followerDiscountAmount: number
+      influencerRewardType: InfluencerRewardType
+      influencerRewardValue: number
+    }
   }
   expiresAt: string
   createdAt: string

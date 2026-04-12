@@ -1,0 +1,51 @@
+- generic [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - generic [ref=e8]
+        - generic [ref=e23]
+      - generic:
+        - generic
+      - dialog "Search":
+        - generic
+    - main [ref=e86]:
+      - generic [ref=e87]:
+        - generic [ref=e91]
+        - generic "Announcements" [ref=e164]
+        - generic [ref=e172]
+        - generic [ref=e553]
+        - generic [ref=e577]
+        - generic [ref=e641]
+        - generic [ref=e679]
+        - generic [ref=e745]
+    - generic [ref=e758]:
+      - link "Instagram" [ref=e785] [cursor=pointer]:
+        - /url: https://instagram.com
+        - generic [ref=e787]: Instagram
+      - generic [ref=e789]:
+        - generic [ref=e790]: REAL
+        - generic [ref=e791]: cosmetics
+        - generic [ref=e792]: endless beauty
+      - generic [ref=e793]:
+        - generic [ref=e796]
+        - generic [ref=e809]
+        - generic [ref=e847]
+      - generic [ref=e878]: (c) Real Cosmetics
+    - generic [ref=e879]:
+      - generic [ref=e881] [cursor=pointer]:
+        - img [ref=e883]
+        - generic [ref=e886]: Home
+      - generic [ref=e888] [cursor=pointer]:
+        - img [ref=e890]
+        - generic [ref=e896]: Categories
+      - generic [ref=e898] [cursor=pointer]:
+        - img [ref=e900]
+        - generic [ref=e906]: Cart
+      - generic [ref=e908] [cursor=pointer]:
+        - img [ref=e910]
+        - generic [ref=e913]: Wishlist
+      - generic [ref=e915] [cursor=pointer]:
+        - img [ref=e917]
+        - generic [ref=e921]: Account

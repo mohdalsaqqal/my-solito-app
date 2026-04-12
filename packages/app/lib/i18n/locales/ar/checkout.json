@@ -1,8 +1,102 @@
 {
+  "title": "الدفع",
+  "error": {
+    "loadFailed": "تعذر تحميل الدفع"
+  },
+  "empty": {
+    "title": "سلتك فارغة",
+    "subtitle": "أضف منتجات قبل الدفع."
+  },
+  "contact": {
+    "title": "الاتصال",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "اسمك الكامل",
+    "phone": "الهاتف",
+    "phonePlaceholder": "رقم الهاتف"
+  },
+  "fulfillment": {
+    "title": "التنفيذ",
+    "noStockedBranches": "لا توجد فروع مخزنة متاحة حالياً.",
+    "selectedBranchOut": "الفرع المحدد لم يعد متوفراً.",
+    "delivery": "التوصيل",
+    "branchPickup": "الاستلام من الفرع",
+    "switchTo": "التبديل إلى {{name}}",
+    "selectedBranchOutOfStock": "الفرع المحدد غير متوفر. اختر فرعاً آخر.",
+    "deliveryAddress": "عنوان التوصيل",
+    "savedAddresses": "العناوين المحفوظة",
+    "selectBranch": "يرجى اختيار فرع للاستلام.",
+    "selectPayment": "يرجى اختيار طريقة الدفع."
+  },
+  "address": {
+    "city": "المدينة",
+    "area": "الحي",
+    "cityPlaceholder": "المدينة",
+    "areaPlaceholder": "الحي",
+    "building": "المبنى",
+    "buildingPlaceholder": "المبنى والشارع",
+    "floor": "الطابق (اختياري)",
+    "floorPlaceholder": "الطابق",
+    "apartment": "الشقة (اختياري)",
+    "apartmentPlaceholder": "الشقة",
+    "deliveryNotes": "ملاحظات التوصيل (اختياري)",
+    "deliveryNotesPlaceholder": "أي تعليمات للتوصيل",
+    "addressBook": "دفتر العناوين",
+    "saveAsNew": "حفظ كجديد",
+    "reuseMatched": "إعادة استخدام المطابق/الافتراضي"
+  },
+  "payment": {
+    "title": "الدفع",
+    "noMethods": "لا توجد طرق دفع متاحة حالياً لوضع التنفيذ هذا.",
+    "cashOnDelivery": "الدفع عند الاستلام",
+    "cardOnDelivery": "بطاقة عند الاستلام",
+    "onlineCard": "بطاقة عبر الإنترنت",
+    "payAtBranch": "الدفع في الفرع",
+    "payNow": "ادفع الآن (بطاقة عبر الإنترنت)"
+  },
+  "promotion": {
+    "title": "رمز العرض الترويجي",
+    "coupon": "رمز القسيمة (اختياري)",
+    "couponPlaceholder": "أدخل رمز القسيمة",
+    "removeCoupon": "إزالة القسيمة",
+    "refreshingQuote": "جارٍ تحديث العرض..."
+  },
+  "loyalty": {
+    "title": "استبدال الولاء",
+    "noRedemption": "بدون استبدال",
+    "estimatedDiscount": "الخصم المقدر: {{amount}}",
+    "pointsRedeemable": "النقاط: {{points}} | القابل للاستبدال: {{value}}"
+  },
+  "summary": {
+    "title": "ملخص الطلب",
+    "quoteRequired": "عرض الدفع مطلوب. قم بتحديث العرض قبل تقديم الطلب.",
+    "subtotal": "المجموع الفرعي",
+    "promotionDiscount": "خصم العرض الترويجي",
+    "shipping": "الشحن",
+    "loyaltyDiscount": "خصم الولاء",
+    "total": "الإجمالي",
+    "appliedPromotion": "مطبق: {{name}}"
+  },
+  "validation": {
+    "emptyCart": "سلتك فارغة.",
+    "fullNameRequired": "الاسم الكامل مطلوب.",
+    "phoneRequired": "الهاتف مطلوب.",
+    "cityRequired": "المدينة مطلوبة للتوصيل.",
+    "areaRequired": "الحي مطلوب للتوصيل.",
+    "buildingRequired": "المبنى مطلوب للتوصيل.",
+    "noPaymentMethods": "لا توجد طرق دفع متاحة.",
+    "quoteError": "تعذر إنشاء عرض أسعار.",
+    "placeOrderError": "تعذر تقديم الطلب حالياً."
+  },
   "actions": {
-    "save": "حفظ",
-    "cancel": "إلغاء",
-    "apply": "تطبيق"
+    "retry": "إعادة المحاولة",
+    "placingOrder": "جارٍ تقديم الطلب...",
+    "placeOrder": "تقديم الطلب"
+  },
+  "steps": {
+    "contact": "1. الاتصال",
+    "fulfillment": "2. {{mode}}",
+    "payment": "3. الدفع",
+    "review": "4. المراجعة"
   },
   "state": {
     "loading": "جار التحميل...",
