@@ -7,7 +7,7 @@ function Card({ className, ...props }: React.ComponentProps<typeof View>) {
     <TextClassContext.Provider value="text-card-foreground">
       <View
         className={cn(
-          'bg-card border-border flex flex-col gap-6 rounded-xl border py-6 shadow-sm shadow-black/5',
+          'bg-card border-border flex flex-col gap-5 rounded-2xl border py-5 shadow-sm shadow-black/5',
           className
         )}
         {...props}
@@ -17,7 +17,7 @@ function Card({ className, ...props }: React.ComponentProps<typeof View>) {
 }
 
 function CardHeader({ className, ...props }: React.ComponentProps<typeof View>) {
-  return <View className={cn('flex flex-col gap-1.5 px-6', className)} {...props} />;
+  return <View className={cn('flex flex-col gap-2 px-5 pt-5', className)} {...props} />;
 }
 
 function CardTitle({
@@ -29,7 +29,7 @@ function CardTitle({
     <Text
       role="heading"
       aria-level={ariaLevel}
-      className={cn('font-semibold leading-none', className)}
+      className={cn('font-semibold leading-tight', className)}
       {...props}
     />
   );
@@ -43,11 +43,11 @@ function CardDescription({
 }
 
 function CardContent({ className, ...props }: React.ComponentProps<typeof View>) {
-  return <View className={cn('px-6', className)} {...props} />;
+  return <View className={cn('px-5', className)} {...props} />;
 }
 
 function CardFooter({ className, ...props }: React.ComponentProps<typeof View>) {
-  return <View className={cn('flex flex-row items-center px-6', className)} {...props} />;
+  return <View className={cn('flex flex-row items-center px-5 pb-5', className)} {...props} />;
 }
 
 export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle };

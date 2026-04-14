@@ -8,7 +8,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['marketing'])
+    const session = await requireAdminAnyDomainSession(request, ['marketing'])
     if (session instanceof Response) return session
 
     return ok(await listAdminMenus())
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['marketing'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['marketing'], 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as Record<string, unknown>

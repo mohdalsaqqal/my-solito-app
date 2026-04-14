@@ -13,7 +13,7 @@ type HomeHeroRailProps = {
   onPressItem?: (href?: string) => void
 }
 
-const HERO_GAP = spacing.md
+const HERO_GAP = spacing.space4
 
 export function HomeHeroRail({
   items,
@@ -28,7 +28,7 @@ export function HomeHeroRail({
   const [isInteracting, setIsInteracting] = useState(false)
   const isDesktop = width >= 1025 || (Platform.OS === 'web' && width === 0)
   const viewportWidth = Math.max(320, width - spacing.pageX * 2)
-  const cardsInViewport = isDesktop ? 2.8 : 1.08
+  const cardsInViewport = isDesktop ? 2.2 : 1.08
   const cardWidth = useMemo(
     () => Math.max(spacing.xxl * 3, (viewportWidth - HERO_GAP * 3) / cardsInViewport),
     [cardsInViewport, viewportWidth]
@@ -68,7 +68,7 @@ export function HomeHeroRail({
 
   return (
     <Box
-      style={{ gap: spacing.sm, position: 'relative' }}
+      style={{ gap: spacing.space2, position: 'relative' }}
       onPointerEnter={
         isDesktop
           ? () => {

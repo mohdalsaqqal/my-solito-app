@@ -1,12 +1,14 @@
 "use client"
 
-import React from 'react'
-import { Image } from 'react-native'
+import React, { useState } from 'react'
+import { Image, Platform } from 'react-native'
 import {
   borderWidth,
+  boxShadowStrings,
   componentTokens,
+  motionDuration,
+  motionEasing,
   radius,
-  shadows,
   spacing,
 } from '@real/tokens'
 import type {
@@ -52,17 +54,15 @@ export function ProductCardSkeleton({
   const density = componentTokens.storefrontHome.productCardDensity[VARIANT_TO_DENSITY[variant]]
 
   return (
-    <Card
-      radiusKey='xs'
-      variant='flat'
-      aria-busy={true}
+    <Box
       style={{
         width,
         padding: 0,
         gap: density.cardGap,
         borderWidth: borderWidth.thin,
         borderColor: c.border,
-        ...shadows.none,
+        borderRadius: radius.md,
+        backgroundColor: c.surface,
       }}
     >
       <Box
@@ -86,7 +86,7 @@ export function ProductCardSkeleton({
         <Box style={{ width: '56%', height: density.priceLineHeight, backgroundColor: c.backgroundSecondary }} />
         <Box style={{ width: '100%', height: cardTokens.buyActionHeight, backgroundColor: c.backgroundSecondary }} />
       </Box>
-    </Card>
+    </Box>
   )
 }
 
@@ -126,13 +126,25 @@ export const ProductCard = React.memo(function ProductCard({
   const showWishlistAction = showWishlist && item.wishlistEnabled
   const showRatingMeta = showRating && typeof item.rating?.average === 'number'
   const cardMinHeight = variant === 'featured' ? spacing['40'] * 9 : undefined
+  const [hovered, setHovered] = useState(false)
+  const isWeb = Platform.OS === 'web'
+
+  const hoverShadow = isWeb && !isDisabled ? boxShadowStrings.sm : undefined
+  const restShadow = isWeb ? 'none' : undefined
+  const cardTransform = isWeb && hovered ? [{ translateY: -2 }] : [{ translateY: 0 }]
+  const imageTransform = isWeb && hovered ? [{ scale: 1.03 }] : [{ scale: 1 }]
+  const transition = isWeb
+    ? `transform ${motionDuration.microInteraction}ms ${motionEasing.easeOut}, box-shadow ${motionDuration.microInteraction}ms ${motionEasing.easeOut}`
+    : undefined
 
   return (
     <Card
-      radiusKey='xs'
+      radiusKey='md'
       variant='flat'
       testID={testID}
       role='article'
+      onPointerEnter={isWeb ? () => setHovered(true) : undefined}
+      onPointerLeave={isWeb ? () => setHovered(false) : undefined}
       style={{
         width,
         minHeight: cardMinHeight,
@@ -140,7 +152,9 @@ export const ProductCard = React.memo(function ProductCard({
         borderWidth: borderWidth.thin,
         borderColor: c.border,
         overflow: 'hidden',
-        ...shadows.none,
+        transform: cardTransform,
+        boxShadow: hovered ? hoverShadow : restShadow,
+        ...(transition ? { transition } as any : {}),
       }}
     >
       <Box style={{ position: 'relative' }}>
@@ -165,17 +179,20 @@ export const ProductCard = React.memo(function ProductCard({
               borderBottomWidth: borderWidth.thin,
               borderColor: c.border,
               width: '100%',
+              overflow: 'hidden',
             }}
           >
             <Image
               source={{ uri: item.image.url }}
-              resizeMode='contain'
+              resizeMode='cover'
               accessibilityLabel={item.image.alt || item.title}
               style={{
                 width: '100%',
                 height: '100%',
                 backgroundColor: c.backgroundSecondary,
                 opacity: isDisabled ? 0.6 : 1,
+                transform: imageTransform,
+                ...(transition ? { transition } as any : {}),
               }}
             />
           </Box>
@@ -185,9 +202,9 @@ export const ProductCard = React.memo(function ProductCard({
           <Box
             style={{
               position: 'absolute',
-              top: spacing['8'],
-              start: spacing['8'],
-              gap: spacing['4'],
+              top: spacing.space2,
+              start: spacing.space2,
+              gap: spacing.space1,
             }}
           >
             {visibleBadges.map((badge) => (
@@ -206,8 +223,8 @@ export const ProductCard = React.memo(function ProductCard({
           <Box
             style={{
               position: 'absolute',
-              top: spacing['8'],
-              end: spacing['8'],
+              top: spacing.space2,
+              end: spacing.space2,
             }}
           >
             <IconButton
@@ -234,7 +251,7 @@ export const ProductCard = React.memo(function ProductCard({
         {showBrand && item.brand?.name ? (
           <Text
             variant='caption'
-            weight='700'
+            weight='500'
             style={{
               color: c.textSecondary,
               textTransform: 'uppercase',
@@ -283,7 +300,7 @@ export const ProductCard = React.memo(function ProductCard({
               minHeight: cardTokens.ratingMinHeight,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: spacing['4'],
+              gap: spacing.space1,
             }}
           >
             <Icon name='star' size={density.ratingSize} color={c.amberWarm} weight='fill' />
@@ -302,7 +319,7 @@ export const ProductCard = React.memo(function ProductCard({
             flexDirection: 'row',
             alignItems: 'center',
             flexWrap: 'wrap',
-            gap: spacing['6'],
+            gap: spacing.space2,
           }}
         >
           <Text

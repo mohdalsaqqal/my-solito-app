@@ -23,11 +23,9 @@ export function MarketplacePromoStrip({
     <Box
       style={{
         borderRadius: radius.sm,
-        borderWidth: borderWidth.thin,
-        borderColor: c.border,
         paddingHorizontal: spacing['12'],
-        paddingVertical: spacing['10'],
-        backgroundColor: c.surface,
+        paddingVertical: spacing['8'],
+        backgroundColor: c.surfaceMuted,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -53,7 +51,7 @@ export function MarketplacePromoStrip({
             </Text>
           </Box>
         ) : null}
-        <Text variant='title' weight='600'>{title}</Text>
+        <Text variant='bodySm' weight='500' tone='muted'>{title}</Text>
         {subtitle ? <Text variant='bodySm' tone='muted'>{subtitle}</Text> : null}
       </Box>
       {actionLabel && onPressAction ? (

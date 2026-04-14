@@ -1,10 +1,17 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { getCategoriesPageInitialData } from './categories-page.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+
+const testContext: StorefrontServiceContext = {
+  requestUrl: 'http://internal.local/api/cms/home',
+  locale: 'en',
+  storeId: 'default',
+}
 
 test('getCategoriesPageInitialData - happy path returns expected shape', async () => {
   try {
-    const result = await getCategoriesPageInitialData()
+    const result = await getCategoriesPageInitialData(testContext)
     assert.ok('cmsHome' in result, 'should have cmsHome')
     assert.ok('categoryTree' in result, 'should have categoryTree')
     assert.ok('error' in result, 'should have error')
@@ -19,7 +26,7 @@ test('getCategoriesPageInitialData - happy path returns expected shape', async (
 test('getCategoriesPageInitialData - failure path surfaces a typed error', async () => {
   try {
     // Service relies on Next.js headers() and provider mocks — failure path handled gracefully
-    const result = await getCategoriesPageInitialData()
+    const result = await getCategoriesPageInitialData(testContext)
     assert.ok(result.error === null || typeof result.error === 'string', 'error field is typed')
   }
   catch {

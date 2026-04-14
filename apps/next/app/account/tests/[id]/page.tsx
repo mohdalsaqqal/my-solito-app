@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { connection } from 'next/server'
 import { getAccountTestDetailPageInitialData } from '../../../../server/services/account/account-test-detail.service'
+import { createStorefrontServiceContext } from '../../../../server/services/_lib/storefront-service-context'
 import AccountTestDetailPageIsland from './AccountTestDetailPageIsland'
 
 type AccountTestDetailPageProps = {
@@ -23,7 +24,10 @@ async function AccountTestDetailPageContent({ params }: AccountTestDetailPagePro
 
 async function AccountTestDetailPageResolved({ params }: { params: { id: string } }) {
   const { id } = params
-  const data = await getAccountTestDetailPageInitialData(id)
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+  })
+  const data = await getAccountTestDetailPageInitialData(id, context)
 
   if (!data.session) {
     redirect(`/auth/login?next=/account/tests/${id}`)

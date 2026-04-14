@@ -56,7 +56,7 @@ export const CampaignCard = React.memo(function CampaignCard({
         } as any}
         {...(Platform.OS === 'web' ? { loading: 'lazy' } : {})}
       />
-      <Box p='md' gap='sm' style={{ backgroundColor: c.surface }}>
+      <Box p='md' gap='xs' style={{ backgroundColor: c.surface }}>
         <Text variant={titleVariant} weight='700'>
           {title}
         </Text>
@@ -66,7 +66,7 @@ export const CampaignCard = React.memo(function CampaignCard({
           </Text>
         ) : null}
         {ctaLabel ? (
-          <Box style={{ marginTop: spacing.xs, alignSelf: 'flex-start' }}>
+          <Box style={{ marginTop: spacing.space2, alignSelf: 'flex-start' }}>
             <Button size='sm'>{ctaLabel}</Button>
           </Box>
         ) : null}

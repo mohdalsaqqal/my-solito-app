@@ -5,7 +5,7 @@ import { listAdminProducts } from '../../../../server/services/admin/admin-produ
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog')
+    const session = await requireAdminDomainSession(request, 'catalog')
     if (session instanceof Response) return session
 
     return ok(await listAdminProducts(request))

@@ -4,7 +4,7 @@ import { readCacheSettings, writeCacheSettings } from '../../../_lib/admin-cache
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations')
+    const session = await requireAdminDomainSession(request, 'operations')
     if (session instanceof Response) return session
     return ok(await readCacheSettings())
   } catch (cause) {
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations', 'full')
+    const session = await requireAdminDomainSession(request, 'operations', 'full')
     if (session instanceof Response) return session
 
     const payload = ((await request.json().catch(() => ({}))) ?? {}) as {

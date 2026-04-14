@@ -9,7 +9,6 @@ import {
   EditorialHotspotSection,
   FlashSaleBand,
   HeroTileRail,
-  NewsletterLoyaltyCta,
   OfferBannersGrid,
   ProductRail,
   TestimonialsBlock,
@@ -22,7 +21,6 @@ import {
   HomeEducationBanner,
   HomeEditorialHotspotSection,
   HomeHeroItem,
-  HomeNewsletterCta,
   HomeUgcItem,
 } from '@real/ui/components/home/types'
 import { Box } from '@real/ui/primitives'
@@ -93,7 +91,6 @@ type HomeV2SectionsProps = {
   editorialHotspotSection?: HomeEditorialHotspotSection | null
   ugcTitle?: string
   ugcItems?: HomeUgcItem[]
-  newsletterCta?: HomeNewsletterCta | null
   flashSale?: {
     offerText: string
     preLabel: string
@@ -142,7 +139,6 @@ export function HomeV2Sections({
   categoryItems = [],
   editorialHotspotSection = null,
   ugcItems = [],
-  newsletterCta = null,
   flashSale = null,
   campaignAnchor2 = null,
   loading,
@@ -382,25 +378,6 @@ export function HomeV2Sections({
           isDesktop={isDesktop}
           onNavigate={onNavigate}
         />
-      ) : null}
-
-      {newsletterCta ? (
-        <Box
-          style={{
-            width: '100%',
-            maxWidth: layout.containerMaxWidth,
-            alignSelf: 'center',
-            paddingHorizontal: isDesktop
-              ? componentTokens.storefrontHome.contentPaddingXDesktop
-              : componentTokens.storefrontHome.contentPaddingXMobile,
-          }}
-        >
-          <NewsletterLoyaltyCta
-            title={newsletterCta.title}
-            subtitle={newsletterCta.subtitle}
-            ctaLabel={newsletterCta.ctaLabel}
-          />
-        </Box>
       ) : null}
     </Box>
   )

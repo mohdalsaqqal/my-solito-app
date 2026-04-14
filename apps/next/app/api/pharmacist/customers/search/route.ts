@@ -1,3 +1,4 @@
+import { ensureRequestConnection } from '../../../_lib/route-connection'
 import { pharmacistProvider } from '@real/providers'
 import { matchProviderResult } from '@real/providers/contracts'
 import { fail, ok } from '../../../_lib/response'
@@ -5,7 +6,8 @@ import { requireAuthSession } from '../../../_lib/request-auth'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAuthSession(request)
+    await ensureRequestConnection()
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }
@@ -27,4 +29,3 @@ export async function GET(request: Request) {
     })
   }
 }
-

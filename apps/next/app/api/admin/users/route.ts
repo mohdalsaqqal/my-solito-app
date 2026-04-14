@@ -5,7 +5,7 @@ import { applyAdminControlsToCms, readAdminControlsState } from '../../_lib/admi
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'customers')
+    const session = await requireAdminDomainSession(request, 'customers')
     if (session instanceof Response) {
       return session
     }

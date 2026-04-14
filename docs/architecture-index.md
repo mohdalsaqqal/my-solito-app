@@ -2,6 +2,9 @@
 
 This repo uses a layered source-of-truth model for humans and agents.
 
+Related reference:
+- [Production Blueprint](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/production-blueprint.md)
+
 ## Source Of Truth Order
 
 1. [AGENTS.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/AGENTS.md)

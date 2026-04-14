@@ -15,6 +15,7 @@ export type HomeCategoryItem = {
   href?: string
   itemCount?: number
   imageUrl?: string
+  icon?: string
 }
 
 export type HomeProductItem = {

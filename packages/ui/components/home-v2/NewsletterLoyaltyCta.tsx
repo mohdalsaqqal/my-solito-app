@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { borderWidth, radius, spacing } from '@real/tokens'
 import { Box, Input, Text } from '../../primitives'
 import { Button } from '../Button'
-import { useThemeColors } from '../../responsive'
+import { useBreakpoint, useThemeColors } from '../../responsive'
 
 /**
  * Newsletter/loyalty signup CTA block.
@@ -29,6 +29,8 @@ export const NewsletterLoyaltyCta = React.memo(function NewsletterLoyaltyCta({
   onSubmit,
 }: NewsletterLoyaltyCtaProps) {
   const c = useThemeColors()
+  const profile = useBreakpoint()
+  const isDesktop = profile.breakpoint === 'desktop'
   const [email, setEmail] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -72,11 +74,11 @@ export const NewsletterLoyaltyCta = React.memo(function NewsletterLoyaltyCta({
         borderColor: c.border,
         borderRadius: radius.xs,
         backgroundColor: c.surface,
-        padding: spacing['24'],
-        gap: spacing['16'],
+        padding: spacing.space6,
+        gap: spacing.space4,
       }}
     >
-      <Box style={{ gap: spacing['8'] }}>
+      <Box style={{ gap: spacing.space2 }}>
         <Text variant='h2'>{title}</Text>
         {subtitle ? (
           <Text variant='bodySm' tone={state === 'error' ? 'danger' : 'muted'}>
@@ -85,8 +87,15 @@ export const NewsletterLoyaltyCta = React.memo(function NewsletterLoyaltyCta({
         ) : null}
       </Box>
 
-      <Box style={{ flexDirection: 'row', gap: spacing['12'], flexWrap: 'wrap', alignItems: 'center' }}>
-        <Box style={{ flex: 1, minWidth: spacing['128'] + spacing['64'] }}>
+      <Box
+        style={{
+          flexDirection: isDesktop ? 'row' : 'column',
+          gap: spacing.space3,
+          flexWrap: 'wrap',
+          alignItems: isDesktop ? 'center' : 'stretch',
+        }}
+      >
+        <Box style={{ flex: 1, minWidth: isDesktop ? spacing['128'] + spacing['64'] : undefined, width: isDesktop ? undefined : '100%' }}>
           <Input
             value={email}
             onChangeText={setEmail}
@@ -102,9 +111,11 @@ export const NewsletterLoyaltyCta = React.memo(function NewsletterLoyaltyCta({
             }}
           />
         </Box>
-        <Button onPress={handleSubmit} disabled={disabled} size='lg' variant='premiumAccent'>
+        <Box style={{ width: isDesktop ? undefined : '100%' }}>
+          <Button onPress={handleSubmit} disabled={disabled} size='lg' variant='premiumAccent' fullWidth={!isDesktop}>
           {submitting ? 'Submitting...' : ctaLabel}
-        </Button>
+          </Button>
+        </Box>
       </Box>
 
       {feedback ? (

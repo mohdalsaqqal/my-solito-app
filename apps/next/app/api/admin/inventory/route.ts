@@ -1,3 +1,4 @@
+import { ensureRequestConnection } from '../../_lib/route-connection'
 import { adminInventoryProvider } from '@real/providers'
 import { fail, ok } from '../../_lib/response'
 import { requireAdminDomainSession } from '../../_lib/request-auth'
@@ -13,7 +14,8 @@ import { readAdminSavedViewsState } from '../../_lib/admin-saved-views-store'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'inventory')
+    await ensureRequestConnection()
+    const session = await requireAdminDomainSession(request, 'inventory')
     if (session instanceof Response) return session
 
     const baseInput = parseAdminListQuery(request)

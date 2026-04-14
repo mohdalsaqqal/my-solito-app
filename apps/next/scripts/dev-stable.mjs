@@ -1,5 +1,26 @@
-import { spawn } from 'node:child_process'
+import { spawn, spawnSync } from 'node:child_process'
 import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
+
+// ── Step 1: Generate Prisma client ──────────────────────────────────────────
+
+console.log('\n Generating Prisma client…\n')
+
+const prismaResult = spawnSync(
+  process.execPath,
+  [require.resolve('prisma'), 'generate', '--schema', 'prisma/schema.prisma'],
+  { stdio: 'inherit', env: process.env },
+)
+
+if (prismaResult.status !== 0) {
+  console.error('\n❌ Prisma generate failed. Fix the errors above, then retry.\n')
+  process.exit(1)
+}
+
+console.log('✅ Prisma client ready.\n')
+
+// ── Step 2: Start Next.js dev server ────────────────────────────────────────
 
 const env = {
   ...process.env,

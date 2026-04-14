@@ -6,7 +6,7 @@ import { runAdminOrderAction } from '../../../../../../server/services/admin/adm
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = requireAdminDomainSession(request, 'sales', 'full')
+    const session = await requireAdminDomainSession(request, 'sales', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as OrderActionInput

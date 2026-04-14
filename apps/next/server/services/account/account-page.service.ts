@@ -1,4 +1,3 @@
-import { headers } from 'next/headers'
 import {
   accountProvider,
   authProvider,
@@ -26,6 +25,7 @@ import type {
   WishlistItem,
 } from '@real/app/lib/types'
 import type { ReferralAccountSummary } from '@real/app/lib/referral/referral-types'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
@@ -48,13 +48,10 @@ export type AccountPageInitialData = {
   error: string | null
 }
 
-export async function getAccountPageInitialData() {
-  const requestHeaders = new Headers(await headers())
-  const url = new URL('http://internal.local/api/cms/home')
-  const request = new Request(url, {
-    headers: requestHeaders,
-  })
-
+export async function getAccountPageInitialData(
+  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+) {
+  const request = new Request(context.requestUrl)
   const [sessionResult, cmsResult, productsResult, cartResult] = await Promise.allSettled([
     authProvider.getSession(),
     getHomeCmsResponseData(request),

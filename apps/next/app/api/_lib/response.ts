@@ -18,6 +18,26 @@ type FailMeta = {
   cause?: unknown
 }
 
+function isExpectedPrerenderBailout(cause: unknown) {
+  if (!(cause instanceof Error)) {
+    return false
+  }
+
+  const digest =
+    typeof (cause as Error & { digest?: unknown }).digest === 'string'
+      ? (cause as Error & { digest: string }).digest
+      : null
+
+  if (digest === 'NEXT_PRERENDER_INTERRUPTED' || digest === 'HANGING_PROMISE_REJECTION') {
+    return true
+  }
+
+  return (
+    cause.message.includes('needs to bail out of prerendering') ||
+    cause.message.includes('During prerendering, `connection()` rejects when the prerender is complete.')
+  )
+}
+
 export function ok<T>(data: T, status = 200) {
   const payload: ApiSuccess<T> = {
     success: true,
@@ -34,7 +54,7 @@ export function fail(
   meta?: FailMeta,
   headers?: Record<string, string>,
 ) {
-  if (meta?.cause !== undefined) {
+  if (meta?.cause !== undefined && !isExpectedPrerenderBailout(meta.cause)) {
     console.error('[BFF_FAIL]', {
       code,
       message,

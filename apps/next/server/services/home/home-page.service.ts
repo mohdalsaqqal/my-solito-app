@@ -1,21 +1,21 @@
 import { getCachedHomeCmsResponseData } from './home-cms.service'
-import { createInternalServiceRequest, getPublicCatalogCollections } from '../_lib/public-discovery'
+import { getPublicCatalogCollections } from '../_lib/public-discovery'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
 }
 
-export async function getHomePageInitialData(previewToken?: string) {
-  const baseRequest = new Request('http://internal.local/api/cms/home')
-  const request = await createInternalServiceRequest('/api/cms/home', baseRequest, previewToken ? { previewToken } : undefined)
-
+export async function getHomePageInitialData(
+  context: Pick<StorefrontServiceContext, 'previewToken' | 'requestUrl'>,
+) {
   const [cmsResult, publicDiscoveryData] = await Promise.allSettled([
-    getCachedHomeCmsResponseData(request.url),
+    getCachedHomeCmsResponseData(context.requestUrl),
     getPublicCatalogCollections({
       includeProducts: true,
       includeCategories: true,
       includeBrands: true,
-      preview: Boolean(previewToken),
+      preview: Boolean(context.previewToken),
     }),
   ])
 

@@ -80,8 +80,8 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
       style={{
         flexDirection: isSplitLayout ? 'row' : 'column',
         alignItems: isSplitLayout ? 'flex-start' : 'stretch',
-        gap: spacing['16'],
-        padding: isSplitLayout ? spacing['20'] : spacing['16'],
+        gap: spacing.space4,
+        padding: isSplitLayout ? spacing.space5 : spacing.space4,
       }}
     >
       <Box
@@ -120,11 +120,11 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
         style={{
           flex: isSplitLayout ? 1 : undefined,
           alignSelf: 'stretch',
-          gap: spacing['6'],
+          gap: spacing.space2,
           justifyContent: 'flex-start',
         }}
       >
-        <Box style={{ gap: spacing['6'], alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
+        <Box style={{ gap: spacing.space2, alignItems: isRTL ? 'flex-end' : 'flex-start' }}>
           {section.title ? (
             <Text
               variant='h2'
@@ -146,8 +146,8 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
 
         <Box
           style={{
-            gap: spacing['2'],
-            padding: spacing['4'],
+            gap: spacing.space1,
+            padding: spacing.space1,
           }}
         >
           {section.products.map((product) => {
@@ -160,7 +160,7 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                 style={{
                   flexDirection: isRTL ? 'row-reverse' : 'row',
                   alignItems: 'center',
-                  gap: spacing['4'],
+                  gap: spacing.space1,
                 }}
               >
                 <ReusableButton
@@ -187,7 +187,7 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                       borderColor: interactive ? c.brandPrimary : c.border,
                       backgroundColor: interactive ? c.brandPrimarySubtle : c.surface,
                       transitionProperty: 'border-color,background-color,transform',
-                      transitionDuration: `${motionDuration.microInteraction}ms`,
+                      transitionDuration: `${motionDuration.interactive}ms`,
                       transform: [{ translateY: interactive ? -1 : 0 }],
                     }
                   }}
@@ -196,8 +196,8 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                     style={{
                       flexDirection: isRTL ? 'row-reverse' : 'row',
                       alignItems: 'center',
-                      gap: spacing['4'],
-                      paddingHorizontal: spacing['4'],
+                      gap: spacing.space1,
+                      paddingHorizontal: spacing.space1,
                       paddingVertical: spacing['3'],
                     }}
                   >
@@ -267,7 +267,7 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                       >
                         {product.displayTitle || product.name}
                       </Text>
-                      <Box style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing['4'], flexWrap: 'nowrap' }}>
+                      <Box style={{ flexDirection: isRTL ? 'row-reverse' : 'row', alignItems: 'center', gap: spacing.space1, flexWrap: 'nowrap' }}>
                         <Text
                           variant='caption'
                           weight='700'
@@ -309,13 +309,13 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                       minWidth: isDesktop ? spacing['48'] : spacing['40'],
                       borderRadius: radius.sm,
                       borderWidth: borderWidth.thin,
-                      borderColor: soldOut ? c.border : c.brandPrimary,
+                      borderColor: soldOut ? c.border : ctaActive ? c.inkDeep : c.border,
                       backgroundColor: soldOut
                         ? c.backgroundSecondary
                         : ctaActive
-                          ? c.brandPrimaryHover
-                          : c.brandPrimary,
-                      paddingHorizontal: spacing['4'],
+                          ? c.surfaceMuted
+                          : c.surface,
+                      paddingHorizontal: spacing.space1,
                       alignItems: 'center',
                       justifyContent: 'center',
                     }
@@ -325,11 +325,11 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                     variant='caption'
                     weight='600'
                     style={{
-                      color: soldOut ? c.textSecondary : c.white,
+                      color: soldOut ? c.textSecondary : c.inkDeep,
                       textAlign: 'center',
                     }}
                   >
-                    {soldOut ? 'Out of stock' : 'Add to cart'}
+                    {soldOut ? 'Out of stock' : 'Add'}
                   </Text>
                 </ReusableButton>
               </Box>

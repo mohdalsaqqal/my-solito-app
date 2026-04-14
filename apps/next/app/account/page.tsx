@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { connection } from 'next/server'
 import { getAccountPageInitialData } from '../../server/services/account/account-page.service'
+import { createStorefrontServiceContext } from '../../server/services/_lib/storefront-service-context'
 import { AccountPageClient } from './AccountPageClient'
 
 export default function AccountPage() {
@@ -14,7 +15,10 @@ export default function AccountPage() {
 
 async function AccountPageContent() {
   await connection()
-  const data = await getAccountPageInitialData()
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+  })
+  const data = await getAccountPageInitialData(context)
 
   if (!data.session) {
     redirect('/auth/login?next=/account')

@@ -12,7 +12,7 @@ import { z } from 'zod'
 // ── Auth ────────────────────────────────────────────────────────────────
 
 export const LoginBodySchema = z.object({
-  email: z.string().email('Invalid email address').max(255),
+  email: z.string().min(1, 'Email is required').max(255),
   password: z.string().min(1, 'Password is required').max(128),
 })
 
@@ -124,7 +124,7 @@ export function validateBody<T extends z.ZodType>(
   const result = schema.safeParse(body)
   if (!result.success) {
     const firstError = result.error.issues[0]
-    const { fail } = require('../response')
+    const { fail } = require('./response')
     return fail(
       'VALIDATION_ERROR',
       firstError.message,

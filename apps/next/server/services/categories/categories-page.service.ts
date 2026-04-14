@@ -1,15 +1,15 @@
 import { categoryProvider } from '@real/providers'
 import { getHomeCmsResponseData } from '../home/home-cms.service'
-import { createInternalServiceRequest } from '../_lib/public-discovery'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
 }
 
-export async function getCategoriesPageInitialData(previewToken?: string) {
-  const baseRequest = new Request('http://internal.local/api/cms/home')
-  const request = await createInternalServiceRequest('/api/cms/home', baseRequest, previewToken ? { previewToken } : undefined)
-
+export async function getCategoriesPageInitialData(
+  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+) {
+  const request = new Request(context.requestUrl)
   const [cmsResult, treeResult] = await Promise.allSettled([
     getHomeCmsResponseData(request),
     categoryProvider.tree(),

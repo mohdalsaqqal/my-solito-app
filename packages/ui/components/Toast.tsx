@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, ReactNode } from 'react'
 import { Pressable, View } from 'react-native'
-import { borderWidth, colors, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, colors, elevation, radius, shadows, spacing, zIndex } from '@real/tokens'
 import { Text } from '../primitives/Text'
 
 type ToastTone = 'success' | 'error' | 'info' | 'warning'
@@ -40,11 +40,8 @@ function ToastItemView({ item, onDismiss }: { item: ToastItem; onDismiss: () => 
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
-        shadowColor: colors.black,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 16,
-        elevation: 8,
+        boxShadow: elevation.lg,
+        elevation: shadows.lg.elevation,
       }}
     >
       <Text variant="body" tone="default" style={{ flex: 1 }}>

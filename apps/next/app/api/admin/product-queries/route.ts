@@ -6,7 +6,7 @@ import { createAdminProductQuery, listAdminProductQueries } from '../../../../se
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'marketing'])
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'marketing'])
     if (session instanceof Response) return session
 
     return ok(await listAdminProductQueries())
@@ -33,7 +33,7 @@ type CreatePayload = {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'marketing'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'marketing'], 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as CreatePayload

@@ -28,7 +28,7 @@ const DigitPair = React.memo(function DigitPair({ value, label }: { value: strin
           style={{
             fontSize: typography.headline,
             fontWeight: fontWeights.black,
-            color: colors.coralPrimary,
+            color: colors.white,
             lineHeight: typography.headline * 1.1,
             letterSpacing: letterSpacing.campaignHeading,
           }}

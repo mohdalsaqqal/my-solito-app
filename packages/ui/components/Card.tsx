@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
-import { View, ViewProps } from 'react-native'
-import { borderWidth, radius, shadows, spacing } from '@real/tokens'
+import { Platform, View, ViewProps } from 'react-native'
+import { borderWidth, elevation, radius, shadows, spacing } from '@real/tokens'
 import { useThemeColors } from '../responsive'
 
 type CardSurfaceRole = 'commerce' | 'promo' | 'campaign' | 'trust' | 'admin'
@@ -76,9 +76,9 @@ export function Card({
           borderRadius: radius[radiusKey],
           padding: spacing['12'],
           ...(variant === 'raised'
-            ? {
-                ...shadows.sm,
-              }
+            ? Platform.OS === 'web'
+              ? ({ boxShadow: elevation.sm } as any)
+              : shadows.sm
             : null),
         },
         style,

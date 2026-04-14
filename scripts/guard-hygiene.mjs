@@ -322,10 +322,8 @@ function findPackageJsonFiles(root) {
     '.agent',
     '.agents',
     'my-clone',
-    'real-cosmetics-admin',
     'src',
     'luxeglow-market',
-    'strapi',
   ])
   function walk(dir) {
     let entries

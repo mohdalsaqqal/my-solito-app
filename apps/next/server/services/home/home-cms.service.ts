@@ -5,16 +5,16 @@ import { createHomePagePayload } from '@real/app/lib/layout/page-schema'
 import type { CMSHomeBlock, CMSHomeHeroCarouselCard, CMSHomeOfferBannerItem } from '@real/app/lib/types'
 import { passThroughPricingService } from '@real/app/lib/pricing'
 import { resolveReleaseEnvironment, resolveStoreId } from '../../../app/api/_lib/release-env'
-import { verifyPreviewToken } from '../../../app/api/_lib/preview-token'
-import { applyAdminControlsToCms, readAdminControlsState } from '../../../app/api/_lib/admin-controls-store'
+import { applyAdminControlsToCms, readAdminControlsState } from '../cms/cms-admin-controls.service'
 import { resolveRequestLocale } from '../../../app/api/_lib/request-locale'
-import { readSiteConfig } from '../../../app/api/_lib/admin-site-config-store'
-import { readBannersState } from '../../../app/api/_lib/admin-banners-store'
-import { readUGCState } from '../../../app/api/_lib/admin-ugc-store'
+import { readSiteConfig } from '../cms/cms-site-config.service'
+import { readBannersState } from '../cms/cms-banners.service'
+import { readUGCState } from '../cms/cms-ugc.service'
+import { readHomeMerchandising, applyMerchandisingToCms } from '../cms/cms-home-merchandising.service'
+import { resolvePreviewContext, getPreviewRelease, loadPreviewBlocks } from '../cms/cms-preview.service'
 import { attachResolvedShellMenus } from '../navigation/resolve-shell-menus.service'
 import {
   findLatestPageVersionByRelease,
-  getPageVersionById,
   toReleaseBlockRecords,
 } from '../../../app/api/_lib/page-version-store'
 
@@ -39,14 +39,18 @@ export async function getHomeCmsResponseData(request: Request) {
   const locale = resolveRequestLocale(request)
   const environment = resolveReleaseEnvironment(request)
   const storeId = resolveStoreId(request)
-  const preview = verifyPreviewToken(new URL(request.url).searchParams.get('previewToken'))
+  const previewContext = resolvePreviewContext(request.url)
+
+  // Apply canonical Prisma merchandising (or fall back to mock if Prisma is unreachable)
+  const merchandisingResult = await readHomeMerchandising()
+  const cmsWithMerchandising = applyMerchandisingToCms(cms, merchandisingResult)
 
   let effectiveReleaseId: string | null = null
 
-  if (preview.valid) {
-    const previewRelease = await releaseProvider.getById(preview.releaseId)
-    if (previewRelease.ok) {
-      effectiveReleaseId = previewRelease.data.id
+  if (previewContext.valid) {
+    const previewRelease = await getPreviewRelease(previewContext)
+    if (previewRelease) {
+      effectiveReleaseId = previewRelease.id
     }
   }
 
@@ -114,17 +118,13 @@ export async function getHomeCmsResponseData(request: Request) {
   const safeBlocks: CMSHomeBlock[] = []
 
   const loadReleaseBlocksForHome = async (releaseId: string) => {
-    if (preview.valid && preview.versionId) {
-      const pageVersion = await getPageVersionById(preview.versionId)
-      if (
-        pageVersion &&
-        pageVersion.releaseId === releaseId &&
-        pageVersion.storeId === storeId
-      ) {
-        return toReleaseBlockRecords(pageVersion)
-      }
+    // Try preview blocks first
+    if (previewContext.valid) {
+      const previewBlocks = await loadPreviewBlocks(previewContext, storeId)
+      if (previewBlocks) return previewBlocks
     }
 
+    // Fall back to page version store
     const version = await findLatestPageVersionByRelease({
       releaseId,
       storeId,
@@ -133,6 +133,7 @@ export async function getHomeCmsResponseData(request: Request) {
       return toReleaseBlockRecords(version)
     }
 
+    // Fall back to release provider
     const blocksResult = await releaseProvider.listBlocks(releaseId)
     if (!blocksResult.ok) return null
     return blocksResult.data
@@ -417,12 +418,12 @@ export async function getHomeCmsResponseData(request: Request) {
 
   if (siteConfig) {
     const localeBranding = locale === 'ar' ? siteConfig.branding.ar : siteConfig.branding.en
-    const fallbackBranding = cms.shell?.branding
+    const fallbackBranding = cmsWithMerchandising.shell?.branding
     const fallbackAlt = fallbackBranding?.logo.alt ?? { en: 'Real Cosmetics', ar: 'رِيال كوزمتيكس' }
     const fallbackUri = fallbackBranding?.logo.uri ?? '/brand-logo-placeholder.svg'
 
-    cms.shell = cms.shell ?? {}
-    cms.shell.branding = {
+    cmsWithMerchandising.shell = cmsWithMerchandising.shell ?? {}
+    cmsWithMerchandising.shell.branding = {
       logo: {
         uri: localeBranding.logoUrl || fallbackUri,
         alt: {
@@ -434,71 +435,71 @@ export async function getHomeCmsResponseData(request: Request) {
     }
   }
 
-  if (siteConfig && cms.shell?.topBar) {
+  if (siteConfig && cmsWithMerchandising.shell?.topBar) {
     if (siteConfig.topBar.messageEn) {
-      cms.shell.topBar.message = {
-        ...cms.shell.topBar.message,
+      cmsWithMerchandising.shell.topBar.message = {
+        ...cmsWithMerchandising.shell.topBar.message,
         en: siteConfig.topBar.messageEn,
       }
     }
     if (siteConfig.topBar.messageAr) {
-      cms.shell.topBar.message = {
-        ...cms.shell.topBar.message,
+      cmsWithMerchandising.shell.topBar.message = {
+        ...cmsWithMerchandising.shell.topBar.message,
         ar: siteConfig.topBar.messageAr,
       }
     }
     if (siteConfig.topBar.ctaLabelEn || siteConfig.topBar.ctaLabelAr) {
-      cms.shell.topBar.ctaLabel = {
-        en: siteConfig.topBar.ctaLabelEn || (cms.shell.topBar.ctaLabel?.en ?? ''),
-        ar: siteConfig.topBar.ctaLabelAr || (cms.shell.topBar.ctaLabel?.ar ?? ''),
+      cmsWithMerchandising.shell.topBar.ctaLabel = {
+        en: siteConfig.topBar.ctaLabelEn || (cmsWithMerchandising.shell.topBar.ctaLabel?.en ?? ''),
+        ar: siteConfig.topBar.ctaLabelAr || (cmsWithMerchandising.shell.topBar.ctaLabel?.ar ?? ''),
       }
     }
     if (siteConfig.topBar.ctaHref) {
-      cms.shell.topBar.ctaHref = siteConfig.topBar.ctaHref
+      cmsWithMerchandising.shell.topBar.ctaHref = siteConfig.topBar.ctaHref
     }
   }
 
-  if (siteConfig && cms.shell?.footer) {
+  if (siteConfig && cmsWithMerchandising.shell?.footer) {
     if (siteConfig.footer.newsletterTitleEn || siteConfig.footer.newsletterTitleAr) {
-      cms.shell.footer.newsletterTitle = {
-        en: siteConfig.footer.newsletterTitleEn || (cms.shell.footer.newsletterTitle?.en ?? ''),
-        ar: siteConfig.footer.newsletterTitleAr || (cms.shell.footer.newsletterTitle?.ar ?? ''),
+      cmsWithMerchandising.shell.footer.newsletterTitle = {
+        en: siteConfig.footer.newsletterTitleEn || (cmsWithMerchandising.shell.footer.newsletterTitle?.en ?? ''),
+        ar: siteConfig.footer.newsletterTitleAr || (cmsWithMerchandising.shell.footer.newsletterTitle?.ar ?? ''),
       }
     }
     if (siteConfig.footer.legalEn || siteConfig.footer.legalAr) {
-      cms.shell.footer.legalNotice = {
-        en: siteConfig.footer.legalEn || (cms.shell.footer.legalNotice?.en ?? ''),
-        ar: siteConfig.footer.legalAr || (cms.shell.footer.legalNotice?.ar ?? ''),
+      cmsWithMerchandising.shell.footer.legalNotice = {
+        en: siteConfig.footer.legalEn || (cmsWithMerchandising.shell.footer.legalNotice?.en ?? ''),
+        ar: siteConfig.footer.legalAr || (cmsWithMerchandising.shell.footer.legalNotice?.ar ?? ''),
       }
     }
   }
 
-  if (siteConfig && cms.shell?.search?.panelTitles) {
+  if (siteConfig && cmsWithMerchandising.shell?.search?.panelTitles) {
     if (siteConfig.search.panelTitleEn || siteConfig.search.panelTitleAr) {
-      cms.shell.search.panelTitles.trendingSearches = {
-        en: siteConfig.search.panelTitleEn || (cms.shell.search.panelTitles.trendingSearches?.en ?? ''),
-        ar: siteConfig.search.panelTitleAr || (cms.shell.search.panelTitles.trendingSearches?.ar ?? ''),
+      cmsWithMerchandising.shell.search.panelTitles.trendingSearches = {
+        en: siteConfig.search.panelTitleEn || (cmsWithMerchandising.shell.search.panelTitles.trendingSearches?.en ?? ''),
+        ar: siteConfig.search.panelTitleAr || (cmsWithMerchandising.shell.search.panelTitles.trendingSearches?.ar ?? ''),
       }
     }
   }
 
-  if (bannersState && cms.marketing?.ticker) {
+  if (bannersState && cmsWithMerchandising.marketing?.ticker) {
     const activeTickerItems = bannersState.ticker.items.filter((item) => item.active)
     if (activeTickerItems.length > 0) {
-      cms.marketing.ticker.items = activeTickerItems.map((item) => ({
+      cmsWithMerchandising.marketing.ticker.items = activeTickerItems.map((item) => ({
         id: item.id,
         message: { en: item.messageEn, ar: item.messageAr },
       }))
     }
     if (bannersState.ticker.speedMs > 0) {
-      cms.marketing.ticker.speedMs = bannersState.ticker.speedMs
+      cmsWithMerchandising.marketing.ticker.speedMs = bannersState.ticker.speedMs
     }
   }
 
   if (bannersState) {
     const activeEducationBanners = bannersState.educationBanners.filter((b) => b.active)
     if (activeEducationBanners.length > 0) {
-      ;(cms.marketing as Record<string, unknown>).educationBanners = activeEducationBanners.map((b) => ({
+      ;(cmsWithMerchandising.marketing as Record<string, unknown>).educationBanners = activeEducationBanners.map((b) => ({
         id: b.id,
         title: { en: b.titleEn, ar: b.titleAr },
         body: { en: b.bodyEn, ar: b.bodyAr },
@@ -507,12 +508,12 @@ export async function getHomeCmsResponseData(request: Request) {
     }
   }
 
-  if (ugcState && cms.marketing?.ugcGallery) {
+  if (ugcState && cmsWithMerchandising.marketing?.ugcGallery) {
     const activeUgcItems = ugcState.items
       .filter((item) => item.active)
       .sort((a, b) => a.order - b.order)
     if (activeUgcItems.length > 0) {
-      cms.marketing.ugcGallery.items = activeUgcItems.map((item) => ({
+      cmsWithMerchandising.marketing.ugcGallery.items = activeUgcItems.map((item) => ({
         id: item.id,
         imageUrl: item.imageUrl,
         caption: { en: item.caption, ar: item.caption },
@@ -534,15 +535,15 @@ export async function getHomeCmsResponseData(request: Request) {
 
   return {
     payload: {
-      ...cms,
+      ...cmsWithMerchandising,
       storeId,
       page,
       marketing: {
-        ...(cms.marketing ?? {}),
+        ...(cmsWithMerchandising.marketing ?? {}),
         homeBlocks: safeBlocks,
       },
     },
-    preview,
+    preview: previewContext,
   }
 }
 
@@ -570,14 +571,13 @@ export async function getCachedHomeCmsResponseData(requestUrl: string) {
   cacheTag('cms-home')
 
   const url = new URL(requestUrl)
-  const previewToken = url.searchParams.get('previewToken')
-  const preview = verifyPreviewToken(previewToken)
+  const previewContext = resolvePreviewContext(requestUrl)
 
   // Reconstruct a Request for downstream functions that expect it
   const request = new Request(requestUrl)
 
   // Preview requests are never cached — bypass immediately.
-  if (preview.valid) {
+  if (previewContext.valid) {
     return getHomeCmsResponseData(request)
   }
 

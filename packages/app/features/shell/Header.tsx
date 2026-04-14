@@ -5,6 +5,7 @@ import {
   BottomNav,
   Box,
   CartDrawer,
+  AuthDrawer,
   Icon,
   Input,
   MiniSearchBar,
@@ -392,6 +393,9 @@ export function Header({
   const { isAtTop } = useHeaderScroll()
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false)
   const [cartDrawerOpen, setCartDrawerOpen] = useState(false)
+  const [authDrawerOpen, setAuthDrawerOpen] = useState(false)
+  const [authDrawerLoading, setAuthDrawerLoading] = useState(false)
+  const [authDrawerError, setAuthDrawerError] = useState<string | null>(null)
   const [showCartToast, setShowCartToast] = useState(false)
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
   const [activeMegaCategoryId, setActiveMegaCategoryId] = useState('')
@@ -747,9 +751,49 @@ export function Header({
         return
       }
       const hasSession = Boolean(response.ok && payload?.success && payload?.data?.userId)
-      navigateToHref(hasSession ? '/account' : '/auth/login?next=/account')
+      if (hasSession) {
+        navigateToHref('/account')
+      } else {
+        setAuthDrawerError(null)
+        setAuthDrawerOpen(true)
+      }
     } catch {
-      navigateToHref('/auth/login?next=/account')
+      setAuthDrawerError(null)
+      setAuthDrawerOpen(true)
+    }
+  }
+
+  const handleAuthLogin = async (input: { email: string; password: string }) => {
+    setAuthDrawerLoading(true)
+    setAuthDrawerError(null)
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+        credentials: 'include',
+      })
+      const json = await response.json()
+      if (!response.ok || !json?.success) {
+        setAuthDrawerError(
+          json?.error?.message || 'Unable to sign in. Please check your details and try again.'
+        )
+        return
+      }
+      // Login succeeded — close drawer and navigate
+      setAuthDrawerOpen(false)
+      const role = json.data?.role as string | undefined
+      if (role === 'pharmacist') {
+        navigateToHref('/pharmacist')
+      } else if (role === 'admin' || role === 'marketing' || role === 'catalog' || role === 'support' || role === 'ops') {
+        navigateToHref('/admin')
+      } else {
+        navigateToHref('/account')
+      }
+    } catch {
+      setAuthDrawerError('Something went wrong. Please try again.')
+    } finally {
+      setAuthDrawerLoading(false)
     }
   }
 
@@ -1398,6 +1442,23 @@ export function Header({
           }
         }}
         onCheckout={onCheckout ?? (() => undefined)}
+      />
+
+      <AuthDrawer
+        open={authDrawerOpen}
+        loading={authDrawerLoading}
+        error={authDrawerError}
+        onClose={() => setAuthDrawerOpen(false)}
+        onLogin={handleAuthLogin}
+        onGoToRegister={() => {
+          setAuthDrawerOpen(false)
+          navigateToHref('/auth/register?next=/account')
+        }}
+        onGoToForgotPassword={() => {
+          setAuthDrawerOpen(false)
+          navigateToHref('/auth/forgot-password?next=/account')
+        }}
+        locale={locale}
       />
     </>
   )

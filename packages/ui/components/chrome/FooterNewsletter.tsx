@@ -75,7 +75,7 @@ export const FooterNewsletter = React.memo(function FooterNewsletter({
   }
 
   return (
-    <Box style={{ gap: spacing.md }}>
+    <Box style={{ gap: spacing.space4 }}>
       <Text variant='h2' tone='inverse' weight='700'>
         {title}
       </Text>
@@ -85,7 +85,7 @@ export const FooterNewsletter = React.memo(function FooterNewsletter({
       <Box
         style={{
           flexDirection: 'row',
-          gap: spacing['16'],
+          gap: spacing.space4,
           flexWrap: 'wrap',
           alignItems: 'center',
         }}
@@ -125,7 +125,7 @@ export const FooterNewsletter = React.memo(function FooterNewsletter({
           style={{
             justifyContent: 'center',
             paddingVertical: spacing.sm,
-            paddingHorizontal: spacing.lg,
+            paddingHorizontal: spacing.space6,
             borderRadius: radius.md,
             backgroundColor: c.white,
             minHeight: spacing['48'],

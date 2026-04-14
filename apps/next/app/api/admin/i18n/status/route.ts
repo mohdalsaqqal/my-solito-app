@@ -1,10 +1,12 @@
+import { ensureRequestConnection } from '../../../_lib/route-connection'
 import { translationProvider } from '@real/providers'
 import { fail, ok } from '../../../_lib/response'
 import { requireAdminDomainSession } from '../../../_lib/request-auth'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations')
+    await ensureRequestConnection()
+    const session = await requireAdminDomainSession(request, 'operations')
     if (session instanceof Response) return session
 
     const result = await translationProvider.getStatus()

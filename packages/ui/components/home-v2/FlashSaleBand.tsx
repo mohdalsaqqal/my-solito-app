@@ -1,4 +1,4 @@
-import { fontWeights, letterSpacing, spacing, typography } from '@real/tokens'
+import { colors, fontWeights, letterSpacing, spacing, typography } from '@real/tokens'
 import { Box, Text } from '../../primitives'
 import { CountdownTimer } from './CountdownTimer'
 import { useThemeColors } from '../../responsive'
@@ -34,22 +34,22 @@ export function FlashSaleBand({
   return (
     <Box
       style={{
-        backgroundColor: c.commercePrimary,
-        paddingVertical: spacing['24'],
-        paddingHorizontal: spacing['16'],
+        backgroundColor: colors.roseDark,
+        paddingVertical: spacing.space4,
+        paddingHorizontal: spacing.space4,
         alignItems: 'center',
-        gap: spacing['12'],
+        gap: spacing.space2,
         opacity: disabled ? 0.5 : 1,
       }}
     >
       {/* Offer headline — mixed-weight contrast */}
-      <Box style={{ alignItems: 'center', gap: spacing['1'] }}>
+      <Box style={{ alignItems: 'center', gap: spacing.space1 }}>
         <Text
           style={{
             fontSize: typography.subheadline,
-            fontWeight: fontWeights.ultra,
+            fontWeight: fontWeights.medium,
             color: c.textInverted,
-            letterSpacing: letterSpacing.labelPill,
+            letterSpacing: letterSpacing.caps,
             textTransform: 'uppercase',
           }}
         >
@@ -57,8 +57,8 @@ export function FlashSaleBand({
         </Text>
         <Text
           style={{
-            fontSize: typography.headline,
-            fontWeight: fontWeights.black,
+            fontSize: typography.headingMd,
+            fontWeight: fontWeights.bold,
             color: c.textInverted,
             letterSpacing: letterSpacing.campaignHeading,
           }}

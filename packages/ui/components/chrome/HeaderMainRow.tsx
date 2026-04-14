@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { borderWidth, layout, letterSpacing, motionDuration, radius, shadows, spacing, typography } from '@real/tokens'
+import { borderWidth, elevation, layout, letterSpacing, motionDuration, radius, spacing, typography } from '@real/tokens'
 import { Box, Container, Input, Text } from '../../primitives'
 import { Button as ReusableButton } from '../../reusables/button'
 import { Badge } from '../Badge'
@@ -56,7 +56,7 @@ function Action({
   const c = useThemeColors()
 
   return (
-    <Box style={{ alignItems: 'center', gap: spacing['8'] }}>
+    <Box style={{ alignItems: 'center', gap: spacing.space2 }}>
       <ReusableButton
         onPress={onPress}
         onHoverIn={() => setInteractive(true)}
@@ -67,12 +67,12 @@ function Action({
         variant={emphasized ? 'default' : 'ghost'}
         size='icon'
         style={{
-          minHeight: emphasized ? spacing['40'] : spacing['40'],
-          minWidth: emphasized ? spacing['40'] : spacing['40'],
+          minHeight: spacing['40'],
+          minWidth: spacing['40'],
           borderRadius: emphasized ? radius.full : radius.md,
           backgroundColor: emphasized ? c.brandPrimary : interactive ? c.surfaceMuted : 'transparent',
           transitionProperty: 'background-color,transform',
-          transitionDuration: `${motionDuration.microInteraction}ms`,
+          transitionDuration: `${motionDuration.interactive}ms`,
           transform: [{ translateY: interactive ? -1 : 0 }],
         }}
       >
@@ -120,7 +120,7 @@ function Action({
                 end: 0,
               }}
             >
-              <Badge tone='accent' size='sm' style={{ minHeight: spacing['16'], paddingHorizontal: spacing['6'] }}>
+              <Badge tone='accent' size='sm' style={{ minHeight: spacing['16'], paddingHorizontal: spacing.space2 }}>
                 {` `}
               </Badge>
             </Box>
@@ -134,7 +134,7 @@ function Action({
           borderRadius: 2,
           backgroundColor: c.brandPrimary,
           transitionProperty: 'width',
-          transitionDuration: `${motionDuration.normal}ms`,
+          transitionDuration: `${motionDuration.medium}ms`,
         }}
       />
     </Box>
@@ -172,7 +172,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
 }: HeaderMainRowProps) {
   const c = useThemeColors()
   const [localeInteractive, setLocaleInteractive] = useState(false)
-  const searchInputHeight = spacing['40']
+  const searchInputHeight = spacing['48']
   const isMegaSearch = variant === 'mega-search'
 
   if (state === 'empty') {
@@ -211,7 +211,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
     return (
       <Box style={{ backgroundColor: c.surfaceLowest }}>
         <Container>
-          <Box style={{ minHeight: layout.header.mainRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing['16'] }}>
+          <Box style={{ minHeight: layout.header.mainRowHeight, flexDirection: 'row', alignItems: 'center', gap: spacing.space4 }}>
             <ReusableButton
               href={logoHref}
               onPress={state === 'disabled' ? undefined : onPressLogo}
@@ -224,7 +224,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
             </ReusableButton>
             <Box style={{ flex: 1.8 }}>
               <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%' }}>
-                <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
+                <Box style={{ position: 'absolute', start: spacing.space4, zIndex: 1 }}>
                   <Icon name='search' color={c.textPrimary} />
                 </Box>
                 <Input
@@ -237,9 +237,8 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
                   radiusKey='full'
                   placeholder={searchPlaceholder}
                   style={{
-                    paddingStart: spacing['32'],
-                    paddingEnd: spacing['16'],
-                    paddingVertical: spacing['2'],
+                    paddingStart: spacing.space8,
+                    paddingEnd: spacing.space4,
                     fontSize: typography.bodySm,
                     minHeight: searchInputHeight,
                     height: searchInputHeight,
@@ -264,7 +263,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: spacing['16'],
+            gap: spacing.space4,
           }}
         >
           <Box
@@ -294,21 +293,22 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
               justifyContent: 'center',
             }}
           >
-            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'], width: '100%' }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.space2, width: '100%' }}>
               {isMegaSearch ? (
                 <Box style={{ minWidth: spacing['128'] }}>
                   <Button
-                    variant={departmentsActive ? 'solid' : 'secondaryQuiet'}
+                    variant='ghost'
                     size='sm'
-                    shape='pill'
                     onPress={state === 'disabled' ? undefined : onPressDepartments}
                   >
-                    {departmentsLabel}
+                    <Text variant='bodySm' tone='default' style={{ paddingHorizontal: 0 }}>
+                      {departmentsLabel}
+                    </Text>
                   </Button>
                 </Box>
               ) : null}
               <Box nativeID={searchRegionId} style={{ position: 'relative', justifyContent: 'center', width: '100%', flex: 1 }}>
-                <Box style={{ position: 'absolute', start: spacing['16'], zIndex: 1 }}>
+                <Box style={{ position: 'absolute', start: spacing.space4, zIndex: 1 }}>
                   <Icon name='search' color={c.textPrimary} />
                 </Box>
                 <Input
@@ -321,9 +321,8 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
                   radiusKey='full'
                   placeholder={searchPlaceholder}
                   style={{
-                    paddingStart: spacing['32'],
-                    paddingEnd: spacing['16'],
-                    paddingVertical: spacing['2'],
+                    paddingStart: spacing.space8,
+                    paddingEnd: spacing.space4,
                     fontSize: typography.bodySm,
                     minHeight: searchInputHeight,
                     height: searchInputHeight,
@@ -342,7 +341,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'flex-end',
-              gap: spacing['16'],
+              gap: spacing.space4,
             }}
           >
             <Action
@@ -360,7 +359,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
               emphasized
               pulse={cartPulse}
             />
-            <Box style={{ alignItems: 'center', gap: spacing['8'] }}>
+            <Box style={{ alignItems: 'center', gap: spacing.space2 }}>
               <ReusableButton
                 disabled={state === 'disabled'}
                 onPress={onPressLocale}
@@ -377,9 +376,9 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
                   borderRadius: radius.md,
                   backgroundColor: localeInteractive ? c.surfaceMuted : 'transparent',
                   transitionProperty: 'background-color,transform',
-                  transitionDuration: `${motionDuration.microInteraction}ms`,
+                  transitionDuration: `${motionDuration.interactive}ms`,
                   transform: [{ translateY: localeInteractive ? -1 : 0 }],
-                  ...shadows.xs,
+                  boxShadow: localeInteractive ? elevation.xs : elevation.none,
                 }}
               >
                 <Icon
@@ -395,7 +394,7 @@ export const HeaderMainRow = React.memo(function HeaderMainRow({
                   borderRadius: 2,
                   backgroundColor: c.brandPrimary,
                   transitionProperty: 'width',
-                  transitionDuration: `${motionDuration.normal}ms`,
+                  transitionDuration: `${motionDuration.medium}ms`,
                 }}
               />
             </Box>

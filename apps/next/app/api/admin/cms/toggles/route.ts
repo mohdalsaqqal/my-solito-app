@@ -1,3 +1,4 @@
+import { ensureRequestConnection } from '../../../_lib/route-connection'
 import { cmsProvider } from '@real/providers'
 import { fail, ok } from '../../../_lib/response'
 import { requireAdminDomainSession } from '../../../_lib/request-auth'
@@ -9,7 +10,8 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing')
+    await ensureRequestConnection()
+    const session = await requireAdminDomainSession(request, 'marketing')
     if (session instanceof Response) {
       return session
     }

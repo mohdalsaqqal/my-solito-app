@@ -9,7 +9,7 @@ type PrefillPayload = {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations', 'full')
+    const session = await requireAdminDomainSession(request, 'operations', 'full')
     if (session instanceof Response) return session
 
     const payload = ((await request.json().catch(() => ({}))) ?? {}) as PrefillPayload

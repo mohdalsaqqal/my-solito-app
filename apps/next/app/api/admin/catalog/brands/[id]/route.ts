@@ -12,7 +12,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog', 'full')
+    const session = await requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
     const { id } = await params
@@ -50,7 +50,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog', 'full')
+    const session = await requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
     const { id } = await params

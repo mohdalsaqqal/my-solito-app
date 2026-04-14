@@ -1,3 +1,4 @@
+import { ensureRequestConnection } from '../../_lib/route-connection'
 import { fail, ok } from '../../_lib/response'
 import { requireAdminDomainSession } from '../../_lib/request-auth'
 import { ServiceError } from '../../../../server/services/_lib/service-error'
@@ -5,7 +6,8 @@ import { listAdminOrders } from '../../../../server/services/admin/admin-orders.
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'sales')
+    await ensureRequestConnection()
+    const session = await requireAdminDomainSession(request, 'sales')
     if (session instanceof Response) return session
 
     return ok(await listAdminOrders(request))

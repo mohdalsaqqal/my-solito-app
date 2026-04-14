@@ -1,30 +1,29 @@
 <!--
   Sync Impact Report
   ==================
-  Version change: 1.2.0 → 1.3.0 (MINOR)
-  Bump rationale: Three new principles added (XIV–XVI) codifying the
-    remediation program identified in the project audit rating. These
-    encode agent-doc source-of-truth, repo hygiene, and operational
-    quality (testing coverage + CI discipline + dependency pinning)
-    as permanent constitutional requirements rather than one-off
-    cleanup tasks. No existing principles removed or redefined.
+  Version change: 1.3.0 -> 1.4.0 (MINOR)
+  Bump rationale: Added one new principle (XVII) and expanded the
+    architecture constraints / definition of done to codify the
+    production CMS operating model for this repo: in-repo Next.js +
+    Prisma is the canonical CMS stack, services own CMS orchestration,
+    and mock CMS adapters are seed/fallback fixtures rather than live
+    production sources of truth.
 
-  Modified principles: None
+  Modified principles:
+    - VI. CMS Controls Content, Not Layout (operationalized by the new
+      CMS production-source-of-truth rules below)
   Added:
-    - Principle XIV: AGENTS.md as Sole Source of Truth
-    - Principle XV: Repo Hygiene and Working Tree Discipline
-    - Principle XVI: Operational Quality Baseline
+    - Principle XVII: In-Repo CMS Canonical Source of Truth
   Removed sections: None
 
   Templates requiring updates:
-    - .specify/templates/plan-template.md — ✅ no changes needed
-      (Constitution Check section is generic; new principles apply
-      automatically as gates for remediation plans)
-    - .specify/templates/spec-template.md — ✅ no changes needed
-    - .specify/templates/tasks-template.md — ✅ no changes needed
+    - .specify/templates/plan-template.md - reviewed, no edits needed
+    - .specify/templates/spec-template.md - reviewed, no edits needed
+    - .specify/templates/tasks-template.md - reviewed, no edits needed
+    - .specify/templates/commands/*.md - not present in this repo
+    - AGENTS.md - updated to mirror the permanent CMS rule
   Follow-up TODOs: None
 -->
-
 # Commerce Platform Constitution
 
 ## Core Principles
@@ -370,10 +369,47 @@ keeps architectural investment from decaying. These rules
 codify the minimum viable discipline for a production-grade
 monorepo.
 
+### XVII. In-Repo CMS Canonical Source of Truth
+
+This repository's production CMS stack MUST remain in-repo:
+`apps/next` owns the CMS server layer and admin surfaces, and
+Prisma/Postgres is the canonical persistence layer for all
+mutable, admin-editable CMS content. CMS reads and writes
+MUST be orchestrated through `apps/next/server/services`;
+Route Handlers and Server Actions remain thin transport
+layers. Prisma rows MUST NOT be returned directly to the UI;
+services MUST normalize them into stable CMS/view models
+before rendering.
+
+`packages/adapters/mock/cms` MAY exist for seed data,
+contract testing, local bootstrap, or explicit fallback
+behavior, but it MUST NOT be the live production source of
+truth for storefront CMS content. If content is editable in
+admin, it MUST be stored in Prisma. JSON columns MAY be used
+for flexible payloads, but typed columns are REQUIRED for
+fields that need validation, filtering, ordering, publish
+state, or operational reporting.
+
+Draft/publish/versioning, auditability, and rollback are
+part of the CMS contract. All production CMS entities MUST
+support explicit lifecycle state, actor attribution, and
+deterministic publish behavior.
+
+**Rationale**: This repo's CMS, admin, and commerce
+operations are tightly coupled. A split source-of-truth model
+between mock adapters and persisted content creates
+unverifiable behavior, weak governance, and fragile publish
+flows. Keeping the CMS in-repo preserves architectural
+consistency and makes the system production-operable.
+
 ## Architecture Constraints
 
 - Route Handlers are thin transport. Business logic lives in
   services.
+- Mutable CMS reads and writes MUST flow through
+  `apps/next/server/services`; Prisma is the production CMS
+  persistence layer, and mock CMS adapters are seed/fallback
+  fixtures only.
 - Server Components MUST NOT call internal Route Handlers
   over HTTP.
 - `apiClient` is banned server-side. It exists only for Expo
@@ -447,6 +483,9 @@ A subphase is complete only when:
 - Required type/build verification passes for the touched
   layer.
 - Data flows via the server layer.
+- CMS reads/writes respect the in-repo Next.js + Prisma
+  production model and no live storefront path depends on
+  mock CMS data as its canonical source.
 - Shared UI respects the active RNR contract.
 - Memory files are updated for substantial changes.
 - The result leaves the codebase more stable and more
@@ -521,4 +560,5 @@ All implementation plans MUST pass a Constitution Check gate
 again after Phase 1 design. Violations MUST be justified in
 the Complexity Tracking table or resolved before proceeding.
 
-**Version**: 1.3.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-11
+**Version**: 1.4.0 | **Ratified**: 2026-04-03 | **Last Amended**: 2026-04-13
+

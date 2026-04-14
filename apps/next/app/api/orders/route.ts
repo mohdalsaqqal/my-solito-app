@@ -1,3 +1,4 @@
+import { ensureRequestConnection } from '../_lib/route-connection'
 import { fail, ok } from '../_lib/response'
 import { requireAuthSession } from '../_lib/request-auth'
 import { ServiceError } from '../../../server/services/_lib/service-error'
@@ -5,7 +6,8 @@ import { listAccessibleOrders } from '../../../server/services/orders/order-acce
 
 export async function GET(request: Request) {
   try {
-    const session = requireAuthSession(request)
+    await ensureRequestConnection()
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }

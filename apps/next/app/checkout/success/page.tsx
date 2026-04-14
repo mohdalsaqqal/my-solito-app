@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { connection } from 'next/server'
 import { getCheckoutSuccessPageInitialData } from '../../../server/services/checkout/checkout-success-page.service'
+import { createStorefrontServiceContext } from '../../../server/services/_lib/storefront-service-context'
 import { CheckoutSuccessPageClient } from './CheckoutSuccessPageClient'
 
 export default function CheckoutSuccessPage() {
@@ -13,7 +14,10 @@ export default function CheckoutSuccessPage() {
 
 async function CheckoutSuccessPageContent() {
   await connection()
-  const { cmsHome, products, cart, error } = await getCheckoutSuccessPageInitialData()
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+  })
+  const { cmsHome, products, cart, error } = await getCheckoutSuccessPageInitialData(context)
 
   return (
     <CheckoutSuccessPageClient

@@ -17,7 +17,7 @@ type PatchPayload = {
 export async function GET(request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'marketing'])
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'marketing'])
     if (session instanceof Response) return session
 
     return ok(await getAdminProductQuery(slug))
@@ -38,7 +38,7 @@ export async function GET(request: Request, context: { params: Promise<{ slug: s
 export async function PATCH(request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'marketing'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'marketing'], 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as PatchPayload
@@ -62,7 +62,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ slug:
 export async function DELETE(request: Request, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'marketing'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'marketing'], 'full')
     if (session instanceof Response) return session
 
     return ok(

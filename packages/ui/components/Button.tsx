@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { ActivityIndicator, Platform, Pressable, ViewStyle } from 'react-native'
-import { borderWidth, buttonTokens, colors, elevation, fontWeights, motionDuration, opacity, shadows, spacing } from '@real/tokens'
+import { borderWidth, buttonTokens, colors, elevation, fontWeights, motionDuration, motionEasing, opacity, shadows, spacing } from '@real/tokens'
 import { Box } from '../primitives/Box'
 import { Text } from '../primitives/Text'
 
@@ -155,9 +155,10 @@ export function Button({
           alignSelf: fullWidth ? 'stretch' : 'flex-start',
           width: fullWidth ? '100%' : undefined,
           opacity: isDisabled ? opacity.disabled : 1,
-          transform: [{ scale: interactive && !isDisabled ? 1.005 : 1 }],
+          transform: [{ scale: interactive && !isDisabled ? 1.02 : 1 }],
           transitionProperty: 'background-color, border-color, box-shadow, transform',
-          transitionDuration: `${motionDuration.hoverScale}ms`,
+          transitionDuration: `${motionDuration.interactive}ms`,
+          transitionTimingFunction: motionEasing.easeOut,
           backgroundColor: ctaActiveBackground,
           borderColor:
             variant === 'outline'

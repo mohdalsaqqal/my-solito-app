@@ -20,7 +20,7 @@ const ugcStateSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'read')
+    const session = await requireAdminDomainSession(request, 'marketing', 'read')
     if (session instanceof Response) return session
 
     const state = await readUGCState()
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => null)) ?? null) as UGCState | null
@@ -57,20 +57,21 @@ export async function PUT(request: Request) {
 
     const actor = { userId: session.userId, email: session.email }
 
-    // Read current state for audit comparison
-    const state = await readAdminControlsState()
-    const prevCount = state.userOverrides ? Object.keys(state.userOverrides).length : 0
+    // Read current UGC state for audit comparison
+    const currentUGC = await readUGCState()
+    const prevCount = currentUGC.items.length
 
     await writeUGCState(body)
 
     // Push audit entry
-    pushAudit(state, {
+    const controlsState = await readAdminControlsState()
+    pushAudit(controlsState, {
       type: 'marketing',
       targetId: 'ugc-gallery',
       actor,
       changes: { previousItemCount: String(prevCount), nextItemCount: String(body.items?.length ?? 0) },
     })
-    await writeAdminControlsState(state)
+    await writeAdminControlsState(controlsState)
 
     const saved = await readUGCState()
     return ok(saved)

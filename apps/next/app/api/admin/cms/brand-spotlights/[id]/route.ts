@@ -59,7 +59,7 @@ function moveToIndex<T>(arr: T[], from: number, to: number) {
 }
 
 async function guard(request: Request) {
-  const session = requireAdminDomainSession(request, 'marketing', 'full')
+  const session = await requireAdminDomainSession(request, 'marketing', 'full')
   if (session instanceof Response) return { error: session as Response }
 
   const cmsResult = await cmsProvider.getHome()

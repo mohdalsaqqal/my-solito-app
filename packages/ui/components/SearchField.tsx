@@ -29,7 +29,7 @@ export function SearchField({
         style={{
           position: 'absolute',
           pointerEvents: 'none',
-          start: spacing['16'],
+          start: spacing.space4,
           zIndex: 1,
           alignItems: 'center',
           justifyContent: 'center',
@@ -37,7 +37,7 @@ export function SearchField({
       >
         <Icon
           name='search'
-          size={16}
+          size={spacing.space4}
           color={invalid ? c.error : c.textSecondary}
         />
       </View>
@@ -56,12 +56,12 @@ export function SearchField({
         style={[
           {
             minHeight: inputTokens.height.md,
-            paddingLeft: spacing['48'],
-            paddingRight: spacing['16'],
+            paddingLeft: spacing.space12,
+            paddingRight: spacing.space4,
             borderRadius: inputTokens.radius.default,
             borderWidth: borderWidth.thin,
             borderColor: invalid ? c.error : c.border,
-            backgroundColor: disabled ? c.backgroundSecondary : c.surface,
+            backgroundColor: disabled ? c.surfaceMuted : c.surface,
             boxShadow: elevation.xs,
           },
           style,

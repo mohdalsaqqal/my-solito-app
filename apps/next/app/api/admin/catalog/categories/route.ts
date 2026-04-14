@@ -9,7 +9,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog')
+    const session = await requireAdminDomainSession(request, 'catalog')
     if (session instanceof Response) return session
 
     const state = await readAdminCatalogState()
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog', 'full')
+    const session = await requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as Partial<AdminCategoryRecord>

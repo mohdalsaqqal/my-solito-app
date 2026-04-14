@@ -337,21 +337,24 @@ function generateCss() {
   )
 
   const durationLines = [
-    line('--duration-micro', `${motionDuration.microInteraction}ms`),
-    line('--duration-hover', `${motionDuration.hoverScale}ms`),
-    line('--duration-reveal', `${motionDuration.pageReveal}ms`),
+    line('--duration-micro', `${motionDuration.micro}ms`),
+    line('--duration-hover', `${motionDuration.hover}ms`),
+    line('--duration-interactive', `${motionDuration.interactive}ms`),
+    line('--duration-reveal', `${motionDuration.reveal}ms`),
     line('--duration-stagger', `${motionDuration.stagger}ms`),
-    ...Object.entries(motionDuration).map(([key, value]) =>
-      line(`--duration-${camelToKebab(key)}`, `${value}ms`)
-    ),
+    ...Object.entries(motionDuration)
+      .filter(([key]) => !['micro', 'hover', 'interactive', 'reveal', 'stagger'].includes(key))
+      .map(([key, value]) => line(`--duration-${camelToKebab(key)}`, `${value}ms`)),
   ]
 
   const easeLines = [
     line('--ease-premium', motionEasing.standard),
+    line('--ease-enter', motionEasing.entrance),
+    line('--ease-standard', motionEasing.standard),
     line('--ease-exit', motionEasing.exit),
-    ...Object.entries(motionEasing).map(([key, value]) =>
-      line(`--ease-${camelToKebab(key)}`, value)
-    ),
+    ...Object.entries(motionEasing)
+      .filter(([key]) => !['standard', 'entrance', 'exit'].includes(key))
+      .map(([key, value]) => line(`--ease-${camelToKebab(key)}`, value)),
   ]
 
   const zIndexLines = [

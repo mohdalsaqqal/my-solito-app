@@ -18,7 +18,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) {
       return session
     }

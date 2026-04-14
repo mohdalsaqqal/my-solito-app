@@ -2,6 +2,7 @@ import React, { useMemo } from 'react'
 import { Image, Platform } from 'react-native'
 import {
   borderWidth,
+  boxShadowStrings,
   breakpoints,
   componentTokens,
   fontFamilies,
@@ -50,6 +51,7 @@ function OfferBannerCard({
   const offerTokens = componentTokens.storefrontHome.offers
   const sharedCtaTokens = componentTokens.storefrontHome.cta
   const cardTokens = componentTokens.card
+  const isWeb = Platform.OS === 'web'
 
   const cardMinHeight = isDesktop ? offerTokens.cardMinHeightDesktop : offerTokens.cardMinHeightMobile
   const cardPadding = isDesktop ? offerTokens.cardPaddingDesktop : offerTokens.cardPaddingMobile
@@ -76,14 +78,14 @@ function OfferBannerCard({
             style={{
               width: '100%',
               height: cardMinHeight,
-              borderRadius: cardTokens.radius.promo,
+              borderRadius: radius.md,
               overflow: 'hidden',
               borderWidth: borderWidth.thin,
               borderColor: imageDrivenBorderColor,
-              transform: [{ translateY: active ? -1 : 0 }],
-              transitionProperty: 'transform,border-color',
+              transform: [{ translateY: active ? -3 : 0 }],
+              transitionProperty: 'transform,box-shadow,border-color',
               transitionDuration: `${motionDuration.hoverScale}ms`,
-              ...({ boxShadow: 'none' } as any),
+              ...(isWeb ? ({ boxShadow: active ? boxShadowStrings.md : 'none' } as any) : null),
             }}
           >
             {/* Background image */}
@@ -114,20 +116,21 @@ function OfferBannerCard({
                 paddingTop: cardPadding,
                 paddingStart: cardPadding,
                 paddingEnd: cardPadding,
-                paddingBottom: cardPaddingBottom,
+                paddingBottom: isDesktop ? 20 : cardPaddingBottom,
                 gap: offerTokens.contentGap,
               }}
             >
-              <Box style={{ maxWidth: offerTokens.copyMaxWidth, gap: spacing['6'] }}>
+              <Box style={{ maxWidth: offerTokens.copyMaxWidth, gap: spacing.space2 }}>
                 {block.title ? (
                   <Text
                     variant='h2'
                     weight='700'
-                    numberOfLines={2}
+                    numberOfLines={1}
                     style={{
                       color: c.white,
-                      fontSize: titleFontSize,
-                      lineHeight: titleLineHeight,
+                      fontSize: isDesktop ? 20 : offerTokens.titleFontSizeMobile,
+                      fontWeight: '600',
+                      lineHeight: isDesktop ? 24 : titleLineHeight,
                       letterSpacing: offerTokens.titleTracking,
                     }}
                   >
@@ -165,7 +168,7 @@ function OfferBannerCard({
                     justifyContent: 'center',
                     gap: sharedCtaTokens.gap,
                     transitionProperty: 'background-color,transform',
-                    transitionDuration: `${motionDuration.microInteraction}ms`,
+                    transitionDuration: `${motionDuration.interactive}ms`,
                     transform: [{ translateY: active ? -1 : 0 }],
                   }}
                 >
@@ -217,24 +220,19 @@ function SectionHeader({
         alignItems: 'center',
         justifyContent: 'space-between',
         minHeight: spacing['40'],
-        gap: spacing['12'],
+        gap: spacing.space3,
       }}
     >
-      <Text variant='h2' weight='700' style={[OFFER_BANNERS_HEADING_STYLE, { color: c.textPrimary, fontFamily: fontFamilies.serif, letterSpacing: -0.3 }]}>
+      <Text variant='h2' weight='700' style={[OFFER_BANNERS_HEADING_STYLE, { color: 'hsl(0 0% 15%)', fontFamily: fontFamilies.heading, letterSpacing: 0 }]}>
         {title}
       </Text>
       {actionLabel ? (
         <ReusableButton onPress={onPressAction} variant='ghost' size='default' accessibilityRole='button' accessibilityLabel={actionLabel}>
           <Text
             variant='caption'
-            weight='700'
+            weight='400'
             style={[
-              {
-                textTransform: 'uppercase',
-                letterSpacing: 1.4,
-                textDecorationLine: 'underline',
-              },
-              { color: c.brandPrimary },
+              { color: c.inkDeep },
             ]}
             numberOfLines={1}
           >

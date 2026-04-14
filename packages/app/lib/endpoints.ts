@@ -65,6 +65,7 @@ export const endpoints = {
   adminReleases: '/api/admin/releases',
   adminRelease: (id: string) => `/api/admin/releases/${id}`,
   adminReleasePublish: (id: string) => `/api/admin/releases/${id}/publish`,
+  adminReleaseRollback: (id: string) => `/api/admin/releases/${id}/rollback`,
   adminPreviewToken: '/api/admin/preview-token',
   adminReleaseBlocks: '/api/admin/release-blocks',
   adminReleaseBlock: (id: string) => `/api/admin/release-blocks/${id}`,

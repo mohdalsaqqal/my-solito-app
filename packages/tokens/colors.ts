@@ -12,8 +12,12 @@ export const colors = {
   // ── Base surfaces — warm beauty commerce (not cold editorial) ─────────────
   background: 'hsl(12 8% 97.5%)',             // #f8f6f5 — warm off-white main bg
   backgroundSecondary: 'hsl(12 8% 95.0%)',    // #f3f0ef — warm section separator
-  surface: 'hsl(0 0% 100%)',                   // #ffffff — cards, elevated objects
+  surface: 'hsl(12 4% 99.5%)',           // #fffcfc — warm white cards, elevated objects
   surfaceMuted: 'hsl(12 8% 93.0%)',           // #efedeb — subtle surfaces
+  card: 'hsl(0 0% 100%)',
+  cardForeground: 'hsl(0 0% 0%)',
+  popover: 'hsl(0 0% 100%)',
+  popoverForeground: 'hsl(0 0% 0%)',
 
   // ── Grayscale — warm neutral (beauty-appropriate, not spreadsheet gray) ───
   gray0:  'hsl(12 8% 97%)',   // #f8f6f5 — warm base
@@ -59,16 +63,26 @@ export const colors = {
   coralPrimary: 'hsl(18 90% 55%)',    // vibrant coral — promo accents
   coralLight: 'hsl(18 85% 68%)',      // soft coral — secondary promo
   coralSubtle: 'hsl(18 70% 96%)',     // pale coral — subtle promo backgrounds
-  amberWarm: 'hsl(35 90% 55%)',       // warm amber — rating stars, highlights
+  amberWarm: 'hsl(35 85% 35%)',       // warm amber — rating stars, highlights (WCAG 4.66:1)
   amberLight: 'hsl(35 85% 65%)',      // soft amber
   amberSubtle: 'hsl(35 70% 96%)',     // pale amber
 
   // ── Logo brand red — the signature underline stroke ───────────────────────
   // Exact match: the red underline in the REAL Cosmetics logo
+  primary900: 'hsl(357 80% 18%)',
+  primary800: 'hsl(357 82% 24%)',
+  primary700: 'hsl(357 84% 30%)',
+  primary600: 'hsl(357 85% 36%)',
   brandPrimary: 'hsl(357 86% 44%)',   // #d31018 — logo red, PRIMARY brand color
+  brand: 'hsl(357 86% 44%)',
+  primary500: 'hsl(357 86% 44%)',
   brandPrimaryHover: 'hsl(357 80% 38%)', // darker on hover
   brandPrimaryPressed: 'hsl(357 75% 32%)', // pressed state
   brandPrimarySubtle: 'hsl(357 60% 96%)',  // pale tint for subtle backgrounds
+  primary400: 'hsl(357 80% 55%)',
+  primary300: 'hsl(357 70% 68%)',
+  primary200: 'hsl(357 55% 82%)',
+  primary100: 'hsl(357 60% 96%)',
   
   // ── Commerce burgundy — softer, more premium CTA color ────────────────────
   // Replaces bright red for purchase actions — feels more premium and less aggressive
@@ -105,12 +119,15 @@ export const colors = {
   // ── Borders — warm neutral ────────────────────────────────────────────────
   border: 'hsla(12 8% 80% / 0.50)',   // warm light gray border
   divider: 'hsla(12 8% 80% / 0.50)',
+  input: 'hsla(12 8% 80% / 0.50)',
 
   // ── Primary CTA — logo black "REAL" ──────────────────────────────────────
   primary: 'hsl(0 0% 0%)',            // #000000 — primary CTA background
   secondary: 'hsl(12 8% 97.5%)',      // warm off-white — secondary surfaces
   accent: 'hsl(357 86% 44%)',         // logo red — accent color
   primaryText: 'hsl(0 0% 100%)',      // white text on dark CTA
+  accentForeground: 'hsl(0 0% 100%)',
+  secondaryForeground: 'hsl(0 0% 0%)',
 
   // ── Surface hierarchy ─────────────────────────────────────────────────────
   surfaceLowest: 'hsl(0 0% 100%)',    // #ffffff — cards, innermost layer
@@ -137,6 +154,8 @@ export const colors = {
   warning: 'hsl(24 85% 40%)',         // amber — attention needed
   danger: 'hsl(357 86% 38%)',         // deep red — errors, critical
   error: 'hsl(357 86% 38%)',          // deep red
+  destructive: 'hsl(357 86% 38%)',
+  destructiveForeground: 'hsl(0 0% 100%)',
   sale: 'hsl(357 86% 38%)',           // deep red — SALE badges
   info: 'hsl(210 70% 40%)',           // blue — informational
 
@@ -145,7 +164,7 @@ export const colors = {
   black: 'hsl(0 0% 0%)',
 
   // ── Semantic intent aliases ───────────────────────────────────────────────
-  salePrice: 'hsl(357 86% 44%)',      // logo red for sale prices
+  salePrice: 'hsl(350 75% 35%)',      // commerce burgundy — darker, 8.17:1 on white
   ctaBackground: 'hsl(0 0% 0%)',      // black CTA (REAL)
   urgencyBadge: 'hsl(357 86% 44%)',   // logo red for urgency badges
 } as const
@@ -159,6 +178,10 @@ export const colorsDark = {
   backgroundSecondary: 'hsl(12 6% 13%)',
   surface: 'hsl(12 6% 13%)',
   surfaceMuted: 'hsl(12 6% 16%)',
+  card: 'hsl(12 6% 13%)',
+  cardForeground: 'hsl(0 0% 100%)',
+  popover: 'hsl(12 6% 13%)',
+  popoverForeground: 'hsl(0 0% 100%)',
 
   // ── Grayscale — dark mode ─────────────────────────────────────────────────
   gray0:  'hsl(12 6% 10%)',
@@ -207,15 +230,26 @@ export const colorsDark = {
   amberSubtle: 'hsl(35 40% 16%)',
 
   // ── Logo brand red — dark mode ────────────────────────────────────────────
+  primary900: 'hsl(357 70% 24%)',
+  primary800: 'hsl(357 74% 30%)',
+  primary700: 'hsl(357 76% 38%)',
+  primary600: 'hsl(357 78% 46%)',
   brandPrimary: 'hsl(357 80% 55%)',   // brighter red for dark mode contrast
+  brand: 'hsl(357 80% 55%)',
+  primary500: 'hsl(357 80% 55%)',
   brandPrimaryHover: 'hsl(357 75% 62%)',
   brandPrimaryPressed: 'hsl(357 70% 48%)',
   brandPrimarySubtle: 'hsl(357 40% 18%)',
+  primary400: 'hsl(357 74% 64%)',
+  primary300: 'hsl(357 68% 74%)',
+  primary200: 'hsl(357 50% 82%)',
+  primary100: 'hsl(357 40% 18%)',
 
   // ── Utility ──────────────────────────────────────────────────────────────
   stroke: 'hsla(0 0% 100% / 0.12)',
   popPink: 'hsl(357 80% 55%)',
   popBlush: 'hsl(357 40% 18%)',
+  input: 'hsla(12 6% 40% / 0.50)',
 
   // ── Figma palette — dark mode ─────────────────────────────────────────────
   primaryHome1: 'hsl(0 0% 100%)',
@@ -243,6 +277,8 @@ export const colorsDark = {
   secondary: 'hsl(12 6% 13%)',
   accent: 'hsl(357 80% 55%)',
   primaryText: 'hsl(12 6% 10%)',
+  accentForeground: 'hsl(0 0% 100%)',
+  secondaryForeground: 'hsl(0 0% 100%)',
 
   // ── Surface hierarchy — dark mode ─────────────────────────────────────────
   surfaceLowest: 'hsl(12 6% 15%)',
@@ -269,6 +305,8 @@ export const colorsDark = {
   warning: 'hsl(24 85% 62%)',
   danger: 'hsl(357 80% 62%)',
   error: 'hsl(357 80% 62%)',
+  destructive: 'hsl(357 80% 62%)',
+  destructiveForeground: 'hsl(0 0% 100%)',
   sale: 'hsl(357 80% 62%)',
   info: 'hsl(210 70% 62%)',
 

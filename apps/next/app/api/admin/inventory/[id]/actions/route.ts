@@ -5,7 +5,7 @@ import { requireAdminDomainSession } from '../../../../_lib/request-auth'
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = requireAdminDomainSession(request, 'inventory', 'full')
+    const session = await requireAdminDomainSession(request, 'inventory', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as InventoryActionInput

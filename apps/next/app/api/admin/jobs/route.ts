@@ -5,7 +5,7 @@ import { requireAdminAnyDomainSession } from '../../_lib/request-auth'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'])
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'])
     if (session instanceof Response) return session
 
     const result = await adminJobProvider.listJobs()
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'], 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as AdminJobCreateInput

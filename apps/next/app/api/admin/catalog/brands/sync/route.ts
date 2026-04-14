@@ -38,7 +38,7 @@ function deriveFromProducts(
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog', 'full')
+    const session = await requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
     const [brandsResult, productsResult] = await Promise.all([brandProvider.list(), productProvider.list()])

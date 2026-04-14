@@ -183,6 +183,7 @@ const HeroTileCard = React.memo(function HeroTileCard({
     [compactPanel, isLead, heroTokens.compactTitleMinHeight, heroTokens.titleMinHeight],
   )
   const mediaOverlayGradient = scrim.heroMedia
+  const hasImage = !!item.imageUrl
 
   return (
     <ReusableButton
@@ -209,7 +210,7 @@ const HeroTileCard = React.memo(function HeroTileCard({
           >
             {/* Image area */}
             <Box style={{ position: 'relative', height: imageHeight, overflow: 'hidden' }}>
-              {item.imageUrl ? (
+              {hasImage ? (
                 <Image
                   source={{ uri: item.imageUrl }}
                   alt={item.title}
@@ -225,20 +226,26 @@ const HeroTileCard = React.memo(function HeroTileCard({
                   style={{
                     width: '100%',
                     height: '100%',
-                    backgroundColor: c.surfaceMuted,
+                    backgroundColor: c.surface,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Text variant='caption' tone='muted'>Image unavailable</Text>
+                </Box>
+              )}
+              {hasImage && (
+                <Box
+                  style={{
+                    position: 'absolute', left: 0, right: 0, bottom: 0,
+                    height: Math.min(spacing['96'], Math.round(imageHeight * (isLead ? 0.5 : 0.42))),
+                    ...(Platform.OS === 'web'
+                      ? ({ backgroundImage: scrim.heroMedia } as any)
+                      : { backgroundColor: scrim.heroMediaNative }),
                   }}
                 />
               )}
-              <Box
-                style={{
-                  position: 'absolute', left: 0, right: 0, bottom: 0,
-                  height: Math.min(spacing['96'], Math.round(imageHeight * (isLead ? 0.5 : 0.42))),
-                  ...(Platform.OS === 'web'
-                    ? ({ backgroundImage: scrim.heroMedia } as any)
-                    : { backgroundColor: scrim.heroMediaNative }),
-                }}
-              />
-              {Platform.OS === 'web' && mediaOverlayGradient ? (
+              {hasImage && Platform.OS === 'web' && mediaOverlayGradient ? (
                 <Box
                   style={{
                     position: 'absolute', top: 0, right: 0, bottom: 0, left: 0,
@@ -255,7 +262,7 @@ const HeroTileCard = React.memo(function HeroTileCard({
                 minHeight: panelHeight,
                 maxHeight: panelHeight,
                 overflow: 'hidden',
-                backgroundColor: item.panelColor ?? c.inkBlack,
+                backgroundColor: hasImage ? (item.panelColor ?? c.inkBlack) : c.surface,
                 padding: compactPanel ? heroTokens.compactPanelPadding : heroTokens.panelPadding,
                 gap: compactPanel ? heroTokens.compactPanelGap : heroTokens.panelGap,
               }}
@@ -310,17 +317,6 @@ const HeroTileCard = React.memo(function HeroTileCard({
                       {item.badge}
                     </Text>
                   </Box>
-                  <Text
-                    variant='overline'
-                    weight='700'
-                    style={{
-                      color: theme.eyebrowText,
-                      textTransform: 'uppercase',
-                      letterSpacing: heroTokens.eyebrowTracking,
-                    }}
-                  >
-                    {item.eyebrow}
-                  </Text>
                 </Box>
               )}
 
@@ -335,6 +331,9 @@ const HeroTileCard = React.memo(function HeroTileCard({
                   lineHeight: titleLineHeight,
                   minHeight: titleMinHeight,
                   letterSpacing: heroTokens.titleTracking,
+                  textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                  textShadowOffset: { width: 0, height: 1 },
+                  textShadowRadius: 3,
                 }}
               >
                 {item.title}
@@ -346,10 +345,13 @@ const HeroTileCard = React.memo(function HeroTileCard({
                   numberOfLines={2}
                   style={{
                     color: theme.subtitleText,
-                    opacity: heroTokens.subtitleOpacity,
+                    opacity: 0.65,
                     fontSize: compactPanel ? heroTokens.compactSubtitleSize : heroTokens.subtitleSize,
                     minHeight: compactPanel ? heroTokens.compactSubtitleMinHeight : heroTokens.subtitleMinHeight,
                     lineHeight: compactPanel ? heroTokens.compactSubtitleLineHeight : heroTokens.subtitleLineHeight,
+                    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 3,
                   }}
                 >
                   {item.subtitle}

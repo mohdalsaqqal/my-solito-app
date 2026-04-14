@@ -1,4 +1,4 @@
-import { NewsletterLoyaltyCta, TopBrandsGrid, TestimonialsBlock } from '@real/ui/components'
+import { TopBrandsGrid, TestimonialsBlock } from '@real/ui/components'
 import { resolveBlockString, resolvePairString, mapBrandItems } from '../../../sections/blocks/block-types'
 import type { HomeUgcItem } from '@real/ui/components/home/types'
 import type { IndependentRenderSlot } from '../home-types'
@@ -12,14 +12,9 @@ type Props = {
 export function renderMiscBlock({ slot, isDesktop, onNavigate }: Props) {
   const { block } = slot
 
+  // Newsletter CTA is handled by footer only — skip mid-page duplicate
   if (block.type === 'newsletter_cta') {
-    return (
-      <NewsletterLoyaltyCta
-        title={block.titleText ?? resolvePairString(block.locale, block.titleEn, block.titleAr, '')}
-        subtitle={block.subtitleText ?? resolvePairString(block.locale, block.subtitleEn, block.subtitleAr)}
-        ctaLabel={block.ctaText ?? resolvePairString(block.locale, block.ctaLabelEn, block.ctaLabelAr, '')}
-      />
-    )
+    return null
   }
 
   if (block.type === 'top_brands') {

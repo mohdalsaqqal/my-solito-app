@@ -32,7 +32,7 @@ export const UgcGallery = React.memo(function UgcGallery({
   const profile = useBreakpoint()
   const desktop = profile.breakpoint === 'desktop'
   const columns = desktop ? 5 : 2
-  const gap = spacing['16']
+  const gap = spacing.space4
   const viewport = profile.containerWidth
   const tileWidth = Math.max(spacing['96'], (viewport - gap * (columns - 1)) / columns)
   const showLoading = state === 'loading'
@@ -47,7 +47,7 @@ export const UgcGallery = React.memo(function UgcGallery({
 
   if (state === 'error') {
     return (
-      <Box style={{ gap: spacing['16'] }}>
+      <Box style={{ gap: spacing.space4 }}>
         <Text variant='h2' style={{ fontFamily: fontFamilies.serif, letterSpacing: -0.3 }}>{title}</Text>
         <Box
           style={{
@@ -55,8 +55,8 @@ export const UgcGallery = React.memo(function UgcGallery({
             borderColor: c.border,
             borderRadius: radius.xs,
             backgroundColor: c.surface,
-            padding: spacing['16'],
-            gap: spacing['8'],
+            padding: spacing.space4,
+            gap: spacing.space2,
           }}
         >
           <Text tone='danger' variant='bodySm'>
@@ -74,7 +74,7 @@ export const UgcGallery = React.memo(function UgcGallery({
 
   if (state === 'empty' || items.length === 0) {
     return (
-      <Box style={{ gap: spacing['16'] }}>
+      <Box style={{ gap: spacing.space4 }}>
         <Text variant='h2' style={{ fontFamily: fontFamilies.serif, letterSpacing: -0.3 }}>{title}</Text>
         <Text tone='muted' variant='bodySm'>
           No community looks available right now.
@@ -84,7 +84,7 @@ export const UgcGallery = React.memo(function UgcGallery({
   }
 
   return (
-    <Box data-ect-node="UgcGallery" role="region" aria-label={title} style={{ gap: spacing['16'] }}>
+    <Box data-ect-node="UgcGallery" role="region" aria-label={title} style={{ gap: spacing.space4 }}>
       <Text
         variant='h2'
         {...(Platform.OS === 'web' ? { accessibilityRole: 'heading' as any, 'aria-level': 2 } : {})}
@@ -129,8 +129,8 @@ export const UgcGallery = React.memo(function UgcGallery({
                   left: 0,
                   right: 0,
                   bottom: 0,
-                  paddingHorizontal: spacing['8'],
-                  paddingVertical: spacing['8'],
+                  paddingHorizontal: spacing.space2,
+                  paddingVertical: spacing.space2,
                   backgroundColor: c.black,
                 }}
               >

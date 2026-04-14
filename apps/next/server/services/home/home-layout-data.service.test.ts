@@ -1,10 +1,17 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { getHomeLayoutData } from './home-layout-data.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+
+const testContext: StorefrontServiceContext = {
+  requestUrl: 'http://internal.local/api/cms/home',
+  locale: 'en',
+  storeId: 'default',
+}
 
 test('getHomeLayoutData - happy path returns expected shape', async () => {
   try {
-    const result = await getHomeLayoutData()
+    const result = await getHomeLayoutData(testContext)
     assert.ok(typeof result === 'object', 'returns an object')
     assert.ok('products' in result, 'has products')
     assert.ok('cmsHome' in result, 'has cmsHome')
@@ -25,7 +32,7 @@ test('getHomeLayoutData - failure path surfaces a typed error', async () => {
   try {
     // Calling with no mock infrastructure should still return a shaped result
     // or throw a typed error
-    const result = await getHomeLayoutData()
+    const result = await getHomeLayoutData(testContext)
     assert.ok('error' in result, 'returns error field on failure')
     assert.ok('renderSlots' in result, 'still provides renderSlots shape')
   }

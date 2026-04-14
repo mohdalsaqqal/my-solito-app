@@ -1,6 +1,6 @@
 import { Linking, Platform } from 'react-native'
 import { borderWidth, layout, radius, spacing, typography } from '@real/tokens'
-import { Box, Divider, FooterNewsletter, FooterSocialLinks, Icon, PaymentBadges, Text } from '@real/ui'
+import { Box, Divider, FooterSocialLinks, Icon, PaymentBadges, Text } from '@real/ui'
 import { Button as ReusableButton } from '@real/ui/reusables/button'
 import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 import { Direction, FooterColumn, LocaleCode, ShellContent, SocialLink } from './types'
@@ -43,26 +43,11 @@ export function Footer({
     return null
   }
 
-  const resolvedTitle =
-    newsletterTitle ?? textForLocale(shellContent?.footer?.newsletterTitle, locale, 'Get launch alerts and member-only deals')
-  const resolvedSubtitle =
-    newsletterSubtitle ??
-    textForLocale(
-      shellContent?.footer?.newsletterSubtitle,
-      locale,
-      'New arrivals, flash offers, and curated beauty picks delivered first.',
-    )
   const legal = textForLocale(
     shellContent?.footer?.legalNotice,
     locale,
     'REAL Cosmetics. All rights reserved.',
   )
-
-  const firstNamePlaceholder = locale === 'ar' ? 'الاسم الأول' : 'First name'
-  const emailPlaceholder = locale === 'ar' ? 'البريد الإلكتروني' : 'Email address'
-  const submitLabel = locale === 'ar' ? 'اشترك' : 'Subscribe'
-  const submitSuccessMessage = locale === 'ar' ? 'تم الاشتراك بنجاح.' : 'Subscribed successfully.'
-  const submitErrorMessage = locale === 'ar' ? 'تعذر الاشتراك حالياً.' : 'Unable to subscribe right now.'
 
   const openSocial = (id: string) => {
     const found = socialLinks.find((item) => item.id === id)
@@ -202,27 +187,7 @@ export function Footer({
             ))}
           </Box>
 
-          <Box style={{ width: 360, gap: spacing['20'] }}>
-            <Box
-              style={{
-                borderWidth: borderWidth.thin,
-                borderColor: c.divider,
-                borderRadius: radius.lg,
-                backgroundColor: c.surfaceMuted,
-                padding: spacing['20'],
-              }}
-            >
-              <FooterNewsletter
-                title={resolvedTitle}
-                subtitle={resolvedSubtitle}
-                firstNamePlaceholder={firstNamePlaceholder}
-                emailPlaceholder={emailPlaceholder}
-                submitLabel={submitLabel}
-                successMessage={submitSuccessMessage}
-                errorMessage={submitErrorMessage}
-              />
-            </Box>
-
+          <Box style={{ flex: 1, gap: spacing['20'] }}>
             <Box
               style={{
                 flexDirection: 'row',

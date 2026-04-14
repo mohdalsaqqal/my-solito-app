@@ -2,6 +2,8 @@ export const AUTH_SESSION_COOKIE = 'rc_auth_session'
 export const AUTH_SESSION_FALLBACK_SECRET = 'dev-auth-secret-change-me'
 export const AUTH_SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 export const TRUSTED_REQUEST_BYPASS_HEADER = 'x-rc-trusted-request'
+export const BETTER_AUTH_FALLBACK_URL = 'http://localhost:3000'
+export const MINIMUM_AUTH_SECRET_LENGTH = 32
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
 
@@ -51,8 +53,72 @@ export function isAuthSessionConfigValid() {
   return getAuthSessionSecret() !== null
 }
 
+export function getBetterAuthSecret(): string | null {
+  const configured = process.env.BETTER_AUTH_SECRET?.trim()
+  if (configured) {
+    if (isReleaseLikeEnvironment() && !isAuthSecretStrongEnough(configured)) {
+      return null
+    }
+
+    return configured
+  }
+
+  if (isReleaseLikeEnvironment()) {
+    return null
+  }
+
+  const fallback = getAuthSessionSecret()
+  if (!fallback) {
+    return null
+  }
+
+  return fallback
+}
+
+export function isBetterAuthConfigValid() {
+  return getBetterAuthSecret() !== null
+}
+
+export function isAuthSecretStrongEnough(secret: string | null | undefined) {
+  if (!secret) {
+    return false
+  }
+
+  return secret.trim().length >= MINIMUM_AUTH_SECRET_LENGTH
+}
+
+export function getBetterAuthBaseUrl() {
+  const configured =
+    process.env.BETTER_AUTH_URL?.trim() ||
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.APP_BASE_URL?.trim()
+
+  if (configured) {
+    return configured
+  }
+
+  return BETTER_AUTH_FALLBACK_URL
+}
+
+export function getBetterAuthTrustedOrigins() {
+  const configured = process.env.BETTER_AUTH_TRUSTED_ORIGINS?.trim()
+  if (!configured) {
+    return [getBetterAuthBaseUrl()]
+  }
+
+  const origins = configured
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+
+  if (!origins.includes(getBetterAuthBaseUrl())) {
+    origins.push(getBetterAuthBaseUrl())
+  }
+
+  return origins
+}
+
 export function buildCookieAttributes(maxAgeSeconds: number) {
   const secure = isSecureCookieRequired() ? '; Secure' : ''
   return `Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${maxAgeSeconds}`
 }
-

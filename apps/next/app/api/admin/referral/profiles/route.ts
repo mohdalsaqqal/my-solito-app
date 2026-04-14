@@ -12,7 +12,7 @@ type CreateProfileBody = {
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'read')
+    const session = await requireAdminDomainSession(request, 'marketing', 'read')
     if (session instanceof Response) return session
 
     const profiles = await listReferralProfiles()
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => null)) ?? null) as CreateProfileBody | null

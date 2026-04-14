@@ -1,10 +1,17 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { getAccountPageInitialData } from './account-page.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+
+const testContext: StorefrontServiceContext = {
+  requestUrl: 'http://internal.local/api/cms/home',
+  locale: 'en',
+  storeId: 'default',
+}
 
 test('account-page - happy path returns expected shape', async () => {
   try {
-    const result = await getAccountPageInitialData()
+    const result = await getAccountPageInitialData(testContext)
     assert.ok(result, 'should return page data')
   } catch {
     assert.ok(true, 'mock adapter may not be configured')
@@ -13,7 +20,7 @@ test('account-page - happy path returns expected shape', async () => {
 
 test('account-page - failure path handles missing session', async () => {
   try {
-    const result = await getAccountPageInitialData()
+    const result = await getAccountPageInitialData(testContext)
     assert.ok(result, 'may return partial data')
   } catch {
     assert.ok(true, 'failure path catches expected errors')

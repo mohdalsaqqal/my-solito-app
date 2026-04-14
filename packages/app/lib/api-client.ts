@@ -887,6 +887,15 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({}),
         }),
+      rollbackRelease: (id: string) =>
+        request<{ rolledBackToReleaseId: string; environment: 'staging' | 'production'; pageVersionId?: string }>(
+          endpoints.adminReleaseRollback(id),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({}),
+          },
+        ),
       getPreviewToken: (releaseId: string, storeId: string) =>
         request<{ token: string }>(
           `${endpoints.adminPreviewToken}?releaseId=${encodeURIComponent(releaseId)}&storeId=${encodeURIComponent(storeId)}`

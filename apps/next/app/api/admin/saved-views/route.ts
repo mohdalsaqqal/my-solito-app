@@ -14,7 +14,7 @@ type SavedViewPayload = {
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'])
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'])
     if (session instanceof Response) return session
 
     const entity = new URL(request.url).searchParams.get('entity')
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace'], 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as SavedViewPayload
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace'], 'full')
     if (session instanceof Response) return session
 
     const id = new URL(request.url).searchParams.get('id')?.trim()

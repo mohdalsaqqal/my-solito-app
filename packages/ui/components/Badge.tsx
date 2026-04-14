@@ -1,6 +1,6 @@
 import { ReactNode } from 'react'
 import { ViewProps } from 'react-native'
-import { borderWidth, colors, opacity, radius, spacing } from '@real/tokens'
+import { borderWidth, letterSpacing, opacity, radius, spacing } from '@real/tokens'
 import { Text } from '../primitives/Text'
 import { Badge as ReusableBadge } from '../reusables/badge'
 import { useThemeColors } from '../responsive'
@@ -54,15 +54,14 @@ export function Badge({ children, tone = 'neutral', size = 'sm', disabled, style
   const minHeight = size === 'md' ? spacing['32'] : spacing['24']
   const paddingHorizontal = size === 'md' ? spacing['12'] : spacing.sm
 
-  // Distinctive border radius + padding by tone for visual differentiation
   const borderRadius =
     tone === 'accent'
-      ? radius.sm  // Sharp square for urgency/sale badges
+      ? radius.sm
       : tone === 'ink'
-        ? radius.md  // Rounded square for brand/bestseller
+        ? radius.md
         : tone === 'warning'
-          ? radius.sm  // Sharp square for warnings
-          : radius.full  // Pill for neutral/outline/premium
+          ? radius.sm
+          : radius.full
   
   const extraPaddingVertical = tone === 'accent' ? spacing['4'] : spacing.none
 
@@ -91,14 +90,17 @@ export function Badge({ children, tone = 'neutral', size = 'sm', disabled, style
           borderColor,
           alignSelf: 'flex-start',
           opacity: disabled ? opacity.medium : 1,
-          // Slightly bolder presence for accent badges
-          ...(tone === 'accent' ? { shadowOpacity: 0.15, shadowRadius: 2, elevation: 2 } : {}),
         },
         style,
       ]}
       {...props}
     >
-      <Text variant={size === 'md' ? 'label' : 'caption'} tone={textTone} weight='800' style={{ textTransform: 'uppercase', letterSpacing: 0.3 }}>
+      <Text
+        variant={size === 'md' ? 'label' : 'caption'}
+        tone={textTone}
+        weight='800'
+        style={{ textTransform: 'uppercase', letterSpacing: letterSpacing.caps }}
+      >
         {children}
       </Text>
     </ReusableBadge>

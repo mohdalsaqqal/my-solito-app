@@ -1,8 +1,10 @@
+import { ensureRequestConnection } from '../_lib/route-connection'
 import { fail, ok } from '../_lib/response'
 import { listProductsForRequest } from '../../../server/services/catalog/product-list.service'
 
 export async function GET(request: Request): Promise<Response> {
   try {
+    await ensureRequestConnection()
     const result = await listProductsForRequest(request)
     if (result.ok) {
       return ok(result.data)

@@ -393,8 +393,14 @@ export function createMySystemInventoryAdapter(client: MySystemClient): Inventor
 | `USE_NETWORKS=false` | Use Networks payment instead of mock | `true` (mock) |
 | `USE_TRANSLATION_MOCK=true` | Use mock translation instead of Crowdin API | `false` (Crowdin) |
 | `STRICT_PROVIDER_READINESS=true` | Fail fast when release-ready provider domains remain mock-backed in staging/production | `false` |
-| `REQUIRE_PRODUCTION_AUTH=true` | Require explicit `AUTH_SESSION_SECRET` in release-like environments | `true` |
+| `REQUIRE_PRODUCTION_AUTH=true` | Require explicit `BETTER_AUTH_SECRET` in release-like environments | `true` |
 | `AUTH_COOKIE_SECURE=true` | Force `Secure` auth cookies (recommended for all non-local deployments) | `true` |
+
+### Better Auth Operator Notes
+
+- `BETTER_AUTH_SECRET` is required in staging/production and should be at least 32 characters of high-entropy random data
+- `AUTH_SESSION_SECRET` remains relevant for legacy cutover compatibility only; do not rely on it as the production Better Auth secret
+- Set `BETTER_AUTH_URL` to the canonical app origin and `BETTER_AUTH_TRUSTED_ORIGINS` when multiple trusted origins are expected
 
 ### Pattern for New Switches
 

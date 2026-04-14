@@ -261,9 +261,9 @@ export const CartDrawer = React.memo(function CartDrawer({
         {/* Header */}
         <Box
           style={{
-            paddingHorizontal: spacing['12'],
-            paddingTop: spacing['4'],
-            paddingBottom: spacing['3'],
+            paddingHorizontal: spacing.space4,
+            paddingTop: spacing.space2,
+            paddingBottom: spacing.space3,
             borderBottomWidth: borderWidth.thin,
             borderBottomColor: c.border,
             backgroundColor: c.surface,
@@ -278,9 +278,9 @@ export const CartDrawer = React.memo(function CartDrawer({
                 tone='ghost'
               />
             </Box>
-            <Text variant='title' size={15} weight='700'>
+            <Text variant='title' size={16} weight='700'>
               Bag
-              <Text variant='caption' tone='muted' style={{ letterSpacing: 0.2 }}>
+              <Text variant='caption' tone='muted'>
                 {' '}
                 ({totalQuantity} item{totalQuantity === 1 ? '' : 's'})
               </Text>
@@ -293,8 +293,8 @@ export const CartDrawer = React.memo(function CartDrawer({
         {items.length > 0 ? (
           <Box
             style={{
-              paddingHorizontal: spacing['16'],
-              paddingVertical: spacing['6'],
+              paddingHorizontal: spacing.space4,
+              paddingVertical: spacing.space2,
               borderBottomWidth: borderWidth.thin,
               borderBottomColor: c.border,
               backgroundColor: c.surface,
@@ -302,10 +302,10 @@ export const CartDrawer = React.memo(function CartDrawer({
           >
             <Box
               style={{
-                paddingHorizontal: spacing['4'],
-                paddingVertical: spacing['2'],
+                paddingHorizontal: spacing.space1,
+                paddingVertical: spacing.space1,
                 backgroundColor: c.surface,
-                gap: spacing['4'],
+                gap: spacing.space1,
               }}
             >
               <Box
@@ -313,10 +313,10 @@ export const CartDrawer = React.memo(function CartDrawer({
                   flexDirection: 'row',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: spacing['8'],
+                  gap: spacing.space2,
                 }}
               >
-                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['6'], flex: 1 }}>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.space2, flex: 1 }}>
                   <Icon name='shipping' size={14} color={c.textSecondary} />
                   <Text variant='bodySm' tone='muted' weight='500' numberOfLines={1} style={{ flex: 1 }}>
                     {amountToFreeDelivery > 0
@@ -336,7 +336,7 @@ export const CartDrawer = React.memo(function CartDrawer({
                     style={{
                       minHeight: spacing['24'],
                       borderRadius: radius.full,
-                      paddingHorizontal: spacing['8'],
+                      paddingHorizontal: spacing.space2,
                       backgroundColor: c.surfaceMuted,
                       borderWidth: borderWidth.thin,
                       borderColor: c.border,
@@ -372,10 +372,10 @@ export const CartDrawer = React.memo(function CartDrawer({
         {/* Scrollable Content */}
         <ScrollView
           style={{ flex: 1, backgroundColor: c.surface }}
-          contentContainerStyle={{ padding: spacing['12'], paddingBottom: spacing['16'] }}
+          contentContainerStyle={{ padding: spacing.space3, paddingBottom: spacing.space4 }}
         >
           {loading ? (
-            <Box style={{ gap: spacing['16'] }}>
+            <Box style={{ gap: spacing.space4 }}>
               <Card tone='subtle' radiusKey='md' style={{ minHeight: spacing.xxl * 2 }} />
               <Card tone='subtle' radiusKey='md' style={{ minHeight: spacing.xxl * 2 }} />
             </Box>
@@ -400,14 +400,14 @@ export const CartDrawer = React.memo(function CartDrawer({
               </Button>
             </Box>
           ) : (
-            <Box style={{ gap: spacing['10'] }}>
+            <Box style={{ gap: spacing.space3 }}>
               {items.map((item) => (
                 <Box
                   key={item.id}
                   style={{
                     flexDirection: 'row',
-                    gap: spacing['8'],
-                    paddingVertical: spacing['8'],
+                    gap: spacing.space2,
+                    paddingVertical: spacing.space2,
                     borderRadius: radius.sm,
                     backgroundColor: c.surface,
                     borderBottomWidth: borderWidth.thin,
@@ -436,8 +436,8 @@ export const CartDrawer = React.memo(function CartDrawer({
                   </Box>
 
                   {/* Details */}
-                  <Box style={{ flex: 1, justifyContent: 'space-between', gap: spacing['4'] }}>
-                    <Box style={{ gap: spacing['2'] }}>
+                  <Box style={{ flex: 1, justifyContent: 'space-between', gap: spacing.space1 }}>
+                    <Box style={{ gap: spacing.space1 }}>
                       {item.brand ? (
                         <Text
                           variant='caption'
@@ -455,10 +455,10 @@ export const CartDrawer = React.memo(function CartDrawer({
                     </Box>
 
                     {/* Quantity & Price Row */}
-                    <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing['8'] }}>
+                    <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: spacing.space2 }}>
 
                       {/* Pill Quantity Selector */}
-                      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['2'] }}>
+                      <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.space1 }}>
                         <Box
                           style={{
                             flexDirection: 'row',
@@ -544,17 +544,17 @@ export const CartDrawer = React.memo(function CartDrawer({
         {items.length > 0 && !loading && !error && (
           <Box
             style={{
-              paddingHorizontal: spacing['12'],
-              paddingTop: spacing['8'],
-              paddingBottom: spacing['10'],
+              paddingHorizontal: spacing.space3,
+              paddingTop: spacing.space2,
+              paddingBottom: spacing.space3,
               backgroundColor: c.surface,
               borderTopWidth: borderWidth.thin,
               borderTopColor: c.border,
             }}
           >
-            <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing['8'] }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.space2 }}>
               <Text variant='bodySm' tone='muted'>Estimated Total</Text>
-              <Text variant='title' size={18} weight='700'>{formatCurrency(subtotal, currency)}</Text>
+              <Text variant='title' size={16} weight='700'>{formatCurrency(subtotal, currency)}</Text>
             </Box>
             <Button
               variant='solid'
@@ -567,7 +567,7 @@ export const CartDrawer = React.memo(function CartDrawer({
             >
               Checkout
             </Button>
-            <Box style={{ alignItems: 'center', marginTop: spacing['6'] }}>
+            <Box style={{ alignItems: 'center', marginTop: spacing.space2 }}>
               <ReusableButton
                 onPress={() => {
                   onViewCart()

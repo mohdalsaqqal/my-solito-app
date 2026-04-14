@@ -1,8 +1,11 @@
 import { fail, ok } from '../../_lib/response'
+import { ensureRequestConnection } from '../../_lib/route-connection'
 import { getHomeCmsResponseData } from '../../../../server/services/home/home-cms.service'
 
 export async function GET(request: Request) {
   try {
+    await ensureRequestConnection()
+
     const { payload, preview } = await getHomeCmsResponseData(request)
     const response = ok(payload)
     if (preview.valid) {

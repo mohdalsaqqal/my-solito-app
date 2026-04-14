@@ -8,7 +8,7 @@ import { fail, ok } from '../../../../_lib/response'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog')
+    const session = await requireAdminDomainSession(request, 'catalog')
     if (session instanceof Response) return session
 
     const state = await readAdminCatalogColumnsState()
@@ -29,7 +29,7 @@ type UpdatePayload = {
 
 export async function PUT(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog', 'full')
+    const session = await requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as UpdatePayload

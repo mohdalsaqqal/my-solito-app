@@ -105,13 +105,13 @@ const textVariantStyles: Record<TextVariant, ResolvedVariantStyle> = {
   },
   caption: {
     fontSize: typography.caption,
-    lineHeight: Math.round(typography.caption * lineHeights.relaxed),
+    lineHeight: Math.round(typography.caption * lineHeights.normal),
     fontWeight: fontWeights.regular,
     letterSpacing: letterSpacing.normal,
   },
   label: {
     fontSize: typography.label,
-    lineHeight: Math.round(typography.label * lineHeights.relaxed),
+    lineHeight: Math.round(typography.label * lineHeights.normal),
     fontWeight: fontWeights.semibold,
     letterSpacing: letterSpacing.caps,
   },

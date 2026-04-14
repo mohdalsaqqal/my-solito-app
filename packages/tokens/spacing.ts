@@ -1,6 +1,23 @@
 export const spacing = {
-  // Hybrid scale
+  // Canonical 4px grid
   none: 0,
+  space1: 4,
+  space2: 8,
+  space3: 12,
+  space4: 16,
+  space5: 20,
+  space6: 24,
+  space7: 28,
+  space8: 32,
+  space10: 40,
+  space12: 48,
+  space14: 56,
+  space16: 64,
+  space20: 80,
+  space24: 96,
+  space32: 128,
+
+  // Existing numeric aliases kept for compatibility
   '1': 4,
   '2': 8,
   '3': 12,
@@ -21,7 +38,7 @@ export const spacing = {
   '96': 96,
   '128': 128,
 
-  // Codex 8px scale aliases
+  // 8px scale aliases retained for existing layout code
   s1: 8,
   s2: 16,
   s3: 24,
@@ -32,7 +49,7 @@ export const spacing = {
   s12: 96,
   s16: 128,
 
-  // Semantic aliases (compatibility-safe)
+  // Semantic aliases
   hairline: 2,
   xxs: 4,
   xs: 4,

@@ -1,7 +1,8 @@
 import { Fragment, useCallback, useMemo } from 'react'
-import { componentTokens } from '@real/tokens'
+import { componentTokens, spacing } from '@real/tokens'
 import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
 import { Box } from '@real/ui/primitives'
+import { RevealOnScroll } from '@real/ui/components'
 import { AnnouncementTicker } from '@real/ui/components'
 import { resolveBlockString } from '../../sections/blocks/block-types'
 import { buildHomeLayout } from './home-layout-engine'
@@ -173,6 +174,28 @@ function resolveHomeRenderer(p: DispatchProps) {
   return null
 }
 
+type HomeBlockType = NonNullable<Props['blocks'][number]['props']>['type']
+
+function shouldSkipReveal(type: HomeBlockType): boolean {
+  // Hero and promo ticker are always visible — no scroll reveal
+  return type === 'hero_carousel' || type === 'hero' || type === 'promo_strip'
+}
+
+function getSectionGap(currentType: HomeBlockType, nextType?: HomeBlockType): number {
+  // After hero → tight (category strip feels connected)
+  if (currentType === 'hero_carousel' && nextType === 'category_shortcuts') return spacing.space4
+  // After category → standard
+  if (currentType === 'category_shortcuts') return spacing.space8
+  // Before/after flash deals → generous
+  if (currentType === 'flash_sale' || nextType === 'flash_sale') return spacing.space10
+  // Before newsletter → extra generous
+  if (nextType === 'newsletter_cta') return spacing.space16
+  // Before editorial → breathing room
+  if (nextType === 'editorial_hotspot') return spacing.space12
+  // Default
+  return spacing.space8
+}
+
 export function HomeBlocksRenderer({
   blocks,
   loading,
@@ -196,6 +219,20 @@ export function HomeBlocksRenderer({
     () => buildHomeLayout(blocks.map((b) => b.props), profile),
     [blocks, profile],
   )
+
+  // Build a flat list of block types for gap calculation
+  const blockTypes = useMemo(() => {
+    const types: HomeBlockType[] = []
+    slots.forEach((slot) => {
+      if (slot.kind === 'paired') {
+        types.push(slot.strip.type, slot.hero.type)
+      } else {
+        types.push(slot.block.type)
+      }
+    })
+    return types
+  }, [slots])
+
   const c = useThemeColors()
 
   const dispatchHomeRenderer = useCallback(
@@ -205,23 +242,94 @@ export function HomeBlocksRenderer({
 
   return (
     <Box style={{ width: '100%', backgroundColor: c.background }}>
-      {slots.map((slot, index) => {
-        if (slot.kind === 'paired') {
-          const stripSlot: IndependentRenderSlot = {
-            kind: 'independent',
-            block: slot.strip,
-            profile,
-            index: slot.stripIndex,
-          }
-          const heroSlot: IndependentRenderSlot = {
-            kind: 'independent',
-            block: slot.hero,
-            profile,
-            index: slot.heroIndex,
+      {(() => {
+        let absIndex = 0
+        let revealIndex = 0
+        return slots.map((slot) => {
+          if (slot.kind === 'paired') {
+            const stripSlot: IndependentRenderSlot = {
+              kind: 'independent',
+              block: slot.strip,
+              profile,
+              index: slot.stripIndex,
+            }
+            const heroSlot: IndependentRenderSlot = {
+              kind: 'independent',
+              block: slot.hero,
+              profile,
+              index: slot.heroIndex,
+            }
+
+            const currentStripType = slot.strip.type
+            const stripGap = absIndex === 0 ? 0 : getSectionGap(blockTypes[absIndex - 1], currentStripType)
+
+            const stripNode = dispatchHomeRenderer({
+              slot: stripSlot,
+              loading,
+              error,
+              tickerSpeedMs,
+              railAutoplayMs,
+              isDesktop,
+              brandAutoplayMs,
+              onReload,
+              onNavigate,
+              onSelectProduct,
+              onAddToCart,
+              onAddAllToCart,
+            })
+            absIndex++
+
+            const currentHeroType = slot.hero.type
+            const heroGap = absIndex === 0 ? 0 : getSectionGap(blockTypes[absIndex - 1], currentHeroType)
+
+            const heroNode = dispatchHomeRenderer({
+              slot: heroSlot,
+              loading,
+              error,
+              tickerSpeedMs,
+              railAutoplayMs,
+              isDesktop,
+              brandAutoplayMs,
+              onReload,
+              onNavigate,
+              onSelectProduct,
+              onAddToCart,
+              onAddAllToCart,
+            })
+            absIndex++
+
+            if (!stripNode && !heroNode) return null
+
+            // Hero never reveals; strip reveals with stagger
+            const stripRevealDelay = shouldSkipReveal(currentStripType) ? 0 : revealIndex * 40
+            const heroRevealDelay = 0 // hero always visible
+            if (!shouldSkipReveal(currentStripType)) revealIndex++
+
+            const wrappedStrip = shouldSkipReveal(currentStripType)
+              ? stripNode
+              : <RevealOnScroll delayMs={stripRevealDelay} liftY={12}>{stripNode}</RevealOnScroll>
+            const wrappedHero = shouldSkipReveal(currentHeroType)
+              ? heroNode
+              : <RevealOnScroll delayMs={heroRevealDelay} liftY={12}>{heroNode}</RevealOnScroll>
+
+            return (
+              <Fragment key={`paired-${slot.stripIndex}-${slot.heroIndex}`}>
+                <Box style={{ marginTop: stripGap }}>
+                  {wrappedStrip}
+                  <Box style={{ marginTop: heroGap }}>
+                    {wrappedHero}
+                  </Box>
+                </Box>
+              </Fragment>
+            )
           }
 
-          const stripNode = dispatchHomeRenderer({
-            slot: stripSlot,
+          const currentType = slot.block.type
+          const gap = absIndex === 0 ? 0 : getSectionGap(blockTypes[absIndex - 1], currentType)
+          absIndex++
+
+          const node = dispatchHomeRenderer({
+            slot,
             loading,
             error,
             tickerSpeedMs,
@@ -234,58 +342,25 @@ export function HomeBlocksRenderer({
             onAddToCart,
             onAddAllToCart,
           })
-          const heroNode = dispatchHomeRenderer({
-            slot: heroSlot,
-            loading,
-            error,
-            tickerSpeedMs,
-            railAutoplayMs,
-            isDesktop,
-            brandAutoplayMs,
-            onReload,
-            onNavigate,
-            onSelectProduct,
-            onAddToCart,
-            onAddAllToCart,
-          })
 
-          if (!stripNode && !heroNode) return null
+          if (!node) return null
+
+          const revealDelay = shouldSkipReveal(currentType) ? 0 : revealIndex * 40
+          if (!shouldSkipReveal(currentType)) revealIndex++
+
+          const wrappedNode = shouldSkipReveal(currentType)
+            ? node
+            : <RevealOnScroll delayMs={revealDelay} liftY={12}>{node}</RevealOnScroll>
 
           return (
-            <Fragment key={`paired-${slot.stripIndex}-${slot.heroIndex}`}>
-              <Box style={{ marginTop: index === 0 ? 0 : layoutTokens.rootGap }}>
-                {stripNode}
-                {heroNode}
+            <Fragment key={`slot-${slot.index}`}>
+              <Box style={{ marginTop: gap }}>
+                {wrappedNode}
               </Box>
             </Fragment>
           )
-        }
-
-        const node = dispatchHomeRenderer({
-          slot,
-          loading,
-          error,
-          tickerSpeedMs,
-          railAutoplayMs,
-          isDesktop,
-          brandAutoplayMs,
-          onReload,
-          onNavigate,
-          onSelectProduct,
-          onAddToCart,
-          onAddAllToCart,
         })
-
-        if (!node) return null
-
-        return (
-          <Fragment key={`slot-${slot.index}`}>
-            <Box style={{ marginTop: index === 0 ? 0 : layoutTokens.rootGap }}>
-              {node}
-            </Box>
-          </Fragment>
-        )
-      })}
+      })()}
     </Box>
   )
 }

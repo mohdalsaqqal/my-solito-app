@@ -9,8 +9,7 @@ import { shadows } from './shadows'
 import { elevation } from './elevation'
 import { typography, fontFamilies, fontWeights, lineHeights } from './typography'
 
-// ── Radius ────────────────────────────────────────────────────────────────────
-
+// Radius
 test('radius scale matches NiceOne rounded system', () => {
   assert.equal(radius.none, 0)
   assert.equal(radius.xs, 2)
@@ -22,8 +21,7 @@ test('radius scale matches NiceOne rounded system', () => {
   assert.equal(radius.full, 9999)
 })
 
-// ── Shadows ───────────────────────────────────────────────────────────────────
-
+// Shadows
 test('shadows are simplified to 4-level + card system', () => {
   assert.ok('xs' in shadows, 'xs missing')
   assert.ok('sm' in shadows, 'sm missing')
@@ -42,8 +40,7 @@ test('card shadow is omnidirectional (offset 0,0)', () => {
   assert.equal(shadows.card.shadowRadius, 5)
 })
 
-// ── Elevation (CSS strings) ───────────────────────────────────────────────────
-
+// Elevation
 test('elevation simplified to 4-level + card + drawer tokens', () => {
   assert.ok('xs' in elevation, 'xs missing')
   assert.ok('sm' in elevation, 'sm missing')
@@ -60,37 +57,44 @@ test('elevation card is the NiceOne diffuse glow string', () => {
   assert.equal(elevation.card, '0 0 5px rgba(0,0,6,0.14)')
 })
 
-// ── Type Scale ────────────────────────────────────────────────────────────────
-
-test('type scale is expanded to 10–20px', () => {
+// Type Scale
+test('type scale exposes semantic display, heading, body, and small tiers', () => {
+  assert.equal(typography.display2xl, 48)
+  assert.equal(typography.displayXl, 36)
+  assert.equal(typography.displayLg, 28)
+  assert.equal(typography.headingLg, 22)
+  assert.equal(typography.bodyMd, 14)
+  assert.equal(typography.bodySm, 12)
+  assert.equal(typography.small, 11)
   assert.equal(typography.h1, 20)
   assert.equal(typography.h2, 18)
   assert.equal(typography.h3, 16)
   assert.equal(typography.h4, 14)
   assert.equal(typography.body1, 14)
   assert.equal(typography.price, 16)
-  assert.equal(typography.display, 20)
+  assert.equal(typography.display, 48)
   assert.equal(typography.overline, 10)
 })
 
-test('font weights include light (300)', () => {
+test('font weights include extrabold and light', () => {
   assert.equal(fontWeights.light, '300')
   assert.equal(fontWeights.regular, '400')
   assert.equal(fontWeights.medium, '500')
   assert.equal(fontWeights.bold, '700')
+  assert.equal(fontWeights.extrabold, '800')
 })
 
-test('line heights match expanded scale', () => {
+test('line heights match semantic scale', () => {
+  assert.equal(lineHeights.display2xl, 56)
+  assert.equal(lineHeights.headingLg, 30)
+  assert.equal(lineHeights.bodyMd, 22)
   assert.equal(lineHeights.h1, 28)
-  assert.equal(lineHeights.h2, 26)
-  assert.equal(lineHeights.body1, 22)
 })
 
-// ── Font Families ─────────────────────────────────────────────────────────────
-
-test('sans font family uses DM Sans', () => {
-  assert.ok(fontFamilies.sans.includes('DM Sans'), `Expected "DM Sans" in: ${fontFamilies.sans}`)
-  assert.ok(!fontFamilies.sans.includes('Manrope'), `Manrope should be removed from sans`)
+// Font Families
+test('sans font family uses Manrope', () => {
+  assert.ok(fontFamilies.sans.includes('Manrope'), `Expected "Manrope" in: ${fontFamilies.sans}`)
+  assert.ok(!fontFamilies.sans.includes('DM Sans'), `DM Sans should be removed from sans`)
 })
 
 test('arabic font family is defined and uses Tajawal', () => {
@@ -98,9 +102,8 @@ test('arabic font family is defined and uses Tajawal', () => {
   assert.ok(fontFamilies.arabic.includes('Tajawal'), `Expected "Tajawal" in: ${fontFamilies.arabic}`)
 })
 
-// ── CSS Token Bridge ──────────────────────────────────────────────────────────
-
-test('global.css reflects new radius and shadow tokens', async () => {
+// CSS Token Bridge
+test('global.css reflects new radius, type, and font tokens', async () => {
   const cssPath = path.join(process.cwd(), 'packages', 'ui', 'global.css')
   const css = await fs.readFile(cssPath, 'utf8')
 
@@ -110,8 +113,6 @@ test('global.css reflects new radius and shadow tokens', async () => {
     '--radius-xl:   12px;',
     '--radius-2xl:  16px;',
     '--shadow-card: 0 0 5px rgba(0,0,6,0.14);',
-    '--text-h1:        1.25rem;',
-    '--text-price:     1rem;',
     '--font-arabic:',
   ]
 

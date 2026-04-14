@@ -13,7 +13,7 @@ import { readAdminSavedViewsState } from '../../_lib/admin-saved-views-store'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketplace')
+    const session = await requireAdminDomainSession(request, 'marketplace')
     if (session instanceof Response) return session
 
     const baseInput = parseAdminListQuery(request)

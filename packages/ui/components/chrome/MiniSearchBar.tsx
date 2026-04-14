@@ -23,14 +23,14 @@ const barStyle: ViewStyle = {
 
 const pillBaseStyle: ViewStyle = {
   alignItems: 'center',
-  gap: spacing.sm,
+  gap: spacing.space2,
   backgroundColor: colors.surfaceMuted,
   borderRadius: radius.full,
   borderWidth: borderWidth.thin,
   borderColor: colors.border,
-  paddingHorizontal: spacing.md,
-  paddingVertical: spacing.xs,
-  minHeight: spacing['40'],
+  paddingHorizontal: spacing.space4,
+  paddingVertical: spacing.space2,
+  minHeight: spacing['48'],
 }
 
 const buttonResetStyle: ViewStyle = {

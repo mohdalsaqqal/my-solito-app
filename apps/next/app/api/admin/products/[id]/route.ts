@@ -6,7 +6,7 @@ import { getAdminProductDetail, updateAdminProduct } from '../../../../../server
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog')
+    const session = await requireAdminDomainSession(request, 'catalog')
     if (session instanceof Response) return session
 
     const { id } = await context.params
@@ -27,7 +27,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog', 'full')
+    const session = await requireAdminDomainSession(request, 'catalog', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as Partial<ProductUpsertInput>

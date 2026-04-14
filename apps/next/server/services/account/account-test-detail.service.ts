@@ -1,9 +1,9 @@
-import { headers } from 'next/headers'
 import { accountProvider, authProvider, cartProvider } from '@real/providers'
 import type { AuthSession } from '@real/providers/contracts'
 import type { AccountTestDetail, Cart, CMSHome, Product } from '@real/app/lib/types'
 import { getHomeCmsResponseData } from '../home/home-cms.service'
 import { listProducts } from '../catalog/product-list.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 export type AccountTestDetailPageInitialData = {
   session: AuthSession | null
@@ -29,7 +29,10 @@ function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
 }
 
-export async function getAccountTestDetailPageInitialData(testId: string) {
+export async function getAccountTestDetailPageInitialData(
+  testId: string,
+  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+) {
   if (!testId) {
     return createEmptyAccountTestDetailPageData('Invalid test ID.')
   }
@@ -42,10 +45,7 @@ export async function getAccountTestDetailPageInitialData(testId: string) {
     return createEmptyAccountTestDetailPageData()
   }
 
-  const requestHeaders = new Headers(await headers())
-  const request = new Request(new URL('http://internal.local/api/cms/home'), {
-    headers: requestHeaders,
-  })
+  const request = new Request(context.requestUrl)
 
   const [cmsResult, productsResult, cartResult, testResult] = await Promise.allSettled([
     getHomeCmsResponseData(request),

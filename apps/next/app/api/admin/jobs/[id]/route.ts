@@ -4,7 +4,7 @@ import { requireAdminAnyDomainSession } from '../../../_lib/request-auth'
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'])
+    const session = await requireAdminAnyDomainSession(request, ['catalog', 'sales', 'inventory', 'marketplace', 'operations'])
     if (session instanceof Response) return session
 
     const { id } = await context.params

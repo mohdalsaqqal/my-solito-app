@@ -246,7 +246,7 @@ export const ProductRail = React.memo(function ProductRail({
       <Box
         style={{
           padding: spacing['24'],
-          gap: spacing['12'],
+        gap: spacing.space3,
         }}
       >
         <Text variant='bodySm' tone='danger'>{error}</Text>
@@ -279,7 +279,7 @@ export const ProductRail = React.memo(function ProductRail({
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          minHeight: spacing['40'],
+          minHeight: spacing['48'],
           gap: spacing['12'],
         }}
       >
@@ -331,7 +331,7 @@ export const ProductRail = React.memo(function ProductRail({
           onContentSizeChange={(contentWidth) => { contentRef.current = contentWidth }}
           onScroll={(event) => { offsetRef.current = event.nativeEvent.contentOffset.x }}
           scrollEventThrottle={16}
-          contentContainerStyle={{ gap: productTokens.railGap, paddingBottom: spacing['4'] }}
+          contentContainerStyle={{ gap: productTokens.railGap, paddingBottom: spacing.space1 }}
           {...(Platform.OS === 'web' ? { role: 'listbox' as any, 'aria-label': title } : {})}
         >
           {loading

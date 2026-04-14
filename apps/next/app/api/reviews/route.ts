@@ -1,9 +1,12 @@
 import { reviewProvider } from '@real/providers'
 import { matchProviderResult } from '@real/providers/contracts'
+import { ensureRequestConnection } from '../_lib/route-connection'
 import { fail, ok } from '../_lib/response'
 
 export async function GET(request: Request) {
   try {
+    await ensureRequestConnection()
+
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('productId')?.trim()
     if (!productId) {

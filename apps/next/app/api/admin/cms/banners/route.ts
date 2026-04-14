@@ -5,7 +5,7 @@ import type { BannersState } from '../../../_lib/admin-banners-store'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'read')
+    const session = await requireAdminDomainSession(request, 'marketing', 'read')
     if (session instanceof Response) return session
 
     const state = await readBannersState()
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) return session
 
     const body = ((await request.json().catch(() => null)) ?? null) as BannersState | null

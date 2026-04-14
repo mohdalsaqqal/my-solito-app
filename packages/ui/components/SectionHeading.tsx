@@ -45,14 +45,14 @@ export function SectionHeading({
     <View
       style={{
         flexDirection: 'row',
-        alignItems: 'flex-end',
+        alignItems: centered ? 'center' : 'flex-end',
         justifyContent: 'space-between',
-        gap: spacing.md,
+        gap: spacing.space4,
       }}
     >
-      <View style={{ flex: 1, gap: spacing.xs, alignItems: centered ? 'center' : 'flex-start' }}>
+      <View style={{ flex: 1, gap: spacing.space2, alignItems: centered ? 'center' : 'flex-start' }}>
         {eyebrow ? (
-          <Text variant='caption' weight='700' tone='muted' style={{ textTransform: 'uppercase' }}>
+          <Text variant='overline' weight='700' tone='primary' style={{ textTransform: 'uppercase' }}>
             {eyebrow}
           </Text>
         ) : null}
@@ -64,7 +64,7 @@ export function SectionHeading({
           )}
         </View>
         {subtitle ? (
-          <Text tone='muted' variant='footer' style={{ textAlign: centered ? 'center' : 'left' }}>
+          <Text tone='muted' variant='bodySm' style={{ textAlign: centered ? 'center' : 'left' }}>
             {subtitle}
           </Text>
         ) : null}

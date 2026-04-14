@@ -38,11 +38,11 @@ export const FooterColumns = React.memo(function FooterColumns({ columns, onPres
   }
 
   return (
-    <Box style={{ flexDirection: 'row', gap: spacing.xl, flexWrap: 'wrap' }}>
+    <Box style={{ flexDirection: 'row', gap: spacing.space8, flexWrap: 'wrap' }}>
       {columns.map((column) => (
-        <Box key={column.id} style={{ gap: spacing.md, flex: 1, minWidth: spacing['96'] }}>
+        <Box key={column.id} style={{ gap: spacing.space4, flex: 1, minWidth: spacing['96'] }}>
           <Text
-            variant='label'
+            variant='overline'
             weight='700'
             tone='inverse'
             style={{ textTransform: 'uppercase', letterSpacing: letterSpacing.caps }}
@@ -65,10 +65,10 @@ export const FooterColumns = React.memo(function FooterColumns({ columns, onPres
               style={{ paddingHorizontal: 0, paddingVertical: 0, alignItems: 'flex-start' }}
             >
               {({ hovered, focused }) => (
-                <Box style={{ alignItems: 'flex-start', gap: spacing.xs }}>
+                <Box style={{ alignItems: 'flex-start', gap: spacing.space2 }}>
                   <Text
                     tone='inverse'
-                    variant='footer'
+                    variant='bodySm'
                     weight={hovered || focused ? '600' : '400'}
                     style={{ opacity: hovered || focused ? 1 : 0.78 }}
                   >
@@ -81,7 +81,7 @@ export const FooterColumns = React.memo(function FooterColumns({ columns, onPres
                       borderRadius: 2,
                       backgroundColor: c.white,
                       transitionProperty: 'width',
-                      transitionDuration: `${motionDuration.normal}ms`,
+                      transitionDuration: `${motionDuration.medium}ms`,
                     }}
                   />
                 </Box>

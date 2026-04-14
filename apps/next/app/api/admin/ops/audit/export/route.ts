@@ -4,7 +4,7 @@ import { readAdminControlsState } from '../../../../_lib/admin-controls-store'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations')
+    const session = await requireAdminDomainSession(request, 'operations')
     if (session instanceof Response) return session
     const url = new URL(request.url)
     const actor = url.searchParams.get('actor')?.trim().toLowerCase()

@@ -7,7 +7,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) return session
 
     const { id } = await context.params

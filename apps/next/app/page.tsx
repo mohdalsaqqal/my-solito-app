@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { colors, spacing } from '@real/tokens'
 import { ClientHomeFeatures } from './_components/ClientHomeFeatures'
 import { getHomeLayoutData } from '../server/services/home/home-layout-data.service'
+import { createStorefrontServiceContext } from '../server/services/_lib/storefront-service-context'
 
 /**
  * Homepage - Server Component
@@ -21,8 +22,12 @@ export default async function Page({
 }) {
   const params = searchParams ? await searchParams : undefined
   const previewToken = params?.previewToken
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+    previewToken,
+  })
 
-  const { products, cmsHome, categories, brands, error } = await getHomeLayoutData(previewToken)
+  const { products, cmsHome, categories, brands, error } = await getHomeLayoutData(context)
 
   return (
     <Suspense fallback={<HomePageFallback />}>

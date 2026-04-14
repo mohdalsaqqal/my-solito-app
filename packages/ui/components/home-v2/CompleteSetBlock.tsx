@@ -31,8 +31,8 @@ export function CompleteSetBlock({
   onAddToCart,
 }: CompleteSetBlockProps) {
   return (
-    <Box style={{ gap: spacing['24'] }}>
-      <Box style={{ gap: spacing.xs, alignItems: 'center' }}>
+    <Box style={{ gap: spacing.space6 }}>
+      <Box style={{ gap: spacing.space2, alignItems: 'center' }}>
         <Text variant='headline'>{title}</Text>
         {subtitle ? <Text tone='muted' variant='bodySm'>{subtitle}</Text> : null}
         {ctaLabel ? (

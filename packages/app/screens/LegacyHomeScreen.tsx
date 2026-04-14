@@ -135,7 +135,6 @@ export const LegacyHomeScreen = React.memo(function LegacyHomeScreen({
             <HomeCategoryStrip
               items={categoryItems}
               onPressItem={(item) => openHref(item.href)}
-              onPressViewAll={() => openHref('/shop')}
             />
           </RevealOnScroll>
         </Section>

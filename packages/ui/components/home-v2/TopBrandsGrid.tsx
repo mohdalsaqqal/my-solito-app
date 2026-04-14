@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { Platform, ScrollView } from 'react-native'
+import { Image, Platform, ScrollView } from 'react-native'
 import { colors, componentTokens, fontFamilies, motionDuration, radius, spacing } from '@real/tokens'
 import { Box, Text } from '../../primitives'
 import { HomeBrandItem } from '../home/types'
@@ -28,7 +28,7 @@ export const TopBrandsGrid = React.memo(function TopBrandsGrid({
   const c = useThemeColors()
   const isDesktop = profile.breakpoint === 'desktop'
   const tokens = componentTokens.storefrontHome.topBrands
-  const tileSize = isDesktop ? tokens.tileSizeDesktop : tokens.tileSizeMobile
+  const tileSize = isDesktop ? tokens.tileSizeDesktop : tokens.tileSizeMobile + spacing.space3
   const getRovingProps = useRovingTabIndex({ itemCount: items.length, orientation: 'horizontal' })
 
   if (!items || items.length === 0) {
@@ -37,7 +37,7 @@ export const TopBrandsGrid = React.memo(function TopBrandsGrid({
 
   return (
     <Box data-ect-node="TopBrandsGrid" role="region" aria-label={title} style={{ gap: tokens.sectionGap }}>
-      <Box align='center' style={{ paddingBottom: spacing['8'] }}>
+      <Box align='center' style={{ paddingBottom: spacing.space2 }}>
         <Text variant='h2' style={{ fontFamily: fontFamilies.serif, letterSpacing: -0.3 }}>{title}</Text>
       </Box>
       {isDesktop ? (
@@ -64,7 +64,7 @@ export const TopBrandsGrid = React.memo(function TopBrandsGrid({
           nestedScrollEnabled
           directionalLockEnabled
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: tokens.mobileGap, paddingHorizontal: spacing['4'] }}
+          contentContainerStyle={{ gap: tokens.mobileGap, paddingHorizontal: spacing.space1 }}
           {...(Platform.OS === 'web' ? { role: 'listbox' as any, 'aria-label': title } : {})}
         >
           {items.map((item, index) => {
@@ -102,6 +102,24 @@ function BrandTile({
   const c = useThemeColors()
   const tokens = componentTokens.storefrontHome.topBrands
   const normalizedName = normalizeBrandLabel(item.name)
+  const [logoError, setLogoError] = useState(false)
+
+  const hasLogo = !!item.logoUrl && !logoError
+
+  const textStyle = {
+    color: c.textPrimary,
+    textAlign: 'center' as const,
+    maxWidth: `${tokens.tileTextMaxWidthRatio * 100}%` as const,
+    fontSize:
+      tileSize >= tokens.tileSizeDesktop
+        ? tokens.tileTextSizeDesktop
+        : tokens.tileTextSizeMobile,
+    lineHeight:
+      tileSize >= tokens.tileSizeDesktop
+        ? tokens.tileTextLineHeightDesktop
+        : tokens.tileTextLineHeightMobile,
+    letterSpacing: tokens.tileTextTracking,
+  }
 
   return (
     <ReusableButton
@@ -113,11 +131,11 @@ function BrandTile({
         return {
           width: tileSize,
           alignItems: 'center',
-          gap: spacing['10'],
+          gap: spacing.space3,
           opacity: active ? 1 : 0.98,
           transform: active ? [{ translateY: -tokens.hoverLift }] : [{ translateY: 0 }],
           transitionProperty: 'opacity, transform',
-          transitionDuration: `${motionDuration.microInteraction}ms`,
+          transitionDuration: `${motionDuration.interactive}ms`,
         }
       }}
     >
@@ -135,26 +153,25 @@ function BrandTile({
               : tokens.tilePaddingXMobile,
         }}
       >
-        <Text
-          variant='label'
-          numberOfLines={2}
-          style={{
-            color: c.textPrimary,
-            textAlign: 'center',
-            maxWidth: `${tokens.tileTextMaxWidthRatio * 100}%`,
-            fontSize:
-              tileSize >= tokens.tileSizeDesktop
-                ? tokens.tileTextSizeDesktop
-                : tokens.tileTextSizeMobile,
-            lineHeight:
-              tileSize >= tokens.tileSizeDesktop
-                ? tokens.tileTextLineHeightDesktop
-                : tokens.tileTextLineHeightMobile,
-            letterSpacing: tokens.tileTextTracking,
-          }}
-        >
-          {normalizedName}
-        </Text>
+        {hasLogo ? (
+          <Image
+            source={{ uri: item.logoUrl }}
+            resizeMode='contain'
+            style={{
+              width: '80%',
+              height: '80%',
+            }}
+            onError={() => setLogoError(true)}
+          />
+        ) : (
+          <Text
+            variant='label'
+            numberOfLines={2}
+            style={textStyle}
+          >
+            {normalizedName}
+          </Text>
+        )}
       </Box>
     </ReusableButton>
   )

@@ -1,3 +1,4 @@
+import { ensureRequestConnection } from '../../_lib/route-connection'
 import { releaseProvider } from '@real/providers'
 import { fail, ok } from '../../_lib/response'
 import { requireAdminDomainSession } from '../../_lib/request-auth'
@@ -8,7 +9,8 @@ import { getPageConfigByReleaseId } from '../../_lib/page-config-store'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing')
+    await ensureRequestConnection()
+    const session = await requireAdminDomainSession(request, 'marketing')
     if (session instanceof Response) return session
 
     const releaseId = new URL(request.url).searchParams.get('releaseId')

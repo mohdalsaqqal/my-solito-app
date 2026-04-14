@@ -43,7 +43,7 @@ body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family:
-    var(--font-dm-sans),
+    var(--font-sans),
     -apple-system,
     system-ui,
     BlinkMacSystemFont,
@@ -74,13 +74,13 @@ html[lang='ar'] body {
   border-radius: var(--radius-lg);
   background: var(--color-primary);
   color: var(--color-primary-foreground);
-  font-family: var(--font-dm-sans), sans-serif;
-  font-size: var(--text-body2);
+  font-family: var(--font-sans), sans-serif;
+  font-size: var(--text-caption);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-decoration: none;
   text-transform: uppercase;
-  transition: transform var(--duration-micro) var(--ease-premium);
+  transition: transform var(--duration-interactive) var(--ease-standard);
 }
 
 html[lang='ar'] .skip-link {
@@ -126,10 +126,10 @@ html[lang='ar'] .skip-link {
 /* Global interaction polish for admin pages. */
 .admin-shell :where(button, a, input, select, textarea) {
   transition:
-    background-color var(--duration-micro) var(--ease-premium),
-    border-color var(--duration-micro) var(--ease-premium),
-    color var(--duration-micro) var(--ease-premium),
-    box-shadow var(--duration-micro) var(--ease-premium);
+    background-color var(--duration-interactive) var(--ease-standard),
+    border-color var(--duration-interactive) var(--ease-standard),
+    color var(--duration-interactive) var(--ease-standard),
+    box-shadow var(--duration-interactive) var(--ease-standard);
 }
 
 .admin-shell :where(button, a, input, select, textarea):focus-visible {

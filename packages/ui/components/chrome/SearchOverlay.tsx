@@ -89,7 +89,7 @@ export const SearchOverlay = React.memo(function SearchOverlay({
         ref={containerRef as React.RefObject<HTMLDivElement>}
         data-ect-node="SearchOverlay"
         style={{
-          ...getWebOverlayStyle(open, motionDuration.normal, dir),
+          ...getWebOverlayStyle(open, motionDuration.medium, dir),
           backgroundColor: c.background,
         } as React.CSSProperties}
         role="dialog"
@@ -161,10 +161,10 @@ function OverlayContent({
         style={{
           flexDirection: dir === 'rtl' ? 'row-reverse' : 'row',
           alignItems: 'center',
-          gap: spacing['12'],
-          paddingHorizontal: spacing['16'],
-          paddingTop: spacing['16'],
-          paddingBottom: spacing['12'],
+          gap: spacing.space3,
+          paddingHorizontal: spacing.space4,
+          paddingTop: spacing.space4,
+          paddingBottom: spacing.space3,
           borderBottomWidth: borderWidth.thin,
           borderColor: c.border,
         }}
@@ -212,22 +212,22 @@ function OverlayContent({
       <ScrollView
         keyboardShouldPersistTaps='handled'
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingVertical: spacing['8'] }}
+        contentContainerStyle={{ paddingVertical: spacing.space2 }}
       >
         {loading ? (
-          <Box style={{ paddingHorizontal: spacing['16'], paddingVertical: spacing['24'] }}>
+          <Box style={{ paddingHorizontal: spacing.space4, paddingVertical: spacing.space6 }}>
             <Text tone='muted' variant='bodySm'>
               Loading…
             </Text>
           </Box>
         ) : error ? (
-          <Box style={{ paddingHorizontal: spacing['16'], paddingVertical: spacing['24'] }}>
+          <Box style={{ paddingHorizontal: spacing.space4, paddingVertical: spacing.space6 }}>
             <Text tone='danger' variant='bodySm'>
               {error}
             </Text>
           </Box>
         ) : suggestions.length === 0 && query.trim().length > 0 ? (
-          <Box style={{ paddingHorizontal: spacing['16'], paddingVertical: spacing['24'] }}>
+          <Box style={{ paddingHorizontal: spacing.space4, paddingVertical: spacing.space6 }}>
             <Text tone='muted' variant='bodySm'>
               No results found.
             </Text>
@@ -242,19 +242,19 @@ function OverlayContent({
               style={({ hovered, focused }) => ({
                 flexDirection: dir === 'rtl' ? 'row-reverse' : 'row',
                 alignItems: 'center',
-                gap: spacing['12'],
+                gap: spacing.space3,
                 minHeight: spacing['48'],
-                paddingVertical: spacing['12'],
-                paddingHorizontal: spacing['16'],
+                paddingVertical: spacing.space3,
+                paddingHorizontal: spacing.space4,
                 borderBottomWidth: borderWidth.thin,
                 borderColor: c.border,
                 ...(hovered || focused ? { backgroundColor: c.surfaceMuted } : {}),
                 transitionProperty: 'background-color',
-                transitionDuration: `${motionDuration.microInteraction}ms`,
+                transitionDuration: `${motionDuration.interactive}ms`,
                 transitionTimingFunction: motionEasing.standard,
               })}
             >
-              <Icon name='search' size={spacing['16']} color={c.textSecondary} />
+              <Icon name='search' size={spacing.space4} color={c.textSecondary} />
               <Text variant='body' style={{ flex: 1 }} numberOfLines={1}>
                 {item.label}
               </Text>

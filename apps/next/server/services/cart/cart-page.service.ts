@@ -1,18 +1,16 @@
-import { headers } from 'next/headers'
 import { cartProvider } from '@real/providers'
 import { getHomeCmsResponseData } from '../home/home-cms.service'
 import { listProducts } from '../catalog/product-list.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
 }
 
-export async function getCartPageInitialData() {
-  const requestHeaders = new Headers(await headers())
-  const request = new Request('http://internal.local/api/cms/home', {
-    headers: requestHeaders,
-  })
-
+export async function getCartPageInitialData(
+  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+) {
+  const request = new Request(context.requestUrl)
   const [productsResult, cartResult, cmsResult] = await Promise.allSettled([
     listProducts(),
     cartProvider.get(),

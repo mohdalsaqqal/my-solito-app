@@ -122,9 +122,9 @@ export const TestimonialsBlock = React.memo(function TestimonialsBlock({
           <Text variant='h2' weight='700' style={testimonialsHeadingStyle}>
             See What Shoppers Say
           </Text>
-          <Box style={{ gap: spacing['8'] }}>
+          <Box style={{ gap: spacing.space2 }}>
             <Text variant='bodySm' tone='default'>★★★★★</Text>
-            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['8'] }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.space2 }}>
               <Text variant='title' weight='700'>4.9</Text>
               <Text variant='bodySm' tone='muted'>(1200+ Reviews)</Text>
             </Box>
@@ -132,12 +132,12 @@ export const TestimonialsBlock = React.memo(function TestimonialsBlock({
         </Box>
 
         {/* Right: testimonial cards + dots */}
-        <Box style={{ flex: 1, gap: spacing['20'] }}>
+          <Box style={{ flex: 1, gap: spacing.space5 }}>
           <Box
             style={{
               position: 'relative',
               flexDirection: isDesktop ? 'row' : 'column',
-              gap: spacing['16'],
+              gap: spacing.space4,
             }}
           >
             {testimonials.map((item, index) => (
@@ -149,12 +149,12 @@ export const TestimonialsBlock = React.memo(function TestimonialsBlock({
                   borderWidth: borderWidth.thin,
                   borderColor: c.border,
                   backgroundColor: c.surface,
-                  padding: spacing['24'],
-                  gap: spacing['16'],
+                  padding: spacing.space6,
+                  gap: spacing.space4,
                   ...(Platform.OS === 'web' ? ({ boxShadow: 'none' } as any) : shadows.none),
                 }}
               >
-                <Box style={{ flexDirection: 'row', gap: spacing['16'], alignItems: 'flex-start' }}>
+                <Box style={{ flexDirection: 'row', gap: spacing.space4, alignItems: 'flex-start' }}>
                   <Box
                     style={{
                       width: 56,
@@ -180,8 +180,8 @@ export const TestimonialsBlock = React.memo(function TestimonialsBlock({
                       </Text>
                     )}
                   </Box>
-                  <Box style={{ flex: 1, gap: spacing['8'] }}>
-                    <Box style={{ gap: spacing['8'] }}>
+                  <Box style={{ flex: 1, gap: spacing.space2 }}>
+                    <Box style={{ gap: spacing.space2 }}>
                       <Text variant='title' weight='700'>{item.name}</Text>
                       <Text
                         variant='caption'
@@ -199,7 +199,7 @@ export const TestimonialsBlock = React.memo(function TestimonialsBlock({
           </Box>
 
           {/* Dot indicators */}
-          <Box style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing['8'] }}>
+          <Box style={{ flexDirection: 'row', justifyContent: 'center', gap: spacing.space2 }}>
             {dotItems.map((item, index) => (
               <Box
                 key={item.id}

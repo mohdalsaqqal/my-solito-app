@@ -42,7 +42,7 @@ export function BrandSpotlightSection({
   onAddToCart,
 }: BrandSpotlightSectionProps) {
   return (
-    <Box key={id} data-ect-node="BrandSpotlightSection" style={{ gap: spacing['16'] }}>
+    <Box key={id} data-ect-node="BrandSpotlightSection" style={{ gap: spacing.space4 }}>
       <BrandStoryBanner
         title={bannerTitle}
         subtitle={bannerSubtitle}

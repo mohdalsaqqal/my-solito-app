@@ -13,7 +13,7 @@ type RouteContext = {
 
 export async function GET(request: Request, context: RouteContext) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['marketing'])
+    const session = await requireAdminAnyDomainSession(request, ['marketing'])
     if (session instanceof Response) return session
 
     const { id } = await context.params
@@ -34,7 +34,7 @@ export async function GET(request: Request, context: RouteContext) {
 
 export async function PATCH(request: Request, context: RouteContext) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['marketing'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['marketing'], 'full')
     if (session instanceof Response) return session
 
     const { id } = await context.params
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
   try {
-    const session = requireAdminAnyDomainSession(request, ['marketing'], 'full')
+    const session = await requireAdminAnyDomainSession(request, ['marketing'], 'full')
     if (session instanceof Response) return session
 
     const { id } = await context.params

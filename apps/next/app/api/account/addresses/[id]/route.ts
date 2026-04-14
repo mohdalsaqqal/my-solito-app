@@ -8,7 +8,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = requireAuthSession(request)
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }
@@ -35,7 +35,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = requireAuthSession(request)
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }

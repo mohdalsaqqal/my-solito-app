@@ -4,7 +4,7 @@ import { requireAdminDomainSession } from '../../_lib/request-auth'
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'catalog')
+    const session = await requireAdminDomainSession(request, 'catalog')
     if (session instanceof Response) return session
 
     const result = await adminProductProvider.productFields()

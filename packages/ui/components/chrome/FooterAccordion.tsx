@@ -44,7 +44,7 @@ export const FooterAccordion = React.memo(function FooterAccordion({
   }
 
   return (
-    <Box style={{ gap: spacing.xs }}>
+    <Box style={{ gap: spacing.space2 }}>
       {sections.map((section) => {
         const open = section.id === openSectionId
 
@@ -55,8 +55,8 @@ export const FooterAccordion = React.memo(function FooterAccordion({
               borderWidth: borderWidth.thin,
               borderColor: c.border,
               borderRadius: radius.md,
-              padding: spacing.sm,
-              gap: spacing.xs,
+              padding: spacing.space3,
+              gap: spacing.space2,
             }}
           >
             <ReusableButton
@@ -76,7 +76,7 @@ export const FooterAccordion = React.memo(function FooterAccordion({
             {open ? (
               <>
                 <Divider tone='muted' />
-                <Box style={{ gap: spacing.xs }}>
+                <Box style={{ gap: spacing.space2 }}>
                   {section.links.map((link) => (
                     <ReusableButton
                       key={link.id}
@@ -86,7 +86,7 @@ export const FooterAccordion = React.memo(function FooterAccordion({
                       size='sm'
                       style={{ alignItems: 'flex-start', justifyContent: 'flex-start', paddingHorizontal: 0 }}
                     >
-                      <Text tone='muted' variant='footer'>
+                      <Text tone='muted' variant='bodySm'>
                         {link.label}
                       </Text>
                     </ReusableButton>

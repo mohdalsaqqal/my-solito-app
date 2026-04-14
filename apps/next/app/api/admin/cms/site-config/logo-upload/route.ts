@@ -32,7 +32,7 @@ function resolveExtension(file: File): 'jpg' | 'png' | 'webp' | null {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) return session
 
     const formData = await request.formData().catch(() => null) as globalThis.FormData | null

@@ -52,7 +52,7 @@ function TickerSequence({
             size='sm'
             style={{ paddingHorizontal: 0, minHeight: spacing['24'] }}
           >
-            <Text variant='nav' tone={item.href ? 'primary' : 'muted'} weight={item.href ? '600' : '500'}>
+            <Text variant='nav' tone='muted' weight='500' style={item.href ? { textDecorationLine: 'underline' } : undefined}>
               {item.label}
             </Text>
           </ReusableButton>
@@ -64,7 +64,7 @@ function TickerSequence({
                 marginHorizontal: spacing.sm,
               }}
             >
-              {'|'}
+              {'·'}
             </Text>
           ) : null}
           <Box style={{ width: spacing.lg }} />
@@ -83,6 +83,7 @@ export const AnnouncementTicker = React.memo(function AnnouncementTicker({
   const [paused, setPaused] = useState(false)
   const translateX = useRef(new Animated.Value(0)).current
   const isWeb = Platform.OS === 'web'
+  const supportsNativeDriver = !isWeb
   const prefersReducedMotion = usePrefersReducedMotion()
 
   const validItems = useMemo(() => items.filter((item) => item.label.trim().length > 0), [items])
@@ -98,13 +99,13 @@ export const AnnouncementTicker = React.memo(function AnnouncementTicker({
         toValue: -trackWidth,
         duration: Math.max(12000, speedMs),
         easing: Easing.linear,
-        useNativeDriver: true,
+        useNativeDriver: supportsNativeDriver,
       })
     )
 
     loop.start()
     return () => loop.stop()
-  }, [paused, speedMs, trackWidth, translateX, validItems.length, prefersReducedMotion])
+  }, [paused, speedMs, supportsNativeDriver, trackWidth, translateX, validItems.length, prefersReducedMotion])
 
   if (validItems.length === 0) {
     return null
@@ -137,13 +138,13 @@ export const AnnouncementTicker = React.memo(function AnnouncementTicker({
               size='sm'
               style={{ paddingHorizontal: 0, minHeight: spacing['24'] }}
             >
-              <Text variant='nav' tone={item.href ? 'primary' : 'muted'} weight={item.href ? '600' : '500'}>
+              <Text variant='nav' tone='muted' weight='500' style={item.href ? { textDecorationLine: 'underline' } : undefined}>
                 {item.label}
               </Text>
             </ReusableButton>
             {index < validItems.length - 1 ? (
               <Text variant='nav' tone='muted' style={{ marginHorizontal: spacing.sm }}>
-                {'|'}
+                {'·'}
               </Text>
             ) : null}
           </React.Fragment>

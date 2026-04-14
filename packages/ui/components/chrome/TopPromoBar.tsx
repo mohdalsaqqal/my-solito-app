@@ -88,7 +88,7 @@ export const TopPromoBar = React.memo(function TopPromoBar({
 
   if (state === 'loading') {
     return (
-      <Box style={{ minHeight: promoBarHeight, backgroundColor: c.inkBlack }} />
+      <Box style={{ minHeight: promoBarHeight, backgroundColor: c.roseBlush }} />
     )
   }
 
@@ -108,13 +108,13 @@ export const TopPromoBar = React.memo(function TopPromoBar({
             width: spacing['8'],
             height: spacing['8'],
             borderRadius: spacing['8'],
-            backgroundColor: c.brandPrimary,
+            backgroundColor: c.roseMid,
           }}
         />
         <Text
           variant='caption'
-          weight='700'
-          tone='inverse'
+          weight='500'
+          tone='default'
           numberOfLines={1}
           style={{
             fontSize: 12,
@@ -127,8 +127,8 @@ export const TopPromoBar = React.memo(function TopPromoBar({
         </Text>
         <Text
           variant='caption'
-          weight='700'
-          tone='inverse'
+          weight='500'
+          tone='default'
           style={{
             fontSize: 12,
             lineHeight: 16,
@@ -140,7 +140,7 @@ export const TopPromoBar = React.memo(function TopPromoBar({
     )
 
     return (
-      <Box data-ect-node='TopPromoBar' style={{ backgroundColor: c.inkBlack }}>
+      <Box data-ect-node='TopPromoBar' style={{ backgroundColor: c.roseBlush }}>
         <Container paddingX={spacing.pageX}>
           {mobileItem.href || fallbackHref ? (
             <ReusableButton
@@ -163,7 +163,7 @@ export const TopPromoBar = React.memo(function TopPromoBar({
       data-ect-node='TopPromoBar'
       style={{
         minHeight: promoBarHeight,
-        backgroundColor: c.inkBlack,
+        backgroundColor: c.roseBlush,
         borderBottomWidth: borderWidth.none,
       }}
     >
@@ -181,14 +181,14 @@ export const TopPromoBar = React.memo(function TopPromoBar({
             const content = (
               <Text
                 variant='caption'
-                weight='700'
-                tone='inverse'
+                weight='500'
+                tone='default'
                 style={{
                   fontSize: item.highlight ? 13 : 12,
                   lineHeight: 16,
                   textTransform: 'uppercase',
                   letterSpacing: 0.7,
-                  color: item.highlight ? c.brandPrimary : c.textInverted,
+                  color: item.highlight ? c.brandPrimary : c.textPrimary,
                 }}
               >
                 {item.label}
@@ -216,7 +216,7 @@ export const TopPromoBar = React.memo(function TopPromoBar({
                   content
                 )}
                 {index < visibleItems.length - 1 ? (
-                  <Text variant='caption' tone='inverse' style={{ opacity: 0.5 }}>
+                  <Text variant='caption' tone='default' style={{ opacity: 0.3 }}>
                     |
                   </Text>
                 ) : null}

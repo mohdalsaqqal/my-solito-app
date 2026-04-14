@@ -63,6 +63,7 @@ Shared UI Consumers
 - Providers over adapter imports
 - Server layer owns all data access
 - CMS controls content, not layout
+- Prisma is the canonical store for mutable CMS content; mock CMS data is seed/fallback only
 - Do not reintroduce public `Touchable`-style legacy primitives into the active shared UI contract
 
 ---
@@ -184,6 +185,13 @@ Responsibilities:
 
 Flow:
 CMS -> Server Layer -> Normalized Blocks -> UI
+
+CMS persistence rule:
+- `apps/next` owns the production CMS stack
+- Prisma/Postgres is the canonical persistence layer for admin-editable CMS content
+- `apps/next/server/services` owns CMS read/write orchestration and normalization
+- `packages/adapters/mock/cms` may provide seeds, fixtures, or explicit fallback data only
+- No live storefront path should treat mock CMS data as the canonical production source
 
 ---
 

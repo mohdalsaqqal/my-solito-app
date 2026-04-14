@@ -49,9 +49,9 @@ export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
           height: blockHeight,
           alignItems: contentAlign,
           justifyContent: 'flex-end',
-          paddingHorizontal: spacing['24'],
-          paddingBottom: spacing['32'],
-          gap: spacing['12'],
+          paddingHorizontal: spacing.space6,
+          paddingBottom: spacing.space8,
+          gap: spacing.space3,
         }}
       >
         <Box
@@ -84,7 +84,7 @@ export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
             height: spacing['40'],
             borderRadius: radius.full,
             backgroundColor: colors.inkMid,
-            marginTop: spacing['8'],
+            marginTop: spacing.space2,
           }}
         />
       </Box>
@@ -140,9 +140,9 @@ export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
           flex: 1,
           alignItems: contentAlign,
           justifyContent: 'flex-end',
-          paddingHorizontal: spacing['24'],
-          paddingBottom: spacing['32'],
-          gap: spacing['8'],
+          paddingHorizontal: spacing.space6,
+          paddingBottom: spacing.space8,
+          gap: spacing.space2,
           opacity: disabled ? 0.5 : 1,
         }}
       >
@@ -155,7 +155,7 @@ export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
               borderRadius: radius.full,
               paddingVertical: spacing['4'],
               paddingHorizontal: spacing['12'],
-              marginBottom: spacing['4'],
+              marginBottom: spacing.space1,
             }}
           >
             <Text
@@ -212,7 +212,7 @@ export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
               color: colors.inkFrost,
               opacity: 0.8,
               textAlign: align,
-              marginBottom: spacing['4'],
+              marginBottom: spacing.space1,
             }}
           >
             {subline}
@@ -224,7 +224,7 @@ export const CampaignHeroBlock = React.memo(function CampaignHeroBlock({
           <Box
             style={{
               alignSelf: contentAlign === 'center' ? 'center' : 'flex-start',
-              marginTop: spacing['8'],
+              marginTop: spacing.space2,
             }}
           >
             <Button

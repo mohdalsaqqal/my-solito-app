@@ -1,21 +1,18 @@
-import { ScrollView } from 'react-native'
+import React, { useState } from 'react'
+import { Pressable, ScrollView } from 'react-native'
 import { borderWidth, radius, spacing } from '@real/tokens'
 import { Box, Text } from '../../primitives'
-import { MarketplaceSectionHeader } from '../MarketplaceSectionHeader'
 import { HomeCategoryItem } from './types'
-import { Button as ReusableButton } from '../../reusables/button'
 import { useThemeColors } from '../../responsive'
 
 type HomeCategoryStripProps = {
   items: HomeCategoryItem[]
   onPressItem?: (item: HomeCategoryItem) => void
-  onPressViewAll?: () => void
 }
 
 export function HomeCategoryStrip({
   items,
   onPressItem,
-  onPressViewAll,
 }: HomeCategoryStripProps) {
   const c = useThemeColors()
   if (items.length === 0) {
@@ -23,44 +20,79 @@ export function HomeCategoryStrip({
   }
 
   return (
-    <Box style={{ gap: spacing['8'] }}>
-      <MarketplaceSectionHeader
-        title='Main Categories'
-        meta='Fast access'
-        actionLabel='View all'
-        onPressAction={onPressViewAll}
-      />
+    <Box>
       <ScrollView
         horizontal
         nestedScrollEnabled
         directionalLockEnabled
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: spacing['8'] }}
+        contentContainerStyle={{
+          gap: spacing['12'],
+          paddingHorizontal: spacing.pageX,
+          paddingVertical: spacing.space2,
+        }}
       >
-        {items.map((item) => (
-          <ReusableButton
-            key={item.id}
-            onPress={() => onPressItem?.(item)}
-            variant='ghost'
-            size='default'
-            style={{
-              borderWidth: borderWidth.thin,
-              borderColor: c.border,
-              borderRadius: radius.sm,
-              minWidth: spacing['96'],
-              paddingHorizontal: spacing['12'],
-              paddingVertical: spacing['10'],
-              backgroundColor: c.surface,
-            }}
-          >
-            <Box style={{ gap: spacing['4'] }}>
-              <Text variant='bodySm'>{item.label}</Text>
-              {item.itemCount ? (
-                <Text variant='caption' tone='muted'>{`${item.itemCount} items`}</Text>
-              ) : null}
-            </Box>
-          </ReusableButton>
-        ))}
+        {items.map((item) => {
+          const [pressed, setPressed] = useState(false)
+          const circleDiameter = 56
+          const iconOrLabel = item.icon
+            ? item.icon
+            : item.label.charAt(0).toUpperCase()
+
+          return (
+            <Pressable
+              key={item.id}
+              onPress={() => onPressItem?.(item)}
+              onPressIn={() => setPressed(true)}
+              onPressOut={() => setPressed(false)}
+              style={{
+                alignItems: 'center',
+                gap: spacing.space2,
+                minWidth: circleDiameter,
+                opacity: pressed ? 0.7 : 1,
+              }}
+            >
+              <Box
+                style={{
+                  width: circleDiameter,
+                  height: circleDiameter,
+                  borderRadius: radius.full,
+                  backgroundColor: c.roseBlush,
+                  borderWidth: borderWidth.thin,
+                  borderColor: c.border,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text
+                  variant='bodySm'
+                  weight='700'
+                  style={{
+                    fontSize: 18,
+                    lineHeight: 22,
+                    color: c.textPrimary,
+                  }}
+                >
+                  {iconOrLabel}
+                </Text>
+              </Box>
+              <Text
+                variant='caption'
+                weight='500'
+                tone='default'
+                numberOfLines={1}
+                style={{
+                  width: circleDiameter,
+                  textAlign: 'center',
+                  fontSize: 10,
+                  lineHeight: 13,
+                }}
+              >
+                {item.label}
+              </Text>
+            </Pressable>
+          )
+        })}
       </ScrollView>
     </Box>
   )

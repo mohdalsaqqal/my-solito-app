@@ -1,34 +1,34 @@
 import { AuthSession } from '@real/app/lib/types'
-import { parseAuthSessionCookie, readAuthSessionCookieValue } from './auth-session'
 import { AdminDomain, hasAdminDomainPermission } from './admin-rbac'
 import { fail } from './response'
+import { ensureRequestConnection } from './route-connection'
 import { isMutationMethod, TRUSTED_REQUEST_BYPASS_HEADER } from './security-policy'
+import { resolveNormalizedSessionFromRequest } from '../../../server/services/auth'
 
 type RequireSessionOptions = {
   skipTrustedRequestCheck?: boolean
 }
 
-export function requireAuthSession(request: Request): AuthSession | Response {
+export async function requireAuthSession(request: Request): Promise<AuthSession | Response> {
   const trustedRequestError = requireTrustedMutationRequest(request)
   if (trustedRequestError) {
     return trustedRequestError
   }
 
-  const cookieValue = readAuthSessionCookieValue(request.headers.get('cookie'))
-  const session = parseAuthSessionCookie(cookieValue)
+  const session = await resolveNormalizedSessionFromRequest(request)
   if (!session) {
     return fail('AUTH_REQUIRED', 'Authentication is required.', 401)
   }
   return session
 }
 
-export function requireAdminDomainSession(
+export async function requireAdminDomainSession(
   request: Request,
   domain: AdminDomain,
   required: 'read' | 'full' = 'read',
   options?: RequireSessionOptions
-): AuthSession | Response {
-  const session = requireAuthSessionWithOptions(request, options)
+): Promise<AuthSession | Response> {
+  const session = await requireAuthSessionWithOptions(request, options)
   if (session instanceof Response) {
     return session
   }
@@ -38,13 +38,13 @@ export function requireAdminDomainSession(
   return session
 }
 
-export function requireAdminAnyDomainSession(
+export async function requireAdminAnyDomainSession(
   request: Request,
   domains: readonly AdminDomain[],
   required: 'read' | 'full' = 'read',
   options?: RequireSessionOptions
-): AuthSession | Response {
-  const session = requireAuthSessionWithOptions(request, options)
+): Promise<AuthSession | Response> {
+  const session = await requireAuthSessionWithOptions(request, options)
   if (session instanceof Response) {
     return session
   }
@@ -57,10 +57,12 @@ export function requireAdminAnyDomainSession(
   return session
 }
 
-function requireAuthSessionWithOptions(
+async function requireAuthSessionWithOptions(
   request: Request,
   options?: RequireSessionOptions
-): AuthSession | Response {
+): Promise<AuthSession | Response> {
+  await ensureRequestConnection()
+
   if (!options?.skipTrustedRequestCheck) {
     const trustedRequestError = requireTrustedMutationRequest(request)
     if (trustedRequestError) {
@@ -68,8 +70,7 @@ function requireAuthSessionWithOptions(
     }
   }
 
-  const cookieValue = readAuthSessionCookieValue(request.headers.get('cookie'))
-  const session = parseAuthSessionCookie(cookieValue)
+  const session = await resolveNormalizedSessionFromRequest(request)
   if (!session) {
     return fail('AUTH_REQUIRED', 'Authentication is required.', 401)
   }
@@ -115,7 +116,12 @@ export function requireTrustedMutationRequest(request: Request): Response | null
     return null
   }
 
-  if (!hasTrustedFetchMetadata(request) || !hasTrustedOriginContext(request)) {
+  const fetchSite = request.headers.get('sec-fetch-site')
+  if (fetchSite === 'same-origin' || fetchSite === 'none') {
+    return null
+  }
+
+  if (!hasTrustedOriginContext(request)) {
     return fail(
       'AUTH_UNTRUSTED_REQUEST',
       'Cross-site or untrusted request context is not allowed for this operation.',

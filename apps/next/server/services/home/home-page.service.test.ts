@@ -1,10 +1,17 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { getHomePageInitialData } from './home-page.service'
+import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+
+const testContext: StorefrontServiceContext = {
+  requestUrl: 'http://internal.local/api/cms/home',
+  locale: 'en',
+  storeId: 'default',
+}
 
 test('getHomePageInitialData - happy path returns expected shape', async () => {
   try {
-    const result = await getHomePageInitialData()
+    const result = await getHomePageInitialData(testContext)
     assert.ok(typeof result === 'object', 'returns an object')
     assert.ok('products' in result, 'has products')
     assert.ok('cmsHome' in result, 'has cmsHome')
@@ -25,7 +32,7 @@ test('getHomePageInitialData - failure path surfaces a typed error', async () =>
   try {
     // Calling without any mock infrastructure — Promise.allSettled prevents throws,
     // so error field should be populated if any upstream call fails
-    const result = await getHomePageInitialData()
+    const result = await getHomePageInitialData(testContext)
     assert.ok('error' in result, 'returns error field even when upstream fails')
   }
   catch {

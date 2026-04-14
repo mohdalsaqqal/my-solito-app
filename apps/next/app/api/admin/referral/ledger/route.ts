@@ -7,7 +7,7 @@ import {
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'read')
+    const session = await requireAdminDomainSession(request, 'marketing', 'read')
     if (session instanceof Response) return session
 
     const { searchParams } = new URL(request.url)

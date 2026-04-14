@@ -35,10 +35,10 @@ export function HomeProductRail({
       ? 'Active picks'
       : undefined
   const urgencyLabel = isFlash ? 'Ends soon' : isTrending ? 'Popular now' : undefined
-  const cardWidth = spacing.xxl * 5
+  const cardWidth = spacing['48'] * 3.75
 
   return (
-    <Box style={{ gap: spacing['8'], paddingTop: spacing['4'] }}>
+    <Box style={{ gap: spacing.space2, paddingTop: spacing.space1 }}>
       <MarketplaceSectionHeader
         title={title}
         eyebrow={urgencyLabel}

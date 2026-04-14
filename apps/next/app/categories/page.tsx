@@ -1,5 +1,6 @@
 import { CategoriesPageClient } from './CategoriesPageClient'
 import { getCategoriesPageInitialData } from '../../server/services/categories/categories-page.service'
+import { createStorefrontServiceContext } from '../../server/services/_lib/storefront-service-context'
 
 export default async function CategoriesPage({
   searchParams,
@@ -8,7 +9,11 @@ export default async function CategoriesPage({
 }) {
   const params = searchParams ? await searchParams : undefined
   const previewToken = params?.previewToken
-  const { cmsHome, categoryTree, error } = await getCategoriesPageInitialData(previewToken)
+  const context = await createStorefrontServiceContext({
+    pathname: '/api/cms/home',
+    previewToken,
+  })
+  const { cmsHome, categoryTree, error } = await getCategoriesPageInitialData(context)
 
   return (
     <CategoriesPageClient

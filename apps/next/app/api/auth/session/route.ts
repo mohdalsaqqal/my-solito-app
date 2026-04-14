@@ -1,21 +1,17 @@
 import { fail } from '../../_lib/response'
-import {
-  jsonOk,
-  parseAuthSessionCookie,
-  readAuthSessionCookieValue,
-} from '../../_lib/auth-session'
+import { jsonOk } from '../../_lib/auth-session'
+import { ensureRequestConnection } from '../../_lib/route-connection'
+import { resolveAuthSessionFromRequest } from './session-resolver'
 
 export async function GET(request: Request) {
   try {
-    const cookieValue = readAuthSessionCookieValue(request.headers.get('cookie'))
+    await ensureRequestConnection()
 
-    const cookieSession = parseAuthSessionCookie(cookieValue)
-    if (cookieSession) {
-      return jsonOk(cookieSession)
+    const session = await resolveAuthSessionFromRequest(request)
+    if (session) {
+      return jsonOk(session)
     }
 
-    // Session source of truth is the signed cookie only.
-    // Avoid adapter-level fallback to prevent stale process-level role leakage.
     return jsonOk(null)
   } catch (cause) {
     return fail('AUTH_SESSION_UNEXPECTED', 'Unexpected error while reading session.', 500, {

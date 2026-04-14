@@ -11,19 +11,19 @@ export function FooterLegalRow({ text, state = 'default' }: FooterLegalRowProps)
   }
 
   if (state === 'loading') {
-    return <Text tone='muted' variant='meta'>...</Text>
+    return <Text tone='muted' variant='caption'>...</Text>
   }
 
   if (state === 'error') {
     return (
-      <Text tone='danger' variant='meta'>
+      <Text tone='danger' variant='caption'>
         Legal text unavailable.
       </Text>
     )
   }
 
   return (
-    <Text tone='inverse' variant='meta' style={{ opacity: state === 'disabled' ? 0.55 : 0.72 }}>
+    <Text tone='inverse' variant='caption' style={{ opacity: state === 'disabled' ? 0.55 : 0.72 }}>
       {text}
     </Text>
   )

@@ -1,6 +1,6 @@
 import React from 'react'
 import { Image, Modal, Platform, Pressable } from 'react-native'
-import { borderWidth, motionDuration, motionEasing, radius, shadows, spacing, zIndex } from '@real/tokens'
+import { borderWidth, motionDuration, motionEasing, radius, spacing, zIndex } from '@real/tokens'
 import { Box, Divider, Text } from '../../primitives'
 import { Card } from '../Card'
 import { Icon } from '../Icon'
@@ -98,7 +98,7 @@ export const SearchPanel = React.memo(function SearchPanel({
 
   const panelContainerStyle: any = {
     position: fixed && Platform.OS === 'web' ? ('fixed' as any) : ('absolute' as const),
-    top: fixed ? (topOffset ?? spacing['8']) : '100%',
+    top: fixed ? (topOffset ?? spacing.space2) : '100%',
     start: centered ? undefined : 0,
     end: centered ? undefined : 0,
     width: centered ? panelWidth : '100%',
@@ -107,7 +107,7 @@ export const SearchPanel = React.memo(function SearchPanel({
     left: centered ? '50%' : undefined,
     transform: centered && panelWidth ? [{ translateX: -(panelWidth / 2) }] : undefined,
     zIndex: zIndex.searchTop + 3,
-    marginTop: spacing['8'],
+    marginTop: spacing.space2,
   }
 
   const normalizedQuery = query.trim()
@@ -116,13 +116,13 @@ export const SearchPanel = React.memo(function SearchPanel({
   const popularBrandsDisplay = popularBrands.slice(0, compact ? 4 : 6)
   const productSuggestions = suggestions.filter((item) => item.type === 'product')
   const panelBodyStyle = {
-    gap: compact ? spacing['8'] : spacing['16'],
+    gap: compact ? spacing.space2 : spacing.space4,
     overflow: 'auto' as any,
     overflowY: Platform.OS === 'web' ? ('scroll' as any) : undefined,
     scrollbarGutter: Platform.OS === 'web' ? ('stable' as any) : undefined,
     scrollbarWidth: Platform.OS === 'web' ? ('thin' as any) : undefined,
     overscrollBehavior: Platform.OS === 'web' ? ('contain' as any) : undefined,
-    padding: spacing['16'],
+    padding: spacing.space4,
     maxHeight: spacing.xxl * 9,
   }
   const titleTrending = copy?.titles?.trendingSearches ?? 'Trending Searches'
@@ -158,12 +158,11 @@ export const SearchPanel = React.memo(function SearchPanel({
       <Card
         variant='raised'
         style={{
-          borderRadius: radius.xs,
+          borderRadius: radius.sm,
           borderWidth: borderWidth.thin,
           borderColor: c.border,
           backgroundColor: c.surface,
           overflow: 'hidden',
-          ...(shadows.md as object),
           maxHeight: spacing.xxl * 11,
         }}
       >
@@ -175,7 +174,7 @@ export const SearchPanel = React.memo(function SearchPanel({
           <Text tone='danger'>{msgUnavailable}</Text>
         ) : !hasQuery ? (
           <Box style={panelBodyStyle}>
-            <Box style={{ gap: spacing['8'] }}>
+            <Box style={{ gap: spacing.space2 }}>
               <Text variant='overline' tone='muted' style={{ textTransform: 'uppercase' }}>
                 {titleTrending}
               </Text>
@@ -188,28 +187,28 @@ export const SearchPanel = React.memo(function SearchPanel({
                   style={({ hovered, focused }) => ({
                     flexDirection: 'row',
                     alignItems: 'center',
-                    gap: spacing['8'],
+                    gap: spacing.space2,
                     minHeight: spacing['48'],
-                    paddingHorizontal: spacing['16'],
+                    paddingHorizontal: spacing.space4,
                     borderRadius: radius.xs,
                     backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                     transitionProperty: 'background-color',
-                    transitionDuration: `${motionDuration.microInteraction}ms`,
+                    transitionDuration: `${motionDuration.interactive}ms`,
                     transitionTimingFunction: motionEasing.standard,
                   })}
                 >
-                  <Icon name='trending' size={spacing['16']} color={c.textSecondary} />
+                  <Icon name='trending' size={spacing.space4} color={c.textSecondary} />
                   <Text variant='bodySm' style={{ flex: 1 }}>
                     {item}
                   </Text>
-                  <Icon name='trendArrow' size={spacing['16']} color={c.textSecondary} />
+                  <Icon name='trendArrow' size={spacing.space4} color={c.textSecondary} />
                 </Pressable>
               ))}
             </Box>
 
             <Divider tone='muted' />
 
-            <Box style={{ gap: spacing['8'] }}>
+            <Box style={{ gap: spacing.space2 }}>
               <Text variant='overline' tone='muted' style={{ textTransform: 'uppercase' }}>
                 {titlePopularBrands}
               </Text>
@@ -227,11 +226,11 @@ export const SearchPanel = React.memo(function SearchPanel({
                     style={({ hovered, focused }) => ({
                       minHeight: spacing['48'],
                       justifyContent: 'center',
-                      paddingHorizontal: spacing['16'],
+                      paddingHorizontal: spacing.space4,
                       borderRadius: radius.xs,
                       backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
-                      transitionDuration: `${motionDuration.microInteraction}ms`,
+                      transitionDuration: `${motionDuration.interactive}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
@@ -243,7 +242,7 @@ export const SearchPanel = React.memo(function SearchPanel({
 
             <Divider tone='muted' />
 
-            <Box style={{ gap: spacing['8'] }}>
+            <Box style={{ gap: spacing.space2 }}>
               <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text variant='overline' tone='muted' style={{ textTransform: 'uppercase' }}>
                   {titleRecent}
@@ -270,11 +269,11 @@ export const SearchPanel = React.memo(function SearchPanel({
                     style={({ hovered, focused }) => ({
                       minHeight: spacing['48'],
                       justifyContent: 'center',
-                      paddingHorizontal: spacing['16'],
+                      paddingHorizontal: spacing.space4,
                       borderRadius: radius.xs,
                       backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
-                      transitionDuration: `${motionDuration.microInteraction}ms`,
+                      transitionDuration: `${motionDuration.interactive}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
@@ -286,7 +285,7 @@ export const SearchPanel = React.memo(function SearchPanel({
           </Box>
         ) : (
           <Box style={panelBodyStyle}>
-            <Box style={{ gap: spacing['8'] }}>
+            <Box style={{ gap: spacing.space2 }}>
               <Text variant='overline' style={{ textTransform: 'uppercase' }}>
                 {titleSuggestions}
               </Text>
@@ -304,16 +303,16 @@ export const SearchPanel = React.memo(function SearchPanel({
                     style={({ hovered, focused }) => ({
                       flexDirection: 'row',
                       alignItems: 'center',
-                      gap: spacing['8'],
+                      gap: spacing.space2,
                       minHeight: spacing['48'],
-                      paddingVertical: spacing['8'],
-                      paddingHorizontal: spacing['16'],
+                      paddingVertical: spacing.space2,
+                      paddingHorizontal: spacing.space4,
                       borderRadius: radius.xs,
                       borderBottomWidth: borderWidth.thin,
                       borderColor: c.border,
                       backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
-                      transitionDuration: `${motionDuration.microInteraction}ms`,
+                      transitionDuration: `${motionDuration.interactive}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
@@ -326,7 +325,7 @@ export const SearchPanel = React.memo(function SearchPanel({
 
             {productSuggestions.length > 0 ? <Divider tone='muted' /> : null}
 
-            <Box style={{ gap: spacing['8'] }}>
+            <Box style={{ gap: spacing.space2 }}>
               <Text variant='overline' style={{ textTransform: 'uppercase' }}>
                 {titleProducts}
               </Text>
@@ -345,20 +344,20 @@ export const SearchPanel = React.memo(function SearchPanel({
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: spacing['16'],
+                      gap: spacing.space4,
                       minHeight: spacing['64'],
-                      paddingVertical: spacing['8'],
-                      paddingHorizontal: spacing['16'],
+                      paddingVertical: spacing.space2,
+                      paddingHorizontal: spacing.space4,
                       borderRadius: radius.xs,
                       borderBottomWidth: borderWidth.thin,
                       borderColor: c.border,
                       backgroundColor: hovered || focused ? c.backgroundSecondary : 'transparent',
                       transitionProperty: 'background-color',
-                      transitionDuration: `${motionDuration.microInteraction}ms`,
+                      transitionDuration: `${motionDuration.interactive}ms`,
                       transitionTimingFunction: motionEasing.standard,
                     })}
                   >
-                    <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing['16'], flex: 1 }}>
+                    <Box style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.space4, flex: 1 }}>
                       {item.imageUrl ? (
                         <Image
                           source={{ uri: item.imageUrl }}
@@ -384,7 +383,7 @@ export const SearchPanel = React.memo(function SearchPanel({
                           }}
                         />
                       )}
-                      <Box style={{ flex: 1, gap: spacing['8'] }}>
+                      <Box style={{ flex: 1, gap: spacing.space2 }}>
                         <Text variant='caption' tone='muted' numberOfLines={1}>
                           {item.brandName ?? 'Brand'}
                         </Text>

@@ -66,6 +66,16 @@ enum ReleaseBlockType {
   promo_strip
 }
 
+enum AppAuthRole {
+  customer
+  pharmacist
+  admin
+  marketing
+  catalog
+  support
+  ops
+}
+
 model Release {
   id          String             @id @default(cuid())
   environment ReleaseEnvironment
@@ -121,6 +131,77 @@ model PricingQuote {
   @@index([cartHash])
   @@index([userId])
   @@index([expiresAt])
+}
+
+model User {
+  id            String             @id
+  name          String
+  email         String             @unique
+  emailVerified Boolean            @default(false)
+  image         String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  roleMapping   AppAuthRoleMapping?
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model Account {
+  id                    String   @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("verification")
+}
+
+model AppAuthRoleMapping {
+  id             String      @id @default(cuid())
+  userId         String      @unique
+  role           AppAuthRole @default(customer)
+  updatedByEmail String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("app_auth_role_mapping")
 }
 
 // ============================================================================
@@ -245,6 +326,174 @@ model CmsAuditLog {
 
   @@index([createdAt(sort: Desc)])
   @@index([type])
+}
+
+// Homepage merchandising — CMS page blocks (release-scoped)
+model CmsPageBlock {
+  id          String   @id @default(cuid())
+  releaseId   String   // release environment reference
+  position    Int      @default(0)
+  blockType   String   // hero_carousel, promo_strip, flash_sale, etc.
+  payloadJson Json     // full block payload
+  locale      String   @default("en")
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([releaseId, position])
+  @@index([blockType])
+}
+
+// Homepage marketing rails
+model CmsMarketingRail {
+  id          String   @id @default(cuid())
+  railId      String   @unique // e.g. "best-items-month"
+  enabled     Boolean  @default(true)
+  titleEn     String
+  titleAr     String
+  querySource String   // best_sellers, new_arrivals, bundle_only
+  queryLimit  Int      @default(12)
+  querySortBy String   @default("price_desc")
+  position    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([position])
+}
+
+// Homepage campaign zones
+model CmsCampaign {
+  id            String   @id @default(cuid())
+  campaignId    String   @unique // e.g. "m-camp-hero-primary"
+  enabled       Boolean  @default(true)
+  zone          String   // home_hero_primary, home_flash_sale, shop_banner
+  titleEn       String
+  titleAr       String
+  subtitleEn    String   @default("")
+  subtitleAr    String   @default("")
+  ctaLabelEn    String   @default("")
+  ctaLabelAr    String   @default("")
+  href          String   @default("")
+  imageUrl      String   @default("")
+  timerEndsAt   String   @default("")
+  urgencyBadgeEn String  @default("")
+  urgencyBadgeAr String  @default("")
+  showTimer     Boolean  @default(false)
+  showUrgency   Boolean  @default(false)
+  position      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([zone])
+  @@index([position])
+}
+
+// Homepage hero carousel cards
+model CmsHeroCard {
+  id            String   @id @default(cuid())
+  cardId        String   @unique
+  titleEn       String
+  titleAr       String
+  subtitleEn    String   @default("")
+  subtitleAr    String   @default("")
+  ctaLabelEn    String   @default("")
+  ctaLabelAr    String   @default("")
+  href          String   @default("")
+  imageUrl      String   @default("")
+  badgeLabelEn  String   @default("")
+  badgeLabelAr  String   @default("")
+  position      Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([position])
+}
+
+// Homepage editorial hotspots
+model CmsEditorialHotspot {
+  id            String   @id @default(cuid())
+  enabled       Boolean  @default(true)
+  titleEn       String
+  titleAr       String
+  subtitleEn    String   @default("")
+  subtitleAr    String   @default("")
+  ctaLabelEn    String   @default("")
+  ctaLabelAr    String   @default("")
+  href          String   @default("")
+  imageUrl      String
+  productIdsJson Json   @default("[]")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Homepage newsletter CTA
+model CmsNewsletterCta {
+  id            String   @id @default(cuid())
+  enabled       Boolean  @default(true)
+  titleEn       String
+  titleAr       String
+  subtitleEn    String   @default("")
+  subtitleAr    String   @default("")
+  ctaLabelEn    String   @default("")
+  ctaLabelAr    String   @default("")
+  href          String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Homepage personalization settings
+model CmsPersonalization {
+  id              String   @id @default(cuid())
+  enabled         Boolean  @default(true)
+  mode            String   @default("rule-based")
+  recommendedTitleEn String @default("Recommended for You")
+  recommendedTitleAr String @default("موصى بها لك")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Homepage rail autoplay settings
+model CmsRailAutoplay {
+  id        String   @id @default(cuid())
+  railKey   String   @unique // hero, categories, newArrivals, featured, brandSpotlights
+  enabled   Boolean  @default(true)
+  autoplayMs Int     @default(4000)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Featured campaign slot
+model CmsFeaturedSlot {
+  id            String   @id @default(cuid())
+  enabled       Boolean  @default(true)
+  titleEn       String
+  titleAr       String
+  subtitleEn    String   @default("")
+  subtitleAr    String   @default("")
+  ctaLabelEn    String   @default("")
+  ctaLabelAr    String   @default("")
+  href          String   @default("")
+  imageUrl      String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// Complete set (frequently bought together)
+model CmsCompleteSet {
+  id            String   @id @default(cuid())
+  enabled       Boolean  @default(true)
+  titleEn       String
+  titleAr       String
+  subtitleEn    String   @default("")
+  subtitleAr    String   @default("")
+  ctaLabelEn    String   @default("")
+  ctaLabelAr    String   @default("")
+  ctaHref       String   @default("")
+  querySource   String   @default("bundle_only")
+  queryLimit    Int      @default(8)
+  querySortBy   String   @default("price_desc")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model RateLimitBucket {

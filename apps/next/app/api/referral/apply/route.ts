@@ -12,7 +12,7 @@ import { readReferralProgramSettings } from '../../_lib/referral-program-store'
 
 export async function POST(request: Request) {
   try {
-    const session = requireAuthSession(request)
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }

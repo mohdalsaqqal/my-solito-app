@@ -6,7 +6,7 @@ import { getAdminCacheAudit, runAdminCacheAction } from '../../../../server/serv
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations')
+    const session = await requireAdminDomainSession(request, 'operations')
     if (session instanceof Response) {
       return session
     }
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'operations', 'full')
+    const session = await requireAdminDomainSession(request, 'operations', 'full')
     if (session instanceof Response) {
       return session
     }

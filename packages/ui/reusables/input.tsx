@@ -13,14 +13,17 @@ const Input = forwardRef<TextInput, InputProps>(function Input({ className, plac
   const inputProps = {
     ...props,
     className: cn(
-      // Compact input field: transparent background, square corners, small text.
-      'bg-transparent text-foreground flex h-10 w-full min-w-0 flex-row items-center rounded-none border-0 border-b border-foreground/20 px-0 py-1 text-xs leading-4 shadow-none sm:h-9',
+      // Canonical field treatment: semantic surface, intentional spacing, and full state styling.
+      'bg-background text-foreground flex min-h-11 w-full min-w-0 flex-row items-center rounded-lg border border-input px-4 py-3 text-sm leading-5 shadow-none',
       props.editable === false &&
-        cn('opacity-50', Platform.select({ web: 'disabled:pointer-events-none disabled:cursor-not-allowed' })),
+        cn(
+          'bg-muted/60 opacity-50',
+          Platform.select({ web: 'disabled:pointer-events-none disabled:cursor-not-allowed' })
+        ),
       Platform.select({
         web: cn(
-          'placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground outline-none transition-[color,box-shadow] md:text-sm',
-          'focus-visible:border-ring focus-visible:ring-0 focus-visible:border-b-2',
+          'placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground outline-none transition-[background-color,border-color,box-shadow,color]',
+          'focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20',
           'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive'
         ),
         native: 'placeholder:text-muted-foreground/50',

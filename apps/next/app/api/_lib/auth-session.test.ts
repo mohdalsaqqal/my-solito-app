@@ -6,6 +6,7 @@ import {
   parseAuthSessionCookie,
   readAuthSessionCookieValue,
 } from './auth-session'
+import { getBetterAuthSecret } from './security-policy'
 import { withEnv } from './security-test-helpers'
 
 const SAMPLE_SESSION = {
@@ -24,6 +25,20 @@ test('getAuthSessionSecret requires explicit secret in release-like env', async 
     },
     () => {
       assert.equal(getAuthSessionSecret(), null)
+    }
+  )
+})
+
+test('getBetterAuthSecret requires a strong secret in release-like env', async () => {
+  await withEnv(
+    {
+      BETTER_AUTH_SECRET: 'too-short',
+      AUTH_SESSION_SECRET: undefined,
+      NODE_ENV: 'production',
+      REQUIRE_PRODUCTION_AUTH: 'true',
+    },
+    () => {
+      assert.equal(getBetterAuthSecret(), null)
     }
   )
 })

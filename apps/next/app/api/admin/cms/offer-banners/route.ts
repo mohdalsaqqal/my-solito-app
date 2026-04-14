@@ -42,7 +42,7 @@ function toRecord(
 
 export async function GET(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing')
+    const session = await requireAdminDomainSession(request, 'marketing')
     if (session instanceof Response) return session
 
     const cmsResult = await cmsProvider.getHome()
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAdminDomainSession(request, 'marketing', 'full')
+    const session = await requireAdminDomainSession(request, 'marketing', 'full')
     if (session instanceof Response) return session
 
     const payload = ((await request.json().catch(() => ({}))) ?? {}) as CreatePayload

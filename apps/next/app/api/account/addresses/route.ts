@@ -5,7 +5,7 @@ import { createAccountAddress, listAccountAddresses } from '../../../../server/s
 
 export async function GET(request: Request) {
   try {
-    const session = requireAuthSession(request)
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = requireAuthSession(request)
+    const session = await requireAuthSession(request)
     if (session instanceof Response) {
       return session
     }

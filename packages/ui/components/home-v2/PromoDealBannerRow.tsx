@@ -83,7 +83,7 @@ function PromoDealBanner({
           minWidth: isDesktop ? 320 : '100%',
           transform: [{ translateY: active ? -1 : 0 }],
           transitionProperty: 'transform,box-shadow',
-          transitionDuration: `${motionDuration.hoverScale}ms`,
+          transitionDuration: `${motionDuration.interactive}ms`,
           ...(Platform.OS === 'web' && active
             ? { boxShadow: boxShadowStrings.md }
             : {}),
@@ -107,9 +107,9 @@ function PromoDealBanner({
           <Box
             style={{
               flex: 1,
-              paddingStart: spacing['20'],
-              paddingVertical: spacing['16'],
-              gap: spacing['2'],
+              paddingStart: spacing.space5,
+              paddingVertical: spacing.space4,
+              gap: spacing.space1,
               justifyContent: 'center',
             }}
           >
@@ -146,8 +146,8 @@ function PromoDealBanner({
             style={{
               alignItems: 'flex-end',
               justifyContent: 'center',
-              paddingEnd: spacing['16'],
-              gap: spacing['8'],
+              paddingEnd: spacing.space4,
+              gap: spacing.space2,
               minWidth: isDesktop ? 140 : 110,
             }}
           >
@@ -208,7 +208,7 @@ export const PromoDealBannerRow = React.memo(function PromoDealBannerRow({
         maxWidth: layout.containerMaxWidth,
         alignSelf: 'center',
         paddingHorizontal: contentPaddingX,
-        gap: spacing['12'],
+        gap: spacing.space3,
       }}
     >
       {title ? (
@@ -226,7 +226,7 @@ export const PromoDealBannerRow = React.memo(function PromoDealBannerRow({
         style={{
           flexDirection: isDesktop ? 'row' : 'column',
           flexWrap: isDesktop ? 'wrap' : undefined,
-          gap: spacing['10'],
+          gap: spacing.space3,
         }}
       >
         {items.map((item, index) => {

@@ -40,7 +40,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = requireAdminDomainSession(request, 'customers', 'full')
+    const session = await requireAdminDomainSession(request, 'customers', 'full')
     if (session instanceof Response) {
       return session
     }

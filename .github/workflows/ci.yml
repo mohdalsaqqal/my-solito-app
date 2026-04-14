@@ -151,6 +151,7 @@ jobs:
         env:
           USE_MOCK: true
           USE_TRANSLATION_MOCK: true
+          BETTER_AUTH_SECRET: ci-test-better-auth-secret-32-characters-minimum
           AUTH_SESSION_SECRET: ci-test-secret-for-build-only
           PREVIEW_TOKEN_SECRET: ci-test-secret-for-build-only
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test

@@ -7,10 +7,10 @@ import { Platform, Pressable } from 'react-native';
 
 const buttonVariants = cva(
   cn(
-    // Phase 1 compact CTA baseline: dark primary actions, quiet light secondary actions.
-    'group shrink-0 flex-row items-center justify-center gap-2 rounded-[8px] shadow-none',
+    // Canonical CTA baseline: 4px-grid spacing, semantic radius, and complete state support.
+    'group shrink-0 flex-row items-center justify-center gap-2 rounded-lg shadow-none',
     Platform.select({
-      web: "focus-visible:border-ring focus-visible:ring-[4px] focus-visible:ring-ring/70 focus-visible:ring-offset-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-all disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+      web: "focus-visible:border-ring focus-visible:ring-[4px] focus-visible:ring-ring/70 focus-visible:ring-offset-2 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap outline-none transition-[background-color,border-color,box-shadow,transform] disabled:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:pointer-events-none [&_svg]:shrink-0",
     })
   ),
   {
@@ -44,11 +44,10 @@ const buttonVariants = cva(
         link: '',
       },
       size: {
-        // DESIGN.md — generous padding (px-8) on primary CTAs
-        // WCAG 2.5.5: all sizes minimum 44px touch target
-        default: cn('h-12 px-8 py-3 sm:h-11', Platform.select({ web: 'has-[>svg]:px-6' })),
-        sm: cn('h-11 gap-1.5 px-4 sm:h-11', Platform.select({ web: 'has-[>svg]:px-3' })),
-        lg: cn('h-14 px-10 sm:h-12', Platform.select({ web: 'has-[>svg]:px-8' })),
+        // All sizes stay on a 4px rhythm and maintain comfortable touch targets.
+        default: cn('h-12 px-6 py-3', Platform.select({ web: 'has-[>svg]:px-5' })),
+        sm: cn('h-10 gap-1.5 px-4 py-2', Platform.select({ web: 'has-[>svg]:px-3' })),
+        lg: cn('h-14 gap-2.5 px-8 py-4', Platform.select({ web: 'has-[>svg]:px-7' })),
         icon: 'h-11 w-11 sm:h-11 sm:w-11',
       },
     },
@@ -61,7 +60,7 @@ const buttonVariants = cva(
 
 const buttonTextVariants = cva(
   cn(
-    'text-foreground text-sm font-medium',
+    'text-foreground text-sm font-semibold',
     Platform.select({ web: 'pointer-events-none transition-colors' })
   ),
   {
