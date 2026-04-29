@@ -1,10 +1,64 @@
-# OSX
-#
+# OS / editor
 .DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
 
-# Xcode
-#
+# Environment / secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp.*
+.yarn/*
+!.yarn/patches/
+!.yarn/plugins/
+!.yarn/releases/
+!.yarn/sdks/
+!.yarn/versions/
+
+# Package manager logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log
+
+# Next.js / React
+.next/
+**/.next/
+out/
+next-env.d.ts
+apps/next/next-env.d.ts
+*.tsbuildinfo
+
+# Expo / React Native
+.expo/
+**/.expo/
+.expo-shared/
+web-build/
+apps/expo/ios/
+apps/expo/android/
+
+# Native build outputs
 build/
+**/build/
+dist/
+**/dist/
+DerivedData/
+*.hmap
+*.ipa
+*.xcuserstate
 *.pbxuser
 !default.pbxuser
 *.mode1v3
@@ -13,91 +67,55 @@ build/
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
-xcuserdata
+xcuserdata/
 *.xccheckout
 *.moved-aside
-DerivedData
-*.hmap
-*.ipa
-*.xcuserstate
-project.xcworkspace
-
-# Android/IntelliJ
-#
-build/
-.idea
-.gradle
+project.xcworkspace/
+ios/Pods/
+**/ios/Pods/
+.gradle/
 local.properties
 *.iml
 
-# node.js
-#
-node_modules/
-npm-debug.log
-yarn-error.log
+# Monorepo / task caches
+.turbo/
+**/.turbo/
+.cache/
+**/.cache/
+cache/
+**/cache/
+!apps/next/app/**/cache/
+!apps/next/app/**/cache/**
 
-# BUCK
-buck-out/
-\.buckd/
-*.keystore
-
-# fastlane
-#
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
-# screenshots whenever they are needed.
-# For more information about the recommended setup visit:
-# https://docs.fastlane.tools/best-practices/source-control/
-
-*/fastlane/report.xml
-*/fastlane/Preview.html
-*/fastlane/screenshots
-
-# Bundle artifacts
-*.jsbundle
-
-# CocoaPods
-/ios/Pods/
-
-# Expo
-.expo/*
-web-build/
-
-**/*/.expo
-
-**/*/.next
-
-apps/expo/ios
-apps/expo/android
-
-.turbo
-build/**
-
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
-
-# Playwright
+# Test / coverage artifacts
+coverage/
+**/coverage/
 test-results/
 playwright-report/
 blob-report/
+.playwright-cli/
+.playwright-mcp/
+
+# Generated app state / temp data
+.tmp/
+**/.tmp/
+.data/
+**/.data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Graphify / generated architecture outputs
+graphify-out/
+**/graphify-out/
+
+# AI tools / local agent workspaces
+.agent/
+.agents/
+.claude/
+.adal/
 .aidesigner/*
 !.aidesigner/.gitkeep
-.ace-tool/
-
-# Environment variables (NEVER commit real credentials)
-.env
-.env.*
-!.env.example
-
-# Coverage reports
-coverage/
-
-# AI tool vendor directories (Constitution Principle XV)
-.adal/
 .augment/
 .cline/
 .codebuddy/
@@ -124,8 +142,13 @@ coverage/
 .vibe/
 .windsurf/
 .zencoder/
+.ace-tool/
 
-# Build artifacts
-.next/
-dist/
-.turbo/
+# Bundles / misc artifacts
+*.jsbundle
+buck-out/
+.buckd/
+*.keystore
+*/fastlane/report.xml
+*/fastlane/Preview.html
+*/fastlane/screenshots/

@@ -1,2 +1,0 @@
-[    3548ms] [WARNING] props.pointerEvents is deprecated. Use style.pointerEvents @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/forward-logs-shared.js:27
-[ 2970855ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=PRsl4R6o-55_oGAzPkYIl' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js:55

@@ -1,7 +1,0 @@
-[    2533ms] [WARNING] props.pointerEvents is deprecated. Use style.pointerEvents @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/forward-logs-shared.js:27
-[ 1314207ms] [WARNING] props.pointerEvents is deprecated. Use style.pointerEvents @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/forward-logs-shared.js:27
-[ 1635026ms] [WARNING] props.pointerEvents is deprecated. Use style.pointerEvents @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/forward-logs-shared.js:27
-[ 3344941ms] [WARNING] props.pointerEvents is deprecated. Use style.pointerEvents @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/forward-logs-shared.js:27
-[ 3930640ms] [WARNING] props.pointerEvents is deprecated. Use style.pointerEvents @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/next-devtools/shared/forward-logs-shared.js:27
-[ 6867448ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=g4Nc7s0vxcZTyfwxh5x14' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js:55
-[ 6870803ms] [ERROR] WebSocket connection to 'ws://localhost:3000/_next/webpack-hmr?id=g4Nc7s0vxcZTyfwxh5x14' failed: Error in connection establishment: net::ERR_CONNECTION_REFUSED @ webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js:55
