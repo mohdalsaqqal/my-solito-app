@@ -15,6 +15,9 @@ Desktop.ini
 !.env.example
 !.env.*.example
 
+# Client provisioning (generated per-tenant configs)
+clients/
+
 # Dependencies
 node_modules/
 **/node_modules/

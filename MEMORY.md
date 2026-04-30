@@ -1,5 +1,14 @@
 ﻿# MEMORY.md - Long-Term Decisions & Conventions
 
+## 2026-04-30 - Client Provisioning Command
+
+- `scripts/new-client.ts` is the idempotent provisioning command for new tenant/client deployments.
+- Usage: `npx tsx scripts/new-client.ts --slug <slug> [--name <name>] [--domains <domains>] [--force] [--dry-run]`
+- Generates `clients/<slug>/.env` with strong random secrets and `clients/<slug>/client.json` with adapter config and provisioning checklist.
+- Idempotent by default — exits clean if `.env` already exists. `--force` regenerates.
+- `clients/` directory is gitignored. Generated secrets are per-client, never committed.
+- Tracking: Aspect 11 (DevOps), Aspect 14 (Platform Operations), checklist queue item.
+
 ## 2026-04-30 - Odoo Order Write-Back Contract
 
 - Odoo catalog reads and merchant backend order writes are separate adapter concerns.
@@ -59,6 +68,12 @@
 - Mock adapters updated: templates carry field arrays, test details include sample questionnaire responses.
 - Verification: `yarn tsc`, `yarn guard:checks`, `yarn verify:retention-consultation` (28/28), `yarn verify:pharmacist-browser` (1/1) all pass.
 - Client can replace field labels/options before go-live; the contract is ready.
+
+## 2026-04-30 - CampaignCard Hydration Fix
+
+- `CampaignCard` had a nested `<button>` bug: outer `ReusableButton` renders `<button>`, inner CTA `Button` also rendered `<button>` — invalid HTML causing React hydration mismatch.
+- Fix: replaced inner `<Button size='sm'>` with a styled `<Box>` + `<Text>` (pilled label). Whole card remains clickable via outer button.
+- Detected by `yarn e2e:a11y` (now 6/6 passing).
 
 ## 2026-04-30 - Odoo Connection Runbook And Smoke Script
 

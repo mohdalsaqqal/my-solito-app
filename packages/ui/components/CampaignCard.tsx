@@ -1,8 +1,7 @@
 import React from 'react'
 import { Image, Platform } from 'react-native'
-import { borderWidth, radius, spacing } from '@real/tokens'
+import { borderWidth, radius, spacing, fontWeights } from '@real/tokens'
 import { Box, Text } from '../primitives'
-import { Button } from './Button'
 import { useThemeColors } from '../responsive'
 import { Button as ReusableButton } from '../reusables/button'
 
@@ -66,8 +65,21 @@ export const CampaignCard = React.memo(function CampaignCard({
           </Text>
         ) : null}
         {ctaLabel ? (
-          <Box style={{ marginTop: spacing.space2, alignSelf: 'flex-start' }}>
-            <Button size='sm'>{ctaLabel}</Button>
+          <Box
+            style={{
+              marginTop: spacing.space2,
+              alignSelf: 'flex-start',
+              backgroundColor: c.surface,
+              borderWidth: borderWidth.thin,
+              borderColor: c.border,
+              borderRadius: radius.full,
+              paddingHorizontal: spacing.space3,
+              paddingVertical: spacing.space1,
+            }}
+          >
+            <Text tone='default' variant='bodySm' weight={fontWeights.semibold}>
+              {ctaLabel}
+            </Text>
           </Box>
         ) : null}
       </Box>
