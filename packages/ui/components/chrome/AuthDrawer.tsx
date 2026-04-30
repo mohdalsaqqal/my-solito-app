@@ -33,6 +33,9 @@ function humanizeError(raw: string): { userMessage: string } {
   const match = cleaned.match(/^\[([^\]]+)\]\s*(\w+):\s*(.+)$/)
   if (match) {
     const [, , code, message] = match
+    if (!code || !message) {
+      return { userMessage: raw }
+    }
     const hint = AUTH_HINTS[code]
     return { userMessage: hint ?? message }
   }

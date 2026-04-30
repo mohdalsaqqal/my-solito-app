@@ -1,22 +1,23 @@
-import { accountProvider, authProvider, cartProvider } from '@real/providers'
+import { accountProvider, cartProvider } from '@real/providers'
 import type { AccountAddress } from '@real/app/lib/types'
 import { getHomeCmsResponseData } from '../home/home-cms.service'
 import { listProducts } from '../catalog/product-list.service'
-import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { createStorefrontServiceRequest, type StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { resolveNormalizedSessionFromRequest } from '../auth'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
 }
 
 export async function getCheckoutPageInitialData(
-  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+  context: Pick<StorefrontServiceContext, 'requestUrl' | 'requestHeaders'>,
 ) {
-  const request = new Request(context.requestUrl)
+  const request = createStorefrontServiceRequest(context)
   const [productsResult, cartResult, cmsResult, sessionResult] = await Promise.allSettled([
     listProducts(),
     cartProvider.get(),
     getHomeCmsResponseData(request),
-    authProvider.getSession(),
+    resolveNormalizedSessionFromRequest(request),
   ])
 
   const products =
@@ -44,7 +45,7 @@ export async function getCheckoutPageInitialData(
   let loyaltyWallet = null
 
   if (!error) {
-    const session = sessionResult.status === 'fulfilled' && sessionResult.value.ok ? sessionResult.value.data : null
+    const session = sessionResult.status === 'fulfilled' ? sessionResult.value : null
     if (session) {
       const [addressesResult, loyaltyResult] = await Promise.allSettled([
         accountProvider.listAddresses(session.userId),

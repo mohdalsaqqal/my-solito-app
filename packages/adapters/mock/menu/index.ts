@@ -130,6 +130,15 @@ export const mockMenuAdapter: MenuProvider = {
     }
 
     const current = menus[index]
+    if (!current) {
+      return {
+        ok: false,
+        error: {
+          code: 'MENU_NOT_FOUND',
+          message: 'The requested menu does not exist.',
+        },
+      }
+    }
     const nextSlug = input.slug?.trim()
     if (
       nextSlug &&

@@ -1,14 +1,35 @@
 import {
   AccountTestDetail,
   AccountTestRecord,
+  AccountTestTemplate,
   PharmacistConsultationDraft,
   PharmacistConsultationInput,
   PharmacistCustomerProfile,
   PharmacistCustomerSummary,
   PharmacistProvider,
+  SKIN_QUESTIONNAIRE_FIELDS,
+  HAIR_QUESTIONNAIRE_FIELDS,
 } from '@real/providers/contracts'
 
 const now = Date.now()
+
+const skinTemplate: AccountTestTemplate = {
+  type: 'skin',
+  label: 'Skin consultation',
+  description: 'Skin barrier, hydration, oil balance, and sensitivity review.',
+  fields: SKIN_QUESTIONNAIRE_FIELDS,
+}
+
+const hairTemplate: AccountTestTemplate = {
+  type: 'hair',
+  label: 'Hair and scalp consultation',
+  description: 'Scalp comfort, dryness, flakes, density, and hair routine review.',
+  fields: HAIR_QUESTIONNAIRE_FIELDS,
+}
+
+function resolveTemplate(type: PharmacistConsultationInput['templateType']) {
+  return type === 'hair' ? hairTemplate : skinTemplate
+}
 
 type MockProduct = {
   id: string
@@ -30,6 +51,14 @@ function toRecommendedProduct(product: MockProduct): AccountTestDetail['recommen
     imageUrl: product.imageUrl,
     inStock: product.inStock,
   }
+}
+
+function recommendedProductAt(index: number): AccountTestDetail['recommendedProducts'][number] {
+  const product = mockProductCatalog[index]
+  if (!product) {
+    throw new Error(`Mock pharmacist product ${index} is not seeded.`)
+  }
+  return toRecommendedProduct(product)
 }
 
 const mockProductCatalog: MockProduct[] = [
@@ -135,6 +164,7 @@ const testsByCustomerId = new Map<string, AccountTestDetail[]>([
     [
       {
         id: 'test-u1-1',
+        template: skinTemplate,
         title: 'Core skin diagnostics',
         createdAt: new Date(now - 3 * 86_400_000).toISOString(),
         status: 'completed',
@@ -148,13 +178,14 @@ const testsByCustomerId = new Map<string, AccountTestDetail[]>([
           { id: 'sensitivity', label: 'Sensitivity', value: 'Mild' },
         ],
         recommendedProducts: [
-          toRecommendedProduct(mockProductCatalog[0]),
-          toRecommendedProduct(mockProductCatalog[2]),
-          toRecommendedProduct(mockProductCatalog[5]),
+          recommendedProductAt(0),
+          recommendedProductAt(2),
+          recommendedProductAt(5),
         ],
       },
       {
         id: 'test-u1-2',
+        template: skinTemplate,
         title: 'Skin balance follow-up',
         createdAt: new Date(now - 14 * 86_400_000).toISOString(),
         status: 'follow_up',
@@ -167,7 +198,7 @@ const testsByCustomerId = new Map<string, AccountTestDetail[]>([
           { id: 'oiliness', label: 'Oiliness', value: 'Balanced' },
           { id: 'sensitivity', label: 'Sensitivity', value: 'Mild' },
         ],
-        recommendedProducts: [toRecommendedProduct(mockProductCatalog[1])],
+        recommendedProducts: [recommendedProductAt(1)],
       },
     ],
   ],
@@ -176,6 +207,7 @@ const testsByCustomerId = new Map<string, AccountTestDetail[]>([
     [
       {
         id: 'test-u4-1',
+        template: hairTemplate,
         title: 'Hair and scalp check',
         createdAt: new Date(now - 7 * 86_400_000).toISOString(),
         status: 'completed',
@@ -187,7 +219,7 @@ const testsByCustomerId = new Map<string, AccountTestDetail[]>([
           { id: 'dryness', label: 'Dryness', value: 'High' },
           { id: 'flake_level', label: 'Flaking', value: 'Mild' },
         ],
-        recommendedProducts: [toRecommendedProduct(mockProductCatalog[1]), toRecommendedProduct(mockProductCatalog[3])],
+        recommendedProducts: [recommendedProductAt(1), recommendedProductAt(3)],
       },
     ],
   ],
@@ -196,6 +228,7 @@ const testsByCustomerId = new Map<string, AccountTestDetail[]>([
 function toTestRecord(detail: AccountTestDetail): AccountTestRecord {
   return {
     id: detail.id,
+    template: detail.template,
     title: detail.title,
     createdAt: detail.createdAt,
     status: detail.status,
@@ -248,10 +281,12 @@ function createDraft(input: PharmacistConsultationInput): PharmacistConsultation
 
   return {
     customer,
+    template: resolveTemplate(input.templateType),
     title: input.title.trim(),
     summary: input.summary.trim(),
     notes: input.notes?.trim() || undefined,
     metrics: input.metrics,
+    questionnaire: input.questionnaire,
     recommendedProducts,
   }
 }
@@ -371,6 +406,7 @@ export const mockPharmacistAdapter: PharmacistProvider = {
 
     const detail: AccountTestDetail = {
       id: `test-${draft.customer.userId}-${Date.now()}`,
+      template: draft.template,
       title: draft.title,
       createdAt: new Date().toISOString(),
       status: 'completed',
@@ -379,6 +415,7 @@ export const mockPharmacistAdapter: PharmacistProvider = {
       summary: draft.summary,
       notes: draft.notes,
       metrics: draft.metrics,
+      questionnaire: draft.questionnaire,
       recommendedProducts: draft.recommendedProducts,
     }
 

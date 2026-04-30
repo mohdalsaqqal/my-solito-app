@@ -7,6 +7,8 @@ import { GET as sessionGET } from './session/route'
 import { POST as loginPOST } from './login/route'
 import { POST as registerPOST } from './register/route'
 import { POST as logoutPOST } from './logout/route'
+import { POST as requestResetPOST } from './request-reset/route'
+import { POST as resetPasswordPOST } from './reset-password/route'
 import { withEnv } from '../_lib/security-test-helpers'
 import { auth } from '../../../lib/auth'
 
@@ -60,6 +62,16 @@ function createAuthServer() {
       webResponse = await logoutPOST(webRequest)
     }
 
+    if (method === 'POST' && url === '/api/auth/request-reset') {
+      const webRequest = await toWebRequest(req)
+      webResponse = await requestResetPOST(webRequest)
+    }
+
+    if (method === 'POST' && url === '/api/auth/reset-password') {
+      const webRequest = await toWebRequest(req)
+      webResponse = await resetPasswordPOST(webRequest)
+    }
+
     if (!webResponse) {
       res.statusCode = 404
       res.end('Not Found')
@@ -98,6 +110,7 @@ test('auth flow: register -> session -> logout', async () => {
         id: 'user-1',
         email: 'test.user@example.com',
         name: 'Test User',
+        emailVerified: true,
       },
       session: {
         id: 'session-1',
@@ -197,6 +210,7 @@ test('POST /api/auth/login accepts seeded mock users with full email credentials
         id: 'admin-1',
         email: 'admin@realcosmetics.local',
         name: 'Admin User',
+        emailVerified: true,
       },
       session: {
         id: 'session-admin',
@@ -204,16 +218,24 @@ test('POST /api/auth/login accepts seeded mock users with full email credentials
     }) as Awaited<ReturnType<typeof auth.api.getSession>>
 
   try {
-    const response = await request(server)
-      .post('/api/auth/login')
-      .send({
-        email: 'admin@realcosmetics.local',
-        password: 'admin',
-      })
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
+      },
+      async () => {
+        const response = await request(server)
+          .post('/api/auth/login')
+          .send({
+            email: 'admin@realcosmetics.local',
+            password: 'admin',
+          })
 
-    assert.equal(response.status, 200)
-    assert.equal(response.body.success, true)
-    assert.equal(response.body.data.role, 'admin')
+        assert.equal(response.status, 200)
+        assert.equal(response.body.success, true)
+        assert.equal(response.body.data.role, 'admin')
+      },
+    )
   } finally {
     auth.api.signInEmail = originalSignIn
     auth.api.getSession = originalGetSession
@@ -246,6 +268,7 @@ test('auth routes issue hardened session cookies', async () => {
             id: 'admin-1',
             email: 'admin@realcosmetics.local',
             name: 'Admin User',
+            emailVerified: true,
           },
           session: {
             id: 'session-admin',
@@ -347,4 +370,162 @@ test('auth routes fail closed when Better Auth secret is missing in release mode
       assert.equal(response.body.error.code, 'AUTH_SESSION_CONFIG_INVALID')
     }
   )
+})
+
+test('POST /api/auth/login rejects unverified identities in release mode and clears the session cookie', async () => {
+  const server = createAuthServer()
+  const originalSignIn = auth.api.signInEmail
+  const originalGetSession = auth.api.getSession
+
+  await withEnv(
+    {
+      BETTER_AUTH_SECRET: 'test-better-auth-secret-32-characters-minimum',
+      REQUIRE_PRODUCTION_AUTH: 'true',
+      NODE_ENV: 'production',
+    },
+    async () => {
+      auth.api.signInEmail = async () =>
+        new Response(null, {
+          status: 200,
+          headers: {
+            'Set-Cookie': 'better-auth.session_token=unverified-token; Path=/; HttpOnly; SameSite=Lax',
+          },
+        }) as Awaited<ReturnType<typeof auth.api.signInEmail>>
+      auth.api.getSession = async () =>
+        ({
+          user: {
+            id: 'user-2',
+            email: 'user@example.com',
+            name: 'User',
+            emailVerified: false,
+          },
+          session: { id: 'session-unverified' },
+        }) as Awaited<ReturnType<typeof auth.api.getSession>>
+
+      try {
+        const response = await request(server)
+          .post('/api/auth/login')
+          .send({
+            email: 'user@example.com',
+            password: 'secret123',
+          })
+
+        assert.equal(response.status, 403)
+        assert.equal(response.body.error.code, 'AUTH_EMAIL_VERIFICATION_REQUIRED')
+        const clearCookie = response.headers['set-cookie']?.[0] ?? ''
+        assert.equal(clearCookie.includes('Max-Age=0'), true)
+      } finally {
+        auth.api.signInEmail = originalSignIn
+        auth.api.getSession = originalGetSession
+      }
+    },
+  )
+})
+
+test('GET /api/auth/session is rate limited after repeated reads', async () => {
+  const server = createAuthServer()
+  const originalGetSession = auth.api.getSession
+  auth.api.getSession = async () => null as Awaited<ReturnType<typeof auth.api.getSession>>
+
+  try {
+    let lastResponse
+    for (let i = 0; i < 61; i += 1) {
+      lastResponse = await request(server)
+        .get('/api/auth/session')
+        .set('X-Forwarded-For', '203.0.113.10')
+    }
+
+    assert.ok(lastResponse)
+    assert.equal(lastResponse.status, 429)
+    assert.equal(lastResponse.body.error.code, 'AUTH_SESSION_RATE_LIMITED')
+  } finally {
+    auth.api.getSession = originalGetSession
+  }
+})
+
+test('POST /api/auth/request-reset delegates to Better Auth password reset', async () => {
+  const server = createAuthServer()
+  const originalRequestPasswordReset = auth.api.requestPasswordReset
+  let receivedBody: unknown = null
+
+  auth.api.requestPasswordReset = async ({ body }) => {
+    receivedBody = body
+    return new Response(JSON.stringify({ status: true }), { status: 200 }) as Awaited<ReturnType<typeof auth.api.requestPasswordReset>>
+  }
+
+  try {
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
+        BETTER_AUTH_PASSWORD_RESET_DELIVERY: 'console',
+      },
+      async () => {
+        const response = await request(server)
+          .post('/api/auth/request-reset')
+          .set('X-Forwarded-For', '203.0.113.20')
+          .send({ email: 'user@example.com' })
+
+        assert.equal(response.status, 200)
+        assert.equal(response.body.success, true)
+        assert.equal(response.body.data.accepted, true)
+        assert.deepEqual(receivedBody, {
+          email: 'user@example.com',
+          redirectTo: 'http://localhost:3000/auth/reset-password',
+        })
+      },
+    )
+  } finally {
+    auth.api.requestPasswordReset = originalRequestPasswordReset
+  }
+})
+
+test('POST /api/auth/request-reset fails closed when reset delivery is unavailable', async () => {
+  const server = createAuthServer()
+
+  await withEnv(
+    {
+      REQUIRE_PRODUCTION_AUTH: 'true',
+      NODE_ENV: 'production',
+      BETTER_AUTH_SECRET: 'test-better-auth-secret-32-characters-minimum',
+      BETTER_AUTH_PASSWORD_RESET_DELIVERY: 'disabled',
+    },
+    async () => {
+      const response = await request(server)
+        .post('/api/auth/request-reset')
+        .set('X-Forwarded-For', '203.0.113.21')
+        .send({ email: 'user@example.com' })
+
+      assert.equal(response.status, 503)
+      assert.equal(response.body.error.code, 'AUTH_RESET_DELIVERY_UNAVAILABLE')
+    },
+  )
+})
+
+test('POST /api/auth/reset-password delegates to Better Auth resetPassword', async () => {
+  const server = createAuthServer()
+  const originalResetPassword = auth.api.resetPassword
+  let receivedBody: unknown = null
+
+  auth.api.resetPassword = async ({ body }) => {
+    receivedBody = body
+    return new Response(JSON.stringify({ status: true }), { status: 200 }) as Awaited<ReturnType<typeof auth.api.resetPassword>>
+  }
+
+  try {
+    const response = await request(server)
+      .post('/api/auth/reset-password')
+      .set('X-Forwarded-For', '203.0.113.22')
+      .send({ token: 'reset-token', newPassword: 'newsecret123' })
+
+    assert.equal(response.status, 200)
+    assert.equal(response.body.success, true)
+    assert.equal(response.body.data.accepted, true)
+    assert.deepEqual(receivedBody, {
+      token: 'reset-token',
+      newPassword: 'newsecret123',
+    })
+  } finally {
+    auth.api.resetPassword = originalResetPassword
+  }
 })

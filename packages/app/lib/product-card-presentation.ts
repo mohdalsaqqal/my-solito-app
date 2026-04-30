@@ -88,8 +88,11 @@ function stripBrandPrefix(name: string, brand: string) {
 function extractTailSubtitle(name: string) {
   const sizeMatch = name.match(SIZE_PATTERN)
   if (!sizeMatch) return {}
+  const amountText = sizeMatch[1]
+  const unitText = sizeMatch[2]
+  if (!amountText || !unitText) return {}
 
-  const sizeText = `${sizeMatch[1].replace(',', '.')} ${sizeMatch[2].toLowerCase()}`
+  const sizeText = `${amountText.replace(',', '.')} ${unitText.toLowerCase()}`
   const subtitleMatch = name.match(
     /((?:tube|pump|jar|spray|stick|bottle|roll-on|roll on|capsules?|mask|serum|cream|gel|lotion|wash|shampoo|conditioner|oil|foam|mist|fluid|balm)\s+)?\d+(?:[.,]\d+)?\s?(?:ml|mg|g|kg|l)(?:\s+(?:tube|pump|jar|spray|stick|bottle|roll-on|roll on|capsules?|mask|serum|cream|gel|lotion|wash|shampoo|conditioner|oil|foam|mist|fluid|balm))?$/i
   )
@@ -143,9 +146,13 @@ function inferProductAttributes(product: Product, locale: Locale, subtitle?: str
   }
 
   if (sizeMatch) {
-    const formattedSize = `${sizeMatch[1].replace(',', '.')} ${sizeMatch[2].toLowerCase()}`
-    if (!subtitleLower.includes(formattedSize.toLowerCase())) {
-      candidates.push(formattedSize)
+    const amountText = sizeMatch[1]
+    const unitText = sizeMatch[2]
+    if (amountText && unitText) {
+      const formattedSize = `${amountText.replace(',', '.')} ${unitText.toLowerCase()}`
+      if (!subtitleLower.includes(formattedSize.toLowerCase())) {
+        candidates.push(formattedSize)
+      }
     }
   }
 
@@ -178,9 +185,12 @@ function inferPricePerUnitLabel(product: Product, locale: Locale, currency: stri
 
   const sizeMatch = product.name.match(SIZE_PATTERN)
   if (!sizeMatch) return undefined
+  const amountText = sizeMatch[1]
+  const unitText = sizeMatch[2]
+  if (!amountText || !unitText) return undefined
 
-  const amount = Number(sizeMatch[1].replace(',', '.'))
-  const unit = sizeMatch[2].toLowerCase()
+  const amount = Number(amountText.replace(',', '.'))
+  const unit = unitText.toLowerCase()
   if (!Number.isFinite(amount) || amount <= 0) return undefined
 
   let normalizedPrice = 0

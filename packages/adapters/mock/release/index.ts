@@ -399,6 +399,9 @@ export const mockReleaseAdapter: ReleaseProvider = {
       return { ok: false, error: { code: 'RELEASE_NOT_FOUND', message: 'Release not found.' } }
     }
     const current = store.releases[index]
+    if (!current) {
+      return { ok: false, error: { code: 'RELEASE_NOT_FOUND', message: 'Release not found.' } }
+    }
     const updated: ReleaseRecord = {
       ...current,
       name: input.name !== undefined ? input.name : current.name,
@@ -418,9 +421,15 @@ export const mockReleaseAdapter: ReleaseProvider = {
       return { ok: false, error: { code: 'RELEASE_NOT_FOUND', message: 'Release not found.' } }
     }
     const current = store.releases[index]
+    if (!current) {
+      return { ok: false, error: { code: 'RELEASE_NOT_FOUND', message: 'Release not found.' } }
+    }
     const nowIso = new Date().toISOString()
     for (let i = 0; i < store.releases.length; i += 1) {
       const release = store.releases[i]
+      if (!release) {
+        continue
+      }
       if (release.environment === current.environment && release.status === 'published') {
         store.releases[i] = { ...release, status: 'draft', updatedAt: nowIso }
       }
@@ -484,6 +493,9 @@ export const mockReleaseAdapter: ReleaseProvider = {
       return { ok: false, error: { code: 'RELEASE_BLOCK_NOT_FOUND', message: 'Release block not found.' } }
     }
     const current = store.blocks[index]
+    if (!current) {
+      return { ok: false, error: { code: 'RELEASE_BLOCK_NOT_FOUND', message: 'Release block not found.' } }
+    }
     const updated: ReleaseBlockRecord = {
       ...current,
       position: input.position ?? current.position,

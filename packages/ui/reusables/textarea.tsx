@@ -1,15 +1,22 @@
 import { cn } from '@real/ui/reusables/lib/utils';
 import { Platform, TextInput } from 'react-native';
 
+type TextareaProps = React.ComponentProps<typeof TextInput> & {
+  className?: string
+  placeholderClassName?: string
+}
+
+const UniwindTextInput = TextInput as React.ComponentType<TextareaProps>
+
 function Textarea({
   className,
   multiline = true,
   numberOfLines = Platform.select({ web: 2, native: 8 }), // On web, numberOfLines also determines initial height. On native, it determines the maximum height.
   placeholderClassName,
   ...props
-}: React.ComponentProps<typeof TextInput>) {
+}: TextareaProps) {
   return (
-    <TextInput
+    <UniwindTextInput
       className={cn(
         'text-foreground border-input dark:bg-input/30 flex min-h-16 w-full flex-row rounded-md border bg-transparent px-3 py-2 text-base shadow-sm shadow-black/5 md:text-sm',
         Platform.select({

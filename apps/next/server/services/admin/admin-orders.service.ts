@@ -14,6 +14,7 @@ import {
 } from '../../../app/api/admin/_lib/admin-list-query'
 import { readAdminSavedViewsState } from '../../../app/api/_lib/admin-saved-views-store'
 import { ServiceError } from '../_lib/service-error'
+import { sendOrderStatusNotification } from '../notifications/notification.service'
 
 const allowedStatuses: OrderStatus[] = ['placed', 'shipped', 'delivered', 'cancelled']
 
@@ -117,6 +118,18 @@ export async function updateAdminOrderStatus(id: string, status?: OrderStatus) {
           : 400,
     )
   }
+
+  await sendOrderStatusNotification({
+    userId: result.data.ownerUserId,
+    orderId: result.data.id,
+    status: result.data.status,
+  }).catch((cause) => {
+    console.warn('[notifications] order status notification skipped', {
+      orderId: result.data.id,
+      status: result.data.status,
+      cause,
+    })
+  })
 
   return result.data
 }

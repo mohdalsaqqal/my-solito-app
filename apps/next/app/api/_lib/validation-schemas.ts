@@ -102,14 +102,27 @@ export const ReferralApplyBodySchema = z.object({
 // ── Pharmacist ──────────────────────────────────────────────────────────
 
 export const PharmacistScanResolveBodySchema = z.object({
-  barcode: z.string().min(1, 'Barcode is required').max(128),
+  qrCode: z.string().trim().min(1, 'QR code is required').max(128),
 })
 
-export const PharmacistConsultationSubmitBodySchema = z.object({
-  customerId: z.string().min(1, 'Customer ID is required').max(64),
-  notes: z.string().max(2000),
-  recommendations: z.array(z.string().max(64)).optional(),
+export const PharmacistConsultationMetricBodySchema = z.object({
+  id: z.string().min(1, 'Metric ID is required').max(64),
+  label: z.string().min(1, 'Metric label is required').max(128),
+  value: z.string().min(1, 'Metric value is required').max(255),
 })
+
+export const PharmacistConsultationBodySchema = z.object({
+  customerId: z.string().min(1, 'Customer ID is required').max(64),
+  templateType: z.enum(['skin', 'hair']).optional().default('skin'),
+  title: z.string().min(1, 'Title is required').max(255),
+  summary: z.string().min(1, 'Summary is required').max(1000),
+  notes: z.string().max(2000).optional().default(''),
+  metrics: z.array(PharmacistConsultationMetricBodySchema).default([]),
+  questionnaire: z.record(z.unknown()).optional(),
+  recommendedProductIds: z.array(z.string().max(64)).default([]),
+})
+
+export const PharmacistConsultationSubmitBodySchema = PharmacistConsultationBodySchema
 
 // ── Helper ──────────────────────────────────────────────────────────────
 

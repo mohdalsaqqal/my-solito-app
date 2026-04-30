@@ -261,7 +261,8 @@ export function HomeBlocksRenderer({
             }
 
             const currentStripType = slot.strip.type
-            const stripGap = absIndex === 0 ? 0 : getSectionGap(blockTypes[absIndex - 1], currentStripType)
+            const previousStripType = blockTypes[absIndex - 1] ?? currentStripType
+            const stripGap = absIndex === 0 ? 0 : getSectionGap(previousStripType, currentStripType)
 
             const stripNode = dispatchHomeRenderer({
               slot: stripSlot,
@@ -280,7 +281,8 @@ export function HomeBlocksRenderer({
             absIndex++
 
             const currentHeroType = slot.hero.type
-            const heroGap = absIndex === 0 ? 0 : getSectionGap(blockTypes[absIndex - 1], currentHeroType)
+            const previousHeroType = blockTypes[absIndex - 1] ?? currentHeroType
+            const heroGap = absIndex === 0 ? 0 : getSectionGap(previousHeroType, currentHeroType)
 
             const heroNode = dispatchHomeRenderer({
               slot: heroSlot,
@@ -325,7 +327,8 @@ export function HomeBlocksRenderer({
           }
 
           const currentType = slot.block.type
-          const gap = absIndex === 0 ? 0 : getSectionGap(blockTypes[absIndex - 1], currentType)
+          const previousType = blockTypes[absIndex - 1] ?? currentType
+          const gap = absIndex === 0 ? 0 : getSectionGap(previousType, currentType)
           absIndex++
 
           const node = dispatchHomeRenderer({

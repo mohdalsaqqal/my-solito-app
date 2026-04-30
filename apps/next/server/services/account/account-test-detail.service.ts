@@ -1,9 +1,10 @@
-import { accountProvider, authProvider, cartProvider } from '@real/providers'
+import { accountProvider, cartProvider } from '@real/providers'
 import type { AuthSession } from '@real/providers/contracts'
 import type { AccountTestDetail, Cart, CMSHome, Product } from '@real/app/lib/types'
 import { getHomeCmsResponseData } from '../home/home-cms.service'
 import { listProducts } from '../catalog/product-list.service'
-import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { createStorefrontServiceRequest, type StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { resolveNormalizedSessionFromRequest } from '../auth'
 
 export type AccountTestDetailPageInitialData = {
   session: AuthSession | null
@@ -31,21 +32,18 @@ function toErrorMessage(cause: unknown, fallback: string) {
 
 export async function getAccountTestDetailPageInitialData(
   testId: string,
-  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+  context: Pick<StorefrontServiceContext, 'requestUrl' | 'requestHeaders'>,
 ) {
   if (!testId) {
     return createEmptyAccountTestDetailPageData('Invalid test ID.')
   }
 
-  const sessionResult = await authProvider.getSession()
-  const session =
-    sessionResult.ok ? sessionResult.data : null
+  const request = createStorefrontServiceRequest(context)
+  const session = await resolveNormalizedSessionFromRequest(request)
 
   if (!session) {
     return createEmptyAccountTestDetailPageData()
   }
-
-  const request = new Request(context.requestUrl)
 
   const [cmsResult, productsResult, cartResult, testResult] = await Promise.allSettled([
     getHomeCmsResponseData(request),

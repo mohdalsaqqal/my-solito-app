@@ -154,6 +154,32 @@ runCheck('No direct adapter imports in BFF routes', {
   exclude: (relativePath) => relativePath.includes('/admin/') && relativePath.includes('/sync/'),
 })
 
+runCheck('Search service delegates catalog discovery to SearchProvider', {
+  targets: ['apps/next/server/services/search/search.service.ts'],
+  regex: /public-discovery|getPublicCatalogCollections/,
+})
+
+runCheck('No Next.js Link imports in shared screens', {
+  targets: ['packages/app/screens'],
+  regex: /from ['"]next\/link['"]/,
+})
+
+runCheck('No moved pricing/referral API helper imports in server services', {
+  targets: ['apps/next/server/services'],
+  regex:
+    /app\/api\/_lib\/(pricing-quote|referral-(profile|program|ledger)-store)|\.\.\/\.\.\/\.\.\/app\/api\/_lib\/(pricing-quote|referral-(profile|program|ledger)-store)|\.\.\/\.\.\/app\/api\/_lib\/(pricing-quote|referral-(profile|program|ledger)-store)/,
+})
+
+runCheck('No direct pharmacist provider orchestration in pharmacist API routes', {
+  targets: ['apps/next/app/api/pharmacist'],
+  regex: /pharmacistProvider|from '@real\/providers'/,
+})
+
+runCheck('No direct mock order persistence in order placement service', {
+  targets: ['apps/next/server/services/orders/place-order.service.ts'],
+  regex: /node:fs|mock-orders\.json|writeFile|persistPlacedOrder/,
+})
+
 runCheck('No provider imports inside packages/ui', {
   targets: ['packages/ui'],
   regex: /from '@real\/providers/,

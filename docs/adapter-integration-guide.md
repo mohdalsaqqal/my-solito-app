@@ -274,6 +274,86 @@ MY_SYSTEM_API_KEY=your_api_key
 
 Payment gateways have an extra requirement: **webhook handling**.
 
+### Current Payment Boundary
+
+Checkout now uses a dedicated `PaymentProvider` contract for payment intents. `OrderProvider` still owns merchant order write-back; `PaymentProvider` owns payment authorization/capture state. This keeps Odoo/custom ERP order creation separate from COD, card-on-delivery, online card, and future regional gateways.
+
+Services call:
+
+```typescript
+paymentProvider.createIntent(input, context)
+```
+
+The active adapter is selected in `packages/providers/registry.ts`.
+
+### Built-In Custom Gateway Adapter
+
+`packages/adapters/custom-payment` is a generic REST adapter for client-specific gateways. It lets the platform stay on mock payment now and switch to a real custom gateway by env only.
+
+Configure:
+
+```bash
+USE_CUSTOM_PAYMENT=false
+CUSTOM_PAYMENT_BASE_URL=https://payments.example.com
+CUSTOM_PAYMENT_API_KEY=your_custom_payment_api_key
+CUSTOM_PAYMENT_WEBHOOK_SECRET=your_custom_payment_webhook_secret
+CUSTOM_PAYMENT_PROVIDER_NAME=client_gateway
+```
+
+Expected gateway endpoint:
+
+- `POST /payments/intents`
+
+Request body includes:
+
+- `tenantId`
+- `storeId`
+- `orderId`
+- `customerUserId`
+- `method`
+- `amount`
+- `currency`
+- `returnUrl`
+- `cancelUrl`
+
+Accepted response fields:
+
+- `id` or `sessionId`
+- `status`: `pending`, `requires_action`, `authorized`, `captured`, `failed`, `cancelled`, `paid`, or `succeeded`
+- `paymentUrl` or `payment_url`
+- `clientToken` or `client_token`
+- `expiresAt` or `expires_at`
+- `settlementId` or `settlement_id`
+
+Local/default functional mode uses the mock payment adapter. Real gateway connection should only require implementing the gateway endpoint above and setting env vars.
+
+Webhook endpoint exposed by this app:
+
+- `POST /api/payments/custom/webhook`
+
+Webhook signature:
+
+- Header: `x-custom-payment-signature` (also accepts `x-payment-signature` or `x-signature`)
+- Value: hex HMAC-SHA256 of the raw request body using `CUSTOM_PAYMENT_WEBHOOK_SECRET`
+- Optional prefix accepted: `sha256=...`
+
+Webhook payload fields accepted:
+
+- `orderId` or `order_id`
+- `intentId`, `intent_id`, `id`, `sessionId`, or `session_id`
+- `status` (`paid`/`succeeded` normalize to captured; `authorized`, `failed`, and `cancelled` are preserved)
+- `amount`
+- `currency`
+- `settlementId`, `settlement_id`, or `reference`
+- `capturedAt` or `captured_at`
+
+Payment return/cancel URLs sent to the gateway during intent creation:
+
+- `returnUrl`: `/api/payments/custom/return?orderId=...`
+- `cancelUrl`: `/api/payments/custom/cancel?orderId=...`
+
+The webhook service records settlement through `OrderProvider.confirmPaymentSettlement(...)` when the active order provider supports it.
+
 ### Structure
 
 ```
@@ -391,6 +471,7 @@ export function createMySystemInventoryAdapter(client: MySystemClient): Inventor
 |----------|--------|---------|
 | `USE_MOCK=false` | Use Odoo ERP adapters instead of mock | `true` (mock) |
 | `USE_NETWORKS=false` | Use Networks payment instead of mock | `true` (mock) |
+| `USE_CUSTOM_PAYMENT=false` | Use generic custom payment intents instead of mock payment | `true` (mock) |
 | `USE_TRANSLATION_MOCK=true` | Use mock translation instead of Crowdin API | `false` (Crowdin) |
 | `STRICT_PROVIDER_READINESS=true` | Fail fast when release-ready provider domains remain mock-backed in staging/production | `false` |
 | `REQUIRE_PRODUCTION_AUTH=true` | Require explicit `BETTER_AUTH_SECRET` in release-like environments | `true` |

@@ -1,13 +1,14 @@
 import {
   accountProvider,
-  authProvider,
   cartProvider,
   orderProvider,
 } from '@real/providers'
 import { buildReferralAccountSummary, DEFAULT_STORE_ID } from '@real/app/lib/referral/referral-schema'
-import { listReferralLedgerEntriesByProfile } from '../../../app/api/_lib/referral-ledger-store'
-import { getReferralProfileByIdentity } from '../../../app/api/_lib/referral-profile-store'
-import { readReferralProgramSettings } from '../../../app/api/_lib/referral-program-store'
+import {
+  getReferralProfileByIdentity,
+  listReferralLedgerEntriesByProfile,
+  readReferralProgramSettings,
+} from '../referral'
 import { getHomeCmsResponseData } from '../home/home-cms.service'
 import { listProducts } from '../catalog/product-list.service'
 import type { AuthSession } from '@real/providers/contracts'
@@ -25,7 +26,8 @@ import type {
   WishlistItem,
 } from '@real/app/lib/types'
 import type { ReferralAccountSummary } from '@real/app/lib/referral/referral-types'
-import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { createStorefrontServiceRequest, type StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { resolveNormalizedSessionFromRequest } from '../auth'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
@@ -49,18 +51,18 @@ export type AccountPageInitialData = {
 }
 
 export async function getAccountPageInitialData(
-  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+  context: Pick<StorefrontServiceContext, 'requestUrl' | 'requestHeaders'>,
 ) {
-  const request = new Request(context.requestUrl)
+  const request = createStorefrontServiceRequest(context)
   const [sessionResult, cmsResult, productsResult, cartResult] = await Promise.allSettled([
-    authProvider.getSession(),
+    resolveNormalizedSessionFromRequest(request),
     getHomeCmsResponseData(request),
     listProducts(),
     cartProvider.get(),
   ])
 
   const session =
-    sessionResult.status === 'fulfilled' && sessionResult.value.ok ? sessionResult.value.data : null
+    sessionResult.status === 'fulfilled' ? sessionResult.value : null
   if (!session) {
     return {
       session: null,

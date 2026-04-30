@@ -121,6 +121,8 @@ function normalizeOrder(input: unknown): Order | null {
           }
         : undefined,
     items,
+    paymentSettlement: raw.paymentSettlement,
+    paymentAction: raw.paymentAction,
   }
 }
 
@@ -209,6 +211,68 @@ export const mockOrderAdapter: OrderProvider = {
     const updated: Order = {
       ...current,
       status,
+    }
+    orders[orderIndex] = updated
+    await writeOrders(orders)
+
+    return { ok: true, data: updated }
+  },
+
+  async place(input) {
+    if (!input.order) {
+      return {
+        ok: false,
+        error: {
+          code: 'ORDER_PLACE_MISSING_ORDER',
+          message: 'Order placement requires normalized order data.',
+        },
+      }
+    }
+
+    const orders = await readOrders()
+    const next = [input.order, ...orders.filter((order) => order.id !== input.order?.id)]
+    await writeOrders(next)
+
+    return { ok: true, data: input.order }
+  },
+
+  async confirmPaymentSettlement(orderId, settlement) {
+    const orders = await readOrders()
+    const orderIndex = orders.findIndex((item) => item.id === orderId)
+    if (orderIndex < 0) {
+      return {
+        ok: false,
+        error: {
+          code: 'ORDER_NOT_FOUND',
+          message: 'Order not found.',
+        },
+      }
+    }
+
+    const current = orders[orderIndex]
+    if (!current) {
+      return {
+        ok: false,
+        error: {
+          code: 'ORDER_NOT_FOUND',
+          message: 'Order not found.',
+        },
+      }
+    }
+
+    const updated: Order = {
+      ...current,
+      paymentSettlement: settlement,
+      paymentAction: {
+        status:
+          settlement.status === 'captured'
+            ? 'captured'
+            : settlement.status === 'authorized'
+              ? 'authorized'
+              : settlement.status === 'failed'
+                ? 'failed'
+                : 'pending',
+      },
     }
     orders[orderIndex] = updated
     await writeOrders(orders)

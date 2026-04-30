@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useWindowDimensions } from 'react-native'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import { spacing } from '@real/tokens'
 import { breakpoints } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'

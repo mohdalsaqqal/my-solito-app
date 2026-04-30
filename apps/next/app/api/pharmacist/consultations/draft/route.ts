@@ -1,7 +1,8 @@
-import { pharmacistProvider } from '@real/providers'
-import { PharmacistConsultationInput, matchProviderResult } from '@real/providers/contracts'
+import { matchProviderResult } from '@real/providers/contracts'
 import { fail, ok } from '../../../_lib/response'
 import { requireAuthSession } from '../../../_lib/request-auth'
+import { PharmacistConsultationBodySchema } from '../../../_lib/validation-schemas'
+import { createPharmacistConsultationDraft } from '../../../../../server/services/pharmacist/pharmacist-consultation.service'
 
 export async function POST(request: Request) {
   try {
@@ -9,23 +10,17 @@ export async function POST(request: Request) {
     if (session instanceof Response) {
       return session
     }
-    if (session.role !== 'pharmacist' && session.role !== 'admin') {
-      return fail('AUTH_FORBIDDEN', 'Pharmacist access is required.', 403)
+    const body = ((await request.json().catch(() => ({}))) ?? {}) as Record<string, unknown>
+    const parsed = PharmacistConsultationBodySchema.safeParse(body)
+    if (!parsed.success) {
+      return fail('PHARMACIST_DRAFT_INVALID', parsed.error.issues[0]?.message ?? 'Invalid consultation draft.', 400)
     }
 
-    const payload = ((await request.json().catch(() => ({}))) ?? {}) as Partial<PharmacistConsultationInput>
-    const result = await pharmacistProvider.createConsultationDraft({
-      customerId: payload.customerId ?? '',
-      title: payload.title ?? '',
-      summary: payload.summary ?? '',
-      notes: payload.notes ?? '',
-      metrics: Array.isArray(payload.metrics) ? payload.metrics : [],
-      recommendedProductIds: Array.isArray(payload.recommendedProductIds) ? payload.recommendedProductIds : [],
-    })
+    const result = await createPharmacistConsultationDraft(session, parsed.data)
 
     return matchProviderResult(result, {
       ok: (data) => ok(data),
-      fail: (error) => fail(error.code, error.message, 400),
+      fail: (error) => fail(error.code, error.message, error.code === 'AUTH_FORBIDDEN' ? 403 : 400),
     })
   } catch (cause) {
     return fail('PHARMACIST_DRAFT_UNEXPECTED', 'Unexpected error while creating consultation draft.', 500, {
@@ -34,4 +29,3 @@ export async function POST(request: Request) {
     })
   }
 }
-

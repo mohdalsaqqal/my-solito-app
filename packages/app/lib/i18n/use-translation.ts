@@ -1,16 +1,34 @@
-import { useMemo } from 'react'
-import { useTranslation as useReactI18nextTranslation } from 'react-i18next'
+import { useEffect, useMemo, useState } from 'react'
 import type { AppNamespace } from './config'
-import type { TranslationKey } from './generated/translation-keys'
+import { getI18n, initI18n } from './index'
+import { useCurrentLocale } from './locale-store'
 
-export function useTranslation(namespace: AppNamespace = 'common') {
-  const api = useReactI18nextTranslation(namespace)
+export function useTranslation(namespace: AppNamespace | string = 'common') {
+  const locale = useCurrentLocale()
+  const [ready, setReady] = useState(() => getI18n().isInitialized)
+
+  useEffect(() => {
+    let active = true
+    initI18n(locale).then(() => {
+      if (active) setReady(true)
+    })
+    return () => {
+      active = false
+    }
+  }, [locale])
 
   return useMemo(
     () => ({
-      ...api,
-      t: (key: TranslationKey, options?: Record<string, unknown>) => api.t(key, options),
+      i18n: getI18n(),
+      ready,
+      t: (key: string, options?: Record<string, unknown>) =>
+        ready
+          ? (getI18n().t as (key: string, options?: Record<string, unknown>) => string)(key, {
+              ns: namespace,
+              ...options,
+            })
+          : key,
     }),
-    [api]
+    [namespace, ready]
   )
 }

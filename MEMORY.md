@@ -1,5 +1,226 @@
 ﻿# MEMORY.md - Long-Term Decisions & Conventions
 
+## 2026-04-30 - Odoo Order Write-Back Contract
+
+- Odoo catalog reads and merchant backend order writes are separate adapter concerns.
+- Order placement must remain behind `OrderProvider.place(input)`; services/UI must not call Odoo directly.
+- The Odoo/custom backend order write-back contract requires explicit outbound order fields, idempotency using quote/platform order identity, status mapping, payment settlement separation, and classified failure behavior.
+- `scripts/smoke-odoo-connection.mjs` now checks the runbook for order write-back coverage in addition to catalog adapter readiness.
+- Live order write-back verification remains blocked on client Odoo endpoints/credentials and agreed product/fulfillment/payment mappings.
+
+## 2026-04-30 - Retention And Consultation Persistence Path
+
+- Referral, loyalty, and pharmacist consultation records remain provider-backed; production must persist them in tenant-scoped PostgreSQL before shared infrastructure.
+- `docs/delivery/runbooks/retention-consultation-persistence.md` defines production ownership, required tenant scoping, referral ledger rules, loyalty transactional/ledger rules, pharmacist web-only submission rules, and customer web/mobile read rules.
+- `yarn verify:retention-consultation` now checks the persistence runbook and verifies the pharmacist service preserves questionnaire answers before running focused tests.
+- Pharmacist consultation normalization now forwards `questionnaire` to `PharmacistProvider`; customer-facing account detail can show submitted answers once the provider persists them.
+
+## 2026-04-30 - Shopify Adapter Scope
+
+- Shopify is scoped as an adapter under `packages/adapters/shopify/`; UI, shared screens, and server services must not call Shopify directly.
+- Required provider scope: `ProductQueryProvider`, `CategoryProvider`, `BrandProvider`, and `OrderProvider.place`; search should prefer `SearchProvider`/Meilisearch and use Shopify search only as fallback.
+- The adapter must preserve Shopify product and variant external IDs so order write-back can use variant IDs.
+- Shopify webhooks must verify `SHOPIFY_WEBHOOK_SECRET`; bulk catalog sync must not run on storefront request paths.
+- `yarn verify:shopify-scope` statically checks the runbook, env example, and provider contracts.
+
+## 2026-04-30 - Custom PostgreSQL Adapter Mapping
+
+- Merchant PostgreSQL integrations are scoped under `packages/adapters/postgresql/`; services/UI must not run merchant SQL directly.
+- Required provider scope is `ProductQueryProvider`, `CategoryProvider`, `BrandProvider`, and `OrderProvider` only if the merchant database has a safe write path.
+- Read-only merchant databases must not expose order write-back; use a separate order API adapter when needed.
+- Mapping requires stable product/variant IDs, price/currency/inventory, category/brand slugs, and idempotent order writes keyed by `tenantId + idempotencyKey`.
+- `yarn verify:postgresql-mapping` statically checks the runbook, env example, and provider contracts.
+
+## 2026-04-30 - Meilisearch Adapter
+
+- `packages/adapters/meilisearch/` implements `SearchProvider` and is selected by the registry when `USE_MEILISEARCH=true` and `MEILISEARCH_HOST` are configured.
+- `MEILISEARCH_PRODUCTS_INDEX` supports `{tenantId}` and `{storeId}` placeholders for isolated indexes.
+- The adapter normalizes hits into canonical search products, product suggestions, brand suggestions, trending searches, and popular brands.
+- The adapter includes a health method against `/health`; production search still needs the indexing pipeline, facet/filter/sort config, and live Meilisearch verification.
+- `yarn verify:meilisearch-adapter` runs static checks plus focused adapter tests.
+- `node scripts/verify-delivery.mjs --profile backend` is the consolidated Aspect 05 gate.
+
+## 2026-04-30 - CMS Lifecycle Gate
+
+- Aspect 04 current v1 CMS workflow is verified by `yarn verify:cms-lifecycle`.
+- The CMS lifecycle smoke starts the Next app, uses an admin session, creates a draft release, creates hero and promo strip blocks, verifies block list, reorders blocks, edits hero copy, publishes, verifies CMS home response, rolls back to the original release, verifies post-rollback response, and creates a scheduled draft release.
+- `writeAdminControlsState()` keeps Prisma as canonical persistence in release-like environments, but local non-release verification can continue when Postgres is unavailable. This keeps smoke tests usable without local DB while preserving fail-closed release behavior.
+- `docs/delivery/runbooks/cms-store-manager.md` is the store-manager runbook for edit/save order/preview/publish/rollback/scheduling/media limitations.
+- The `cms-lifecycle` gate is listed in `scripts/verify-delivery.mjs` and `docs/delivery/DELIVERY_MATRIX.md` as a hardening/functional CMS gate.
+- Explicit FAQ accordion editing is still a future content-block enhancement; current testimonials use `ugc_gallery` plus `TestimonialsBlock`.
+
+## 2026-04-30 - Hair/Skin Questionnaire Contracts
+
+- `QuestionnaireField` type with id, label, type (text/number/select/multiselect/range/boolean), options, unit, min/max added to `AccountProvider.ts`.
+- `AccountTestTemplate.fields?: QuestionnaireField[]` allows templates to carry their questionnaire schema.
+- `PharmacistConsultationInput.questionnaire?: Record<string, unknown>` and `AccountTestDetail.questionnaire?: Record<string, unknown>` carry submitted responses.
+- `SKIN_QUESTIONNAIRE_FIELDS` (10 fields) and `HAIR_QUESTIONNAIRE_FIELDS` (9 fields) defined in `QuestionnaireFields.ts` with realistic cosmetic consultation fields.
+- `PharmacistConsultationBodySchema` updated to allow `questionnaire` passthrough.
+- Mock adapters updated: templates carry field arrays, test details include sample questionnaire responses.
+- Verification: `yarn tsc`, `yarn guard:checks`, `yarn verify:retention-consultation` (28/28), `yarn verify:pharmacist-browser` (1/1) all pass.
+- Client can replace field labels/options before go-live; the contract is ready.
+
+## 2026-04-30 - Odoo Connection Runbook And Smoke Script
+
+- Aspect 05-001 landed: `docs/delivery/runbooks/odoo-connection.md` + `scripts/smoke-odoo-connection.mjs` + `scripts/smoke-odoo-connection-live.ts`.
+- Static smoke (44 checks) validates env vars, adapter topology, provider contract conformance, runbook coverage, and data mapping test coverage — no real Odoo required.
+- `--health` and `--full` flags delegate to `tsx scripts/smoke-odoo-connection-live.ts` for live adapter execution against real Odoo.
+- Static verification baseline: `node scripts/smoke-odoo-connection.mjs`, `yarn guard:checks`, `yarn tsc`.
+- Live verification requires client Odoo credentials/endpoints (blocker noted in Aspect 05).
+
+## 2026-04-29 - Expo Typecheck Gate Promoted
+
+- `BLK-001` is resolved. `yarn --cwd apps/expo tsc --noEmit --incremental false` passes locally.
+- Expo typecheck is now a current/functional delivery gate through `scripts/verify-delivery.mjs`.
+- Expo native typecheck should compile native app code and native-reachable shared packages, not package tests, adapter implementations, or UI reference files. `apps/expo/tsconfig.json` is scoped accordingly.
+- Native app code may depend on provider contracts, but not provider registry or adapter implementations.
+- Keep `packages/app/qrcode.d.ts` as the shared declaration for current QR preview usage unless the repo installs upstream `@types/qrcode`.
+- Remaining native delivery work is runtime/device validation: physical-device or simulator smoke, deep-link validation, physical push smoke with real EAS project credentials, and later Maestro.
+
+## 2026-04-28 - Delivery Readiness Baseline
+
+- Current delivery gate baseline is green after the readiness loop:
+  - `yarn guard:checks`
+  - `yarn guard:agent-docs`
+  - `yarn guard:hygiene` exits 0 with known `HY-008` warning for 2277 pre-existing staged deletions
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+  - `yarn workspace next-app build` with mock env
+  - `yarn e2e:a11y`
+  - `yarn --cwd apps/next test:api` (`213/213`)
+  - `npx ai-devkit@latest lint --feature commerce-platform-roadmap`
+- `apps/next/scripts/dev-stable.mjs` must keep a single `createRequire` declaration and resolve Prisma through `prisma/build/index.js` for this installed Prisma package.
+- `scripts/run-e2e-a11y.mjs` uses tolerant Windows cleanup because stale port listeners may already be gone by cleanup time.
+- Hygiene scanning must exclude nested `.worktrees/`; `docs/plans/003-hygiene-remediation-runbook.md` documents the memory override, workspace exclusion, and nested worktree policy.
+- Next dev indicators are disabled in `apps/next/next.config.mjs` so local a11y smoke does not count framework dev-tool controls as app UI.
+- Storefront image/icon-only interactive elements need explicit accessible labels; current fixed examples are offer banners and footer social links.
+- `apps/next` API tests must run with explicit test auth env: `NODE_ENV=test`, `REQUIRE_PRODUCTION_AUTH=false`, `BETTER_AUTH_SECRET`, and `AUTH_SESSION_SECRET`.
+- Remaining release hygiene blocker before push/release: decide what to do with the pre-existing 2277 staged deletions.
+
+## 2026-04-28 - Commerce Delivery Checklist Contract
+
+- Root `checklist.md` is the production-readiness tracker for the commerce platform lifecycle.
+- `AGENTS.md` remains the sole architecture source of truth; `checklist.md` tracks delivery status, blockers, verification, and next implementation queue.
+- `AGENTS.md` v4.7 requires agents to read `checklist.md` before substantial work and update it after finishing when delivery status changes.
+- Definition of Done now includes updating `checklist.md` when status changed, plus the existing memory sync.
+- Current checklist position:
+  - Landed foundations include AGENTS boundaries, Better Auth, provider-backed order write-back, SearchProvider contract/mock adapter, core shared screens, guard checks, a11y smoke, production blueprint, SaaS migration note, and AI DevKit roadmap docs.
+  - Release blockers include pre-existing staged deletions, full API suite rerun after timeout, production Meilisearch search, payment provider hardening, NotificationProvider, tenant DB scoping, provisioning automation, observability, and native mobile production readiness.
+- tRPC is not currently installed or formalized. If adopted, AGENTS must be updated with a narrow internal-client bridge allowance; Server Components should continue calling services directly.
+
+## 2026-04-28 - Payment Provider Boundary
+
+- Payment is now a first-class provider boundary via `packages/providers/contracts/PaymentProvider.ts`.
+- `OrderProvider` owns merchant/backend order write-back; `PaymentProvider` owns payment intent, authorization/capture state, optional webhook handling, and gateway health.
+- Local/default functional mode uses `mockPaymentAdapter`.
+- Real custom gateway mode uses `packages/adapters/custom-payment` with:
+  - `USE_CUSTOM_PAYMENT=false`
+  - `CUSTOM_PAYMENT_BASE_URL`
+  - `CUSTOM_PAYMENT_API_KEY`
+  - optional `CUSTOM_PAYMENT_WEBHOOK_SECRET`
+  - optional `CUSTOM_PAYMENT_PROVIDER_NAME`
+- `placeOrder()` now creates a payment intent before calling `OrderProvider.place` and attaches normalized `paymentSettlement` metadata to the order payload.
+- Custom gateway webhook route/service is `/api/payments/custom/webhook`; it delegates to `paymentProvider.handleWebhook(...)` and records settlements through `OrderProvider.confirmPaymentSettlement(...)`.
+- Custom payment return/cancel routes are `/api/payments/custom/return` and `/api/payments/custom/cancel`; `placeOrder()` passes those URLs to payment intent creation.
+- Placed orders may include `paymentAction`; web checkout must redirect to `paymentAction.paymentUrl` when status is `requires_action`.
+- Custom payment webhooks use HMAC-SHA256 over the raw body with `CUSTOM_PAYMENT_WEBHOOK_SECRET`; accepted signature headers are `x-custom-payment-signature`, `x-payment-signature`, or `x-signature`.
+- Remaining production payment work: idempotency persistence, adapter-level retry policy, COD settlement operations, sandbox cards/vendor-specific docs, and gateway-specific hardening after the client gateway contract is known.
+- Current verification caveat: focused payment/order/custom adapter tests pass, but full `apps/next test:api` timed out locally because DB-fallback-heavy tests wait on unavailable Postgres. Web a11y smoke also did not complete locally in the latest run; do not mark delivery gates fully green until those are fixed or run in an environment with Postgres available.
+
+## 2026-04-28 - Functional Delivery Plan
+
+- `checklist.md` now contains a phased `Functional Delivery Plan` for making the website and app work end-to-end with Odoo-equivalent mock catalog data plus mock/custom payment gateway readiness.
+- This is a functional delivery track. UI polish/publishing can happen separately, but customer, admin, CMS, checkout, order, account, and platform-critical behavior should work as expected.
+- Only allowed external blockers are the client's real Odoo credentials/endpoints and custom payment gateway credentials/endpoints; adapter seams, runbooks, and smoke tests must be ready before handoff.
+- Delivery order:
+  1. Stabilize gates and disk so verification can run.
+  2. Complete web customer flow with production-like merchant seed.
+  3. Verify Expo native smoke and hide incomplete native-only features.
+  4. Prepare Odoo connection runbook, mapping checklist, and smoke script.
+  5. Finish custom payment webhook and online-card return/cancel flow.
+  6. Prepare CMS/admin functional script and user guide.
+  7. Run verification pack and client functional script.
+- Old review findings status:
+  - `dev-stable.mjs` duplicate require fixed.
+  - hygiene `.worktrees` scope/runbook fixed, but staged deletion batch remains release blocker.
+  - search is now provider-backed.
+  - shared `next/link` imports removed; direct `Platform.OS` backlog remains.
+
+## 2026-04-27 - Commerce Platform Requirements Refresh
+
+- `commerce-platform-roadmap` now includes managed commerce platform requirements for branded web storefronts and native apps from one codebase.
+- V1 prioritizes isolated per-tenant deployments, not shared runtime multi-tenancy or marketplace features.
+- Must-have v1 scope includes CMS blocks, product listing/search/facets, product detail, cart/checkout, COD/custom payment provider, block editor, universal adapters, `new-client.ts`, Zod API validation, and Lighthouse >= 90.
+- First-party integration targets are Odoo, Shopify REST API, and custom PostgreSQL, all behind provider/service/adapter boundaries.
+- Search target is Meilisearch, but it must enter through a search provider contract so UI/shared screens do not depend on Meilisearch directly.
+- Commerce explicitness should start with an audit, not greenfield duplication: existing `CartProvider`, `OrderProvider`, `ProductProvider`, `CatalogProviders`, existing cart/catalog/checkout/orders/payments/product/search services, and existing shared commerce screens must be hardened before adding parallel names.
+- Confirmed likely missing/under-specified platform surfaces: `SearchProvider`, `NotificationProvider`, possibly standalone `PaymentProvider`, Shopify adapter, custom PostgreSQL adapter, Meilisearch adapter, Paymob adapter, Newsletter/FAQ/Testimonials CMS blocks, and tests/guards for all fixed gaps.
+- `AGENTS.md` v4.5 now includes durable Commerce Platform Rules: commerce integrations follow UI -> Next server layer -> services -> provider registry -> adapters; contracts live in `packages/providers/contracts`; adapters live in `packages/adapters`; services should use existing domain folders unless a new boundary is justified; audit existing equivalents before adding new commerce contracts/services/screens/blocks; search/notifications/payments/catalog/orders/cart/checkout/CMS must be provider/service-backed; commerce CMS blocks use `packages/app/features/home/renderers`; shared commerce screens live in `packages/app/screens`.
+- `docs/ai/requirements/feature-commerce-platform-roadmap.md` is now AGENTS-aligned: proposed stack choices such as Payload CMS, Tamagui, external GraphQL Mesh/BFF, direct client merchant API calls, direct service-to-adapter imports, and mock-as-production content are deferred unless `AGENTS.md` changes.
+- Phase 2 requirements review confirms the commerce roadmap requirements are template-complete and aligned to `AGENTS.md` v4.5. Remaining clarifications are product/implementation choices, not architecture conflicts: payment boundary, native scope, search adapter, notification channels, provisioning output, and CMS block audit.
+- Phase 3 design review rewrote the commerce design to match AGENTS-aligned requirements. Active design centers Prisma/Postgres CMS, RNR shared UI, existing `apps/next/server/services` domain folders, provider-backed commerce domains, adapter isolation, audit-before-addition, and explicit trade-offs for `OrderProvider` vs `PaymentProvider`, `SearchProvider`, `NotificationProvider`, and native v1 scope.
+- Phase 4 explicit commerce audit matrix is in `docs/ai/implementation/feature-commerce-platform-roadmap.md`. Confirmed first implementation candidates: refactor order placement to call `OrderProvider.place`, add `SearchProvider`, add `NotificationProvider`, add FAQ/Testimonials CMS blocks after audit, and clean web-only imports/`Platform.OS` use in shared screens.
+- Phase 5 planning reconciliation is complete. The Phase 4 implementation queue is ordered as: order write-back through `OrderProvider.place`, `SearchProvider`, `NotificationProvider`, FAQ/Testimonials CMS blocks, then shared screen hygiene.
+- Concrete order gap: `apps/next/server/services/orders/place-order.service.ts` currently builds/persists order summaries to `.tmp/mock-orders.json`; merchant write-back should go through `OrderProvider.place` or an explicitly justified provider boundary.
+- Order write-back slice is landed. `placeOrder()` now delegates final creation/write-back through `OrderProvider.place`, `PlaceOrderInput` accepts optional normalized `order` data, and `mockOrderAdapter.place()` owns local mock order persistence.
+- `yarn guard:checks` now blocks direct mock order persistence in `apps/next/server/services/orders/place-order.service.ts`; order placement services should not import `node:fs`, reference `mock-orders.json`, or revive `persistPlacedOrder`.
+- Next implementation slice should use TDD for `SearchProvider`: first add a failing search service/provider delegation test, then define the smallest contract and move current in-memory search behavior behind it.
+- Submitted stack choices that conflict with `AGENTS.md` are recorded as architecture decision items, not active rules:
+  - Payload CMS 3.0 conflicts with current Prisma/Postgres canonical CMS rule.
+  - Tamagui v2 conflicts with current RNR-centered shared UI contract.
+  - Expo SDK 52+ conflicts with Solito v5 skill baseline of Expo SDK 54+.
+  - GraphQL Mesh/tRPC target must not become an external BFF unless `AGENTS.md` changes.
+  - Redis session/cache ownership must be reconciled with Better Auth and existing Prisma-backed session/rate-limit paths.
+- Next lifecycle step for this feature is Phase 4 implementation of the `SearchProvider` slice.
+
+## 2026-04-26 - Pharmacist Consultation Service Boundary
+
+- Pharmacist API routes must not call `pharmacistProvider` directly.
+- Canonical pharmacist/consultation orchestration now lives in `apps/next/server/services/pharmacist/pharmacist-consultation.service.ts`.
+- Routes under `apps/next/app/api/pharmacist/**` should authenticate, parse route/request input, call the service, and map service/provider results to HTTP responses.
+- `yarn guard:checks` blocks direct `pharmacistProvider` orchestration in pharmacist API routes.
+- TDD baseline covers customer-role denial before provider access, QR trimming, and consultation submission normalization.
+- Remaining consultation production-readiness gaps: validation schema alignment, staff/beauty-consultant role modeling, and Prisma-backed consultation/recommendation persistence.
+
+## 2026-04-26 - Pharmacist Validation Contract
+
+- Pharmacist QR resolve payload uses `qrCode`, not legacy `barcode`.
+- Pharmacist consultation draft/submit payloads use `recommendedProductIds`, not legacy `recommendations`.
+- Canonical pharmacist consultation validation schema is `PharmacistConsultationBodySchema`.
+- `PharmacistConsultationSubmitBodySchema` is an alias of the canonical consultation body schema.
+- Pharmacist QR, draft, and submit routes validate request bodies before server service delegation.
+- Validation tests lock the `qrCode` and `recommendedProductIds` contract.
+
+## 2026-04-25 - Service Boundary Cleanup: Pricing + Referral Helpers
+
+- Server services must not import checkout pricing or referral store helpers from `apps/next/app/api/_lib`.
+- Canonical pricing helper location is `apps/next/server/services/checkout/pricing-quote.ts`.
+- Canonical referral store helper location is `apps/next/server/services/referral/`.
+- `apps/next/app/api/_lib/pricing-quote.ts` and `apps/next/app/api/_lib/referral-*.ts` are compatibility re-export shims only.
+- `yarn guard:checks` now enforces this moved-helper boundary for `apps/next/server/services`.
+- Verification baseline for this slice: guard passed, Next typecheck passed, focused account/checkout/order service tests passed `6/6`.
+
+## 2026-04-22 - Better Auth Audit Findings Fixed
+
+- Checkout quote and order placement must resolve sessions through the normalized Better Auth boundary, not direct legacy cookie parsing.
+- Password reset routes now use Better Auth APIs and must not call the development-only mock `authProvider`.
+- Release-like password reset delivery must fail closed unless a real delivery mechanism is configured.
+- `/api/checkout/quote` is a persisted write surface and must keep trusted mutation provenance plus route-level rate limiting.
+- `x-rc-trusted-request` is no longer a static `1` bypass; it requires `TRUSTED_REQUEST_BYPASS_SECRET`.
+- Remediation verification passed: targeted auth/checkout/order suite `44/44`, Next typecheck, `yarn guard:checks`, and graphify context rebuild.
+
+## 2026-04-22 - AGENTS Startup Status Rule
+
+- `AGENTS.md` v4.3 requires agents to explicitly report `/caveman: active|inactive` at the start of work.
+- Agents must also report `graphify: checked|not checked` based on whether the root graph report and selected bounded-context graph were read for the current task.
+- If the user explicitly overrides repo guidance, report `graphify: not checked (user override)`.
+
+## 2026-04-22 - Better Auth Audit Follow-Up
+
+- Better Auth audit report lives at `docs/reports/better-auth-audit-2026-04-22.md`.
+- Original audit found checkout/order legacy-cookie parsing, mock-provider password reset, missing checkout quote mutation/rate-limit hardening, and static trusted-request bypass.
+- Those findings were fixed later on `2026-04-22`; see the "Better Auth Audit Findings Fixed" memory entry above.
+- Original targeted auth/checkout/order verification passed (`38/38`); full `yarn --cwd apps/next test:api` timed out after roughly `124s` in this environment.
+
 ## 2026-04-13 — Homepage "Souk Energy" Redesign Complete (All 11 Phases)
 
 All 11 phases from `joyful-stirring-breeze.md` implemented and verified. Key decisions baked in:
@@ -258,6 +479,30 @@ Verification:
 Open follow-up:
 - If the team still wants package-level shared typecheck jobs later, treat that as a separate hardening initiative with real package boundaries and dedicated green compile targets.
 
+## 2026-04-22 - Better Auth Redo Audit Findings
+
+- The Better Auth audit was redone with `AGENTS.md` read first, followed by memory files, `docs/architecture-index.md`, root graphify, and bounded contexts for `apps-next-api`, `apps-next-services`, and `packages-providers`.
+- Required startup status during this audit: `/caveman` was inactive, `graphify` was checked.
+- Previously remediated Better Auth findings remain fixed for auth mutation routes, password reset API delegation, checkout quote trusted mutation/rate limiting, and order placement session resolution.
+- New migration gap: live page/bootstrap services still use `authProvider.getSession()`, which maps to `mockAuthAdapter` and is marked `development-only` in `packages/providers/registry.ts`. Affected flows include account page, account test detail, checkout page, order detail, and pharmacist bootstrap.
+- New reset-flow gap: `BETTER_AUTH_PASSWORD_RESET_FALLBACK_PATH` defaults to `/reset-password`, but the real page is `/auth/reset-password`; update the fallback path and route test before considering reset links operational by default.
+- Audit report updated at `docs/reports/better-auth-audit-2026-04-22.md`.
+
+## 2026-04-22 - Better Auth Redo Audit Findings Fixed
+
+- `StorefrontServiceContext` preserves request headers; server services can use `createStorefrontServiceRequest(...)` to reconstruct requests with auth cookies intact.
+- Account, account test detail, checkout page, order detail, and pharmacist bootstrap services now resolve sessions through `resolveNormalizedSessionFromRequest(...)`, not the development-only mock `authProvider`.
+- `apps/next/server/services` should not reintroduce `authProvider.getSession()` for live page/bootstrap session hydration.
+- `BETTER_AUTH_PASSWORD_RESET_FALLBACK_PATH` now defaults to `/auth/reset-password`, matching the real App Router reset page.
+- Verification passed: focused suite `24/24`, Next typecheck, and `yarn guard:checks`.
+
+## 2026-04-22 - AGENTS Caveman Startup Rule
+
+- `AGENTS.md` v4.4 makes Caveman activation the first startup action.
+- Agents must activate `C:\Users\hamoo\.agents\skills\caveman\SKILL.md` before memory files, AGENTS, architecture index, graphify, or raw file search.
+- Startup status should report `/caveman: active` when activation succeeds.
+- Navigation order now starts with the Caveman skill.
+
 ## 2026-04-12 - Sprint 2 Security Hardening Slice
 Context:
 - Sprint 2 from the remediation plan targeted session architecture and rate-limiting hardening.
@@ -275,6 +520,106 @@ Verification:
 - `yarn guard:checks`
 - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
 - `yarn --cwd apps/next test:api`
+
+## 2026-04-22 - Git Hygiene Cleanup Contract
+
+- Generated Graphify output, temp data, local DB files, logs, dependency directories, build outputs, coverage, and local AI-tool workspaces must stay untracked.
+- `.gitignore` is the canonical ignore surface for this cleanup and includes `graphify-out/`, `**/graphify-out/`, `.tmp/`, `.data/`, `.cache/`, `.claude/`, `.agents/`, `.agent/`, and generated log/database patterns.
+- If a generated path was previously tracked, remove it with `git rm --cached` so local files are preserved.
+- Keep explicit exceptions for legitimate source route folders named `cache` under `apps/next/app/**/cache/**`.
+- Stale deleted scaffolds such as `apps/strapi`, `real-cosmetics-admin`, and `src/Figma` should remain removed from the index unless intentionally restored as product code.
+
+## 2026-04-29 - Functional Storefront Smoke Contract
+
+- `yarn verify:functional-storefront` is now the repeatable web functional smoke for client-readiness loops.
+- The smoke validates production-like fallback CMS/catalog seed data, boots Next, checks storefront pages and public APIs, then executes add-to-cart, checkout quote creation, COD order placement, and order-history verification.
+- The script uses local-only secrets and a non-release legacy session cookie so it can verify authenticated checkout without requiring a local Better Auth database; this must not be treated as a production auth pattern.
+- Fallback CMS seed data must not expose "mock", placeholder branding, or lorem/todo-style copy on customer-visible paths.
+- Prisma client internal `error` logging is opt-in via `PRISMA_CLIENT_LOG=error`; service-level production errors remain responsible for real operational diagnostics.
+- Shared screens should import `useTranslation` from `@real/app/lib/i18n/use-translation`; direct `react-i18next` usage can trigger missing-init warnings in shared web/native flows.
+
+## 2026-04-29 - Expo Static Smoke Contract
+
+- `yarn verify:expo-functional` is now the repeatable static/config/router smoke for the Expo app.
+- Expo API Routes must not become the commerce server/data layer under the current `AGENTS.md` architecture. Next.js owns APIs, services, data access, and provider orchestration.
+- Public native/mobile bundles must not send the server-only trusted bypass header (`x-rc-trusted-request: 1`). Use allowed request provenance for the current local API contract, and move to a stronger authenticated mobile mutation contract before production if needed.
+- The Expo app currently uses a state router around shared screens. The static smoke verifies expected view coverage and checkout/order wiring, but it is not a substitute for real device/simulator navigation.
+- Device/simulator smoke, deep links, push notifications, and EAS Build/Submit/Update remain separate delivery gates.
+
+## 2026-04-29 - Notification Provider And EAS Contract
+
+- Notifications are provider-backed through `NotificationProvider`; UI/shared screens must not call Expo, FCM, APNs, or email providers directly.
+- Local/default delivery uses `mockNotificationAdapter` and writes registrations/deliveries to `.tmp/mock-notifications.json`.
+- Real Expo push delivery is selected with `USE_EXPO_PUSH=true`; `EXPO_PUSH_ACCESS_TOKEN` is optional and only used when the Expo push API requires an access token.
+- `/api/notifications/devices` is the authenticated device-token registration endpoint.
+- Order-status notifications are triggered from server/admin order status updates and must stay non-blocking; notification failure should not roll back a successful order status transition.
+- Expo push registration must skip safely until the real EAS project id exists. A physical-device smoke is required before claiming production push readiness.
+- Root `eas.json` owns build profiles; `docs/eas-runbook.md` owns operator instructions for build, submit, update, credentials, push smoke, and rollback.
+- EAS Update can be used for JavaScript-only fixes. Native dependency, config, permission, app identifier, notification credential, icon, or splash changes require a new EAS build.
+
+## 2026-04-29 - Repo-Local Symphony Delivery Workflow
+
+- Delivery work is organized under `docs/delivery/`:
+  - `WORKFLOW.md` defines how work moves.
+  - `DELIVERY_MATRIX.md` maps aspects to gates.
+  - `BLOCKERS.md` stores reproducible blockers.
+  - `aspects/*.md` tracks end-to-end delivery status by aspect.
+- `AGENTS.md` v4.8 makes delivery matrix, blockers, and relevant aspect files part of mandatory startup context.
+- Every delivery task should have a small scope, exact verification commands, and a clear Done Means before implementation.
+- `scripts/verify-delivery.mjs` is the named gate runner. Default `yarn verify:delivery` runs the current required gates; `yarn verify:delivery:full` includes hardening gates and may expose known blockers.
+- Reproducible blockers must include command, aspect, current first failing area, impact, and next action.
+- Do not mark a task done if the relevant delivery gate fails. Fix it if in scope; otherwise update `docs/delivery/BLOCKERS.md`.
+
+## 2026-04-29 - Aspect 01 Product Business Foundation
+
+- Aspect 01 is verified at the repo-delivery level.
+- Client agreement checklist, onboarding runbook, SLA/support expectations, and source-code buyout handoff are under `docs/delivery/runbooks/`.
+- The client agreement checklist is not legal advice or final contract language; final use requires business/legal review.
+- Future client onboarding should start from `docs/delivery/runbooks/client-onboarding.md` and link back to the delivery matrix for acceptance gates.
+
+## 2026-04-29 - Aspect 02 Architecture Design System
+
+- Aspect 02 uses `docs/delivery/runbooks/architecture-design-system.md` as the delivery gate for architecture, shared UI, shared screens, provider/adapter, CMS layout-as-data, and Solito navigation work.
+- The runbook is operational guidance only; it must not duplicate or override `AGENTS.md`.
+- Aspect 02 remains partial while `BLK-001` blocks broad Expo TypeScript promotion.
+- For architecture/design-system tickets, mark work done only when the relevant layer follows the canonical flow, `yarn verify:delivery` passes, and any remaining failed gate has a reproducible blocker entry.
+
+## 2026-04-29 - Referral Loyalty Pharmacist Coverage
+
+- `yarn verify:retention-consultation` is the focused gate for referral, loyalty, account test detail, and pharmacist consultation coverage.
+- The gate covers referral validation/apply/admin/account summary, account page loyalty/test data, checkout page/quote, order loyalty application, account test detail, pharmacist bootstrap, and pharmacist consultation service behavior.
+- `docs/delivery/runbooks/referral-loyalty-pharmacist-tests.md` owns acceptance criteria for these flows.
+- Current implementation is service/API verified but not production-complete until persistence, tenant scoping, explicit hair/skin templates, native/manual smoke, rollback behavior, expiry/fraud controls, and operator audit trail are finished.
+- Do not call these flows fully client-ready until the functional storefront smoke includes referral + loyalty checkout and hair/skin recommendation paths.
+
+## 2026-04-29 - Aspect 03 Web Retention Functional Smoke
+
+- `yarn verify:functional-storefront` now covers referral, loyalty, account tests, account test detail recommendations, recommended-product add-to-cart, and referral+loyalty COD checkout on web.
+- The functional smoke uses seeded customer `u-1` because that account owns referral, loyalty, and test fixtures.
+- Keep native/manual smoke separate: the web smoke proves server/API/customer-flow behavior, not physical-device navigation.
+- Remaining before client-ready: explicit hair and skin templates, native/manual account flow smoke, production persistence/tenant scoping, rollback behavior, and fraud/expiry controls.
+
+## 2026-04-29 - Aspect 03 Hair Skin Consultation Templates
+
+- Account and pharmacist test records now carry explicit template identity through `AccountTestTemplate`.
+- Supported template types are `skin` and `hair`.
+- Pharmacist consultation input accepts optional `templateType`; service normalization defaults unknown/missing values to `skin`.
+- Mock account and pharmacist adapters must seed both template types so `yarn verify:functional-storefront` can prove the customer account sees skin and hair consultation records.
+- Template identity is not the same as client-specific questionnaire content. Template field definitions, audit persistence, tenant scoping, native/manual smoke, and operator smoke remain open.
+
+## 2026-04-29 - Aspect 03 Pharmacist Operator Web Smoke
+
+- `yarn verify:functional-storefront` now includes a pharmacist operator API flow using seeded pharmacist `u-3`.
+- The operator smoke covers customer search, QR resolve, customer profile/history, product search, hair consultation draft, hair consultation submit, and submitted consultation history.
+- This proves the current web/API assisted-consultation flow, but not browser-click UX, native UX, production persistence, tenant scoping, or audit trail.
+
+## 2026-04-29 - Aspect 03 Pharmacist Browser Smoke
+
+- `yarn verify:pharmacist-browser` is the web browser-click gate for the pharmacist assisted-consultation flow.
+- The gate starts Next, signs in as seeded pharmacist `u-3`, searches customer `u-1`, opens the profile, creates a hair test, selects a product recommendation, reviews, submits, and verifies the submitted consultation in customer history.
+- Pharmacist new-test UI must include `templateType` on `PharmacistConsultationInput`; otherwise hair tests silently submit as the default skin template.
+- `packages/ui/components/Button.tsx` renders a real HTML `button` on web and keeps `Pressable` on native. This avoids browser-click/hydration gaps for product-facing shared buttons.
+- Verification baseline after this slice: `yarn verify:pharmacist-browser`, `yarn verify:delivery:functional`, and `yarn verify:functional-storefront` passed.
 
 ## 2026-04-14 - 004 Production CMS Audit Remediation
 
@@ -327,6 +672,8 @@ Verification:
 - **Prerender noise rule**: expected Next prerender bailout errors (`NEXT_PRERENDER_INTERRUPTED`, `HANGING_PROMISE_REJECTION`, and equivalent "needs to bail out of prerendering" messages) should not be logged as `BFF_FAIL` noise. Suppress those diagnostics so real failures remain visible.
 - **Current ship-readiness position**: the safe hardening pass is considered shippable once production envs provide the required Better Auth secret and the existing rollout plan for legacy-session read compatibility is observed. Deeper route-to-service cleanup remains desirable architecture work, but is no longer the blocking auth-hardening gate.
 - **Spec Kit sync rule for active features**: when a feature like `005-better-auth` moves from planning into real implementation, keep `spec.md`, `plan.md`, and `tasks.md` aligned with the actual rollout approach and verification state. Do not leave Spec Kit artifacts stuck in a generic draft state once the repo has committed to a specific production path.
+- **No inferred-role writes in release envs**: `AppAuthRoleMapping` is the only production source of truth for app roles. If a mapping is missing in a release-like environment, return `customer` and do not upsert an inferred role from the seeded email map.
+- **No legacy auth fallback in release envs**: legacy cookie sessions may remain readable for dev/test cutover convenience, but release-like environments must reject them entirely so stale cookie-embedded roles cannot outlive DB-backed role changes.
 
 ## 2026-04-13 - Canonical Design System Foundations
 
@@ -366,4 +713,3 @@ Verification:
 - `yarn guard:checks`
 - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
 - `yarn --cwd apps/next test:api`
-

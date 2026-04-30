@@ -4,15 +4,17 @@ import {
   parseAuthSessionCookie,
   readAuthSessionCookieValue,
 } from '../../../app/api/_lib/auth-session'
+import { isReleaseLikeEnvironment } from '../../../app/api/_lib/security-policy'
 import { resolveAppOwnedRoleForUser } from './auth-role-resolution.service'
 
 type BetterAuthUser = {
   id: string
   email: string
   name: string
+  emailVerified?: boolean
 }
 
-type BetterAuthSessionResult = {
+export type BetterAuthSessionResult = {
   user: BetterAuthUser
 } | null
 
@@ -27,6 +29,18 @@ function toNormalizedSession(user: BetterAuthUser, role: AuthRole): NormalizedAu
     name: user.name,
     role,
   }
+}
+
+export function isEmailVerificationRequired() {
+  return isReleaseLikeEnvironment()
+}
+
+export function isBetterAuthIdentityAllowed(user: BetterAuthUser) {
+  if (!isEmailVerificationRequired()) {
+    return true
+  }
+
+  return user.emailVerified === true
 }
 
 export async function resolveBetterAuthIdentity(
@@ -45,6 +59,7 @@ export async function resolveBetterAuthIdentity(
       id: resolved.user.id,
       email: resolved.user.email,
       name: resolved.user.name,
+      emailVerified: resolved.user.emailVerified,
     },
   }
 }
@@ -54,6 +69,10 @@ export async function resolveNormalizedSessionFromHeaders(
 ): Promise<NormalizedAuthSession | null> {
   const identity = await resolveBetterAuthIdentity(headers)
   if (!identity) {
+    return null
+  }
+
+  if (!isBetterAuthIdentityAllowed(identity.user)) {
     return null
   }
 
@@ -71,6 +90,10 @@ export async function resolveNormalizedSessionFromRequest(
   }
 
   if (options?.allowLegacyFallback === false) {
+    return null
+  }
+
+  if (isReleaseLikeEnvironment()) {
     return null
   }
 

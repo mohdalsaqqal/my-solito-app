@@ -7,6 +7,7 @@ const testContext: StorefrontServiceContext = {
   requestUrl: 'http://internal.local/api/cms/home',
   locale: 'en',
   storeId: 'default',
+  tenantId: 'default',
 }
 
 test('getPharmacistBootstrapData - happy path returns expected shape', async () => {

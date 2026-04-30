@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Image, Platform } from 'react-native'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import {
   AccountAddress,
   CheckoutPlaceOrderInput,

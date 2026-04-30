@@ -18,5 +18,23 @@
       "@real/adapters/*": ["./packages/adapters/*"]
     }
   },
-  "include": ["app/**/*.ts", "app/**/*.tsx", "../../packages/**/*.ts", "../../packages/**/*.tsx"]
+  "include": [
+    "*.d.ts",
+    "app/**/*.ts",
+    "app/**/*.tsx",
+    "../../packages/app/**/*.ts",
+    "../../packages/app/**/*.tsx",
+    "../../packages/ui/**/*.ts",
+    "../../packages/ui/**/*.tsx",
+    "../../packages/tokens/**/*.ts",
+    "../../packages/providers/contracts/**/*.ts",
+    "../../packages/providers/contracts.ts"
+  ],
+  "exclude": [
+    "../../packages/**/__tests__/**",
+    "../../packages/**/*.test.ts",
+    "../../packages/**/*.test.tsx",
+    "../../packages/adapters/**",
+    "../../packages/ui/_reference/**"
+  ]
 }

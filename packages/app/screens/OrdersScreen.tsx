@@ -1,17 +1,17 @@
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import { spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Button, Card } from '@real/ui/components'
 import { Box, Text } from '@real/ui/primitives'
 import { OrderSummary } from '@real/app/lib/types'
 import { useBreakpoint } from '@real/ui/responsive'
-import Link from 'next/link'
 
 type OrdersScreenProps = {
   orders?: OrderSummary[]
   loading?: boolean
   error?: string | null
   onReload?: () => void
+  onNavigate?: (href: string) => void
   onSelectOrder?: (orderId: string) => void
 }
 
@@ -20,6 +20,7 @@ export function OrdersScreen({
   loading = false,
   error = null,
   onReload,
+  onNavigate,
   onSelectOrder,
 }: OrdersScreenProps) {
   const { t } = useTranslation('orders')
@@ -60,9 +61,7 @@ export function OrdersScreen({
             ) : orders.length === 0 ? (
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
                 <Text tone='muted'>{t('empty.message')}</Text>
-                <Link href='/shop' passHref>
-                  <Button size='sm'>{t('actions.browseShop')}</Button>
-                </Link>
+                <Button size='sm' onPress={() => onNavigate?.('/shop')}>{t('actions.browseShop')}</Button>
               </Card>
             ) : (
               <Box style={{ gap: spacing.md }}>

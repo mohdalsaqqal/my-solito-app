@@ -18,18 +18,23 @@ export function buildHomeLayout(
 
   while (i < blocks.length) {
     const block = blocks[i]
+    if (!block) {
+      i++
+      continue
+    }
+    const nextBlock = blocks[i + 1]
     const isDesktop = profile.breakpoint === 'desktop'
 
     if (
       isDesktop &&
       block.type === 'promo_strip' &&
-      i + 1 < blocks.length &&
-      (blocks[i + 1].type === 'hero_carousel' || blocks[i + 1].type === 'hero')
+      nextBlock &&
+      (nextBlock.type === 'hero_carousel' || nextBlock.type === 'hero')
     ) {
       slots.push({
         kind: 'paired',
         strip: block,
-        hero: blocks[i + 1],
+        hero: nextBlock,
         profile,
         stripIndex: i,
         heroIndex: i + 1,

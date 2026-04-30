@@ -18,6 +18,7 @@ export const endpoints = {
   orders: '/api/orders',
   order: (id: string) => `/api/orders/${id}`,
   orderPlace: '/api/orders/place',
+  notificationDevices: '/api/notifications/devices',
   adminOrderStatus: (id: string) => `/api/admin/orders/${id}/status`,
   adminCache: '/api/admin/cache',
   adminCacheSettings: '/api/admin/cache/settings',

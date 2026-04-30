@@ -1,6 +1,6 @@
 ﻿# AGENTS VERSION
-- Version: `v4.2`
-- Last updated: `2026-04-11`
+- Version: `v4.8`
+- Last updated: `2026-04-29`
 - This file is the **sole source of truth** for architecture rules, platform operating model, and non-negotiables.
 
 ## Source of Truth
@@ -19,6 +19,10 @@ The following files exist as **support shims only** — they contain tool-specif
 | `.impeccable.md` | Impeccable-specific notes |
 
 Any architecture rule duplicated in a shim file is a violation enforced by `yarn guard:agent-docs`.
+
+`checklist.md` is the production-readiness tracker. It is not an architecture source of truth, but agents must review it before substantial work and update it when delivery status changes.
+
+`docs/delivery/` is the delivery operating system. It is not an architecture source of truth; it tracks aspects, tickets, blockers, and verification gates. Agents must use it to keep work small, scoped, and verifiable.
 
 ---
 
@@ -181,6 +185,31 @@ Responsibilities:
 
 ---
 
+# Commerce Platform Rules
+
+- Commerce integrations must follow the canonical data flow:
+  UI -> Next.js Server Layer -> Services -> Provider Registry -> Adapters
+- Commerce provider contracts live in `packages/providers/contracts`
+- Commerce adapters live in `packages/adapters` and must not be imported by UI, shared screens, or server services directly
+- Commerce orchestration lives in existing domain service folders under `apps/next/server/services` unless a new domain boundary is explicitly justified
+- Before adding new commerce contracts, services, screens, or CMS blocks, audit existing equivalents first and harden them when possible
+- Search, notifications, payments, catalog, orders, cart, checkout, and CMS must be provider/service-backed, not client-integrated directly
+- New commerce CMS blocks follow the existing `packages/app/features/home/renderers` dispatch pattern
+- Shared commerce screens belong in `packages/app/screens`
+
+---
+
+# Tenant Readiness
+
+- Current delivery model is isolated per client deployment: dedicated web app, mobile app, and database unless explicitly changed
+- Tenant identity must be resolved in the Next.js server layer and passed to services/providers through explicit context
+- Shared packages must not read tenant identity from domains, headers, auth tokens, or `process.env`
+- Provider contracts that can touch tenant-owned data should accept tenant context, even if a mock or isolated adapter does not use it yet
+- New persistent commerce/CMS tables that may later be shared across clients must include `tenantId`; service queries must scope by tenant before the platform moves to shared infrastructure
+- Do not hardcode tenant names, domains, payment config, or backend adapter config in shared UI or shared screens
+
+---
+
 # Layout-As-Data
 
 Flow:
@@ -291,6 +320,8 @@ After every substantial update, agents must sync the repo memory.
 - `SESSION-STATE.md`
 - `RECENT_CONTEXT.md`
 - `MEMORY.md`
+- `checklist.md` when delivery status, blockers, verification, or next steps changed
+- `docs/delivery/BLOCKERS.md` and the relevant `docs/delivery/aspects/*.md` when a blocker or aspect status changes
 
 ## Update `AGENTS.md` Too When
 
@@ -314,26 +345,53 @@ After every substantial update, agents must sync the repo memory.
 
 At the start of every new conversation, before searching the repo or opening arbitrary files, agents must:
 
+0. **Activate Caveman first** — activate `C:\Users\hamoo\.agents\skills\caveman\SKILL.md` before any other repo work
 1. **Check memory files** — read `SESSION-STATE.md`, `RECENT_CONTEXT.md`, and `MEMORY.md` for current working context, open questions, and recent decisions
 2. Read `AGENTS.md`
-3. Read `docs/architecture-index.md`
-4. Read `graphify-out/GRAPH_REPORT.md`
-5. Choose the smallest matching bounded-context graph under `graphify-out/contexts/`
-6. Read that context's `GRAPH_REPORT.md` or `wiki/index.md`
-7. Only then search raw files inside that narrowed context
+3. Read `checklist.md` for production-readiness status, blockers, and the next implementation queue
+4. Read `docs/delivery/DELIVERY_MATRIX.md` and `docs/delivery/BLOCKERS.md`
+5. Read the smallest relevant file under `docs/delivery/aspects/`
+6. Read `docs/architecture-index.md`
+7. Read `graphify-out/GRAPH_REPORT.md`
+8. Choose the smallest matching bounded-context graph under `graphify-out/contexts/`
+9. Read that context's `GRAPH_REPORT.md` or `wiki/index.md`
+10. Only then search raw files inside that narrowed context
 
 This startup protocol is mandatory unless the user explicitly asks to ignore repo guidance.
+
+## Mandatory Startup Status
+
+At the start of work, agents must explicitly check and report:
+
+- `caveman`: `active` or `inactive`, based on whether the Caveman skill is active
+- If the Caveman skill was activated by the mandatory startup protocol, report `caveman: active`
+- `graphify`: `checked` or `not checked`, based on whether `graphify-out/GRAPH_REPORT.md` and the selected bounded context graph have been read for the current task
+
+If graphify is not relevant because the user explicitly asked to ignore repo guidance, report `graphify: not checked (user override)`.
 
 ## Navigation Order
 
 All agents should build context in this order:
 
+0. Caveman skill (`C:\Users\hamoo\.agents\skills\caveman\SKILL.md`)
 1. **Memory files** (`SESSION-STATE.md`, `RECENT_CONTEXT.md`, `MEMORY.md`)
 2. `AGENTS.md`
-3. `docs/architecture-index.md`
-4. `graphify-out/GRAPH_REPORT.md`
-5. The smallest matching bounded-context graph under `graphify-out/contexts/`
-6. Raw files inside that narrowed context only
+3. `checklist.md`
+4. `docs/delivery/DELIVERY_MATRIX.md` and `docs/delivery/BLOCKERS.md`
+5. The relevant `docs/delivery/aspects/*.md`
+6. `docs/architecture-index.md`
+7. `graphify-out/GRAPH_REPORT.md`
+8. The smallest matching bounded-context graph under `graphify-out/contexts/`
+9. Raw files inside that narrowed context only
+
+## Delivery Workflow
+
+- Use `docs/delivery/WORKFLOW.md` for the repo-local Symphony operating model
+- Organize delivery work under aspect files in `docs/delivery/aspects/`
+- Every task must have a small scope, exact verification commands, and a clear Done Means
+- Use `docs/delivery/BLOCKERS.md` for reproducible blockers only; every blocker must include the command that detects it
+- Use `scripts/verify-delivery.mjs` for named delivery gates
+- Do not mark a task done if its required gate fails; either fix the failure or record/update the blocker
 
 ## Bounded Context Graphs
 
@@ -369,8 +427,11 @@ When changing `apps/next` architecture/build behavior:
 
 - Guards pass
 - Required type/build verification passes for the touched layer
+- Relevant `scripts/verify-delivery.mjs` gate or documented task-specific verification passes
 - Data flows via the server layer
 - Shared UI respects the active RNR contract
+- `checklist.md` is updated when delivery status changed
+- Relevant delivery aspect and blocker files are updated when status changed
 - Memory files are updated after substantial work
 
 ---

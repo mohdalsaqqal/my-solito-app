@@ -14,6 +14,7 @@ import {
 } from '@real/app/lib/types'
 import type { CMSHome as ProviderCMSHome } from '@real/providers/contracts/CMSProvider'
 import { prisma } from '../../lib/prisma'
+import { isReleaseLikeEnvironment } from '../../../app/api/_lib/security-policy'
 
 type Actor = {
   userId: string
@@ -163,70 +164,79 @@ export async function writeAdminControlsState(state: AdminControlsState): Promis
   await fs.mkdir(STORAGE_DIR, { recursive: true })
   await writeUserOverridesFile(state.userOverrides)
 
-  await prisma.$transaction(async (tx) => {
-    await tx.cmsToggleOverride.deleteMany()
-    for (const [id, toggle] of Object.entries(state.toggleOverrides)) {
-      await tx.cmsToggleOverride.create({
-        data: {
-          id,
-          enabled: toggle.enabled,
-          updatedByUserId: toggle.updatedBy.userId,
-          updatedByEmail: toggle.updatedBy.email,
-        },
-      })
-    }
-
-    await tx.cmsBrandSpotlight.deleteMany()
-    if (state.brandSpotlightsOverride) {
-      for (let i = 0; i < state.brandSpotlightsOverride.length; i++) {
-        const s = state.brandSpotlightsOverride[i]
-        const meta = state.brandSpotlightMeta[s.id]
-        await tx.cmsBrandSpotlight.create({
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.cmsToggleOverride.deleteMany()
+      for (const [id, toggle] of Object.entries(state.toggleOverrides)) {
+        await tx.cmsToggleOverride.create({
           data: {
-            id: s.id,
-            position: i,
-            spotlightJson: JSON.parse(JSON.stringify(s)),
-            updatedByUserId: meta?.updatedBy.userId ?? 'unknown',
-            updatedByEmail: meta?.updatedBy.email ?? 'unknown',
+            id,
+            enabled: toggle.enabled,
+            updatedByUserId: toggle.updatedBy.userId,
+            updatedByEmail: toggle.updatedBy.email,
           },
         })
       }
-    }
 
-    await tx.cmsOfferBanner.deleteMany()
-    if (state.offerBannersOverride) {
-      for (let i = 0; i < state.offerBannersOverride.length; i++) {
-        const b = state.offerBannersOverride[i]
-        const meta = state.offerBannerMeta[b.id]
-        await tx.cmsOfferBanner.create({
-          data: {
-            id: b.id,
-            position: i,
-            bannerJson: JSON.parse(JSON.stringify(b)),
-            updatedByUserId: meta?.updatedBy.userId ?? '',
-            updatedByEmail: meta?.updatedBy.email ?? '',
-          },
-        })
+      await tx.cmsBrandSpotlight.deleteMany()
+      if (state.brandSpotlightsOverride) {
+        for (let i = 0; i < state.brandSpotlightsOverride.length; i++) {
+          const s = state.brandSpotlightsOverride[i]
+          const meta = state.brandSpotlightMeta[s.id]
+          await tx.cmsBrandSpotlight.create({
+            data: {
+              id: s.id,
+              position: i,
+              spotlightJson: JSON.parse(JSON.stringify(s)),
+              updatedByUserId: meta?.updatedBy.userId ?? 'unknown',
+              updatedByEmail: meta?.updatedBy.email ?? 'unknown',
+            },
+          })
+        }
       }
-    }
 
-    if (state.audits.length > 0) {
-      for (const audit of state.audits) {
-        await tx.cmsAuditLog.upsert({
-          where: { id: audit.id },
-          create: {
-            id: audit.id,
-            type: audit.type,
-            targetId: audit.targetId,
-            actorUserId: audit.actor.userId,
-            actorEmail: audit.actor.email,
-            changes: audit.changes,
-          },
-          update: {},
-        })
+      await tx.cmsOfferBanner.deleteMany()
+      if (state.offerBannersOverride) {
+        for (let i = 0; i < state.offerBannersOverride.length; i++) {
+          const b = state.offerBannersOverride[i]
+          const meta = state.offerBannerMeta[b.id]
+          await tx.cmsOfferBanner.create({
+            data: {
+              id: b.id,
+              position: i,
+              bannerJson: JSON.parse(JSON.stringify(b)),
+              updatedByUserId: meta?.updatedBy.userId ?? '',
+              updatedByEmail: meta?.updatedBy.email ?? '',
+            },
+          })
+        }
       }
+
+      if (state.audits.length > 0) {
+        for (const audit of state.audits) {
+          await tx.cmsAuditLog.upsert({
+            where: { id: audit.id },
+            create: {
+              id: audit.id,
+              type: audit.type,
+              targetId: audit.targetId,
+              actorUserId: audit.actor.userId,
+              actorEmail: audit.actor.email,
+              changes: audit.changes,
+            },
+            update: {},
+          })
+        }
+      }
+    })
+  } catch (cause) {
+    if (isReleaseLikeEnvironment()) {
+      throw cause
     }
-  })
+    if (process.env.PRISMA_CLIENT_LOG === 'error') {
+      console.warn('[admin-controls] Prisma write unavailable; kept file-backed dev state only.')
+    }
+  }
 }
 
 export function applyAdminControlsToCms(home: CMSHome | ProviderCMSHome, state: AdminControlsState): CMSHome {

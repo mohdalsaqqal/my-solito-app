@@ -421,7 +421,9 @@ export function AppRouter({
   if (view === 'auth-forgot') {
     return (
       <AuthForgotPasswordScreen
-        onSubmit={(input) => apiClient.auth.requestReset(input)}
+        onSubmit={async (input) => {
+          await apiClient.auth.requestReset(input)
+        }}
         onGoToLogin={() => setView('auth-login')}
       />
     )

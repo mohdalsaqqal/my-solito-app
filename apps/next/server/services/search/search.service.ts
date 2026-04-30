@@ -1,130 +1,19 @@
 import { cacheLife, cacheTag } from 'next/cache'
-import { passThroughPricingService } from '@real/app/lib/pricing'
 import { createPagePayload } from '@real/app/lib/layout/page-schema'
 import { SEARCH_PAGE_SLUG, SEARCH_PAGE_TYPE } from '@real/app/lib/layout/page-types'
 import type { CMSHomeBlock, SearchResult } from '@real/app/lib/types'
+import { searchProvider } from '@real/providers'
+import type { SearchProviderPayload, SearchProviderProduct } from '@real/providers/contracts'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
-import { getPublicCatalogCollections } from '../_lib/public-discovery'
 import {
   createStorefrontServiceContextFromRequest,
   type StorefrontServiceContext,
 } from '../_lib/storefront-service-context'
+import { createProviderContext } from '../tenant/context'
 
-type SearchItem = SearchResult['suggestions'][number]
 type SearchDiscoveryResult = {
-  products: Array<{ id: string; name: string; description?: string; price: number; currency: string; image?: string }>
+  products: SearchProviderProduct[]
   result: SearchResult
-}
-
-function normalize(input: string) {
-  return input.trim().toLowerCase()
-}
-
-function extractBrand(name: string) {
-  const [left] = name.split('-')
-  const candidate = (left ?? '').trim()
-  return candidate || 'Brand'
-}
-
-function extractProductName(name: string) {
-  const split = name.split('-')
-  if (split.length < 2) {
-    return name.trim()
-  }
-  return split.slice(1).join('-').trim()
-}
-
-function buildProductSuggestions(
-  products: Array<{ id: string; name: string; description?: string; price: number; currency: string; image?: string }>,
-  query: string
-) {
-  const q = normalize(query)
-  const filtered = q
-    ? products.filter((product) => {
-        const haystack = [product.name, product.description ?? '', extractBrand(product.name)]
-          .join(' ')
-          .toLowerCase()
-        return haystack.includes(q)
-      })
-    : products
-
-  return filtered.slice(0, 7).map((product) => {
-    const brandName = extractBrand(product.name)
-    const resolvedPrice = passThroughPricingService.getProductPrice({
-      price: product.price,
-      currency: product.currency,
-    })
-
-    return {
-      id: `p-${product.id}`,
-      label: product.name,
-      type: 'product' as const,
-      href: `/product/${product.id}`,
-      imageUrl: product.image || undefined,
-      brandName,
-      productName: extractProductName(product.name),
-      price: resolvedPrice.unitPrice,
-    }
-  })
-}
-
-function buildBrandSuggestions(products: Array<{ name: string }>, query: string) {
-  const seen = new Set<string>()
-  const q = normalize(query)
-  const brands: string[] = []
-
-  for (const product of products) {
-    const brand = extractBrand(product.name)
-    const key = brand.toLowerCase()
-    if (seen.has(key)) {
-      continue
-    }
-    if (q && !key.includes(q)) {
-      continue
-    }
-    seen.add(key)
-    brands.push(brand)
-  }
-
-  return brands.slice(0, 6).map((brand, index) => ({
-    id: `b-${index}`,
-    label: brand,
-    type: 'brand' as const,
-    href: `/brands/${encodeURIComponent(brand.toLowerCase().replace(/\s+/g, '-'))}`,
-  }))
-}
-
-function buildTrending(products: Array<{ name: string }>) {
-  const words = new Map<string, number>()
-
-  for (const product of products) {
-    for (const token of product.name.toLowerCase().split(/\s+/)) {
-      const clean = token.replace(/[^a-z0-9]/g, '')
-      if (clean.length < 3) {
-        continue
-      }
-      words.set(clean, (words.get(clean) ?? 0) + 1)
-    }
-  }
-
-  return Array.from(words.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([token]) => token)
-    .slice(0, 6)
-}
-
-function buildPopularBrands(products: Array<{ name: string }>) {
-  const counts = new Map<string, number>()
-
-  for (const product of products) {
-    const brand = extractBrand(product.name)
-    counts.set(brand, (counts.get(brand) ?? 0) + 1)
-  }
-
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([brand]) => brand)
-    .slice(0, 6)
 }
 
 function buildSearchPageBlocks(query: string, locale: 'en' | 'ar', popularBrands: string[]): CMSHomeBlock[] {
@@ -175,6 +64,7 @@ async function getCachedSearchDiscovery(
   storeId: string,
   locale: 'en' | 'ar',
   query: string,
+  tenantId: string,
 ): Promise<SearchDiscoveryResult> {
   'use cache'
 
@@ -183,15 +73,19 @@ async function getCachedSearchDiscovery(
   cacheTag('shop')
   cacheTag('sales')
   cacheTag('search')
+  cacheTag(`tenant:${tenantId}`)
 
-  const discovery = await getPublicCatalogCollections({ includeProducts: true })
-  if (discovery.error) {
-    throw new Error(discovery.error)
+  const providerResult = await searchProvider.search(
+    { storeId, locale, query },
+    createProviderContext({ tenantId, storeId }),
+  )
+  if (!providerResult.ok) {
+    throw new Error(providerResult.error.message)
   }
 
   return {
-    products: discovery.products,
-    result: buildSearchPayload(storeId, locale, query, discovery.products),
+    products: providerResult.data.products,
+    result: buildSearchPayload(storeId, locale, query, providerResult.data),
   }
 }
 
@@ -199,12 +93,9 @@ function buildSearchPayload(
   storeId: string,
   locale: 'en' | 'ar',
   query: string,
-  products: Array<{ id: string; name: string; description?: string; price: number; currency: string; image?: string }>,
+  payload: SearchProviderPayload,
 ): SearchResult {
-  const productSuggestions = buildProductSuggestions(products, query)
-  const brandSuggestions = query ? buildBrandSuggestions(products, query) : []
-  const suggestions: SearchItem[] = [...brandSuggestions, ...productSuggestions]
-  const popularBrands = buildPopularBrands(products)
+  const popularBrands = payload.popularBrands
   const searchPageBlocks = buildSearchPageBlocks(query, locale, popularBrands)
 
   return {
@@ -219,8 +110,8 @@ function buildSearchPayload(
         props: block,
       })),
     }),
-    suggestions,
-    trendingSearches: buildTrending(products),
+    suggestions: payload.suggestions,
+    trendingSearches: payload.trendingSearches,
     popularBrands,
   }
 }
@@ -228,25 +119,30 @@ function buildSearchPayload(
 export async function getSearchPayload(
   request: Request,
   queryOverride?: string,
-  productsOverride?: Array<{ id: string; name: string; description?: string; price: number; currency: string; image?: string }>,
+  productsOverride?: SearchProviderProduct[],
 ): Promise<SearchResult> {
   const context = createStorefrontServiceContextFromRequest(request)
   const { searchParams } = new URL(context.requestUrl)
   const query = queryOverride ?? searchParams.get('q') ?? ''
   if (productsOverride) {
-    return buildSearchPayload(context.storeId, context.locale, query, productsOverride)
+    return buildSearchPayload(context.storeId, context.locale, query, {
+      products: productsOverride,
+      suggestions: [],
+      trendingSearches: [],
+      popularBrands: [],
+    })
   }
 
-  const discovery = await getCachedSearchDiscovery(context.storeId, context.locale, query)
+  const discovery = await getCachedSearchDiscovery(context.storeId, context.locale, query, context.tenantId)
   return discovery.result
 }
 
 export async function getSearchPageInitialData(
   query: string,
-  context: Pick<StorefrontServiceContext, 'locale' | 'requestUrl' | 'storeId'>,
+  context: Pick<StorefrontServiceContext, 'locale' | 'requestUrl' | 'storeId' | 'tenantId'>,
 ) {
   const [discoveryResult, cmsResult] = await Promise.allSettled([
-    getCachedSearchDiscovery(context.storeId, context.locale, query),
+    getCachedSearchDiscovery(context.storeId, context.locale, query, context.tenantId),
     getCachedHomeCmsResponseData(context.requestUrl),
   ])
 
@@ -255,7 +151,12 @@ export async function getSearchPageInitialData(
   const result =
     discoveryResult.status === 'fulfilled'
       ? discoveryResult.value.result
-      : buildSearchPayload(context.storeId, context.locale, query, products)
+      : buildSearchPayload(context.storeId, context.locale, query, {
+          products,
+          suggestions: [],
+          trendingSearches: [],
+          popularBrands: [],
+        })
 
   let error: string | null = null
   if (cmsResult.status === 'rejected') {

@@ -1,4 +1,4 @@
-import { AccountTestDetail, AccountTestRecord } from './AccountProvider'
+import { AccountTestDetail, AccountTestRecord, AccountTestTemplate, AccountTestTemplateType } from './AccountProvider'
 import { ProviderResult } from './types'
 
 export type PharmacistCustomerSummary = {
@@ -24,19 +24,23 @@ export type PharmacistConsultationMetricInput = {
 
 export type PharmacistConsultationInput = {
   customerId: string
+  templateType?: AccountTestTemplateType
   title: string
   summary: string
   notes?: string
   metrics: PharmacistConsultationMetricInput[]
+  questionnaire?: Record<string, unknown>
   recommendedProductIds: string[]
 }
 
 export type PharmacistConsultationDraft = {
   customer: PharmacistCustomerSummary
+  template: AccountTestTemplate
   title: string
   summary: string
   notes?: string
   metrics: PharmacistConsultationMetricInput[]
+  questionnaire?: Record<string, unknown>
   recommendedProducts: Array<{
     productId: string
     brand?: string

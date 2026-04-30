@@ -3,11 +3,10 @@ import type { PricingQuote } from '@real/providers/contracts'
 import { passThroughPricingService } from '@real/app/lib/pricing'
 import { DEFAULT_STORE_ID, validateReferralRequest } from '@real/app/lib/referral/referral-schema'
 import type { ReferralProfile, ReferralProgramSettings } from '@real/app/lib/referral/referral-types'
-import { parseAuthSessionCookie, readAuthSessionCookieValue } from '../../../app/api/_lib/auth-session'
-import { buildCartHash, hasSingleCurrency, isQuoteExpired, normalizeCouponCode, quoteExpiresAt } from '../../../app/api/_lib/pricing-quote'
-import { getReferralProfileByCode } from '../../../app/api/_lib/referral-profile-store'
-import { readReferralProgramSettings } from '../../../app/api/_lib/referral-program-store'
+import { buildCartHash, hasSingleCurrency, isQuoteExpired, normalizeCouponCode, quoteExpiresAt } from './pricing-quote'
+import { getReferralProfileByCode, readReferralProgramSettings } from '../referral'
 import { ServiceError } from '../_lib/service-error'
+import { resolveNormalizedSessionFromRequest } from '../auth'
 
 export type CheckoutQuoteRequest = {
   items?: Array<{ productId?: string; quantity?: number }>
@@ -20,11 +19,6 @@ export type CheckoutQuoteRequest = {
 }
 
 const QUOTE_TTL_MS = 5 * 60 * 1000
-
-function readSession(request: Request) {
-  const cookieValue = readAuthSessionCookieValue(request.headers.get('cookie'))
-  return parseAuthSessionCookie(cookieValue)
-}
 
 function toSafeItems(payloadItems: CheckoutQuoteRequest['items']) {
   return (payloadItems ?? [])
@@ -67,7 +61,7 @@ function buildReferralPricing(input: {
 }
 
 export async function createCheckoutQuote(request: Request) {
-  const session = readSession(request)
+  const session = await resolveNormalizedSessionFromRequest(request)
   const body = ((await request.json().catch(() => ({}))) ?? {}) as CheckoutQuoteRequest
 
   const fulfillmentMode = body.fulfillment?.mode === 'pickup' ? 'pickup' : 'delivery'

@@ -78,7 +78,7 @@ export default function HomeRoute() {
       city: branch.city?.[locale],
       area: branch.area?.[locale],
       building: branch.building?.[locale],
-      stockCount: branch.stockCount,
+      stockCount: branch.stockCount ?? 0,
       distanceKm: branch.distanceKm,
       payAtBranchEnabled: branch.payAtBranchEnabled,
       payNowEnabled: branch.payNowEnabled,

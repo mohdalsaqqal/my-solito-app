@@ -113,8 +113,45 @@ export type WishlistItem = {
   imageUrl?: string
 }
 
+export type AccountTestTemplateType = 'skin' | 'hair'
+
+export type QuestionnaireFieldType = 'text' | 'number' | 'select' | 'multiselect' | 'range' | 'boolean'
+
+export type QuestionnaireFieldOption = {
+  value: string
+  label: string
+}
+
+export type QuestionnaireField = {
+  id: string
+  label: string
+  type: QuestionnaireFieldType
+  required?: boolean
+  options?: QuestionnaireFieldOption[]
+  unit?: string
+  min?: number
+  max?: number
+  placeholder?: string
+}
+
+export type AccountTestTemplate = {
+  type: AccountTestTemplateType
+  label: string
+  description: string
+  fields?: QuestionnaireField[]
+}
+
+export type QuestionnaireResponseValue = string | number | boolean | string[]
+
+export type QuestionnaireResponse = {
+  fieldId: string
+  label: string
+  value: QuestionnaireResponseValue
+}
+
 export type AccountTestRecord = {
   id: string
+  template: AccountTestTemplate
   title: string
   createdAt: string
   status?: 'completed' | 'follow_up'
@@ -134,6 +171,7 @@ export type AccountTestRecommendedProduct = {
 
 export type AccountTestDetail = {
   id: string
+  template: AccountTestTemplate
   title: string
   createdAt: string
   status: 'completed' | 'follow_up'
@@ -146,6 +184,7 @@ export type AccountTestDetail = {
     label: string
     value: string
   }>
+  questionnaire?: Record<string, unknown>
   recommendedProducts: AccountTestRecommendedProduct[]
 }
 

@@ -4,6 +4,7 @@ import {
   AccountOverview,
   AccountProvider,
   AccountTestRecord,
+  AccountTestTemplate,
   AuthRole,
   LoyaltyBarcode,
   LoyaltyHistoryEntry,
@@ -11,9 +12,25 @@ import {
   LoyaltyTierRule,
   LoyaltyWallet,
   WishlistItem,
+  SKIN_QUESTIONNAIRE_FIELDS,
+  HAIR_QUESTIONNAIRE_FIELDS,
 } from '@real/providers/contracts'
 
 const now = Date.now()
+
+const skinTemplate: AccountTestTemplate = {
+  type: 'skin',
+  label: 'Skin consultation',
+  description: 'Skin barrier, hydration, oil balance, and sensitivity review.',
+  fields: SKIN_QUESTIONNAIRE_FIELDS,
+}
+
+const hairTemplate: AccountTestTemplate = {
+  type: 'hair',
+  label: 'Hair and scalp consultation',
+  description: 'Scalp comfort, dryness, flakes, density, and hair routine review.',
+  fields: HAIR_QUESTIONNAIRE_FIELDS,
+}
 
 const addressesByUserId = new Map<string, AccountAddress[]>([
   [
@@ -135,6 +152,7 @@ const testsByUserId = new Map<string, AccountTestRecord[]>([
     [
       {
         id: 'test-u1-1',
+        template: skinTemplate,
         title: 'Core skin diagnostics',
         createdAt: new Date(now - 3 * 86_400_000).toISOString(),
         status: 'completed',
@@ -142,7 +160,17 @@ const testsByUserId = new Map<string, AccountTestRecord[]>([
         purchasedCount: 1,
       },
       {
+        id: 'test-u1-3',
+        template: hairTemplate,
+        title: 'Hair and scalp consultation',
+        createdAt: new Date(now - 8 * 86_400_000).toISOString(),
+        status: 'completed',
+        recommendedCount: 2,
+        purchasedCount: 0,
+      },
+      {
         id: 'test-u1-2',
+        template: skinTemplate,
         title: 'Skin balance follow-up',
         createdAt: new Date(now - 14 * 86_400_000).toISOString(),
         status: 'follow_up',
@@ -157,6 +185,7 @@ const testsByUserId = new Map<string, AccountTestRecord[]>([
     [
       {
         id: 'test-u3-1',
+        template: skinTemplate,
         title: 'Pharmacist internal sample test',
         createdAt: new Date(now - 7 * 86_400_000).toISOString(),
         status: 'completed',
@@ -179,6 +208,7 @@ const testDetailsByUserId = new Map<string, AccountTestDetail[]>([
     [
       {
         id: 'test-u1-1',
+        template: skinTemplate,
         title: 'Core skin diagnostics',
         createdAt: new Date(now - 3 * 86_400_000).toISOString(),
         status: 'completed',
@@ -191,6 +221,18 @@ const testDetailsByUserId = new Map<string, AccountTestDetail[]>([
           { id: 'oiliness', label: 'Oiliness', value: 'Balanced' },
           { id: 'sensitivity', label: 'Sensitivity', value: 'Mild' },
         ],
+        questionnaire: {
+          skinType: 'combination',
+          primaryConcern: 'dehydration',
+          sensitivityLevel: 3,
+          currentCleanser: 'CeraVe Hydrating Cleanser',
+          currentMoisturizer: 'Neutrogena Hydro Boost',
+          usesSPF: false,
+          sleepHours: 6,
+          waterIntake: 'low',
+          makeupFrequency: 'daily',
+          previousTreatments: ['none'],
+        },
         recommendedProducts: [
           {
             productId: '1',
@@ -225,7 +267,57 @@ const testDetailsByUserId = new Map<string, AccountTestDetail[]>([
         ],
       },
       {
+        id: 'test-u1-3',
+        template: hairTemplate,
+        title: 'Hair and scalp consultation',
+        createdAt: new Date(now - 8 * 86_400_000).toISOString(),
+        status: 'completed',
+        pharmacistName: 'Dr. Lina',
+        branchName: 'Sweifieh Branch',
+        summary: 'Scalp shows dryness with mild flaking and low shine at the lengths.',
+        notes: 'Use a gentle scalp cleanser twice weekly and add a nourishing gloss treatment.',
+        metrics: [
+          { id: 'scalp_dryness', label: 'Scalp dryness', value: 'High' },
+          { id: 'flake_level', label: 'Flaking', value: 'Mild' },
+          { id: 'hair_shine', label: 'Hair shine', value: 'Low' },
+        ],
+        questionnaire: {
+          hairType: 'wavy',
+          scalpCondition: 'dry',
+          primaryConcern: 'dullness',
+          washFrequency: 'twiceWeekly',
+          usesHeatStyling: true,
+          chemicallyTreated: false,
+          hairLength: 'long',
+          strandThickness: 'medium',
+          previousTreatments: ['coloring'],
+        },
+        recommendedProducts: [
+          {
+            productId: '2',
+            brand: 'IGK',
+            name: 'Expensive Hi-Shine Gloss Treatment',
+            price: 28,
+            currency: 'USD',
+            imageUrl:
+              'https://images.unsplash.com/photo-1626015365107-2c06f0d654ad?auto=format&fit=crop&w=80&h=80&q=80',
+            inStock: true,
+          },
+          {
+            productId: '4',
+            brand: 'Huda Beauty',
+            name: 'Faux Filler Extra Shine Lip Gloss',
+            price: 21,
+            currency: 'USD',
+            imageUrl:
+              'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=80&h=80&q=80',
+            inStock: true,
+          },
+        ],
+      },
+      {
         id: 'test-u1-2',
+        template: skinTemplate,
         title: 'Skin balance follow-up',
         createdAt: new Date(now - 14 * 86_400_000).toISOString(),
         status: 'follow_up',
@@ -259,6 +351,7 @@ const testDetailsByUserId = new Map<string, AccountTestDetail[]>([
     [
       {
         id: 'test-u3-1',
+        template: skinTemplate,
         title: 'Pharmacist internal sample test',
         createdAt: new Date(now - 7 * 86_400_000).toISOString(),
         status: 'completed',

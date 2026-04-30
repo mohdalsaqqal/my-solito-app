@@ -481,8 +481,9 @@ export function Header({
   }
 
   useEffect(() => {
+    const firstMegaSection = megaSections[0]
     if (!activeMegaCategoryId && megaSections.length > 0) {
-      setActiveMegaCategoryId(megaSections[0].id)
+      setActiveMegaCategoryId(firstMegaSection?.id ?? '')
       return
     }
 

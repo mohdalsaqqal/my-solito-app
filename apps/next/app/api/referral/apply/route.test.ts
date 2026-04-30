@@ -5,13 +5,11 @@ import http from 'node:http'
 import request from 'supertest'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
+
 import { POST } from './route'
 import { buildAuthSessionCookieHeader } from '../../_lib/auth-session'
 
-const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
-const APPS_NEXT_ROOT = path.resolve(TEST_DIR, '../../../..')
-const DATA_DIR = path.join(APPS_NEXT_ROOT, '.data')
+const DATA_DIR = path.join(process.cwd(), '.data')
 const PROFILE_FILE = path.join(DATA_DIR, 'referral-profile-store.json')
 const LEDGER_FILE = path.join(DATA_DIR, 'referral-ledger-store.json')
 

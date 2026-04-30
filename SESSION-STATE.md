@@ -1,8 +1,648 @@
 ﻿# SESSION-STATE.md - Active Working Memory
 
-## Current State: 005-better-auth — Foundation Implemented, Safe Hardening Pass Landed
+## 2026-04-30 Aspect 04 CMS Lifecycle Completed
 
-**Last Updated**: 2026-04-14
+**Status**: LANDED / CMS LIFECYCLE GATE GREEN.
+
+- Added `yarn verify:cms-lifecycle` as the repeatable store-manager smoke.
+- CMS lifecycle smoke exercises release listing, draft release creation, hero block creation, promo strip creation, block reorder persistence, hero copy edit, publish, home API validation, rollback, post-rollback validation, and scheduled draft creation.
+- Hardened `writeAdminControlsState()` so local non-release verification can continue when Postgres is unavailable; release-like environments still fail closed.
+- Fixed CMS smoke server cleanup on Windows so child Next/Yarn processes are terminated after the run.
+- Added `docs/delivery/runbooks/cms-store-manager.md` with store-manager workflow, media-library limits, rollback/scheduling notes, and block coverage.
+- Added `cms-lifecycle` to `scripts/verify-delivery.mjs` and `docs/delivery/DELIVERY_MATRIX.md`.
+- Marked Aspect 04 complete in `docs/delivery/aspects/04-cms-content-management.md`.
+
+**Verification**
+- `yarn verify:cms-lifecycle` passed: 14/14.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- `node scripts/guard-checks.mjs` passed.
+
+**Next**
+- Continue aspect loop. Strong next candidates: Aspect 05 order write-back expectations, Aspect 08 Meilisearch adapter, or Aspect 11/14 provisioning automation.
+
+## 2026-04-29 All Blockers Cleared + Build + Test Hardening
+
+**Status**: LANDED / ALL BLOCKERS CLEARED / HARDENING GATES GREEN.
+
+### BLK-003 Resolved
+- Committed 2277 staged deletions from git index (generated output + dead scaffolds).
+- `yarn guard:hygiene` now passes: 0 FAIL, 0 WARN.
+
+### next-build Hardening Gate Passes
+- `yarn workspace next-app build` passes: 149 static pages generated.
+- Requires `REQUIRE_PRODUCTION_AUTH=false` env during build (no local Postgres).
+
+### test:api Cross-Platform Fix
+- `yarn --cwd apps/next test:api` was broken on Windows because Yarn 4's shell glob-expands `?` in DATABASE_URL.
+- Added `apps/next/scripts/run-api-tests.mjs` wrapper that sets env vars in-process, bypassing shell interpretation.
+- `test:api` script now uses the wrapper: 217/217 pass via both direct and `yarn verify:delivery`.
+- Promoted `next-api-full` into the `current` delivery profile in `scripts/verify-delivery.mjs`.
+
+**Verification**
+- `yarn verify:delivery` passed: all 6 current gates green.
+- `yarn guard:hygiene` passed: 0 FAIL, 0 WARN.
+- `yarn workspace next-app build` passed: 149 static pages.
+- `yarn --cwd apps/next test:api` passed: 217/217.
+
+**Next**
+- All 3 blockers resolved. All hardening gates pass.
+- Continue aspect-by-aspect delivery.
+
+## 2026-04-29 BLK-002 Full API Suite Resolved
+
+**Status**: LANDED / `BLK-002` CLEARED.
+
+- Root cause: test cleanup paths used `APPS_NEXT_ROOT/.data/` while stores use `process.cwd()/.data/`. Functional storefront smoke left stale referral/program data in root `.data/` that tests never cleaned, causing 16 state isolation failures across referral, checkout, and order tests.
+- Fixed 7 test files to use `process.cwd()` for `.data/` and `.tmp/` cleanup, matching the store paths.
+- Added `connect_timeout=2` to test `DATABASE_URL` so Prisma connection attempts fail fast when Postgres is unavailable.
+- Added `--test-timeout=30000` as a safety net in the `test:api` script.
+- Full suite now passes: `217/217` in ~160s without a running Postgres.
+- Promoted `next-api-full` into the current required delivery profile.
+- Updated `BLOCKERS.md`, `DELIVERY_MATRIX.md`, and `checklist.md`.
+
+**Verification**
+- `yarn --cwd apps/next test:api` passed: `217/217` in ~160s.
+- `node scripts/guard-checks.mjs` passed.
+
+**Next**
+- BLK-003 (staged deletions) remains the next active blocker.
+- Continue aspect-by-aspect delivery.
+
+## 2026-04-29 Expo Typecheck Promotion
+
+**Status**: LANDED / `BLK-001` CLEARED.
+
+- `yarn --cwd apps/expo tsc --noEmit --incremental false` now passes.
+- Scoped `apps/expo/tsconfig.json` to native-reachable Expo app files plus shared `packages/app`, `packages/ui`, `packages/tokens`, and provider contracts. Adapter implementations, package tests, and UI reference files no longer compile as part of the native app gate.
+- Fixed Expo-facing strict TypeScript issues in release mocks, home layout/rendering, i18n wrappers, product card parsing, QR typing, auth error parsing, native star rating, focus trap, RN slot cloning, textarea typing, and pharmacist camera scan setup.
+- Promoted `expo-typecheck` into current and functional delivery profiles.
+- Marked Aspect 02 locally complete and updated Aspect 03 to remove `BLK-001` as a blocker.
+
+**Verification**
+- `yarn --cwd apps/expo tsc --noEmit --incremental false` passed.
+- `yarn verify:expo-functional` passed.
+- `node scripts/guard-checks.mjs` passed.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+
+**Next**
+- Run `yarn verify:delivery` with the promoted Expo typecheck gate.
+- Continue Aspect 03 with physical-device native smoke and deep-link validation.
+
+## 2026-04-28 Delivery Readiness Loop
+
+**Status**: LANDED / GATES GREEN.
+
+- Fixed `apps/next/scripts/dev-stable.mjs` so the dev server no longer crashes on duplicate `createRequire` declarations and resolves the Prisma CLI through `prisma/build/index.js`.
+- Hardened `scripts/run-e2e-a11y.mjs` cleanup on Windows so stale dev-server cleanup does not fail the smoke run when the process has already exited.
+- Updated `scripts/guard-hygiene.mjs` to exclude `.worktrees/` from active repo hygiene scanning and added `docs/plans/003-hygiene-remediation-runbook.md` for the memory override, workspace exclusion, and nested worktree policy.
+- Fixed storefront a11y smoke blockers:
+  - Offer banner image-only buttons now always get a non-empty accessible label.
+  - Footer social icon links now use their social label for accessibility.
+  - Next dev indicator is disabled in local dev config so a11y smoke only measures app UI.
+  - The a11y test snapshots named interactive elements after hydration instead of looping over a changing locator list.
+- Made `apps/next` API tests explicitly run with `NODE_ENV=test`, `REQUIRE_PRODUCTION_AUTH=false`, and stable auth/session secrets so mocked auth tests do not inherit release-like auth behavior.
+
+**Verification**
+- `yarn guard:checks` passed.
+- `yarn guard:agent-docs` passed.
+- `yarn guard:hygiene` passed with one known warning: `HY-008` reports 2277 pre-existing staged deletions.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- `yarn workspace next-app build` passed with mock env and generated 145 static pages.
+- `yarn e2e:a11y` passed.
+- `yarn --cwd apps/next test:api` passed: `213/213`.
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with the known no-dedicated-worktree warning.
+
+**Next**
+- Resolve or intentionally commit/restore the pre-existing 2277 staged deletions before push/release.
+- Continue the commerce roadmap with the planned `SearchProvider` slice.
+
+## 2026-04-28 Commerce Delivery Checklist
+
+**Status**: LANDED.
+
+- Added root `checklist.md` as the production-readiness tracker for the commerce platform lifecycle.
+- Reviewed the current system against the submitted lifecycle coverage:
+  - Landed: AGENTS-governed architecture, RNR/token UI contract, Better Auth foundation, service/provider/adapter boundaries, order write-back through `OrderProvider.place`, shared storefront screens, API/service test scripts, guard checks, Playwright a11y smoke, production blueprint, SaaS migration docs, and AI DevKit roadmap docs.
+  - Partial: native production readiness, CMS scheduling/media/release operations, payment hardening, Odoo production verification, tenant persistence/scoping, observability, runbooks, and shared screen `Platform.OS` hygiene.
+  - Not yet: formal tRPC standard/implementation, public GraphQL exposure remains disallowed, GraphQL Mesh remains deferred, NotificationProvider, Shopify/custom PostgreSQL/Meilisearch/Paymob adapters, provisioning automation, Maestro, Lighthouse CI, Sentry confirmation, RLS, penetration testing, and go-live/offboarding runbooks.
+- Updated `AGENTS.md` to v4.7 so agents must read `checklist.md` before substantial work and update it when delivery status, blockers, verification, or next steps change.
+- Linked `checklist.md` from `docs/architecture-index.md`.
+
+**Verification**
+- `yarn guard:agent-docs` passed.
+- `yarn guard:checks` passed.
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with the known no-dedicated-worktree warning.
+
+**Next**
+- Use the checklist's recommended queue: decide/formalize tRPC scope, implement `NotificationProvider`, formalize payment provider boundary, add Meilisearch adapter, add FAQ/Testimonials CMS blocks, continue shared screen hygiene, and start `new-client.ts`.
+
+## 2026-04-28 Payment Gateway Readiness Slice
+
+**Status**: LANDED / FOCUSED GATES GREEN.
+
+- Added `PaymentProvider` contract for payment intents, optional intent lookup, optional webhooks, and health checks.
+- Added `mockPaymentAdapter` for functional COD, card-on-delivery, pay-at-branch, and online-card intent flows.
+- Added `packages/adapters/custom-payment` as a generic REST custom gateway adapter selected by env.
+- Wired `paymentProvider` into `packages/providers/registry.ts` with `USE_CUSTOM_PAYMENT=false` switching to custom gateway when configured.
+- Updated `placeOrder()` to create a payment intent before `OrderProvider.place`, attaching normalized settlement data to the order write-back payload.
+- Added `.env.example` entries and adapter guide docs for custom payment integration.
+- Updated focused order placement test to assert payment provider delegation and settlement propagation.
+
+**Verification**
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- `node scripts/guard-checks.mjs` passed.
+- Focused order placement tests passed: `3/3`.
+- Earlier Yarn-based parallel verification hit local disk/cache pressure: `ENOSPC` and one timeout. Use direct local node commands or free disk before full suite.
+
+**Next**
+- Add payment webhook route/service for generic custom payment gateway.
+- Add `NotificationProvider`.
+- Continue Odoo readiness by verifying product/category/brand adapters against real env contracts.
+
+## 2026-04-28 Website/App Functional Delivery Plan
+
+**Status**: PLANNED / CORRECTED SCOPE.
+
+- Updated `checklist.md` with a phased plan to get the website and app functionally ready end-to-end.
+- Corrected scope: this is a functional delivery plan. UI polish/publishing can happen separately, but all functionality should work as expected.
+- Only allowed external blockers are the client's real Odoo credentials/endpoints and custom payment gateway credentials/endpoints; adapter seams, runbooks, and smoke tests must be ready.
+- Plan phases:
+  1. Gate recovery: old review findings, disk/verification stability, staged deletion blocker.
+  2. Web storefront functional readiness: production-like seed, complete customer flow, no broken reachable surfaces.
+  3. Mobile app functional readiness: Expo boot/navigation smoke, complete or hide incomplete push/deep-link controls.
+  4. Odoo connection readiness: env/runbook/smoke/mapping/order write-back expectations.
+  5. Custom payment readiness: webhook, return/cancel handling, idempotency/retry, vendor handoff docs.
+  6. Admin/CMS functional readiness: edit/preview/publish script and user guide.
+  7. Delivery verification pack and acceptance criteria.
+- Reordered the next implementation queue toward functional readiness: free disk, finish custom payment webhook/return flow, production-like seed/script, web functional flow, Expo native smoke, Odoo runbook/smoke, then notifications/search/provisioning.
+
+**Next**
+- Free disk or clear safe generated caches before full verification.
+- Implement custom payment webhook + return/cancel flow.
+- Create production-like merchant seed and run end-to-end web functional flow.
+
+## 2026-04-28 Custom Payment Functional Flow
+
+**Status**: LANDED / FOCUSED GATES GREEN.
+
+- Added custom payment webhook service and route at `/api/payments/custom/webhook`.
+- Webhook processing delegates to `paymentProvider.handleWebhook(...)` and records settlements through `OrderProvider.confirmPaymentSettlement(...)` when supported.
+- Added custom payment return/cancel routes for online-card gateway redirects.
+- Extended order placement to pass return/cancel URLs to `PaymentProvider.createIntent(...)`.
+- Exposed `paymentAction` on placed orders so web checkout can redirect users to a required gateway payment URL.
+- Added mock order settlement recording so local/default functional mode can exercise settlement updates.
+- Added HMAC-SHA256 custom payment webhook verification in `packages/adapters/custom-payment`.
+- Updated payment gateway docs, `.env.example`, and `checklist.md`.
+
+**Verification**
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- Focused payment/order/custom adapter tests passed: `7/7`.
+- `node scripts/guard-checks.mjs` passed.
+- `yarn guard:agent-docs` passed.
+- Full `yarn --cwd apps/next test:api` timed out after 4 minutes in local environment; isolated `checkout-page.service.test.ts` passed but spent about 16 seconds waiting through unavailable Postgres fallbacks.
+- `yarn e2e:a11y` and a manual a11y rerun did not complete locally; leftover Next dev-server processes were cleaned up.
+
+**Next**
+- Create production-like merchant seed and functional script.
+- Rework or configure DB-heavy fallback tests before treating full API suite and web a11y smoke as green.
+- Continue Odoo runbook/smoke script.
+
+## 2026-04-29 Web Functional Storefront Smoke
+
+**Status**: LANDED / WEB FUNCTIONAL SMOKE GREEN.
+
+- Replaced customer-visible fallback CMS copy that said "Mock CMS hero content" with production-like merchant copy.
+- Switched fallback CMS branding from `/brand-logo-placeholder.svg` to the uploaded `/uploads/site-branding/logo-en.png` asset.
+- Added `scripts/verify-functional-storefront.mjs` plus package scripts:
+  - `yarn verify:functional-storefront:static`
+  - `yarn verify:functional-storefront`
+- The live functional script starts the Next dev server, checks home/shop/search/product/cart/checkout/orders/account pages, validates catalog/search/CMS APIs, then exercises add-to-cart, checkout quote creation, COD order placement, and order history through real API routes.
+- Adjusted the smoke runner to provide local-only Better Auth/trusted request env and to mint a non-release legacy session cookie from the configured local auth secret.
+- Quieted repeated Prisma client error logs during intentional local CMS fallback by making Prisma client error logging opt-in via `PRISMA_CLIENT_LOG=error`.
+
+**Verification**
+- `yarn verify:functional-storefront` passed end-to-end.
+- `node scripts/guard-checks.mjs` passed.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+
+**Remaining**
+- Deprecated `textShadow*`/`shadow*` style warnings and the missing i18next initialization warning were removed from the functional smoke path.
+- Native Expo functional smoke remains.
+- Production build/full API/a11y suite still need reruns in a stable environment.
+
+## 2026-04-29 Expo Static Functional Smoke
+
+**Status**: LANDED / STATIC EXPO SMOKE GREEN.
+
+- Used the Expo API Routes, Expo Dev Client, Expo CI/CD, and Solito navigation guidance for the mobile-readiness pass.
+- Confirmed no Expo `+api.ts` routes are part of the commerce data layer; Next.js remains the server/data owner per `AGENTS.md`.
+- Hardened the Expo API client so the public mobile bundle no longer sends the server-only `x-rc-trusted-request: 1` bypass header. Native requests now send same-origin `origin`/`referer` provenance headers for the current Next-backed API contract.
+- Normalized checkout branch data so missing `stockCount` becomes `0` before entering the shared checkout screen.
+- Fixed forgot-password submit handling so the async auth reset call satisfies the shared screen callback contract.
+- Added `scripts/verify-expo-functional.mjs` plus root `yarn verify:expo-functional`.
+- The static Expo smoke checks app config, platform/scheme/scripts, provider shell, API-client boundary, expected router views, checkout/order wiring, branch normalization, absence of Expo API routes, and local `expo config` resolution.
+
+**Verification**
+- `yarn verify:expo-functional` passed.
+- `node scripts/guard-checks.mjs` passed.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+
+**Remaining**
+- Real device/simulator boot and navigation smoke.
+- Push notification and deep-link verification.
+- EAS Build/Submit/Update runbook or workflow setup.
+- Broad Expo TypeScript command still exposes existing monorepo backlog outside the focused Expo-owned fixes.
+
+## 2026-04-29 Push Notifications And EAS Runbook
+
+**Status**: LANDED / STATIC GATES GREEN.
+
+- Added `NotificationProvider` contract for push/email-capable notification delivery.
+- Added `mockNotificationAdapter` with local `.tmp/mock-notifications.json` registration and delivery recording.
+- Added `packages/adapters/expo-push` adapter selected by `USE_EXPO_PUSH=true`.
+- Wired `notificationProvider` into the provider registry and readiness map.
+- Added `/api/notifications/devices` for authenticated push-token registration/unregistration.
+- Added `apps/next/server/services/notifications/notification.service.ts` with provider-backed registration and order-status notification orchestration.
+- Admin order status updates now trigger non-blocking order-status notifications.
+- Installed `expo-notifications`, configured Expo notifications, and added `apps/expo/app/registerPushNotifications.ts`.
+- Expo app now attempts push registration, skips safely until an EAS project id exists, and sends tokens to the Next API through the shared API client.
+- Added root `eas.json` with development, preview, and production build profiles.
+- Added `docs/eas-runbook.md` for build, submit, update, credentials, push smoke, and rollback operations.
+- Expanded `yarn verify:expo-functional` to check push registration and EAS config.
+
+**Verification**
+- `yarn verify:expo-functional` passed.
+- `node scripts/guard-checks.mjs` passed.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- Focused notification service tests passed: `2/2`.
+- `git diff --check` passed for touched files.
+
+**Remaining**
+- Physical-device push smoke with real EAS project id and push credentials.
+- Deep-link verification.
+- Real EAS build/submit/update execution with client store credentials.
+- `yarn --cwd apps/expo tsc --noEmit --incremental false` still fails on pre-existing monorepo/package type debt; the first current errors are outside the push/EAS files.
+
+## 2026-04-29 Repo-Local Symphony Delivery Workflow
+
+**Status**: LANDED.
+
+- Added the complete repo-local delivery operating system under `docs/delivery/`.
+- Added `docs/delivery/WORKFLOW.md` with the task state machine, ticket format, work-session loop, agent dispatch rule, and verification rule.
+- Added `docs/delivery/DELIVERY_MATRIX.md` with current required gates, functional gates, hardening gates, and aspect-to-gate ownership.
+- Added `docs/delivery/BLOCKERS.md` with reproducible active blockers:
+  - `BLK-001` Expo typecheck shared package debt.
+  - `BLK-002` full API suite stable DB/disk rerun.
+  - `BLK-003` release hygiene staged deletions.
+- Added 17 delivery aspect files under `docs/delivery/aspects/`, covering product/business through launch/post-launch.
+- Added `scripts/verify-delivery.mjs` with named gates and profiles:
+  - `current`
+  - `functional`
+  - `full`
+  - `hardening`
+- Added package scripts:
+  - `yarn verify:delivery`
+  - `yarn verify:delivery:functional`
+  - `yarn verify:delivery:full`
+- Updated `AGENTS.md` to v4.8 so agents must read delivery matrix/blockers/aspects during startup and keep delivery files updated when status changes.
+- Updated `docs/architecture-index.md` and `checklist.md` to reference the delivery workflow.
+
+**Verification**
+- `node scripts/verify-delivery.mjs --list` passed.
+- `yarn guard:agent-docs` passed.
+- `yarn verify:delivery` passed.
+- `yarn verify:delivery:functional` passed.
+- `git diff --check` passed for the delivery workflow files.
+
+**Next**
+- Use `BLK-001` as the next bounded cleanup task: `packages/adapters/mock/release/index.ts`.
+
+## 2026-04-29 Aspect 01 Product Business Foundation
+
+**Status**: LANDED / ASPECT VERIFIED.
+
+- Completed Aspect 01 under `docs/delivery/aspects/01-product-business-foundation.md`.
+- Added business foundation runbooks:
+  - `docs/delivery/runbooks/client-agreement-checklist.md`
+  - `docs/delivery/runbooks/client-onboarding.md`
+  - `docs/delivery/runbooks/sla-support.md`
+  - `docs/delivery/runbooks/source-code-buyout.md`
+- Updated `checklist.md` to mark onboarding, SLA/support, and source-code buyout docs complete.
+- Kept legal review explicit: the agreement checklist is operationally complete, but final contract language still requires business/legal review.
+
+**Verification**
+- `yarn verify:delivery` passed.
+- `git diff --check` passed for Aspect 01 runbooks/status files.
+
+**Next**
+- Move to Aspect 02 Architecture & Design System after this slice is verified.
+
+## 2026-04-29 Aspect 02 Architecture Design System
+
+**Status**: PARTIAL / GOVERNANCE GATE DOCUMENTED.
+
+- Added `docs/delivery/runbooks/architecture-design-system.md` as the per-feature delivery gate for architecture, shared UI, shared screens, CMS layout data, provider contracts, adapters, and Solito navigation changes.
+- Updated Aspect 02 to record that architecture governance is documented and current delivery verification is explicit.
+- Kept Aspect 02 partial because broad Expo TypeScript promotion remains blocked by `BLK-001`.
+
+**Next**
+- Continue to Aspect 03 Core Development Domains, or clear `BLK-001` if the next goal is full Aspect 02 completion.
+
+## 2026-04-29 Referral Loyalty Pharmacist Coverage Gate
+
+**Status**: LANDED / FOCUSED GATE GREEN.
+
+- Added `scripts/verify-retention-consultation.mjs` and root `yarn verify:retention-consultation`.
+- Added `docs/delivery/runbooks/referral-loyalty-pharmacist-tests.md` to track referral, loyalty, account tests, and pharmacist consultation acceptance.
+- Updated delivery matrix, Aspect 03, Aspect 05, Aspect 06, Aspect 07, Aspect 10, and `checklist.md` so these flows are explicit delivery requirements.
+- Current status is partial for production readiness: service/API contracts pass, but production persistence, tenant scoping, hair/skin templates, native/operator smoke, rollback, expiry, and fraud controls remain.
+
+**Verification**
+- `yarn verify:retention-consultation` passed: `28/28`.
+- `yarn verify:delivery:functional` passed with the new `retention-consultation-focused` gate included.
+
+**Next**
+- Add combined referral + loyalty checkout smoke to `yarn verify:functional-storefront`.
+- Model explicit hair and skin consultation templates before client handoff.
+
+## 2026-04-29 Aspect 03 Web Retention Functional Smoke
+
+**Status**: LANDED / WEB FUNCTIONAL SMOKE GREEN.
+
+- Expanded `scripts/verify-functional-storefront.mjs` to use the seeded customer account.
+- Web functional smoke now covers account referral summary, referral validate/apply, loyalty wallet/history, account test history, account test detail recommendations, recommended-product add-to-cart, and referral+loyalty COD checkout/order history.
+- Aspect 03 and `checklist.md` now distinguish web coverage from remaining native/manual and production-persistence work.
+
+**Verification**
+- `yarn verify:functional-storefront` passed.
+
+**Next**
+- Model explicit hair and skin consultation templates.
+- Add native/manual smoke for account referral, loyalty, tests, and recommended-product cart behavior.
+
+## 2026-04-29 Aspect 03 Hair Skin Consultation Templates
+
+**Status**: LANDED / WEB GATES GREEN.
+
+- Added explicit `skin` and `hair` consultation template identity to account and pharmacist shared contracts.
+- Seeded skin and hair/scalp account test records/details in the mock account adapter.
+- Seeded skin and hair/scalp pharmacist consultation records in the mock pharmacist adapter.
+- Pharmacist consultation payloads now accept `templateType` with a safe default of `skin`.
+- Web functional storefront smoke now fails unless account tests expose both skin and hair templates.
+
+**Verification**
+- Next typecheck passed.
+- `yarn verify:retention-consultation` passed: `28/28`.
+- `yarn verify:functional-storefront` passed.
+
+**Next**
+- Define client-specific questionnaire fields/content for the hair and skin templates.
+- Add native/manual smoke for these account and consultation flows.
+
+## 2026-04-29 Aspect 03 Pharmacist Operator Web Smoke
+
+**Status**: LANDED / WEB FUNCTIONAL SMOKE GREEN.
+
+- Expanded `scripts/verify-functional-storefront.mjs` with an authenticated pharmacist session.
+- Web functional smoke now verifies pharmacist customer search, QR resolve, customer profile/history, product search, hair consultation draft, hair consultation submit, and the submitted consultation appearing in the customer history.
+- Aspect 03, the referral/loyalty/pharmacist runbook, and `checklist.md` now distinguish web/API operator coverage from remaining browser-click/native verification and production audit persistence.
+
+**Verification**
+- `yarn verify:functional-storefront` passed.
+
+**Next**
+- Run browser-click/native pharmacist smoke.
+- Define production persistence, tenant scoping, and audit trail for consultations.
+
+## 2026-04-29 Aspect 03 Pharmacist Browser Smoke
+
+**Status**: LANDED / BROWSER GATE GREEN.
+
+- Added `e2e/pharmacist.spec.ts` and `scripts/run-e2e-pharmacist.mjs`.
+- Added root `yarn verify:pharmacist-browser` and included `pharmacist-browser` in the functional delivery profile.
+- Browser-click smoke covers pharmacist customer search, open customer, create hair test, product recommendation selection, review, submit, and submitted consultation history.
+- Fixed the pharmacist new-test form to include `templateType` in the submitted consultation payload.
+- Updated `packages/ui/components/Button.tsx` to render a real HTML `button` on web while keeping React Native `Pressable` on native, so browser clicks reliably invoke actions.
+
+**Verification**
+- `yarn verify:pharmacist-browser` passed.
+- `yarn verify:delivery:functional` passed with the new `pharmacist-browser` gate included.
+- `yarn verify:functional-storefront` passed after the shared Button web rendering change.
+
+**Next**
+- Run native/device pharmacist smoke.
+- Define production consultation persistence, tenant scoping, and audit trail.
+
+## 2026-04-27 Commerce Platform Requirements Refresh
+
+**Status**: DOCS UPDATED.
+
+- Updated AI DevKit lifecycle docs for `commerce-platform-roadmap` with the submitted managed commerce platform requirements.
+- Requirements now cover branded web storefronts and native apps, CMS blocks, search/facets, product detail, cart/checkout, COD/custom gateway, Better Auth, SEO, native push/deep links, backend adapters, tenant provisioning, Sentry, CI/CD, security, and NFRs.
+- Recorded architecture decision blockers instead of silently overriding `AGENTS.md`:
+  - Payload CMS 3.0 vs current Prisma/Postgres canonical CMS rule.
+  - Tamagui v2 vs current RNR-centered shared UI contract.
+  - Expo SDK 52+ vs Solito v5 skill baseline of Expo SDK 54+.
+  - GraphQL Mesh/tRPC target vs current service/provider/adapter architecture and no external BFF rule.
+  - Redis sessions/cache target vs current Better Auth/Prisma/session/rate-limit setup.
+- Updated design, planning, and testing docs to reflect v1 isolated tenant deployments, Meilisearch/search provider, first-party Odoo/Shopify/custom PostgreSQL adapters, `new-client.ts`, EAS, Sentry, dependency scanning, CodeQL, Playwright, Maestro, and Lighthouse gates.
+
+**Verification**
+- `npx ai-devkit@latest lint` passed.
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with known no-dedicated-worktree warning.
+- No app code changed.
+
+### 2026-04-27 AGENTS Commerce Platform Rules
+
+**Status**: LANDED.
+
+- Updated `AGENTS.md` to v4.5 with durable Commerce Platform Rules.
+- Added rules that commerce integrations must follow the canonical data flow and use provider/service/adapter boundaries.
+- Added no-duplication rule: audit and harden existing commerce contracts, services, screens, and CMS blocks before adding new ones.
+- Added explicit locations for commerce provider contracts, adapters, CMS renderers, and shared commerce screens.
+
+### 2026-04-27 Requirements Realigned To AGENTS
+
+**Status**: LANDED.
+
+- Rewrote `docs/ai/requirements/feature-commerce-platform-roadmap.md` so requirements are based on `AGENTS.md` v4.5.
+- Removed proposed stack choices from active requirements when they conflict with current source of truth.
+- Made Prisma/Postgres CMS, RNR-centered shared UI, service/provider/adapter flow, provider-backed commerce domains, and audit-before-addition explicit requirements.
+- Kept Odoo, Shopify REST, custom PostgreSQL, Meilisearch, Paymob, and notification providers as proposed adapter targets only after contracts are stable.
+
+### 2026-04-27 Dev Lifecycle Phase 3: Commerce Design Review
+
+**Status**: LANDED.
+
+- Rewrote `docs/ai/design/feature-commerce-platform-roadmap.md` against AGENTS-aligned requirements.
+- Removed stale active conflict framing around Payload/Tamagui/GraphQL Mesh.
+- Design now centers Prisma/Postgres CMS, RNR shared UI, existing domain service folders, provider-backed commerce domains, adapter isolation, and audit-before-addition.
+- Added design trade-offs for payment boundary, search provider, notification provider, and native scope.
+
+**Verification**
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with the known no-dedicated-worktree warning.
+
+### 2026-04-27 Dev Lifecycle Phase 4: Explicit Commerce Audit Matrix
+
+**Status**: LANDED.
+
+- Added the explicit commerce implementation matrix to `docs/ai/implementation/feature-commerce-platform-roadmap.md`.
+- Updated planning to mark the matrix output complete.
+- Confirmed the first implementation candidates:
+  1. Refactor `placeOrder()` to use `OrderProvider.place` for merchant write-back.
+  2. Add `SearchProvider` and delegate search service behavior to it.
+  3. Add `NotificationProvider` for order-status notifications.
+  4. Add FAQ and Testimonials CMS blocks after renderer/component audit.
+  5. Clean shared screen web-only imports and review `Platform.OS` usage.
+- Key concrete gap: `apps/next/server/services/orders/place-order.service.ts` currently persists placed orders to `.tmp/mock-orders.json` instead of using `OrderProvider.place`.
+
+**Verification**
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with the known no-dedicated-worktree warning.
+
+### 2026-04-27 Dev Lifecycle Phase 5: Planning Reconciliation
+
+**Status**: LANDED.
+
+- Updated `docs/ai/planning/feature-commerce-platform-roadmap.md` to mark Phase 5 planning reconciliation complete.
+- Converted confirmed audit gaps into an ordered Phase 4 implementation queue:
+  1. Order write-back through `OrderProvider.place`.
+  2. `SearchProvider` contract plus search service delegation.
+  3. `NotificationProvider` contract for order-status push/email.
+  4. FAQ and Testimonials CMS block audit/implementation.
+  5. Shared screen hygiene for web-only imports and direct `Platform.OS` usage.
+- Updated `docs/ai/implementation/feature-commerce-platform-roadmap.md` to mark confirmed-gap conversion complete.
+- Selected the next implementation slice: add a failing test for `placeOrder()` delegating final order creation/write-back to `OrderProvider.place`, then implement the smallest provider-backed path.
+
+**Verification**
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with the known no-dedicated-worktree warning.
+
+### 2026-04-27 Dev Lifecycle Phase 4: Order Write-Back
+
+**Status**: LANDED.
+
+- Added TDD coverage proving `placeOrder()` delegates final order creation/write-back to `OrderProvider.place`.
+- Updated `apps/next/server/services/orders/place-order.service.ts` to call `orderProvider.place` instead of directly persisting `.tmp/mock-orders.json`.
+- Widened `PlaceOrderInput` with optional normalized `order` data for merchant/backend adapters.
+- Added `mockOrderAdapter.place()` as the local provider-backed write path.
+- Added `yarn guard:checks` enforcement that blocks direct mock order persistence from returning to `place-order.service.ts`.
+- Updated commerce roadmap planning, implementation, and testing docs.
+
+**Verification**
+- Red test failed first because `placeOrder()` returned a locally generated `ord-*` id instead of the provider-created order id.
+- Focused order service tests passed: `3/3`.
+- Focused order route tests passed: `6/6`.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- `yarn guard:checks` passed.
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` passed with the known no-dedicated-worktree warning.
+- Local Prisma was unavailable at `localhost:5432` during focused tests; auth role fallback logs were expected and non-blocking.
+
+**Next**
+- Start the `SearchProvider` slice: failing search delegation test, smallest provider contract, then move current in-memory search behavior behind the provider boundary.
+
+## Current State: Architecture Fix Slice Started
+
+**Last Updated**: 2026-04-25
+
+### 2026-04-26 Dev Lifecycle Phase 4: Pharmacist Service Boundary
+
+**Status**: LANDED.
+
+- Added `apps/next/server/services/pharmacist/pharmacist-consultation.service.ts` as the server-owned orchestration layer for pharmacist/customer lookup, QR resolve, product search, draft creation, and consultation submission.
+- Added TDD coverage in `pharmacist-consultation.service.test.ts`.
+- Updated all `apps/next/app/api/pharmacist/**` routes to delegate business/provider orchestration to the service.
+- Added `yarn guard:checks` enforcement that blocks direct `pharmacistProvider` orchestration in pharmacist API routes.
+- Updated AI DevKit lifecycle docs for `commerce-platform-roadmap`.
+
+**Verification**
+- Red test failed first with missing service module.
+- Focused pharmacist service tests passed: `5/5`.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+- `yarn guard:checks` ✅
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` ✅ with known no-dedicated-worktree warning.
+
+### 2026-04-26 Dev Lifecycle Phase 4: Pharmacist Validation Alignment
+
+**Status**: LANDED.
+
+- Updated pharmacist QR validation to use live `qrCode` contract and trim input.
+- Added canonical `PharmacistConsultationBodySchema` for `customerId`, `title`, `summary`, `notes`, `metrics`, and `recommendedProductIds`.
+- Updated pharmacist QR, draft, and submit routes to validate payloads before delegating to server services.
+- Added focused validation schema tests.
+
+**Verification**
+- Red validation test failed first because `PharmacistConsultationBodySchema` was missing.
+- Focused validation/pharmacist tests passed: `8/8`.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+- `yarn guard:checks` ✅
+- Source search found no remaining legacy `barcode` or `recommendations:` contract usage in pharmacist validation/routes.
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` ✅ with known no-dedicated-worktree warning.
+
+### 2026-04-25 Service Boundary Cleanup: Pricing + Referral Helpers
+
+**Status**: LANDED.
+
+- Moved checkout pricing quote helpers out of `apps/next/app/api/_lib/pricing-quote.ts` into `apps/next/server/services/checkout/pricing-quote.ts`.
+- Moved referral profile/program/ledger stores out of `apps/next/app/api/_lib/referral-*.ts` into `apps/next/server/services/referral/`.
+- Kept old API `_lib` files as compatibility re-export shims only.
+- Updated account, checkout quote, and order placement services to import server-owned helpers instead of API `_lib` helpers.
+- Added `yarn guard:checks` enforcement so server services cannot reintroduce imports from the moved pricing/referral API helper paths.
+
+**Verification**
+- `yarn guard:checks` ✅
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+- Focused service tests passed: `6/6` ✅
+- Local Postgres was unavailable at `localhost:5432`, causing expected Prisma fallback logs during account service tests.
+
+### Previous State: Better Auth Audit Findings Fixed
+
+**Last Updated**: 2026-04-22
+
+### 2026-04-22 Better Auth Audit Remediation
+
+**Audit findings fixed** — LANDED.
+- Checkout quote and order placement now resolve sessions through `resolveNormalizedSessionFromRequest(...)` instead of parsing the legacy `rc_auth_session` cookie directly.
+- Password reset routes now delegate to Better Auth APIs:
+  - `/api/auth/request-reset` → `auth.api.requestPasswordReset`
+  - `/api/auth/reset-password` → `auth.api.resetPassword`
+- Password reset delivery fails closed when unavailable in release-like environments.
+- `/api/checkout/quote` now requires trusted mutation provenance and uses a dedicated `checkoutQuoteLimiter`.
+- `x-rc-trusted-request` now requires `TRUSTED_REQUEST_BYPASS_SECRET`; a bare value of `1` is rejected.
+- [docs/reports/better-auth-audit-2026-04-22.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/reports/better-auth-audit-2026-04-22.md) was updated with remediation status.
+
+**Verification**
+- Targeted auth/checkout/order suite passed: `44/44`.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+- `yarn guard:checks` ✅
+- `py -3 scripts/build_graphify_contexts.py` ✅
+
+### Previous State: AGENTS Startup Status Rule Added
+
+### 2026-04-22 AGENTS Startup Status Rule
+
+**AGENTS.md updated** — LANDED.
+- Version bumped to `v4.3`
+- Last updated set to `2026-04-22`
+- Added `Mandatory Startup Status` requiring agents to report:
+  - `/caveman: active|inactive`
+  - `graphify: checked|not checked`
+- If repo guidance is explicitly overridden, agents should report `graphify: not checked (user override)`.
+
+### Previous State: Better Auth Audit Completed
+
+### 2026-04-22 Better Auth Audit
+
+**Audit artifact** — ADDED:
+- [docs/reports/better-auth-audit-2026-04-22.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/reports/better-auth-audit-2026-04-22.md)
+
+**Key findings**
+- P1: checkout quote and order placement services still parse the legacy `rc_auth_session` cookie directly instead of resolving Better Auth-backed normalized sessions.
+- P1: password reset routes still call the development-only mock `authProvider` instead of Better Auth account lifecycle flows.
+- P2: `/api/checkout/quote` writes quote state without trusted mutation or route-level rate-limit protection.
+- P2: the static `x-rc-trusted-request: 1` bypass header should be replaced with a stronger internal trust mechanism or constrained to documented machine callers.
+
+**Verification**
+- Targeted auth/checkout/order suite passed: `38/38`.
+- `yarn --cwd apps/next test:api` was attempted but timed out after roughly `124s` in this environment.
 
 ### Better Auth Implementation
 
@@ -48,6 +688,15 @@
 - [auth/route.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/route.test.ts) now covers fail-closed behavior for weak/missing Better Auth secrets in release-like environments
 - [apps/next/package.json](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/package.json) test script now seeds a strong test `BETTER_AUTH_SECRET` so auth imports are stable under test
 
+**Production auth hardening** — TIGHTENED AGAIN.
+- [auth-role-resolution.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-role-resolution.service.ts) no longer upserts inferred roles in release-like environments; missing mapping now resolves to least-privilege `customer`
+- release-like environments also fail closed when Prisma role lookup throws instead of re-inferring elevated seeded roles
+- [auth-session-adapter.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-session-adapter.service.ts) now rejects legacy cookie fallback entirely in release-like environments
+- new focused auth tests cover:
+  - no inferred-role upsert in release mode
+  - release-mode rejection of legacy cookie fallback
+  - existing email-verification and session-rate-limit behavior
+
 **Spec Kit sync** — LANDED. `specs/005-better-auth/` now reflects the real implementation approach instead of the earlier generic migration draft:
 - [spec.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/spec.md) is now `In Progress` and includes release-secret enforcement plus prerender-compatibility requirements
 - [plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/plan.md) now records the landed Better Auth foundation and the safe hardening pass
@@ -61,12 +710,13 @@
 - `yarn --cwd apps/next test:api` ✅ (`159/159`)
 - `yarn --cwd apps/next build --webpack` ✅
 - `yarn --cwd apps/next build --webpack --debug-prerender` ✅
+- focused auth regression suite ✅ (`29/29`)
 
 ### Remaining Follow-Up
 - Production/staging must set a real high-entropy `BETTER_AUTH_SECRET`; release-like envs now fail closed instead of silently falling back
 - Debug prerender no longer floods with expected bailout logs, but deeper route-to-route/request-state coupling still exists and should be reduced by moving more internal fetch paths to direct service calls
 - Explicit Better Auth vs legacy-session observability is not implemented yet
-- Legacy compatibility read paths remain intentionally in place during cutover and should be removed only after rollout confidence is high
+- Dev/test still use compatibility behavior intentionally, but release-like environments no longer accept legacy cookie fallback
 
 ---
 
@@ -485,3 +1135,142 @@
 - Verification after visual QA polish:
   - `yarn guard:checks` ✅
   - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+
+---
+
+## 2026-04-22 Git Hygiene Cleanup
+
+**State**: Root `.gitignore` was replaced with a monorepo-safe ignore set for Next.js, Expo, Node, generated caches, Graphify output, temp data, logs, local DBs, and AI tool workspaces.
+
+### Landed
+- `.gitignore` now ignores `graphify-out`, nested `graphify-out`, `.tmp`, `.data`, `.cache`, generated logs, local DBs, `.claude`, `.agents`, `.agent`, Playwright logs, Next/Expo build output, and dependency caches.
+- Tracked generated/local files were removed from the Git index with `git rm --cached`, leaving local files intact.
+- Stale deleted scaffolds were removed from the index: `apps/strapi`, `real-cosmetics-admin`, and `src/Figma`.
+
+### Verification
+- `git check-ignore -v` confirms the noisy generated paths are ignored.
+- `git status --short --untracked-files=no` completed in about `0.27s` after the cleanup.
+
+---
+
+## 2026-04-22 Better Auth Redo Audit
+
+**State**: Better Auth audit was redone with `AGENTS.md` read first, then memory files, `docs/architecture-index.md`, root graphify, and bounded contexts for `apps-next-api`, `apps-next-services`, and `packages-providers`.
+
+### Status
+- `/caveman`: inactive
+- `graphify`: checked
+
+### Result
+- Original remediated findings still hold for login/register/logout/session routes, password reset API delegation, checkout quote mutation hardening, and order placement session resolution.
+- New P1 finding: live page/bootstrap services still call `authProvider.getSession()`, which is the development-only mock auth provider, for account, account test detail, checkout page, order detail, and pharmacist bootstrap data.
+- New P2 finding: Better Auth password reset fallback redirect points to `/reset-password`, but the actual App Router page is `/auth/reset-password`.
+- Report updated: `docs/reports/better-auth-audit-2026-04-22.md`.
+
+### Verification
+- Redo audit did not rerun test/typecheck suites because it only updated audit documentation and memory.
+
+### 2026-04-22 Better Auth Redo Audit Findings Fixed
+
+**Status**: LANDED.
+
+- `StorefrontServiceContext` now preserves request headers and exposes `createStorefrontServiceRequest(...)` for server services that need auth-aware request reconstruction.
+- Account, account test detail, checkout page, order detail, and pharmacist bootstrap services now resolve sessions through `resolveNormalizedSessionFromRequest(...)` instead of `authProvider.getSession()`.
+- Source search confirms no remaining `authProvider.getSession()` calls under `apps/next/server/services`.
+- `BETTER_AUTH_PASSWORD_RESET_FALLBACK_PATH` now points to `/auth/reset-password`, matching the actual App Router page.
+- Password reset route test expectation was updated to the corrected fallback URL.
+
+**Verification**
+- Focused tests passed: `24/24`.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+- `yarn guard:checks` ✅
+
+---
+
+## 2026-04-22 AGENTS Caveman Startup Rule
+
+**Status**: LANDED.
+
+- `AGENTS.md` version bumped to `v4.4`.
+- Mandatory Startup Protocol now requires agents to activate `C:\Users\hamoo\.agents\skills\caveman\SKILL.md` as step `0`, before memory files, AGENTS, architecture index, or graphify.
+- Mandatory Startup Status now reports `/caveman: active` when Caveman was activated by the startup protocol.
+- Navigation Order now starts with the Caveman skill.
+
+---
+
+## 2026-04-30 Aspect 05 Backend Integration - Order Write-Back Contract
+
+**Status**: LANDED.
+
+- Expanded `docs/delivery/runbooks/odoo-connection.md` with the Odoo/custom merchant backend order write-back contract.
+- The contract now covers `OrderProvider.place`, required outbound order fields, idempotency, status mapping, payment settlement separation, failure behavior, and live verification steps.
+- Added static smoke assertions to `scripts/smoke-odoo-connection.mjs` so the Odoo handoff cannot regress to catalog-only documentation.
+- Updated `docs/delivery/aspects/05-backend-integration.md` and `checklist.md` to mark the order write-back expectations done while keeping live Odoo verification, Shopify, custom PostgreSQL, and Meilisearch open.
+
+**Verification**
+- `node scripts/smoke-odoo-connection.mjs` passed.
+- `node scripts/guard-checks.mjs` passed.
+
+---
+
+## 2026-04-30 Aspect 05 Backend Integration - Retention Persistence Path
+
+**Status**: LANDED.
+
+- Added `docs/delivery/runbooks/retention-consultation-persistence.md` for referral profiles/ledger, loyalty wallet/history, and pharmacist consultation/test persistence.
+- Documented tenant scoping, production store ownership, referral idempotency, loyalty rollback rules, and pharmacist web-only/customer mobile-read boundaries.
+- Updated `scripts/verify-retention-consultation.mjs` to statically verify the persistence runbook and questionnaire service path before running focused tests.
+- Fixed `apps/next/server/services/pharmacist/pharmacist-consultation.service.ts` so questionnaire answers are preserved when submitting/drafting consultations.
+- Updated focused pharmacist service test coverage.
+
+**Verification**
+- `yarn verify:retention-consultation` passed: 28/28.
+- `node scripts/guard-checks.mjs` passed.
+
+---
+
+## 2026-04-30 Aspect 05 Backend Integration - Shopify Scope
+
+**Status**: LANDED.
+
+- Added `docs/delivery/runbooks/shopify-adapter-scope.md`.
+- Added `scripts/smoke-shopify-adapter-scope.mjs` and root script `yarn verify:shopify-scope`.
+- Added Shopify env placeholders to `.env.example`.
+- Updated Aspect 05 and checklist status to mark scope definition complete while leaving adapter implementation open.
+
+**Verification**
+- `yarn verify:shopify-scope` passed.
+- `node scripts/guard-checks.mjs` passed.
+
+---
+
+## 2026-04-30 Aspect 05 Backend Integration - Custom PostgreSQL Mapping
+
+**Status**: LANDED.
+
+- Added `docs/delivery/runbooks/custom-postgresql-adapter-mapping.md`.
+- Added `scripts/smoke-postgresql-adapter-mapping.mjs` and root script `yarn verify:postgresql-mapping`.
+- Added merchant PostgreSQL env placeholders to `.env.example`.
+- Updated Aspect 05 and checklist status to mark mapping definition complete while leaving adapter implementation open.
+
+**Verification**
+- `yarn verify:postgresql-mapping` passed.
+- `node scripts/guard-checks.mjs` passed.
+
+---
+
+## 2026-04-30 Aspect 05 Backend Integration - Meilisearch Adapter
+
+**Status**: LANDED.
+
+- Added `packages/adapters/meilisearch/index.ts` implementing `SearchProvider`.
+- Wired provider registry to select Meilisearch when `USE_MEILISEARCH=true` and `MEILISEARCH_HOST` are configured.
+- Added `docs/delivery/runbooks/meilisearch-adapter.md`, `scripts/smoke-meilisearch-adapter.mjs`, focused adapter tests, env placeholders, and root script `yarn verify:meilisearch-adapter`.
+- Updated Aspect 05 and checklist to mark the adapter done while leaving indexing pipeline/facet config/live health as open production search work.
+- Added the Aspect 05 backend profile to `scripts/verify-delivery.mjs` and `docs/delivery/DELIVERY_MATRIX.md`.
+
+**Verification**
+- `yarn verify:meilisearch-adapter` passed: 2/2 adapter tests.
+- `node scripts/guard-checks.mjs` passed.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- `node scripts/verify-delivery.mjs --profile backend` passed.

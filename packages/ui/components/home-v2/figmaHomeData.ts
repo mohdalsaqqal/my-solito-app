@@ -112,7 +112,7 @@ export function buildEditorialHeroTiles(
   promoBlocks: PromoBlock[],
 ): EditorialHeroTile[] {
   const heroTiles: EditorialHeroTile[] = heroItems.map((item, index) => {
-    const tone = HERO_TONES[index % HERO_TONES.length]
+    const tone = HERO_TONES[index % HERO_TONES.length] ?? 'editorial'
     const defaults = HERO_PRESENTATION_DEFAULTS[tone]
 
     return {
@@ -130,7 +130,7 @@ export function buildEditorialHeroTiles(
   })
 
   const promoItems: EditorialHeroTile[] = promoBlocks.map((block, index) => {
-    const tone = HERO_TONES[(heroItems.length + index) % HERO_TONES.length]
+    const tone = HERO_TONES[(heroItems.length + index) % HERO_TONES.length] ?? 'editorial'
     const defaults = HERO_PRESENTATION_DEFAULTS[tone]
 
     return {

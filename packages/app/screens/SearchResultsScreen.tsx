@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import { BlockRenderer } from '@real/app/sections/blocks/BlockRenderer'
 import { SearchResult, SearchSuggestion } from '@real/app/lib/types'
 import { layout, spacing } from '@real/tokens'
@@ -10,7 +10,6 @@ import { HomeProductItem } from '@real/ui/components/home/types'
 import { Box, Text } from '@real/ui/primitives'
 import { passThroughPricingService } from '@real/app/lib/pricing'
 import { useBreakpoint } from '@real/ui/responsive'
-import Link from 'next/link'
 
 function homeProductToCardModel(item: HomeProductItem): ProductCardModel {
   const fmt = new Intl.NumberFormat('en-US', {
@@ -125,9 +124,7 @@ export const SearchResultsScreen = React.memo(function SearchResultsScreen({
               <Text variant='bodySm' tone='muted'>
                 {emptySearchSubtitle}
               </Text>
-              <Link href='/shop' passHref>
-                <Button size='sm'>{t('actions.browseShop')}</Button>
-              </Link>
+              <Button size='sm' onPress={() => onNavigate?.('/shop')}>{t('actions.browseShop')}</Button>
             </Box>
           </Section>
         </PageScaffold.Body>
@@ -186,9 +183,7 @@ export const SearchResultsScreen = React.memo(function SearchResultsScreen({
               <Text variant='bodySm' tone='muted'>
                 {noResultsSubtitle}
               </Text>
-              <Link href='/shop' passHref>
-                <Button size='sm'>{t('actions.browseShop')}</Button>
-              </Link>
+              <Button size='sm' onPress={() => onNavigate?.('/shop')}>{t('actions.browseShop')}</Button>
             </Box>
           </Section>
         </PageScaffold.Body>

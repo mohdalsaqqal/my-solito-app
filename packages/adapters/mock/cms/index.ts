@@ -151,7 +151,7 @@ export const mockCMSAdapter: CMSProvider = {
           {
             id: 'hero-1',
             title: 'Clean Beauty Essentials',
-            subtitle: 'Mock CMS hero content',
+            subtitle: 'Curated pharmacy-backed skincare, makeup, haircare, and suncare from verified supplier feeds.',
             ctaLabel: 'Shop now',
           },
         ],
@@ -173,7 +173,7 @@ export const mockCMSAdapter: CMSProvider = {
           },
           branding: {
             logo: {
-              uri: '/brand-logo-placeholder.svg',
+              uri: '/uploads/site-branding/logo-en.png',
               alt: {
                 en: 'Real Cosmetics',
                 ar: 'ريال كوزمتكس',

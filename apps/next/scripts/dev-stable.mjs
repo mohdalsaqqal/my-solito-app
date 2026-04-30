@@ -9,7 +9,7 @@ console.log('\n Generating Prisma client…\n')
 
 const prismaResult = spawnSync(
   process.execPath,
-  [require.resolve('prisma'), 'generate', '--schema', 'prisma/schema.prisma'],
+  [require.resolve('prisma/build/index.js'), 'generate', '--schema', 'prisma/schema.prisma'],
   { stdio: 'inherit', env: process.env },
 )
 
@@ -29,7 +29,6 @@ const env = {
   CHOKIDAR_INTERVAL: process.env.CHOKIDAR_INTERVAL ?? '300',
 }
 
-const require = createRequire(import.meta.url)
 const nextBin = require.resolve('next/dist/bin/next')
 const args = [nextBin, 'dev', '--webpack', '--hostname', '0.0.0.0', '--port', process.env.PORT ?? '3000']
 

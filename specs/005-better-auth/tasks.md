@@ -61,7 +61,7 @@ the migration can be delivered safely in phases.
 - [x] T017 [US1] Update `apps/next/app/api/auth/login/route.ts` to authenticate via Better Auth while preserving rate limiting and trusted mutation checks
 - [x] T018 [US1] Update `apps/next/app/api/auth/logout/route.ts` to terminate Better Auth-backed sessions
 - [x] T019 [US1] Update `apps/next/app/api/auth/register/route.ts` to create Better Auth-backed accounts/users
-- [ ] T020 [US1] Migrate password/reset routes if included in the initial Better Auth rollout
+- [x] T020 [US1] Migrate password/reset routes if included in the initial Better Auth rollout
 - [x] T021 [US1] Verify User Story 1 with `yarn guard:checks`, `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`, and targeted auth/API tests
 
 **Checkpoint**: Better Auth is the active authentication engine for low-risk auth routes. This is the MVP cut line.
@@ -115,6 +115,8 @@ the migration can be delivered safely in phases.
 - [x] T037a [US3] Enforce dedicated strong `BETTER_AUTH_SECRET` in release-like environments
 - [x] T037b [US3] Update env examples, CI, and operator docs to reflect the Better Auth secret/origin contract
 - [x] T037c [US3] Harden request-bound auth/session routes for prerender compatibility and suppress expected bailout noise during debug verification
+- [x] T037d [US3] Fail closed in release-like environments when app-owned role mapping is missing or unreadable; do not upsert inferred roles outside dev
+- [x] T037e [US3] Reject legacy cookie session fallback in release-like environments
 - [x] T038 [US3] Add observability/logging for legacy-vs-Better-Auth session usage during migration
 - [x] T039 [US3] Stop issuing legacy custom sessions after the transition window is complete
 - [x] T040 [US3] Remove dead legacy-auth-only code paths that are no longer required

@@ -42,6 +42,7 @@ export type PaymentSettlementRecord = {
 export type PlaceOrderInput = {
   pricingQuoteId: string
   customerUserId?: string
+  order?: Order
   fulfillment: {
     mode: 'delivery' | 'pickup'
     paymentMethod: OrderPaymentMethod
@@ -71,6 +72,12 @@ export type Order = {
     branchName?: string
   }
   paymentSettlement?: PaymentSettlementRecord
+  paymentAction?: {
+    status: 'not_required' | 'pending' | 'requires_action' | 'authorized' | 'captured' | 'failed' | 'cancelled'
+    paymentUrl?: string
+    clientToken?: string
+    expiresAt?: string
+  }
   items?: Array<{
     productId: string
     brand?: string

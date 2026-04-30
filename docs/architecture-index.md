@@ -4,14 +4,21 @@ This repo uses a layered source-of-truth model for humans and agents.
 
 Related reference:
 - [Production Blueprint](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/production-blueprint.md)
+- [SaaS Migration Path](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/saas-migration.md)
+- [Commerce Platform Delivery Checklist](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/checklist.md)
+- [Delivery Workflow](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/WORKFLOW.md)
+- [Delivery Matrix](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/DELIVERY_MATRIX.md)
+- [Blocker Register](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/BLOCKERS.md)
 
 ## Source Of Truth Order
 
 1. [AGENTS.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/AGENTS.md)
 2. This file
-3. `graphify-out/GRAPH_REPORT.md`
-4. The smallest matching bounded-context graph under `graphify-out/contexts/`
-5. Raw source files
+3. [checklist.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/checklist.md) for delivery status
+4. [Delivery Matrix](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/DELIVERY_MATRIX.md) and [Blocker Register](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/BLOCKERS.md) for delivery workflow state
+5. `graphify-out/GRAPH_REPORT.md`
+6. The smallest matching bounded-context graph under `graphify-out/contexts/`
+7. Raw source files
 
 ## Canonical Repo Boundaries
 
@@ -39,10 +46,13 @@ Related reference:
 When an agent needs project context:
 
 1. Read [AGENTS.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/AGENTS.md).
-2. Read `graphify-out/GRAPH_REPORT.md`.
-3. Choose one context graph from the table above.
-4. Read that context's `GRAPH_REPORT.md` or `wiki/index.md`.
-5. Use raw file search only inside that narrowed context.
+2. Read [checklist.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/checklist.md).
+3. Read [Delivery Matrix](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/DELIVERY_MATRIX.md) and [Blocker Register](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/BLOCKERS.md).
+4. Read the smallest relevant delivery aspect file under `docs/delivery/aspects/`.
+5. Read `graphify-out/GRAPH_REPORT.md`.
+6. Choose one context graph from the table above.
+7. Read that context's `GRAPH_REPORT.md` or `wiki/index.md`.
+8. Use raw file search only inside that narrowed context.
 
 ## Selection Heuristics
 

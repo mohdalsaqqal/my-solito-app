@@ -91,6 +91,7 @@ const withTurbopack = {
  */
 const nextConfig = {
   cacheComponents: true,
+  devIndicators: false,
   transpilePackages: [
     '@real/app',
     '@real/ui',

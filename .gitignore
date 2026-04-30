@@ -110,6 +110,7 @@ graphify-out/
 **/graphify-out/
 
 # AI tools / local agent workspaces
+.worktrees/
 .agent/
 .agents/
 .claude/

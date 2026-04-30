@@ -1,5 +1,6 @@
 import { prisma } from '../../lib/prisma'
 import type { AuthRole } from '@real/providers/contracts'
+import { isReleaseLikeEnvironment } from '../../../app/api/_lib/security-policy'
 
 const SEEDED_ROLE_BY_EMAIL: Record<string, AuthRole> = {
   'user@realcosmetics.local': 'customer',
@@ -32,11 +33,15 @@ export async function resolveAppOwnedRoleForUser(user: { id: string; email: stri
       select: { role: true },
     }) as { role: AuthRole } | null
   } catch {
-    return inferRoleFromEmail(user.email)
+    return isReleaseLikeEnvironment() ? 'customer' : inferredRole
   }
 
   if (mapping) {
     return mapping.role
+  }
+
+  if (isReleaseLikeEnvironment()) {
+    return 'customer'
   }
 
   const role = inferredRole

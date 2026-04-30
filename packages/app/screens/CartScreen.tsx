@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { Platform } from 'react-native'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import { borderWidth, componentTokens, spacing } from '@real/tokens'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Divider, Text } from '@real/ui/primitives'

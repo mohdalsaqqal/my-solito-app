@@ -2,7 +2,11 @@ import { AuthSession } from '@real/app/lib/types'
 import { AdminDomain, hasAdminDomainPermission } from './admin-rbac'
 import { fail } from './response'
 import { ensureRequestConnection } from './route-connection'
-import { isMutationMethod, TRUSTED_REQUEST_BYPASS_HEADER } from './security-policy'
+import {
+  getTrustedRequestBypassSecret,
+  isMutationMethod,
+  TRUSTED_REQUEST_BYPASS_HEADER,
+} from './security-policy'
 import { resolveNormalizedSessionFromRequest } from '../../../server/services/auth'
 
 type RequireSessionOptions = {
@@ -112,7 +116,8 @@ export function requireTrustedMutationRequest(request: Request): Response | null
     return null
   }
 
-  if (request.headers.get(TRUSTED_REQUEST_BYPASS_HEADER) === '1') {
+  const bypassSecret = getTrustedRequestBypassSecret()
+  if (bypassSecret && request.headers.get(TRUSTED_REQUEST_BYPASS_HEADER) === bypassSecret) {
     return null
   }
 

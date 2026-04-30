@@ -1,7 +1,8 @@
-import { authProvider, cartProvider, orderProvider } from '@real/providers'
+import { cartProvider, orderProvider } from '@real/providers'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
 import { listProducts } from '../catalog/product-list.service'
-import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { createStorefrontServiceRequest, type StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { resolveNormalizedSessionFromRequest } from '../auth'
 
 function toErrorMessage(cause: unknown, fallback: string) {
   return cause instanceof Error ? cause.message : fallback
@@ -9,10 +10,11 @@ function toErrorMessage(cause: unknown, fallback: string) {
 
 export async function getOrderDetailPageInitialData(
   orderId: string,
-  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+  context: Pick<StorefrontServiceContext, 'requestUrl' | 'requestHeaders'>,
 ) {
+  const request = createStorefrontServiceRequest(context)
   const [sessionResult, cmsResult, productsResult, cartResult, orderResult] = await Promise.allSettled([
-    authProvider.getSession(),
+    resolveNormalizedSessionFromRequest(request),
     getCachedHomeCmsResponseData(context.requestUrl),
     listProducts(),
     cartProvider.get(),
@@ -20,7 +22,7 @@ export async function getOrderDetailPageInitialData(
   ])
 
   const session =
-    sessionResult.status === 'fulfilled' && sessionResult.value.ok ? sessionResult.value.data : null
+    sessionResult.status === 'fulfilled' ? sessionResult.value : null
   const cmsHome = cmsResult.status === 'fulfilled' ? cmsResult.value.payload : null
   const products =
     productsResult.status === 'fulfilled' && productsResult.value.ok ? productsResult.value.data : []

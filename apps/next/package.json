@@ -5,18 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "NODE_OPTIONS=--max-old-space-size=8192 next dev",
+    "predev": "prisma generate --schema prisma/schema.prisma",
     "dev:stable": "NODE_OPTIONS=--max-old-space-size=8192 node scripts/dev-stable.mjs",
     "build": "NODE_OPTIONS=--max-old-space-size=8192 next build",
     "start": "next start",
     "lint": "next lint",
     "test": "yarn test:api",
-    "test:api": "node --max-old-space-size=4096 ../../node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 'app/api/**/*.test.ts' 'server/services/**/*.test.ts'",
+    "test:api": "node scripts/run-api-tests.mjs",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
     "prisma:migrate": "prisma migrate deploy --schema prisma/schema.prisma"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "@prisma/client": "6.5.0",
     "@real/app": "*",
+    "better-auth": "^1.6.2",
     "next": "16.2.1",
     "raf": "3.4.1",
     "react": "19.2.4",

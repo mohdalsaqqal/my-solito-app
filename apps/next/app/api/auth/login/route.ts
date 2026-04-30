@@ -6,9 +6,19 @@ import { LoginBodySchema } from '../../_lib/validation-schemas'
 import { auth } from '../../../../lib/auth'
 import {
   buildCookieHeaderFromBetterAuthSetCookie,
+  isBetterAuthIdentityAllowed,
+  resolveBetterAuthIdentity,
   resolveNormalizedSessionFromHeaders,
 } from '../../../../server/services/auth'
 import { isBetterAuthConfigValid } from '../../_lib/security-policy'
+
+function buildExpiredSessionCookie(setCookie: string | null) {
+  if (!setCookie) return undefined
+  const [cookiePair] = setCookie.split(';', 1)
+  const [cookieName] = cookiePair.split('=', 1)
+  if (!cookieName) return undefined
+  return `${cookieName}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`
+}
 
 export async function POST(request: Request) {
   try {
@@ -49,9 +59,19 @@ export async function POST(request: Request) {
     await authLimiter.reset(rateLimitKey)
 
     const setCookie = result.headers.get('set-cookie')
-    const session = await resolveNormalizedSessionFromHeaders(
-      await buildCookieHeaderFromBetterAuthSetCookie(setCookie, request.headers),
-    )
+    const authHeaders = await buildCookieHeaderFromBetterAuthSetCookie(setCookie, request.headers)
+    const identity = await resolveBetterAuthIdentity(authHeaders)
+    if (identity && !isBetterAuthIdentityAllowed(identity.user)) {
+      const clearCookie = buildExpiredSessionCookie(setCookie)
+      return fail(
+        'AUTH_EMAIL_VERIFICATION_REQUIRED',
+        'Verify your email address before signing in.',
+        403,
+        undefined,
+        clearCookie ? { 'Set-Cookie': clearCookie } : undefined,
+      )
+    }
+    const session = await resolveNormalizedSessionFromHeaders(authHeaders)
 
     if (!session) {
       return fail('AUTH_LOGIN_SESSION_UNAVAILABLE', 'Signed in, but failed to resolve the authenticated session.', 500)

@@ -63,11 +63,16 @@ function OfferBannerCard({
     () => (block.imageUrl ? c.stroke : c.border),
     [block.imageUrl, c.border, c.stroke],
   )
+  const accessibleLabel =
+    block.title?.trim() ||
+    block.ctaLabel?.trim() ||
+    block.subtitle?.trim() ||
+    'Offer banner'
 
   return (
     <ReusableButton
       accessibilityRole='button'
-      accessibilityLabel={block.title ?? block.ctaLabel ?? 'Offer banner'}
+      accessibilityLabel={accessibleLabel}
       onPress={block.href ? () => onNavigate?.(block.href!) : undefined}
       variant='ghost'
     >
@@ -92,7 +97,7 @@ function OfferBannerCard({
             {block.imageUrl ? (
               <Image
                 source={{ uri: block.imageUrl }}
-                alt={block.title || ''}
+                alt={accessibleLabel}
                 resizeMode='cover'
                 style={{ position: 'absolute', width: '100%', height: '100%' }}
               />

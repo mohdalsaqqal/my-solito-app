@@ -1,6 +1,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { createStorefrontServiceContextFromRequest } from './storefront-service-context'
+import {
+  createStorefrontServiceContextFromRequest,
+  createStorefrontServiceRequest,
+} from './storefront-service-context'
 
 test('createStorefrontServiceContextFromRequest derives locale, store, and preview token from request state', () => {
   const request = new Request(
@@ -19,4 +22,16 @@ test('createStorefrontServiceContextFromRequest derives locale, store, and previ
   assert.equal(context.locale, 'ar')
   assert.equal(context.storeId, 'amman-store')
   assert.equal(context.previewToken, 'preview-demo')
+  assert.equal(new Headers(context.requestHeaders).get('x-store-id'), 'amman-store')
+})
+
+test('createStorefrontServiceRequest preserves request headers for server auth resolution', () => {
+  const request = createStorefrontServiceRequest({
+    requestUrl: 'http://internal.local/api/cms/home',
+    requestHeaders: {
+      cookie: 'better-auth.session_token=session-1',
+    },
+  })
+
+  assert.equal(request.headers.get('cookie'), 'better-auth.session_token=session-1')
 })

@@ -181,6 +181,11 @@ export function CheckoutPageClient({
           }
 
           const placed = await apiClient.orders.place(input)
+          if (placed.paymentAction?.status === 'requires_action' && placed.paymentAction.paymentUrl) {
+            window.location.assign(placed.paymentAction.paymentUrl)
+            return
+          }
+
           const params = new URLSearchParams({
             orderId: placed.id,
             total: String(placed.total),

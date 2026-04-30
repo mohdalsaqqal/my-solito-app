@@ -269,6 +269,32 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           body: JSON.stringify(input),
         }),
     },
+    notifications: {
+      registerDevice: (input: {
+        token: string
+        platform?: 'ios' | 'android' | 'web' | 'unknown'
+        deviceId?: string
+        locale?: string
+      }) =>
+        request<{
+          id: string
+          userId: string
+          token: string
+          platform: 'ios' | 'android' | 'web' | 'unknown'
+          registeredAt: string
+          updatedAt: string
+        }>(endpoints.notificationDevices, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      unregisterDevice: (input: { token: string }) =>
+        request<{ removed: boolean }>(endpoints.notificationDevices, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+    },
     reviews: {
       list: (productId: string) => request<Review[]>(endpoints.reviews(productId)),
       create: (input: {

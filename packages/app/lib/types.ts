@@ -1234,6 +1234,12 @@ export type OrderSummary = {
     addressLine?: string
     branchName?: string
   }
+  paymentAction?: {
+    status: 'not_required' | 'pending' | 'requires_action' | 'authorized' | 'captured' | 'failed' | 'cancelled'
+    paymentUrl?: string
+    clientToken?: string
+    expiresAt?: string
+  }
   items?: Array<{
     productId: string
     brand?: string
@@ -1477,8 +1483,17 @@ export type WishlistItem = {
   imageUrl?: string
 }
 
+export type AccountTestTemplateType = 'skin' | 'hair'
+
+export type AccountTestTemplate = {
+  type: AccountTestTemplateType
+  label: string
+  description: string
+}
+
 export type AccountTestRecord = {
   id: string
+  template: AccountTestTemplate
   title: string
   createdAt: string
   status?: 'completed' | 'follow_up'
@@ -1498,6 +1513,7 @@ export type AccountTestRecommendedProduct = {
 
 export type AccountTestDetail = {
   id: string
+  template: AccountTestTemplate
   title: string
   createdAt: string
   status: 'completed' | 'follow_up'
@@ -1540,6 +1556,7 @@ export type PharmacistConsultationMetricInput = {
 
 export type PharmacistConsultationInput = {
   customerId: string
+  templateType?: AccountTestTemplateType
   title: string
   summary: string
   notes?: string
@@ -1549,6 +1566,7 @@ export type PharmacistConsultationInput = {
 
 export type PharmacistConsultationDraft = {
   customer: PharmacistCustomerSummary
+  template: AccountTestTemplate
   title: string
   summary: string
   notes?: string

@@ -54,9 +54,11 @@ if (__DEV__) {
 
 export const apiClient = createApiClient({
   baseUrl,
-  // Native fetch requests do not carry browser provenance headers; use the
-  // explicit machine-client bypass expected by the hardened mutation routes.
+  // Native fetch requests do not carry browser provenance headers by default.
+  // Send same-origin provenance instead of exposing the server-only trusted
+  // mutation bypass secret in the public mobile bundle.
   defaultHeaders: {
-    'x-rc-trusted-request': '1',
+    origin: baseUrl,
+    referer: `${baseUrl}/`,
   },
 })

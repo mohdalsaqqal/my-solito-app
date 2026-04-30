@@ -135,7 +135,7 @@ export type AppRouterProps = {
       city?: string
       area?: string
       building?: string
-      stockCount?: number
+      stockCount: number
       distanceKm?: number
       payAtBranchEnabled?: boolean
       payNowEnabled?: boolean

@@ -9,6 +9,18 @@
     "ios": {
       "bundleIdentifier": "com.solito.blank"
     },
+    "android": {
+      "package": "com.solito.blank"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#111111",
+          "defaultChannel": "orders"
+        }
+      ]
+    ],
     "newArchEnabled": true,
     "experiments": {
       "reactCanary": true

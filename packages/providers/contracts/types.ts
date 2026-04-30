@@ -13,6 +13,11 @@ export type ProviderSuccess<T> = {
 
 export type ProviderResult<T> = ProviderSuccess<T> | ProviderFailure
 
+export type ProviderContext = {
+  tenantId: string
+  storeId?: string
+}
+
 export type CursorSort = {
   key: string
   direction: 'asc' | 'desc'

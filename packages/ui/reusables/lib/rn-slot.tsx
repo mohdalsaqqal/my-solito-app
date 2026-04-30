@@ -86,7 +86,7 @@ function cloneChild(
   const childProps = (child.props ?? {}) as AnyProps
   const childRef = childProps.ref as React.Ref<any> | undefined
 
-  return React.cloneElement(child, {
+  return React.cloneElement(child as React.ReactElement<AnyProps>, {
     ...mergeProps(slotProps, childProps),
     ref: forwardedRef ? composeRefs(forwardedRef, childRef) : childRef,
   })

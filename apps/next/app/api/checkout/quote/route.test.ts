@@ -5,16 +5,14 @@ import http from 'node:http'
 import request from 'supertest'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
-import { fileURLToPath } from 'node:url'
+
 import { POST } from './route.ts'
 
-const TEST_DIR = path.dirname(fileURLToPath(import.meta.url))
-const APPS_NEXT_ROOT = path.resolve(TEST_DIR, '../../../..')
-const STORAGE_DIR = path.join(APPS_NEXT_ROOT, '.tmp')
+const STORAGE_DIR = path.join(process.cwd(), '.tmp')
 const CART_FILE = path.join(STORAGE_DIR, 'mock-cart.json')
 const QUOTE_FILE = path.join(STORAGE_DIR, 'mock-pricing-quotes.json')
 const PROMOTIONS_FILE = path.join(STORAGE_DIR, 'mock-promotions.json')
-const DATA_DIR = path.join(APPS_NEXT_ROOT, '.data')
+const DATA_DIR = path.join(process.cwd(), '.data')
 const PROGRAM_FILE = path.join(DATA_DIR, 'referral-program-store.json')
 const PROFILE_FILE = path.join(DATA_DIR, 'referral-profile-store.json')
 const TEST_PRODUCT_ID = '76959'
@@ -80,7 +78,11 @@ function createServer() {
     const webResponse = await POST(
       new Request('http://localhost/api/checkout/quote', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          origin: 'http://localhost',
+          'sec-fetch-site': 'same-origin',
+        },
         body,
       })
     )
@@ -105,6 +107,28 @@ test('POST /api/checkout/quote returns quote and totals', { concurrency: false }
   assert.equal(typeof response.body.data.quoteId, 'string')
   assert.equal(typeof response.body.data.expiresAt, 'string')
   assert.equal(typeof response.body.data.totals.finalTotal, 'number')
+})
+
+test('POST /api/checkout/quote rejects untrusted browser-like mutation requests', { concurrency: false }, async () => {
+  await cleanup()
+  await seedPromotions()
+  await setCart([{ productId: TEST_PRODUCT_ID, quantity: 2 }])
+
+  const response = await POST(
+    new Request('http://localhost/api/checkout/quote', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'https://evil.example',
+        'sec-fetch-site': 'cross-site',
+      },
+      body: JSON.stringify({ fulfillment: { mode: 'delivery' }, items: [{ productId: TEST_PRODUCT_ID, quantity: 2 }] }),
+    })
+  )
+  const json = await response.json()
+
+  assert.equal(response.status, 403)
+  assert.equal(json.error.code, 'AUTH_UNTRUSTED_REQUEST')
 })
 
 test('POST /api/checkout/quote applies coupon required promo', { concurrency: false }, async () => {

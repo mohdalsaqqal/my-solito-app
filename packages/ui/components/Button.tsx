@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
 import { ActivityIndicator, Platform, Pressable, ViewStyle } from 'react-native'
 import { borderWidth, buttonTokens, colors, elevation, fontWeights, motionDuration, motionEasing, opacity, shadows, spacing } from '@real/tokens'
 import { Box } from '../primitives/Box'
@@ -118,6 +118,87 @@ export function Button({
   const variantStyle = buttonContainerStyles[variant]
   const isDisabled = disabled || loading
   const isWeb = Platform.OS === 'web'
+  const [webInteractive, setWebInteractive] = useState(false)
+
+  if (isWeb) {
+    const resolvedShape = shape === 'default' ? 'pill' : shape
+    const radius = resolvedShape === 'pill' ? buttonTokens.radius.pill : buttonTokens.radius.default
+    const ctaActiveBackground =
+      variant === 'solid'
+        ? webInteractive
+          ? colors.brandPrimaryHover
+          : colors.brandPrimary
+        : variant === 'primaryCommerce'
+          ? webInteractive
+            ? colors.brandPrimaryHover
+            : colors.brandPrimary
+          : variant === 'premiumAccent'
+            ? webInteractive
+              ? colors.inkMid
+              : colors.inkBlack
+            : variantStyle.backgroundColor
+    const webStyle: CSSProperties = {
+      minHeight: sizeStyle.minHeight,
+      paddingLeft: sizeStyle.paddingHorizontal,
+      paddingRight: sizeStyle.paddingHorizontal,
+      borderRadius: radius,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: fullWidth ? 'stretch' : 'flex-start',
+      width: fullWidth ? '100%' : undefined,
+      opacity: isDisabled ? opacity.disabled : 1,
+      transform: webInteractive && !isDisabled ? 'scale(1.02)' : 'scale(1)',
+      transitionProperty: 'background-color, border-color, box-shadow, transform',
+      transitionDuration: `${motionDuration.interactive}ms`,
+      transitionTimingFunction: motionEasing.easeOut,
+      backgroundColor: String(ctaActiveBackground ?? 'transparent'),
+      borderColor:
+        variant === 'outline'
+          ? String(webInteractive ? colors.brandPrimaryHover : colors.brandPrimary)
+          : variant === 'soft'
+            ? String(webInteractive ? colors.textPrimary : colors.border)
+            : String(variantStyle.borderColor ?? 'transparent'),
+      borderWidth: variantStyle.borderWidth,
+      borderStyle: variantStyle.borderWidth ? 'solid' : 'none',
+      boxShadow:
+        variant === 'solid' || variant === 'primaryCommerce'
+          ? webInteractive
+            ? elevation.xs
+            : elevation.none
+          : undefined,
+      cursor: isDisabled ? 'not-allowed' : 'pointer',
+      display: 'flex',
+      textDecorationLine: variant === 'secondaryQuiet' && webInteractive ? 'underline' : 'none',
+    }
+
+    return (
+      <button
+        type='button'
+        aria-busy={loading || undefined}
+        disabled={isDisabled}
+        onClick={() => {
+          if (!isDisabled) onPress?.()
+        }}
+        onMouseEnter={() => setWebInteractive(true)}
+        onMouseLeave={() => setWebInteractive(false)}
+        onFocus={() => setWebInteractive(true)}
+        onBlur={() => setWebInteractive(false)}
+        style={webStyle}
+      >
+        {loading ? (
+          <ActivityIndicator accessibilityLabel='Loading' color={spinnerColor[variant]} />
+        ) : (
+          <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
+            {leftIcon ? leftIcon : null}
+            <Text tone={buttonTextTone[variant]} variant='bodySm' weight={fontWeights.semibold}>
+              {children}
+            </Text>
+            {rightIcon ? rightIcon : null}
+          </Box>
+        )}
+      </button>
+    )
+  }
 
   return (
     <Pressable

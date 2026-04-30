@@ -260,11 +260,25 @@ export const registrationLimiter = new RateLimiter({
   prefix: 'register',
 })
 
+// Session reads: moderate ceiling to prevent cheap authenticated hammering
+export const sessionReadLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 60,
+  prefix: 'session',
+})
+
 // Password reset: 2 per 15 minutes per IP
 export const passwordResetLimiter = new RateLimiter({
   windowMs: 15 * 60 * 1000,
   maxRequests: 2,
   prefix: 'reset',
+})
+
+// Checkout quote creation: persisted write surface, moderate ceiling
+export const checkoutQuoteLimiter = new RateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 20,
+  prefix: 'checkout-quote',
 })
 
 // Public read endpoints (search, browse): 60 per minute per IP
@@ -374,7 +388,9 @@ export function startAutoPrune(): void {
     const totals = await Promise.all([
       authLimiter.prune(),
       registrationLimiter.prune(),
+      sessionReadLimiter.prune(),
       passwordResetLimiter.prune(),
+      checkoutQuoteLimiter.prune(),
       publicReadLimiter.prune(),
       generalLimiter.prune(),
       cartMutationLimiter.prune(),

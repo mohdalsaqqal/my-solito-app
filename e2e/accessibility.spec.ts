@@ -24,6 +24,40 @@ test.describe('Accessibility', () => {
       .catch(() => undefined)
   }
 
+  async function expectNamedInteractiveElements(page: Page, role: 'button' | 'link') {
+    await page.waitForTimeout(3_000)
+    const missingNames = await page.getByRole(role).evaluateAll((elements, roleName) =>
+      elements
+        .map((element, index) => {
+          const labelledBy = element.getAttribute('aria-labelledby')
+          const labelledByText = labelledBy
+            ?.split(/\s+/)
+            .map((id) => document.getElementById(id)?.textContent?.trim() ?? '')
+            .join(' ')
+            .trim()
+          const candidate =
+            element.getAttribute('aria-label')?.trim() ||
+            labelledByText ||
+            element.getAttribute('title')?.trim() ||
+            element.textContent?.trim() ||
+            element.querySelector('img')?.getAttribute('alt')?.trim() ||
+            ''
+
+          return candidate
+            ? null
+            : {
+                role: roleName,
+                index,
+                html: element.outerHTML.slice(0, 240),
+              }
+        })
+        .filter(Boolean),
+      role,
+    )
+
+    expect(missingNames).toEqual([])
+  }
+
   test('homepage has proper heading hierarchy', async ({ page }) => {
     await gotoHome(page)
     const h1s = page.getByRole('heading', { level: 1 })
@@ -68,17 +102,8 @@ test.describe('Accessibility', () => {
 
   test('ARIA labels present on interactive elements', async ({ page }) => {
     await gotoHome(page)
-    const buttons = page.getByRole('button')
-    const buttonCount = await buttons.count()
-    for (let i = 0; i < buttonCount; i += 1) {
-      await expect(buttons.nth(i)).toHaveAccessibleName(/.+/)
-    }
-
-    const links = page.getByRole('link')
-    const linkCount = await links.count()
-    for (let i = 0; i < linkCount; i += 1) {
-      await expect(links.nth(i)).toHaveAccessibleName(/.+/)
-    }
+    await expectNamedInteractiveElements(page, 'button')
+    await expectNamedInteractiveElements(page, 'link')
   })
 
   test('skip link navigates to main content', async ({ page }) => {

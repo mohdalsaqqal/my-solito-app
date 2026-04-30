@@ -32,6 +32,7 @@ export function useFocusTrap(ref: React.RefObject<HTMLElement | null>, open: boo
 
       const firstFocusable = focusable[0]
       const lastFocusable = focusable[focusable.length - 1]
+      if (!firstFocusable || !lastFocusable) return
 
       if (event.shiftKey) {
         if (document.activeElement === firstFocusable) {

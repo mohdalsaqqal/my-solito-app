@@ -18,7 +18,7 @@ function getPrisma(): PrismaClient {
   if (globalForPrisma.prisma) return globalForPrisma.prisma
 
   globalForPrisma.prisma = new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['error'] : ['error'],
+    log: process.env.PRISMA_CLIENT_LOG === 'error' ? ['error'] : [],
   })
 
   // Lazy-connect: attempt once, swallow error in dev so mock adapters work

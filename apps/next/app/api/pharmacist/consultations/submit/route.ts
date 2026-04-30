@@ -1,7 +1,8 @@
-import { pharmacistProvider } from '@real/providers'
-import { PharmacistConsultationInput, matchProviderResult } from '@real/providers/contracts'
+import { matchProviderResult } from '@real/providers/contracts'
 import { fail, ok } from '../../../_lib/response'
 import { requireAuthSession } from '../../../_lib/request-auth'
+import { PharmacistConsultationSubmitBodySchema } from '../../../_lib/validation-schemas'
+import { submitPharmacistConsultation } from '../../../../../server/services/pharmacist/pharmacist-consultation.service'
 
 export async function POST(request: Request) {
   try {
@@ -9,27 +10,17 @@ export async function POST(request: Request) {
     if (session instanceof Response) {
       return session
     }
-    if (session.role !== 'pharmacist' && session.role !== 'admin') {
-      return fail('AUTH_FORBIDDEN', 'Pharmacist access is required.', 403)
+    const body = ((await request.json().catch(() => ({}))) ?? {}) as Record<string, unknown>
+    const parsed = PharmacistConsultationSubmitBodySchema.safeParse(body)
+    if (!parsed.success) {
+      return fail('PHARMACIST_SUBMIT_INVALID', parsed.error.issues[0]?.message ?? 'Invalid consultation.', 400)
     }
 
-    const payload = ((await request.json().catch(() => ({}))) ?? {}) as Partial<PharmacistConsultationInput>
-    const result = await pharmacistProvider.submitConsultation({
-      pharmacistName: session.name,
-      branchName: 'Main Branch',
-      consultation: {
-        customerId: payload.customerId ?? '',
-        title: payload.title ?? '',
-        summary: payload.summary ?? '',
-        notes: payload.notes ?? '',
-        metrics: Array.isArray(payload.metrics) ? payload.metrics : [],
-        recommendedProductIds: Array.isArray(payload.recommendedProductIds) ? payload.recommendedProductIds : [],
-      },
-    })
+    const result = await submitPharmacistConsultation(session, parsed.data)
 
     return matchProviderResult(result, {
       ok: (data) => ok(data),
-      fail: (error) => fail(error.code, error.message, 400),
+      fail: (error) => fail(error.code, error.message, error.code === 'AUTH_FORBIDDEN' ? 403 : 400),
     })
   } catch (cause) {
     return fail('PHARMACIST_SUBMIT_UNEXPECTED', 'Unexpected error while submitting consultation.', 500, {
@@ -38,4 +29,3 @@ export async function POST(request: Request) {
     })
   }
 }
-

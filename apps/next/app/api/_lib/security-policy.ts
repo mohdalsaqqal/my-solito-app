@@ -3,6 +3,7 @@ export const AUTH_SESSION_FALLBACK_SECRET = 'dev-auth-secret-change-me'
 export const AUTH_SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 export const TRUSTED_REQUEST_BYPASS_HEADER = 'x-rc-trusted-request'
 export const BETTER_AUTH_FALLBACK_URL = 'http://localhost:3000'
+export const BETTER_AUTH_PASSWORD_RESET_FALLBACK_PATH = '/auth/reset-password'
 export const MINIMUM_AUTH_SECRET_LENGTH = 32
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
@@ -116,6 +117,37 @@ export function getBetterAuthTrustedOrigins() {
   }
 
   return origins
+}
+
+export function getTrustedRequestBypassSecret(): string | null {
+  const configured = process.env.TRUSTED_REQUEST_BYPASS_SECRET?.trim()
+  if (!configured) {
+    return null
+  }
+
+  return configured
+}
+
+export function getBetterAuthPasswordResetRedirectUrl() {
+  const configured = process.env.BETTER_AUTH_PASSWORD_RESET_REDIRECT_URL?.trim()
+  if (configured) {
+    return configured
+  }
+
+  return `${getBetterAuthBaseUrl()}${BETTER_AUTH_PASSWORD_RESET_FALLBACK_PATH}`
+}
+
+export function isBetterAuthPasswordResetDeliveryEnabled() {
+  const configured = process.env.BETTER_AUTH_PASSWORD_RESET_DELIVERY?.trim().toLowerCase()
+  if (configured === 'disabled') {
+    return false
+  }
+
+  if (configured === 'console') {
+    return !isReleaseLikeEnvironment()
+  }
+
+  return !isReleaseLikeEnvironment()
 }
 
 export function buildCookieAttributes(maxAgeSeconds: number) {

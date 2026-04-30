@@ -98,8 +98,18 @@ export const mockProductQueryAdapter: ProductQueryProvider = {
     }
 
     const current = queries[index]
+    if (!current) {
+      return {
+        ok: false,
+        error: {
+          code: 'PRODUCT_QUERY_NOT_FOUND',
+          message: 'The requested product query does not exist.',
+        },
+      }
+    }
     const updated: ProductQuery = {
       ...current,
+      slug: current.slug,
       active: input.active ?? current.active,
       title: input.title ?? current.title,
       filters: input.filters ?? current.filters,

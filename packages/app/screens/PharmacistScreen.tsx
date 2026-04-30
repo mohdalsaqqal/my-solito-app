@@ -204,11 +204,17 @@ export const PharmacistScreen = React.memo(function PharmacistScreen({
           audio: false,
         })
       }
+      if (!stream) {
+        setError('Camera access failed. Please type or paste the QR code instead.')
+        setScanningQr(false)
+        return
+      }
+      const scanStream = stream
 
       const video = root.document.createElement('video')
       video.setAttribute('playsinline', 'true')
       video.muted = true
-      video.srcObject = stream
+      video.srcObject = scanStream
       await video.play()
 
       const BarcodeDetectorCtor = root.BarcodeDetector
@@ -222,8 +228,9 @@ export const PharmacistScreen = React.memo(function PharmacistScreen({
       if (!detector) {
         const jsQrModule = await import('jsqr')
         jsQrDecode = jsQrModule.default
-        canvas = root.document.createElement('canvas')
-        context = canvas.getContext('2d')
+        const fallbackCanvas = root.document.createElement('canvas')
+        canvas = fallbackCanvas
+        context = fallbackCanvas.getContext('2d')
       }
 
       let rafId: number | null = null
@@ -272,7 +279,7 @@ export const PharmacistScreen = React.memo(function PharmacistScreen({
           if (rafId !== null) {
             root.cancelAnimationFrame(rafId)
           }
-          const tracks = stream.getTracks?.() ?? []
+          const tracks = scanStream.getTracks?.() ?? []
           tracks.forEach((track: any) => track.stop?.())
           try {
             video.pause?.()

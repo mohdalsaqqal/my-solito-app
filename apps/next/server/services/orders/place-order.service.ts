@@ -1,12 +1,11 @@
-import { accountProvider, cartProvider, cmsProvider, productProvider, promotionProvider } from '@real/providers'
-import type { Order } from '@real/providers/contracts'
+import { accountProvider, cartProvider, cmsProvider, orderProvider, paymentProvider, productProvider, promotionProvider } from '@real/providers'
+import type { Order, PaymentProviderIntent } from '@real/providers/contracts'
 import { passThroughPricingService } from '@real/app/lib/pricing'
-import { promises as fs } from 'node:fs'
-import * as path from 'node:path'
-import { parseAuthSessionCookie, readAuthSessionCookieValue } from '../../../app/api/_lib/auth-session'
-import { buildCartHash, hasSingleCurrency, isQuoteExpired, normalizeCouponCode } from '../../../app/api/_lib/pricing-quote'
-import { createReferralLedgerEntry } from '../../../app/api/_lib/referral-ledger-store'
+import { buildCartHash, hasSingleCurrency, isQuoteExpired, normalizeCouponCode } from '../checkout/pricing-quote'
+import { createReferralLedgerEntry } from '../referral'
 import { ServiceError } from '../_lib/service-error'
+import { resolveNormalizedSessionFromRequest } from '../auth'
+import { createProviderContext } from '../tenant/context'
 
 export type PlaceOrderPayload = {
   items?: Array<{
@@ -42,26 +41,6 @@ export type PlaceOrderPayload = {
   pricingQuoteId?: string
   couponCode?: string
   referralCode?: string
-}
-
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
-const STORAGE_FILE = path.join(STORAGE_DIR, 'mock-orders.json')
-
-async function readStoredOrders(): Promise<Order[]> {
-  try {
-    const raw = await fs.readFile(STORAGE_FILE, 'utf8')
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? (parsed as Order[]) : []
-  } catch {
-    return []
-  }
-}
-
-async function persistPlacedOrder(order: Order) {
-  const current = await readStoredOrders()
-  const next = [order, ...current]
-  await fs.mkdir(STORAGE_DIR, { recursive: true })
-  await fs.writeFile(STORAGE_FILE, JSON.stringify(next), 'utf8')
 }
 
 function splitProductName(rawName: string) {
@@ -107,13 +86,8 @@ function isSameAddress(
   )
 }
 
-function readSession(request: Request) {
-  const cookieValue = readAuthSessionCookieValue(request.headers.get('cookie'))
-  return parseAuthSessionCookie(cookieValue)
-}
-
 export async function placeOrder(request: Request) {
-  const session = readSession(request)
+  const session = await resolveNormalizedSessionFromRequest(request)
   if (!session) {
     throw new ServiceError('ORDER_PLACE_AUTH_REQUIRED', 'Please sign in to place your order.', 401)
   }
@@ -464,22 +438,84 @@ export async function placeOrder(request: Request) {
     items: summaryItems,
   }
 
-  await persistPlacedOrder(summary)
+  const paymentResult = await paymentProvider.createIntent(
+    {
+      orderId: summary.id,
+      customerUserId: session.userId,
+      method: selectedMethod,
+      amount: summary.total,
+      currency: summary.currency,
+      returnUrl: `${new URL(request.url).origin}/api/payments/custom/return?orderId=${encodeURIComponent(summary.id)}`,
+      cancelUrl: `${new URL(request.url).origin}/api/payments/custom/cancel?orderId=${encodeURIComponent(summary.id)}`,
+      idempotencyKey: `${pricingQuoteId}:${session.userId}:${selectedMethod}`,
+    },
+    createProviderContext({ storeId: 'default' }),
+  )
+  if (!paymentResult.ok) {
+    throw new ServiceError(paymentResult.error.code, paymentResult.error.message, 502)
+  }
+
+  const paymentIntent: PaymentProviderIntent = paymentResult.data
+  summary.paymentSettlement =
+    paymentIntent.settlement ??
+    {
+      settlementId: paymentIntent.id,
+      provider: paymentIntent.provider === 'custom_gateway' ? 'payment_gateway' : 'mock',
+      status:
+        paymentIntent.status === 'captured'
+          ? 'captured'
+          : paymentIntent.status === 'authorized'
+            ? 'authorized'
+            : paymentIntent.status === 'failed' || paymentIntent.status === 'cancelled'
+              ? 'failed'
+              : paymentIntent.method === 'cod' || paymentIntent.method === 'pay_at_branch'
+                ? 'not_started'
+                : 'pending',
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency,
+      rawReference: paymentIntent.paymentUrl ?? paymentIntent.clientToken ?? paymentIntent.provider,
+    }
+  summary.paymentAction = {
+    status: paymentIntent.status,
+    paymentUrl: paymentIntent.paymentUrl,
+    clientToken: paymentIntent.clientToken,
+    expiresAt: paymentIntent.expiresAt,
+  }
+
+  if (!orderProvider.place) {
+    throw new ServiceError('ORDER_PLACE_UNSUPPORTED', 'Order placement is not supported by the active provider.', 500)
+  }
+
+  if (!summary.fulfillment) {
+    throw new ServiceError('ORDER_PLACE_INVALID_FULFILLMENT', 'Order fulfillment details are required.', 500)
+  }
+
+  const placedOrderResult = await orderProvider.place({
+    pricingQuoteId,
+    customerUserId: session.userId,
+    fulfillment: summary.fulfillment,
+    referralCode: quote.quote.referral?.code,
+    order: summary,
+  })
+  if (!placedOrderResult.ok) {
+    throw new ServiceError(placedOrderResult.error.code, placedOrderResult.error.message, 500)
+  }
+  const placedOrder = placedOrderResult.data
 
   if (quote.quote.referral) {
     await createReferralLedgerEntry({
       storeId: 'default',
       profileId: quote.quote.referral.profileId,
       referredUserId: session.userId,
-      orderId: summary.id,
+      orderId: placedOrder.id,
       code: quote.quote.referral.code,
       status: 'pending',
-      currency: summary.currency,
+      currency: placedOrder.currency,
       subtotal: Math.round(subtotal * 100) / 100,
       followerRewardValue: quote.quote.referral.followerDiscountAmount,
       influencerRewardValue: quote.quote.referral.influencerRewardValue,
     })
   }
 
-  return summary
+  return placedOrder
 }

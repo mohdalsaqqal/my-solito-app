@@ -30,6 +30,9 @@ function humanizeError(raw: string): { userMessage: string; code?: string } {
   const match = cleaned.match(/^\[([^\]]+)\]\s*(\w+):\s*(.+)$/)
   if (match) {
     const [, _path, code, _message] = match
+    if (!code || !_message) {
+      return { userMessage: raw }
+    }
     const hint = AUTH_HINTS[code]
     if (hint) return { userMessage: hint, code }
     return { userMessage: _message, code }
@@ -192,7 +195,7 @@ export const AuthLoginScreen = React.memo(function AuthLoginScreen({
           borderColor: hasError ? c.error + '40' : c.stroke,
           padding: isDesktop ? spacing['32'] : spacing['24'],
           gap: spacing['20'],
-          ...shadows.card,
+          ...(isNative ? shadows.card : {}),
         }}>
           {/* Email */}
           <Box style={{ gap: spacing['8'] }}>

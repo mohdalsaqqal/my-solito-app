@@ -331,9 +331,6 @@ const HeroTileCard = React.memo(function HeroTileCard({
                   lineHeight: titleLineHeight,
                   minHeight: titleMinHeight,
                   letterSpacing: heroTokens.titleTracking,
-                  textShadowColor: 'rgba(0, 0, 0, 0.5)',
-                  textShadowOffset: { width: 0, height: 1 },
-                  textShadowRadius: 3,
                 }}
               >
                 {item.title}
@@ -349,9 +346,6 @@ const HeroTileCard = React.memo(function HeroTileCard({
                     fontSize: compactPanel ? heroTokens.compactSubtitleSize : heroTokens.subtitleSize,
                     minHeight: compactPanel ? heroTokens.compactSubtitleMinHeight : heroTokens.subtitleMinHeight,
                     lineHeight: compactPanel ? heroTokens.compactSubtitleLineHeight : heroTokens.subtitleLineHeight,
-                    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-                    textShadowOffset: { width: 0, height: 1 },
-                    textShadowRadius: 3,
                   }}
                 >
                   {item.subtitle}

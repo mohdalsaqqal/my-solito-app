@@ -1,5 +1,5 @@
 import { spacing } from '@real/tokens'
-import { useTranslation } from 'react-i18next'
+import { useTranslation } from '@real/app/lib/i18n/use-translation'
 import { PageScaffold, Section } from '@real/ui'
 import { Box, Text } from '@real/ui/primitives'
 import { Button, Card } from '@real/ui/components'

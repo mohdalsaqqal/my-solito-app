@@ -159,6 +159,7 @@ export default function PharmacistNewTestPageClient({ session, cmsHome }: Pharma
     }
     const input: PharmacistConsultationInput = {
       customerId,
+      templateType: testType,
       title: titleValue.trim(),
       summary: summaryValue.trim(),
       notes: notesValue.trim(),

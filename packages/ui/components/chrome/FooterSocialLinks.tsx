@@ -50,6 +50,7 @@ export const FooterSocialLinks = React.memo(function FooterSocialLinks({ items, 
           target={social.href?.startsWith('http') ? '_blank' : undefined}
           rel={social.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
           variant='ghost'
+          accessibilityLabel={social.label}
           onPress={() => {
             if (Platform.OS !== 'web' || !social.href) {
               onPress(social.id)

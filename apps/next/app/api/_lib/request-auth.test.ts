@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { buildAuthSessionCookieHeader } from './auth-session'
 import { requireAuthSession, requireAdminDomainSession, requireTrustedMutationRequest } from './request-auth'
 import { auth } from '../../../lib/auth'
+import { withEnv } from './security-test-helpers'
 
 test('requireTrustedMutationRequest blocks cross-site browser mutation requests', () => {
   const request = new Request('http://localhost/api/account/addresses', {
@@ -55,7 +56,7 @@ test('requireTrustedMutationRequest allows same-origin referer fallback when fet
   assert.equal(result, null)
 })
 
-test('requireTrustedMutationRequest allows bypass header for machine clients', () => {
+test('requireTrustedMutationRequest rejects bare bypass header without configured secret', () => {
   const request = new Request('http://localhost/api/payments/networks/webhook', {
     method: 'POST',
     headers: {
@@ -64,7 +65,27 @@ test('requireTrustedMutationRequest allows bypass header for machine clients', (
   })
 
   const result = requireTrustedMutationRequest(request)
-  assert.equal(result, null)
+  assert.ok(result instanceof Response)
+  assert.equal(result.status, 403)
+})
+
+test('requireTrustedMutationRequest allows bypass header for machine clients with matching secret', async () => {
+  await withEnv(
+    {
+      TRUSTED_REQUEST_BYPASS_SECRET: 'machine-secret',
+    },
+    async () => {
+      const request = new Request('http://localhost/api/payments/networks/webhook', {
+        method: 'POST',
+        headers: {
+          'x-rc-trusted-request': 'machine-secret',
+        },
+      })
+
+      const result = requireTrustedMutationRequest(request)
+      assert.equal(result, null)
+    },
+  )
 })
 
 test('requireAuthSession prefers Better Auth-backed session resolution', async () => {
@@ -74,6 +95,7 @@ test('requireAuthSession prefers Better Auth-backed session resolution', async (
       id: 'admin-1',
       email: 'admin@realcosmetics.local',
       name: 'Admin User',
+      emailVerified: true,
     },
     session: {
       id: 'session-1',
@@ -81,12 +103,20 @@ test('requireAuthSession prefers Better Auth-backed session resolution', async (
   })) as typeof auth.api.getSession
 
   try {
-    const request = new Request('http://localhost/api/admin/i18n/status')
-    const result = await requireAuthSession(request)
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
+      },
+      async () => {
+        const request = new Request('http://localhost/api/admin/i18n/status')
+        const result = await requireAuthSession(request)
 
-    assert.ok(!(result instanceof Response))
-    assert.equal(result.role, 'admin')
-    assert.equal(result.email, 'admin@realcosmetics.local')
+        assert.ok(!(result instanceof Response))
+        assert.equal(result.role, 'admin')
+        assert.equal(result.email, 'admin@realcosmetics.local')
+      },
+    )
   } finally {
     auth.api.getSession = original
   }
@@ -109,11 +139,19 @@ test('requireAuthSession falls back to legacy cookie when Better Auth session is
       },
     })
 
-    const result = await requireAuthSession(request)
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
+      },
+      async () => {
+        const result = await requireAuthSession(request)
 
-    assert.ok(!(result instanceof Response))
-    assert.equal(result.userId, 'legacy-1')
-    assert.equal(result.role, 'customer')
+        assert.ok(!(result instanceof Response))
+        assert.equal(result.userId, 'legacy-1')
+        assert.equal(result.role, 'customer')
+      },
+    )
   } finally {
     auth.api.getSession = original
   }
@@ -126,6 +164,7 @@ test('requireAdminDomainSession keeps 403 permission checks after Better Auth id
       id: 'support-1',
       email: 'support@realcosmetics.local',
       name: 'Support User',
+      emailVerified: true,
     },
     session: {
       id: 'session-2',
@@ -133,11 +172,19 @@ test('requireAdminDomainSession keeps 403 permission checks after Better Auth id
   })) as typeof auth.api.getSession
 
   try {
-    const request = new Request('http://localhost/api/admin/ops/audit')
-    const result = await requireAdminDomainSession(request, 'operations')
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
+      },
+      async () => {
+        const request = new Request('http://localhost/api/admin/ops/audit')
+        const result = await requireAdminDomainSession(request, 'operations')
 
-    assert.ok(result instanceof Response)
-    assert.equal(result.status, 403)
+        assert.ok(result instanceof Response)
+        assert.equal(result.status, 403)
+      },
+    )
   } finally {
     auth.api.getSession = original
   }
@@ -194,21 +241,30 @@ test('requireAdminDomainSession returns 403 when Better Auth resolves an unknown
       id: 'unknown-99',
       email: 'unknown@external.example.com',
       name: 'Unknown User',
+      emailVerified: true,
     },
     session: { id: 's-x' },
   })) as typeof auth.api.getSession
 
   try {
-    const request = new Request('http://localhost/api/admin/catalog/brands', {
-      headers: {
-        origin: 'http://localhost',
-        'sec-fetch-site': 'same-origin',
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
       },
-    })
-    const result = await requireAdminDomainSession(request, 'catalog')
+      async () => {
+        const request = new Request('http://localhost/api/admin/catalog/brands', {
+          headers: {
+            origin: 'http://localhost',
+            'sec-fetch-site': 'same-origin',
+          },
+        })
+        const result = await requireAdminDomainSession(request, 'catalog')
 
-    assert.ok(result instanceof Response)
-    assert.equal(result.status, 403)
+        assert.ok(result instanceof Response)
+        assert.equal(result.status, 403)
+      },
+    )
   } finally {
     auth.api.getSession = original
   }
@@ -222,24 +278,33 @@ test('requireAdminDomainSession full check returns 403 when role only has read p
       id: 'ops-1',
       email: 'ops@realcosmetics.local',
       name: 'Ops User',
+      emailVerified: true,
     },
     session: { id: 's-ops' },
   })) as typeof auth.api.getSession
 
   try {
-    const request = new Request('http://localhost/api/admin/catalog/brands', {
-      method: 'POST',
-      headers: {
-        origin: 'http://localhost',
-        'sec-fetch-site': 'same-origin',
-        'content-type': 'application/json',
+    await withEnv(
+      {
+        REQUIRE_PRODUCTION_AUTH: 'false',
+        NODE_ENV: 'development',
       },
-      body: '{}',
-    })
-    const result = await requireAdminDomainSession(request, 'catalog', 'full')
+      async () => {
+        const request = new Request('http://localhost/api/admin/catalog/brands', {
+          method: 'POST',
+          headers: {
+            origin: 'http://localhost',
+            'sec-fetch-site': 'same-origin',
+            'content-type': 'application/json',
+          },
+          body: '{}',
+        })
+        const result = await requireAdminDomainSession(request, 'catalog', 'full')
 
-    assert.ok(result instanceof Response)
-    assert.equal(result.status, 403)
+        assert.ok(result instanceof Response)
+        assert.equal(result.status, 403)
+      },
+    )
   } finally {
     auth.api.getSession = original
   }

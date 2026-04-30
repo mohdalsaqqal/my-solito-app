@@ -191,11 +191,22 @@ export const mockPromotionAdapter: PromotionProvider = {
       }
     }
     const current = promotions[index]
+    if (!current) {
+      return {
+        ok: false,
+        error: { code: 'PROMOTION_NOT_FOUND', message: 'Promotion not found.' },
+      }
+    }
     const updated: Promotion = {
       ...current,
       ...input,
+      id: current.id,
       code: input.code !== undefined ? normalizeCouponCode(input.code) || undefined : current.code,
       name: input.name ?? current.name,
+      isActive: input.isActive ?? current.isActive,
+      startAt: input.startAt ?? current.startAt,
+      endAt: input.endAt ?? current.endAt,
+      priority: input.priority !== undefined ? round2(input.priority) : current.priority,
       conditions: input.conditions ?? current.conditions,
       rewards: input.rewards ?? current.rewards,
     }

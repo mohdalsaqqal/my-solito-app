@@ -1,8 +1,8 @@
-import { authProvider } from '@real/providers'
 import type { AuthSession } from '@real/providers/contracts'
 import type { CMSHome } from '@real/app/lib/types'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
-import type { StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { createStorefrontServiceRequest, type StorefrontServiceContext } from '../_lib/storefront-service-context'
+import { resolveNormalizedSessionFromRequest } from '../auth'
 
 export type PharmacistBootstrapData = {
   session: AuthSession | null
@@ -10,15 +10,16 @@ export type PharmacistBootstrapData = {
 }
 
 export async function getPharmacistBootstrapData(
-  context: Pick<StorefrontServiceContext, 'requestUrl'>,
+  context: Pick<StorefrontServiceContext, 'requestUrl' | 'requestHeaders'>,
 ) {
+  const request = createStorefrontServiceRequest(context)
   const [sessionResult, cmsResult] = await Promise.allSettled([
-    authProvider.getSession(),
+    resolveNormalizedSessionFromRequest(request),
     getCachedHomeCmsResponseData(context.requestUrl),
   ])
 
   const session =
-    sessionResult.status === 'fulfilled' && sessionResult.value.ok ? sessionResult.value.data : null
+    sessionResult.status === 'fulfilled' ? sessionResult.value : null
   const cmsHome = cmsResult.status === 'fulfilled' ? cmsResult.value.payload : null
 
   return {

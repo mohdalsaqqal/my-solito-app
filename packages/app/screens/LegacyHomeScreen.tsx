@@ -3,7 +3,6 @@ import { Product, CMSHome } from '@real/app/lib/types'
 import {
   HomeCategoryStrip,
   HomeHeroRail,
-  HomeProductItem,
   HomeProductRail,
   RevealOnScroll,
 } from '@real/ui/components'
@@ -11,7 +10,7 @@ import { PageScaffold, Section } from '@real/ui'
 import { motionDuration } from '@real/tokens'
 import { NavItem } from '@real/app/features/shell'
 import { applyProductFilter } from '@real/app/lib/product-filter'
-import { passThroughPricingService } from '@real/app/lib/pricing'
+import { buildProductCardModels } from '@real/app/lib/product-card-model'
 
 type LegacyHomeScreenProps = {
   products: Product[]
@@ -23,32 +22,6 @@ type LegacyHomeScreenProps = {
   onNavigate?: (href: string) => void
   onSelectProduct?: (productId: string) => void
   onAddToCart?: (productId: string) => void
-}
-
-function deriveBrand(name: string) {
-  const [left] = name.split('-')
-  return left?.trim() || 'Brand'
-}
-
-function deriveProductName(name: string) {
-  const split = name.split('-')
-  if (split.length < 2) {
-    return name
-  }
-  return split.slice(1).join('-').trim()
-}
-
-function toHomeProductItem(product: Product, badge?: string): HomeProductItem {
-  const resolvedPrice = passThroughPricingService.getProductPrice(product)
-  return {
-    id: product.id,
-    name: deriveProductName(product.name),
-    brand: deriveBrand(product.name),
-    price: resolvedPrice.unitPrice,
-    imageUrl: product.image,
-    href: `/product/${product.id}`,
-    badge,
-  }
 }
 
 export const LegacyHomeScreen = React.memo(function LegacyHomeScreen({
@@ -65,7 +38,10 @@ export const LegacyHomeScreen = React.memo(function LegacyHomeScreen({
   const heroItems = useMemo(() => {
     const cmsCards = cmsHome?.marketing?.hero?.cards ?? []
     if (cmsCards.length > 0) {
-      return cmsCards
+      return cmsCards.map((card) => ({
+        ...card,
+        badgeLabel: typeof card.badgeLabel === 'string' ? card.badgeLabel : undefined,
+      }))
     }
     return cmsHome?.heroSlides.map((slide) => ({
       id: slide.id,
@@ -77,11 +53,11 @@ export const LegacyHomeScreen = React.memo(function LegacyHomeScreen({
   }, [cmsHome])
 
   const flashSaleProducts = useMemo(
-    () => applyProductFilter(products, { onSale: true, limit: 8 }).map((item) => toHomeProductItem(item, '-20%')),
+    () => buildProductCardModels(applyProductFilter(products, { onSale: true, limit: 8 })),
     [products]
   )
   const bestSellerProducts = useMemo(
-    () => applyProductFilter(products, { sort: 'bestseller', limit: 8 }).map((item) => toHomeProductItem(item)),
+    () => buildProductCardModels(applyProductFilter(products, { sort: 'bestseller', limit: 8 })),
     [products]
   )
   const categoryItems = useMemo(

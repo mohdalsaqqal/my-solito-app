@@ -19,7 +19,7 @@ export function StarRating({
   reviewCount,
   color,
 }: StarRatingProps) {
-  const resolvedColor = color ?? c.warning
+  const resolvedColor = color ?? colors.warning
   const clamped = Math.max(0, Math.min(max, value))
   const formattedValue = clamped.toFixed(1)
   const formattedReviewCount =

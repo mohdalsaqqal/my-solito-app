@@ -50,7 +50,7 @@ export function getCurrentDirection() {
 }
 
 export function t(key: TranslationKey, options?: Record<string, unknown>) {
-  return i18next.t(key, options)
+  return (i18next.t as (key: string, options?: Record<string, unknown>) => string)(key as string, options)
 }
 
 export type { AppLocale, TranslationKey }

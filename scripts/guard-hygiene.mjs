@@ -318,6 +318,7 @@ function findPackageJsonFiles(root) {
   const results = []
   const EXCLUDE_DIRS = new Set([
     'node_modules',
+    '.worktrees',
     '.claude',
     '.agent',
     '.agents',

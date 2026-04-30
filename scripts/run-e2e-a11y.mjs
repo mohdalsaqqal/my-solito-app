@@ -20,7 +20,7 @@ function stopProcessTree(pid) {
     const result = run('powershell.exe', [
       '-NoProfile',
       '-Command',
-      `Stop-Process -Id ${pid} -Force -ErrorAction Stop`,
+      `Stop-Process -Id ${pid} -Force -ErrorAction SilentlyContinue`,
     ])
     if (result.status !== 0) {
       console.error(result.stderr || result.stdout)
