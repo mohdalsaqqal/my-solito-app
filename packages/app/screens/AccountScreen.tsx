@@ -904,7 +904,14 @@ export const AccountScreen = React.memo(function AccountScreen({
                 <>
                   <Card tone='subtle' style={{ gap: spacing['8'], alignItems: 'center' }}>
                     <Text variant='label'>Your Code</Text>
-                    <Text variant='title' style={{ fontSize: 24, letterSpacing: 4, fontWeight: '700' }}>
+                    <Text
+                      variant='title'
+                      style={{
+                        fontSize: 24,
+                        letterSpacing: 4,
+                        fontWeight: '700',
+                      }}
+                    >
                       {referralSummary.code}
                     </Text>
                     <Text variant='caption' tone='muted'>{referralSummary.shareLink}</Text>
@@ -936,7 +943,14 @@ export const AccountScreen = React.memo(function AccountScreen({
                   ) : null}
                 </>
               ) : (
-                <Card tone='subtle' style={{ alignItems: 'center', gap: spacing['8'], padding: spacing['24'] }}>
+                <Card
+                  tone='subtle'
+                  style={{
+                    alignItems: 'center',
+                    gap: spacing['8'],
+                    padding: spacing['24'],
+                  }}
+                >
                   <Text variant='label'>Not enrolled</Text>
                   <Text variant='caption' tone='muted'>Start sharing to earn rewards on referred orders.</Text>
                 </Card>
@@ -950,12 +964,12 @@ export const AccountScreen = React.memo(function AccountScreen({
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
                 <Text variant='label'>{t('account.settings.notifications.title')}</Text>
                 <Text variant='caption' tone='muted'>{t('account.settings.notifications.subtitle')}</Text>
-                <Button size='sm' variant='outline'>{t('account.settings.notifications.manage')}</Button>
+                <Button size='sm' variant='outline' onPress={() => onNavigate?.('/account?tab=settings')}>{t('account.settings.notifications.manage')}</Button>
               </Card>
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
                 <Text variant='label'>{t('account.settings.password.title')}</Text>
                 <Text variant='caption' tone='muted'>{t('account.settings.password.subtitle')}</Text>
-                <Button size='sm' variant='outline'>{t('account.settings.password.change')}</Button>
+                <Button size='sm' variant='outline' onPress={() => onNavigate?.('/auth/login')}>{t('account.settings.password.change')}</Button>
               </Card>
             </Card>
           ) : null}
