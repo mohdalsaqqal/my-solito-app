@@ -71,7 +71,7 @@ type AccountScreenProps = {
 
 type AccountTab = 'dashboard' | 'orders' | 'tests' | 'addresses' | 'loyalty' | 'wishlist' | 'settings' | 'referral'
 
-const IN_PAGE_TAB_KEYS: AccountTab[] = ['dashboard', 'orders', 'tests', 'addresses', 'loyalty', 'wishlist', 'settings']
+const IN_PAGE_TAB_KEYS: AccountTab[] = ['dashboard', 'orders', 'tests', 'addresses', 'loyalty', 'wishlist', 'referral', 'settings']
 
 const TAB_LABEL_KEY_MAP: Record<AccountTab, TranslationKey> = {
   dashboard: 'account.tabs.dashboard',
@@ -81,7 +81,7 @@ const TAB_LABEL_KEY_MAP: Record<AccountTab, TranslationKey> = {
   loyalty: 'account.tabs.loyalty',
   wishlist: 'account.tabs.wishlist',
   settings: 'account.tabs.settings',
-  referral: 'account.tabs.settings',
+  referral: 'account.tabs.referral',
 }
 
 function getTabLabel(key: AccountTab, t: (k: TranslationKey) => string): string {
@@ -893,6 +893,53 @@ export const AccountScreen = React.memo(function AccountScreen({
                     </Touchable>
                   ))}
                 </Box>
+              )}
+            </Card>
+          ) : null}
+
+          {activeTab === 'referral' ? (
+            <Card variant='flat' style={{ gap: spacing['16'] }}>
+              <Text variant='title'>Referral Program</Text>
+              {referralSummary && referralSummary.code ? (
+                <>
+                  <Card tone='subtle' style={{ gap: spacing['8'], alignItems: 'center' }}>
+                    <Text variant='label'>Your Code</Text>
+                    <Text variant='title' style={{ fontSize: 24, letterSpacing: 4, fontWeight: '700' }}>
+                      {referralSummary.code}
+                    </Text>
+                    <Text variant='caption' tone='muted'>{referralSummary.shareLink}</Text>
+                  </Card>
+                  <div style={{ display: 'flex', flexDirection: 'row', gap: spacing['8'] }}>
+                    <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
+                      <Text variant='title'>{referralSummary.analytics?.followerCount ?? 0}</Text>
+                      <Text variant='caption' tone='muted'>Followers</Text>
+                    </Card>
+                    <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
+                      <Text variant='title'>{referralSummary.analytics?.attributedOrders ?? 0}</Text>
+                      <Text variant='caption' tone='muted'>Orders</Text>
+                    </Card>
+                    <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
+                      <Text variant='title'>{referralSummary.rewardSummary?.totalEarned ?? 0}</Text>
+                      <Text variant='caption' tone='muted'>Earned (SAR)</Text>
+                    </Card>
+                  </div>
+                  {referralSummary.recentActivity && referralSummary.recentActivity.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
+                      <Text variant='label'>Recent Activity</Text>
+                      {referralSummary.recentActivity.slice(0, 5).map((item, i) => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing['4'], borderBottomWidth: 1, borderBottomColor: c.border }}>
+                          <Text variant='caption'>{item.description ?? item.type}</Text>
+                          <Text variant='caption' tone='muted'>{item.date}</Text>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </>
+              ) : (
+                <Card tone='subtle' style={{ alignItems: 'center', gap: spacing['8'], padding: spacing['24'] }}>
+                  <Text variant='label'>Not enrolled</Text>
+                  <Text variant='caption' tone='muted'>Start sharing to earn rewards on referred orders.</Text>
+                </Card>
               )}
             </Card>
           ) : null}

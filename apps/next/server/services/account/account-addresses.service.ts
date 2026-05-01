@@ -50,7 +50,23 @@ export async function createAccountAddress(userId: string, body: AddressPayload)
 }
 
 export async function updateAccountAddress(userId: string, id: string, body: AddressPayload) {
-  const result = await accountProvider.updateAddress(userId, id, body)
+  const label = body.label?.trim()
+  const city = body.city?.trim()
+  const area = body.area?.trim()
+  const building = body.building?.trim()
+  if (!label) throw new ServiceError('ACCOUNT_ADDRESS_INVALID', 'Label is required.', 400)
+  if (!city) throw new ServiceError('ACCOUNT_ADDRESS_INVALID', 'City is required.', 400)
+  if (!area) throw new ServiceError('ACCOUNT_ADDRESS_INVALID', 'Area is required.', 400)
+  if (!building) throw new ServiceError('ACCOUNT_ADDRESS_INVALID', 'Building is required.', 400)
+
+  const result = await accountProvider.updateAddress(userId, id, {
+    label,
+    city,
+    area,
+    building,
+    floor: body.floor,
+    apartment: body.apartment,
+  })
   if (!result.ok) {
     throw new ServiceError(result.error.code, result.error.message, 400)
   }

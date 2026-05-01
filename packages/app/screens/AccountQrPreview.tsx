@@ -7,10 +7,14 @@ type AccountQrPreviewProps = {
   qrImageDataUrl: string | null
 }
 
-export function AccountQrPreview({ userQrCode }: AccountQrPreviewProps) {
-  const [dataUrl, setDataUrl] = useState<string | null>(null)
+export function AccountQrPreview({ userQrCode, qrImageDataUrl }: AccountQrPreviewProps) {
+  const [dataUrl, setDataUrl] = useState<string | null>(qrImageDataUrl)
 
   useEffect(() => {
+    if (qrImageDataUrl) {
+      setDataUrl(qrImageDataUrl)
+      return
+    }
     let active = true
     void import('qrcode')
       .then((mod) => mod.toDataURL(userQrCode, { margin: 1, width: 192 }))
@@ -23,7 +27,7 @@ export function AccountQrPreview({ userQrCode }: AccountQrPreviewProps) {
     return () => {
       active = false
     }
-  }, [userQrCode])
+  }, [userQrCode, qrImageDataUrl])
 
   if (!dataUrl) {
     return (
