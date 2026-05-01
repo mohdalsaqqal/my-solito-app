@@ -22,6 +22,8 @@ import {
   AdminOfferBannerRecord,
   AdminMenuRecord,
   AdminUserControlRecord,
+  AdminCreateUserInput,
+  AdminCreateUserResponse,
   AuthAck,
   AuthSession,
   CMSHome,
@@ -75,6 +77,9 @@ import {
   VendorActionInput,
   AdminJobRecord,
   AdminJobCreateInput,
+  AdminNotificationCampaign,
+  AdminNotificationControlCenter,
+  AdminNotificationTemplate,
   AdminCategoryRecord,
   AdminBrandRecord,
   ReleaseBlockType,
@@ -556,6 +561,33 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(input),
         }),
+      getNotifications: () =>
+        request<AdminNotificationControlCenter>(endpoints.adminNotifications),
+      updateNotificationTemplate: (
+        id: string,
+        input: Partial<AdminNotificationTemplate>
+      ) =>
+        request<AdminNotificationTemplate>(endpoints.adminNotificationTemplate(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
+      createNotificationCampaign: (input: {
+        name?: string
+        audience?: AdminNotificationCampaign['audience']
+        userId?: string
+        recipientEmail?: string
+        segment?: AdminNotificationCampaign['segment']
+        channels?: Partial<AdminNotificationCampaign['channels']>
+        title?: string
+        body?: string
+        scheduledAt?: string
+      }) =>
+        request<AdminNotificationCampaign>(endpoints.adminNotificationCampaigns, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
       listSavedViews: (entity?: AdminSavedView['entity']) =>
         request<AdminSavedView[]>(
           entity ? `${endpoints.adminSavedViews}?entity=${encodeURIComponent(entity)}` : endpoints.adminSavedViews
@@ -855,6 +887,12 @@ export const createApiClient = (cfg: ApiClientConfig) => {
           method: 'DELETE',
         }),
       listUsers: () => request<AdminUserControlRecord[]>(endpoints.adminUsers),
+      createUser: (input: AdminCreateUserInput) =>
+        request<AdminCreateUserResponse>(endpoints.adminUsers, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }),
       updateUser: (
         id: string,
         input: {

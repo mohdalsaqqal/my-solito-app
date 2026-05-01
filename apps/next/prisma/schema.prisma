@@ -78,17 +78,20 @@ enum AppAuthRole {
 
 model Release {
   id          String             @id @default(cuid())
+  tenantId    String             @default("default")
   environment ReleaseEnvironment
   status      ReleaseStatus      @default(draft)
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
   blocks      ReleaseBlock[]
 
+  @@index([tenantId])
   @@index([environment, status])
 }
 
 model ReleaseBlock {
   id          String           @id @default(cuid())
+  tenantId    String           @default("default")
   releaseId   String
   position    Int
   type        ReleaseBlockType
@@ -98,12 +101,14 @@ model ReleaseBlock {
 
   release     Release          @relation(fields: [releaseId], references: [id], onDelete: Cascade)
 
+  @@index([tenantId])
   @@index([releaseId, position])
 }
 
 model Promotion {
   id             String   @id @default(cuid())
-  code           String?  @unique
+  tenantId       String   @default("default")
+  code           String?
   nameEn         String
   nameAr         String
   isActive       Boolean  @default(true)
@@ -115,19 +120,22 @@ model Promotion {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  @@unique([tenantId, code])
+  @@index([tenantId])
   @@index([isActive, startAt, endAt])
   @@index([priority])
-  @@index([code])
 }
 
 model PricingQuote {
   id        String   @id @default(cuid())
+  tenantId  String   @default("default")
   userId    String?
   cartHash  String
   quoteJson Json
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([tenantId])
   @@index([cartHash])
   @@index([userId])
   @@index([expiresAt])
@@ -144,8 +152,38 @@ model User {
   accounts      Account[]
   sessions      Session[]
   roleMapping   AppAuthRoleMapping?
+  tenantUsers   TenantUser[]
 
   @@map("user")
+}
+
+model Tenant {
+  id          String       @id
+  name        String
+  slug        String       @unique
+  status      String       @default("active")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  tenantUsers TenantUser[]
+
+  @@map("tenant")
+}
+
+model TenantUser {
+  id        String      @id @default(cuid())
+  tenantId  String
+  userId    String
+  role      AppAuthRole @default(customer)
+  status    String      @default("active")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+  @@index([tenantId, role])
+  @@map("tenant_user")
 }
 
 model Session {
@@ -208,9 +246,10 @@ model AppAuthRoleMapping {
 // CMS Entities — replaces JSON file stores in .data/
 // ============================================================================
 
-// Site-wide configuration (singleton: id = "default")
+// Site-wide configuration (singleton per tenant: @@unique([tenantId]))
 model CmsSiteConfig {
   id                      String   @id @default("default")
+  tenantId                String   @default("default")
   brandingEnLogoUrl       String   @default("")
   brandingEnLogoAlt       String   @default("Real Cosmetics")
   brandingEnLogoSize      String   @default("md")
@@ -229,18 +268,24 @@ model CmsSiteConfig {
   searchPanelTitleEn      String   @default("")
   searchPanelTitleAr      String   @default("")
   updatedAt               DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
-// Ticker settings (singleton: id = "default")
+// Ticker settings (singleton per tenant)
 model CmsTickerSettings {
   id        String   @id @default("default")
+  tenantId  String   @default("default")
   speedMs   Int      @default(4000)
   updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // Scrolling ticker messages
 model CmsTickerItem {
   id        String   @id @default(cuid())
+  tenantId  String   @default("default")
   messageEn String
   messageAr String
   active    Boolean  @default(true)
@@ -248,12 +293,14 @@ model CmsTickerItem {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([order])
 }
 
 // Education banners
 model CmsEducationBanner {
   id         String   @id @default(cuid())
+  tenantId   String   @default("default")
   titleEn    String   @default("")
   titleAr    String   @default("")
   bodyEn     String   @default("")
@@ -264,12 +311,14 @@ model CmsEducationBanner {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([order])
 }
 
 // User-generated content gallery items
 model CmsUgcItem {
   id           String   @id @default(cuid())
+  tenantId     String   @default("default")
   imageUrl     String
   caption      String
   sourceHandle String   @default("")
@@ -278,45 +327,54 @@ model CmsUgcItem {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([order])
 }
 
 // Toggle overrides (admin control toggles)
 model CmsToggleOverride {
   id               String   @id // toggle id like "free_shipping", "loyalty_program"
+  tenantId         String   @default("default")
   enabled          Boolean  @default(false)
   updatedAt        DateTime @updatedAt
   updatedByUserId  String   @default("")
   updatedByEmail   String   @default("")
+
+  @@index([tenantId])
 }
 
 // Brand spotlights (homepage marketing blocks)
 model CmsBrandSpotlight {
   id              String   @id @default(cuid())
+  tenantId        String   @default("default")
   position        Int      @default(0)
   spotlightJson   Json     // Full CMS spotlight object
   updatedAt       DateTime @updatedAt
   updatedByUserId String   @default("")
   updatedByEmail  String   @default("")
 
+  @@index([tenantId])
   @@index([position])
 }
 
 // Offer banners (homepage promo banners)
 model CmsOfferBanner {
   id              String   @id @default(cuid())
+  tenantId        String   @default("default")
   position        Int      @default(0)
   bannerJson      Json     // Full CMS banner object
   updatedAt       DateTime @updatedAt
   updatedByUserId String   @default("")
   updatedByEmail  String   @default("")
 
+  @@index([tenantId])
   @@index([position])
 }
 
 // Audit log for admin operations
 model CmsAuditLog {
   id           String   @id @default(cuid())
+  tenantId     String   @default("default")
   type         String   // "TOGGLE_CHANGED", "BRAND_SPOTLIGHT_CREATED", etc.
   targetId     String
   actorUserId  String   @default("")
@@ -324,6 +382,7 @@ model CmsAuditLog {
   changes      Json     // { field: { from, to } }
   createdAt    DateTime @default(now())
 
+  @@index([tenantId])
   @@index([createdAt(sort: Desc)])
   @@index([type])
 }
@@ -331,6 +390,7 @@ model CmsAuditLog {
 // Homepage merchandising — CMS page blocks (release-scoped)
 model CmsPageBlock {
   id          String   @id @default(cuid())
+  tenantId    String   @default("default")
   releaseId   String   // release environment reference
   position    Int      @default(0)
   blockType   String   // hero_carousel, promo_strip, flash_sale, etc.
@@ -340,6 +400,7 @@ model CmsPageBlock {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([releaseId, position])
   @@index([blockType])
 }
@@ -347,7 +408,8 @@ model CmsPageBlock {
 // Homepage marketing rails
 model CmsMarketingRail {
   id          String   @id @default(cuid())
-  railId      String   @unique // e.g. "best-items-month"
+  tenantId    String   @default("default")
+  railId      String   // e.g. "best-items-month"
   enabled     Boolean  @default(true)
   titleEn     String
   titleAr     String
@@ -358,13 +420,16 @@ model CmsMarketingRail {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@unique([tenantId, railId])
+  @@index([tenantId])
   @@index([position])
 }
 
 // Homepage campaign zones
 model CmsCampaign {
   id            String   @id @default(cuid())
-  campaignId    String   @unique // e.g. "m-camp-hero-primary"
+  tenantId      String   @default("default")
+  campaignId    String   // e.g. "m-camp-hero-primary"
   enabled       Boolean  @default(true)
   zone          String   // home_hero_primary, home_flash_sale, shop_banner
   titleEn       String
@@ -384,6 +449,8 @@ model CmsCampaign {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@unique([tenantId, campaignId])
+  @@index([tenantId])
   @@index([zone])
   @@index([position])
 }
@@ -391,7 +458,8 @@ model CmsCampaign {
 // Homepage hero carousel cards
 model CmsHeroCard {
   id            String   @id @default(cuid())
-  cardId        String   @unique
+  tenantId      String   @default("default")
+  cardId        String
   titleEn       String
   titleAr       String
   subtitleEn    String   @default("")
@@ -406,12 +474,15 @@ model CmsHeroCard {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  @@unique([tenantId, cardId])
+  @@index([tenantId])
   @@index([position])
 }
 
 // Homepage editorial hotspots
 model CmsEditorialHotspot {
   id            String   @id @default(cuid())
+  tenantId      String   @default("default")
   enabled       Boolean  @default(true)
   titleEn       String
   titleAr       String
@@ -424,11 +495,14 @@ model CmsEditorialHotspot {
   productIdsJson Json   @default("[]")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // Homepage newsletter CTA
 model CmsNewsletterCta {
   id            String   @id @default(cuid())
+  tenantId      String   @default("default")
   enabled       Boolean  @default(true)
   titleEn       String
   titleAr       String
@@ -439,32 +513,42 @@ model CmsNewsletterCta {
   href          String   @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // Homepage personalization settings
 model CmsPersonalization {
   id              String   @id @default(cuid())
+  tenantId        String   @default("default")
   enabled         Boolean  @default(true)
   mode            String   @default("rule-based")
   recommendedTitleEn String @default("Recommended for You")
   recommendedTitleAr String @default("موصى بها لك")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // Homepage rail autoplay settings
 model CmsRailAutoplay {
   id        String   @id @default(cuid())
-  railKey   String   @unique // hero, categories, newArrivals, featured, brandSpotlights
+  tenantId  String   @default("default")
+  railKey   String   // hero, categories, newArrivals, featured, brandSpotlights
   enabled   Boolean  @default(true)
   autoplayMs Int     @default(4000)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, railKey])
+  @@index([tenantId])
 }
 
 // Featured campaign slot
 model CmsFeaturedSlot {
   id            String   @id @default(cuid())
+  tenantId      String   @default("default")
   enabled       Boolean  @default(true)
   titleEn       String
   titleAr       String
@@ -476,11 +560,14 @@ model CmsFeaturedSlot {
   imageUrl      String   @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 // Complete set (frequently bought together)
 model CmsCompleteSet {
   id            String   @id @default(cuid())
+  tenantId      String   @default("default")
   enabled       Boolean  @default(true)
   titleEn       String
   titleAr       String
@@ -494,13 +581,104 @@ model CmsCompleteSet {
   querySortBy   String   @default("price_desc")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([tenantId])
 }
 
 model RateLimitBucket {
+  tenantId  String   @default("default")
   key       String   @id
   count     Int
   resetAt   DateTime
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([resetAt])
+}
+
+// ============================================================================
+// Referral & Loyalty — Prisma-backed production storage
+// ============================================================================
+
+model ReferralProgram {
+  id                         String   @id @default("default")
+  tenantId                   String   @default("default")
+  storeId                    String   @default("default")
+  mode                       String   @default("two_way")
+  accessMode                 String   @default("open")
+  followerRewardType         String   @default("fixed_discount")
+  followerRewardValue        Float    @default(0)
+  followerRewardCurrency     String   @default("SAR")
+  influencerRewardType       String   @default("fixed_discount")
+  influencerRewardValue      Float    @default(0)
+  influencerRewardCurrency   String   @default("SAR")
+  attributionWindowDays      Int      @default(30)
+  firstOrderOnly             Boolean  @default(true)
+  allowStackingWithPromotions Boolean @default(false)
+  minimumOrderAmount         Float    @default(0)
+  minimumOrderCurrency       String   @default("SAR")
+  updatedAt                  DateTime @updatedAt
+
+  @@unique([tenantId, storeId])
+  @@index([tenantId])
+}
+
+model ReferralProfile {
+  id            String   @id @default(cuid())
+  tenantId      String   @default("default")
+  storeId       String   @default("default")
+  userId        String
+  userEmail     String
+  actorType     String   @default("customer")
+  code          String
+  shareLink     String   @default("")
+  approved      Boolean  @default(false)
+  displayName   String   @default("")
+  audienceCount Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([tenantId, userId])
+  @@unique([code])
+  @@index([tenantId])
+  @@index([storeId])
+}
+
+model ReferralLedgerEntry {
+  id                   String   @id @default(cuid())
+  tenantId             String   @default("default")
+  storeId              String   @default("default")
+  profileId            String
+  referredUserId       String?
+  orderId              String?
+  code                 String
+  status               String   @default("pending")
+  currency             String   @default("SAR")
+  subtotal             Float    @default(0)
+  followerRewardValue  Float    @default(0)
+  influencerRewardValue Float   @default(0)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([profileId])
+  @@index([storeId])
+  @@index([status])
+}
+
+// ============================================================================
+// Admin — Prisma-backed user override storage
+// ============================================================================
+
+model AdminUserOverride {
+  id                String   @id
+  tenantId          String   @default("default")
+  role              String?
+  status            String?
+  permissionsJson   Json?
+  domainPermissions Json?
+  updatedByEmail    String?
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId])
 }

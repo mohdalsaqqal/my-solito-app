@@ -31,6 +31,7 @@ type UserOverride = {
   role?: AuthRole
   status?: 'active' | 'invited' | 'disabled'
   permissions?: AdminPermissionSet
+  domainPermissions?: Partial<Record<string, 'none' | 'read' | 'full'>>
   updatedAt: string
   updatedBy: Actor
 }
@@ -71,16 +72,45 @@ function initialAdminControlsState(): AdminControlsState {
 
 async function readUserOverridesFile(): Promise<Record<string, UserOverride>> {
   try {
-    const raw = await fs.readFile(USER_OVERRIDES_FILE, 'utf8')
-    return JSON.parse(raw) as Record<string, UserOverride>
+    const rows = await prisma.adminUserOverride.findMany()
+    const result: Record<string, UserOverride> = {}
+    for (const row of rows) {
+      result[row.id] = {
+        role: (row.role as AuthRole) ?? undefined,
+        status: (row.status as 'active' | 'invited' | 'disabled') ?? undefined,
+        permissions: (row.permissionsJson as AdminPermissionSet) ?? undefined,
+        domainPermissions: (row.domainPermissions as Record<string, 'none' | 'read' | 'full'>) ?? undefined,
+        updatedAt: row.updatedAt.toISOString(),
+        updatedBy: { userId: row.id, email: row.updatedByEmail ?? '' },
+      }
+    }
+    return result
   } catch {
     return {}
   }
 }
 
 async function writeUserOverridesFile(data: Record<string, UserOverride>) {
-  await fs.mkdir(path.dirname(USER_OVERRIDES_FILE), { recursive: true })
-  await fs.writeFile(USER_OVERRIDES_FILE, JSON.stringify(data, null, 2), 'utf8')
+  for (const [userId, override] of Object.entries(data)) {
+    await prisma.adminUserOverride.upsert({
+      where: { id: userId },
+      create: {
+        id: userId,
+        role: override.role,
+        status: override.status,
+        permissionsJson: override.permissions as never,
+        domainPermissions: override.domainPermissions as never,
+        updatedByEmail: override.updatedBy?.email,
+      },
+      update: {
+        role: override.role,
+        status: override.status,
+        permissionsJson: override.permissions as never,
+        domainPermissions: override.domainPermissions as never,
+        updatedByEmail: override.updatedBy?.email,
+      },
+    })
+  }
 }
 
 export async function readAdminControlsState(): Promise<AdminControlsState> {

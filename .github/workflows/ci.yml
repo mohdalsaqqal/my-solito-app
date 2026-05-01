@@ -156,3 +156,29 @@ jobs:
           PREVIEW_TOKEN_SECRET: ci-test-secret-for-build-only
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
           NODE_ENV: production
+
+  lighthouse:
+    name: Lighthouse CI
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+      - run: corepack enable
+      - run: yarn install --immutable
+      - run: yarn workspace next-app prisma:generate
+      - run: yarn workspace next-app build
+        env:
+          USE_MOCK: true
+          USE_TRANSLATION_MOCK: true
+          BETTER_AUTH_SECRET: ci-test-better-auth-secret-32-characters-minimum
+          AUTH_SESSION_SECRET: ci-test-secret-for-build-only
+          PREVIEW_TOKEN_SECRET: ci-test-secret-for-build-only
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+          NODE_ENV: production
+      - run: npx start-server-and-test "npx next start -p 3000" http://localhost:3000 "npx @lhci/cli autorun"
+        working-directory: apps/next

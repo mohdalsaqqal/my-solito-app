@@ -1,5 +1,135 @@
 # RECENT_CONTEXT.md — Auto-Updated Highlights
 
+## 2026-04-30 — Docker PostgreSQL + Dynamic User Management + CMS FAQ + Platform Cleanup
+
+**4 tickets completed.** All gates green.
+
+- Docker PostgreSQL 16 running on port 5433 (Windows PostgreSQL removed). Dev server at :3000.
+- Dynamic per-user domain permissions: super admin creates users with custom section access. `hasAdminDomainPermission` accepts `customPermissions` param — domains not listed default to 'none'. `requireAdminDomainSession` reads per-user overrides from `.data/admin-user-overrides.json`.
+- FAQ accordion CMS block: `FaqAccordionBlock` (type: 'faq_accordion'), `FaqAccordion` component in `@real/ui/components/home/`, renderer + dispatch + seed data.
+- Platform.OS cleanup: `useHeaderScroll.ts` → `useHeaderScroll.native.ts` pattern (web uses scroll listener, native uses `subscribeNativeScrollOffset`).
+- Production build passes clean. A11y 6/6. Search 5/5. TypeScript clean.
+- Admin user (admin@realcosmetics.local / admin) seeded with Better Auth scrypt hash. Test users: pharm@test.local / test1234 (pharmacist), mkt@test.local / test1234 (admin with catalog+marketing only).
+
+**Key technical detail:** Better Auth uses `node:crypto.scrypt` (N=16384, r=16, p=1, dkLen=64) for password hashing, format: `salt:hexKey`. bcryptjs hashes will NOT work — hash must be created at `apps/next/app/api/_lib/password-hash.ts`.
+
+## 2026-04-30 — Admin Auth Verification + Full API Suite Rerun
+
+**Line 285 verified.** Full admin auth/session pipeline smoke-tested using real route handlers:
+- 46/46 auth tests pass (12 route + 13 admin RBAC + 21 session adapter)
+- 5/5 smoke tests pass (login→cookie→session→admin RBAC across catalog/CMS/ops)
+- 225/225 full API suite rerun in 6min (previous ENOSPC was Yarn-specific, direct Node command clean)
+- New smoke script: `apps/next/scripts/smoke-admin-auth.mjs`
+- Checklist line 285 `[x]`, line 202 `[x]`
+- All guard checks pass. No code-verifiable `[ ]` items remain.
+
+**Key finding:** `admin-route-auth.test.ts` requires `NODE_ENV=test` — `resolveAppOwnedRoleForUser` has test-mode bypass that skips Prisma. With wrong NODE_ENV, 10/13 tests fail with 401.
+
+## Last Session: Aspect 07 Payments And Checkout
+
+**Date**: 2026-04-30
+
+### What Was Done
+Finished the current Aspect 07 payments/checkout reconciliation gate.
+
+### Output
+- Added checkout reconciliation records for order write-back failure, loyalty reversal requirement, and referral ledger failure.
+- Updated order placement so payment-created-but-order-failed cases are recorded for operator follow-up.
+- Kept referral ledger failures non-blocking after successful order placement, while recording reconciliation work.
+- Added [scripts/verify-payments-checkout.mjs](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/verify-payments-checkout.mjs) and `yarn verify:payments-checkout`.
+- Added the `payments` profile to [scripts/verify-delivery.mjs](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/verify-delivery.mjs).
+- Updated [docs/delivery/aspects/07-payments-checkout.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/aspects/07-payments-checkout.md), [docs/delivery/DELIVERY_MATRIX.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/DELIVERY_MATRIX.md), and [checklist.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/checklist.md).
+
+### Verification
+- `yarn verify:payments-checkout` passed.
+- `node scripts/verify-delivery.mjs --profile payments` passed.
+- `node scripts/guard-checks.mjs` passed.
+- Next typecheck passed.
+
+### Next
+- Client custom payment gateway sandbox/live verification remains external.
+- Continue aspect loop with Aspect 08 Search & Discovery.
+
+## Last Session: Aspect 08 Search And Discovery
+
+**Date**: 2026-04-30
+
+### What Was Done
+Finished the current Aspect 08 local search/discovery gate.
+
+### Output
+- Extended `SearchProvider` with filters, sort, facets, result meta, and health settings.
+- Updated mock and Meilisearch search adapters to support facets, filters, sort, typo tolerance health, and index settings health.
+- Added [scripts/sync-meilisearch-products.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/sync-meilisearch-products.ts) for catalog-provider-to-Meilisearch indexing with dry-run support.
+- Added [scripts/smoke-search-discovery.mjs](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/smoke-search-discovery.mjs) and `yarn verify:search-discovery`.
+- Added the `search` profile to [scripts/verify-delivery.mjs](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/verify-delivery.mjs).
+- Updated [docs/delivery/aspects/08-search-discovery.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/aspects/08-search-discovery.md), [docs/delivery/runbooks/meilisearch-adapter.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/runbooks/meilisearch-adapter.md), delivery matrix, and checklist.
+
+### Verification
+- `yarn verify:search-discovery` passed.
+- `node scripts/verify-delivery.mjs --profile search` passed.
+- `node scripts/guard-checks.mjs` passed.
+- Next typecheck passed.
+
+### Next
+- Live Meilisearch provisioning/health remains external.
+- Continue aspect loop with Aspect 09 Notifications.
+
+## Last Session: Aspect 09 Notifications
+
+**Date**: 2026-04-30
+
+### What Was Done
+Finished the current Aspect 09 local notification gate.
+
+### Output
+- Added generic REST email notification adapter under `packages/adapters/email`.
+- Added multi-channel notification provider mux so push registration stays push-owned while email messages route to email adapter.
+- Added notification dead-letter storage with retry metadata under `apps/next/server/services/notifications`.
+- Added `sendUserEmailNotification()` and `getNotificationStatus()` service surfaces.
+- Added [docs/delivery/runbooks/notifications.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/runbooks/notifications.md).
+- Added [scripts/smoke-notifications.mjs](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/smoke-notifications.mjs) and `yarn verify:notifications`.
+- Added the `notifications` profile to delivery verification.
+
+### Verification
+- `yarn verify:notifications` passed.
+- `node scripts/verify-delivery.mjs --profile notifications` passed.
+- `node scripts/guard-checks.mjs` passed.
+- Next typecheck passed.
+
+### Next
+- Physical push smoke still needs EAS project id and APNs/FCM credentials.
+- Live email smoke needs client email vendor endpoint/key/from address.
+- Continue aspect loop with Aspect 10 Quality & Testing.
+
+## Last Session: Admin Notification Control Center
+
+**Date**: 2026-04-30
+
+### What Was Done
+Added web-admin controls for notification templates, channels, test sends, campaigns, and status.
+
+### Output
+- Added `notification-control.service.ts` for event templates, test campaigns, provider status, and dead-letter visibility.
+- Added admin APIs:
+  - `/api/admin/notifications`
+  - `/api/admin/notifications/templates/:id`
+  - `/api/admin/notifications/campaigns`
+- Added `/admin/marketing/notifications` page and admin navigation link.
+- Extended `apiClient.admin` and shared app admin types for notification control center data.
+- Updated notifications smoke to verify admin route/page/control coverage.
+- Updated Aspect 09, checklist, and notifications runbook.
+
+### Verification
+- `yarn verify:notifications` passed.
+- `node scripts/verify-delivery.mjs --profile notifications` passed.
+- `node scripts/guard-checks.mjs` passed.
+- Next typecheck passed.
+
+### Next
+- Customer preference surfaces are still separate account work.
+- Physical push and live email vendor smoke remain external.
+
 ## Last Session: Aspect 05 Order Write-Back Contract
 
 **Date**: 2026-04-30
@@ -89,6 +219,29 @@ Added the Meilisearch adapter behind `SearchProvider`.
 - `node scripts/guard-checks.mjs` passed.
 - Next typecheck passed.
 - `node scripts/verify-delivery.mjs --profile backend` passed.
+
+## Last Session: Aspect 06 User & Account Management
+
+**Date**: 2026-04-30
+
+### What Was Done
+Finished the current Aspect 06 user/account management scope.
+
+### Output
+- Added tenant membership models to Prisma: `Tenant` and `TenantUser`, plus migration `20260430180000_tenant_user_membership`.
+- Added [docs/delivery/runbooks/user-account-management.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/runbooks/user-account-management.md).
+- Added [scripts/verify-account-management.mjs](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/scripts/verify-account-management.mjs) and `yarn verify:account-management`.
+- Strengthened account page/test-detail tests so they assert logged-in account data, referral summary, loyalty wallet/history, hair and skin tests, questionnaire answers, and recommended products.
+- Updated shared app `AccountTestDetail` type to include `questionnaire`.
+- Added OAuth provider setup direction and env placeholders; activation remains client-choice dependent.
+- Added account profile to `scripts/verify-delivery.mjs` and delivery matrix.
+- Marked [docs/delivery/aspects/06-user-account-management.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/delivery/aspects/06-user-account-management.md) complete for current delivery scope.
+
+### Verification
+- `yarn verify:account-management` passed: 14/14 focused tests.
+- `node scripts/verify-delivery.mjs --profile account` passed.
+- Next typecheck passed.
+- `yarn --cwd apps/next prisma validate` passed.
 
 ## Last Session: Aspect 04 CMS Lifecycle Completed
 
@@ -990,3 +1143,88 @@ All 11 phases from `joyful-stirring-breeze.md` implemented and verified. The hom
 ### Open Items
 - Phase 2 `HomeFlashDealsSection` ready but CMS `FlashSaleBlock` has no products field — needs CMS schema extension to wire products
 - Pre-existing hex violation in `OfferBannersGrid.tsx:226` (`hsl(0 0% 15%)`) — not introduced by this work
+## 2026-04-30 - Aspect 10 Quality Profile Green
+
+Current and quality delivery profiles now pass locally.
+
+- `retention-consultation-focused` is part of the current delivery profile.
+- `yarn verify:delivery:quality` exists for client-reviewable milestones.
+- `faq_accordion` is aligned across app CMS types, provider release contract, and admin release block updates.
+- CMS lifecycle smoke starts a dedicated Next dev runtime on port 3104 by default and skips `dev:stable` Prisma generate to avoid Windows query-engine file locks.
+- Verification passed:
+  - `node scripts/verify-delivery.mjs --profile current`
+  - `yarn verify:cms-lifecycle` (14/14)
+  - `yarn verify:delivery:quality`
+- Quality profile currently covers guards, Next typecheck, Expo functional/typecheck, notifications, retention/consultation, account management, payments/checkout, search/discovery, CMS lifecycle, storefront static smoke, 225/225 API tests, and production Next build.
+## 2026-05-01 - Aspect 11 DevOps Deployment Gate
+
+Aspect 11 local deploy readiness is green.
+
+- Added `docs/delivery/runbooks/staging-deployment.md` for staging DB, Vercel preview env/deploy, EAS preview build, adapter readiness, staging smoke, and rollback.
+- Added `scripts/verify-devops-deployment.mjs`, `yarn verify:devops-deployment`, and `yarn verify:delivery:deploy`.
+- Added `devops-deployment` gate and `deploy` profile to `scripts/verify-delivery.mjs`.
+- Fixed `scripts/new-client.ts --output <dir>` so the advertised output option works.
+- Verification passed:
+  - `yarn verify:devops-deployment`
+  - `node scripts/verify-delivery.mjs --profile deploy`
+## 2026-05-01 - Aspect 12 Operations Observability Gate
+
+Aspect 12 first local gate is green.
+
+- Added `GET /api/health`.
+- Added `apps/next/server/services/operations/health.service.ts` with runtime, provider readiness, search health, and notification status.
+- Added `docs/delivery/runbooks/uptime-monitoring.md` and `docs/delivery/runbooks/incident-response.md`.
+- Added `scripts/verify-operations-observability.mjs`, `yarn verify:operations-observability`, and operations profile.
+- Verification passed:
+  - `yarn verify:operations-observability`
+  - `node scripts/verify-delivery.mjs --profile operations`
+
+## 2026-05-01 - Aspect 13 Security Compliance
+
+Security/compliance local gate is green.
+
+- App-wide CSP and security headers live in `apps/next/next.config.mjs`.
+- HSTS is guarded by `ENABLE_HSTS=true` and documented in `docs/delivery/runbooks/security-compliance.md`.
+- `.github/workflows/security.yml` configures CodeQL, Dependency Review, and Gitleaks.
+- `scripts/verify-security-compliance.mjs` powers `yarn verify:security-compliance`.
+- `node scripts/verify-delivery.mjs --profile security` passes, including guard checks, Next typecheck, and the security smoke.
+- Remaining: hosted security workflow run, DB-level RLS/tenant isolation, and external penetration test.
+
+## 2026-05-01 - Aspect 14 Platform Operations
+
+Platform operations local gate is green.
+
+- Added `docs/delivery/runbooks/platform-operations.md`.
+- Added `scripts/verify-platform-operations.mjs` and `yarn verify:platform-operations`.
+- Added the `platform-operations` delivery gate and `platform` profile.
+- The verifier proves `new-client.ts` dry-run, generated client output, idempotent rerun, tenant config adapter selections, and operator runbook coverage.
+- `node scripts/verify-delivery.mjs --profile platform` passes.
+- Remaining: live Vercel/EAS/database/account provisioning and tenant-management UI.
+
+## 2026-05-01 - Aspect 15 Documentation Knowledge
+
+Documentation/knowledge local gate is green.
+
+- Added `docs/delivery/runbooks/component-catalog.md`.
+- Added `scripts/verify-documentation-knowledge.mjs` and `yarn verify:documentation-knowledge`.
+- Added the `documentation-knowledge` delivery gate and `docs` profile.
+- `node scripts/verify-delivery.mjs --profile docs` passes.
+- Remaining: generated API schema docs and full Storybook.
+
+## 2026-05-01 - Aspect 16 AI Development Process
+
+AI development process local gate is green.
+
+- Added `scripts/verify-ai-development-process.mjs` and `yarn verify:ai-development-process`.
+- Added the `ai-development-process` delivery gate and `ai` profile.
+- `node scripts/verify-delivery.mjs --profile ai` passes.
+
+## 2026-05-01 - Aspect 17 Launch Post-Launch
+
+Launch/post-launch local gate is green.
+
+- Added `docs/delivery/runbooks/launch-post-launch.md`.
+- Added `scripts/verify-launch-post-launch.mjs` and `yarn verify:launch-post-launch`.
+- Added the `launch-post-launch` delivery gate and `launch` profile.
+- `node scripts/verify-delivery.mjs --profile launch` passes.
+- Remaining: actual first beta launch and production credentials/accounts.

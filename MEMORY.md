@@ -1,5 +1,109 @@
 ﻿# MEMORY.md - Long-Term Decisions & Conventions
 
+## 2026-05-01 - Security Compliance Gate
+
+- Security headers are centralized in `apps/next/next.config.mjs`.
+- HSTS is intentionally opt-in through `ENABLE_HSTS=true`; do not enable until the target deployment is fully HTTPS-ready.
+- `yarn verify:security-compliance` is the focused static security/compliance smoke.
+- `node scripts/verify-delivery.mjs --profile security` is the consolidated security gate and includes guard checks plus Next typecheck.
+- CI security scanning is configured in `.github/workflows/security.yml` with CodeQL, Dependency Review, and Gitleaks; hosted run confirmation is still required before production handoff.
+
+## 2026-05-01 - Platform Operations Gate
+
+- `docs/delivery/runbooks/platform-operations.md` is the operator reference for tenant provisioning, generated `client.json`, adapter/gateway configuration, cross-client patching, support triage, and offboarding.
+- `yarn verify:platform-operations` is the focused platform-operations smoke.
+- `node scripts/verify-delivery.mjs --profile platform` is the consolidated platform gate and includes guard checks plus Next typecheck.
+- `new-client.ts` remains the idempotent provisioning source today; generated `client.json` is the tenant config record until a tenant-management UI exists.
+
+## 2026-05-01 - Documentation Knowledge Gate
+
+- `docs/delivery/runbooks/component-catalog.md` is the lightweight component documentation baseline until full Storybook is added.
+- `yarn verify:documentation-knowledge` checks the core developer, operator, handoff, and component docs.
+- `node scripts/verify-delivery.mjs --profile docs` is the consolidated documentation profile.
+
+## 2026-05-01 - AI Development Process Gate
+
+- `yarn verify:ai-development-process` checks AGENTS startup/memory/graphify/workflow requirements and bounded graph files.
+- `node scripts/verify-delivery.mjs --profile ai` is the consolidated AI process profile.
+
+## 2026-05-01 - Launch Post-Launch Gate
+
+- `docs/delivery/runbooks/launch-post-launch.md` is the launch readiness runbook for beta plan, migration, go-live checklist, first 48 hours, SLA/support channels, and feedback loop.
+- `yarn verify:launch-post-launch` checks the launch docs and delivery wiring.
+- `node scripts/verify-delivery.mjs --profile launch` is the consolidated launch profile.
+
+## 2026-04-30 — Better Auth Password Hashing (Critical)
+
+- Better Auth uses `node:crypto.scrypt` (NOT bcrypt). Params: N=16384, r=16, p=1, dkLen=64, maxmem=128*N*r*2. Format: `${salt}:${key.toString('hex')}`. Password normalized with NFKC before hashing.
+- Hash utility: `apps/next/app/api/_lib/password-hash.ts` — `hashBetterAuthPassword(password)`.
+- bcrypt/bcryptjs hashes will fail with "Invalid password hash" error at login.
+- Docker PostgreSQL at port 5433 (Windows PostgreSQL removed). `.env` DATABASE_URL uses 5433.
+
+## 2026-04-30 — Dynamic Per-User Domain Permissions
+
+- `hasAdminDomainPermission(role, domain, required, customPermissions?)` — if customPermissions has entries, they override role matrix. Domains NOT in customPermissions default to 'none'.
+- `requireAdminDomainSession` reads per-user permissions from `.data/admin-user-overrides.json` via `resolveUserDomainPermissions`.
+- Client-side: `canAccessDomain(role, domain, customPermissions?)` in `admin-permissions.ts`. AdminShell fetches user list on mount to get domainPermissions.
+- Admin creates users via `POST /api/admin/users` (customers:full). Slide-over form at `/admin/customers` toggles per-domain: None → Full → Read → Off.
+
+## 2026-04-30 — CMS FAQ Accordion Block
+
+- New block type: `faq_accordion`. Type + schema in `packages/app/lib/cms/blocks.ts`. Added to `HomeBlock` union, `homeBlockSchema` discriminated union, and `ReleaseBlockType`.
+- Component: `packages/ui/components/home/FaqAccordion.tsx` — uses React Native primitives + tokens (multiline style objects to pass guard check).
+- Renderer: `packages/app/features/home/renderers/renderFaqAccordionBlock.tsx`.
+- Dispatch: `HomeBlocksRenderer.tsx` — `if (block.type === 'faq_accordion')`.
+- Seed: 4 FAQ items in `packages/adapters/mock/cms/index.ts` (shipping, returns, authenticity, loyalty).
+
+## 2026-04-30 — Platform.OS Cleanup Pattern
+
+- `useHeaderScroll.ts` → `useHeaderScroll.native.ts`: web uses `addEventListener('scroll')`, native uses `subscribeNativeScrollOffset()`.
+- Guard check: `style={{...}}` with tokens on SAME LINE triggers violation. Multiline style objects pass.
+
+## 2026-04-30 - Admin Auth Smoke + Full API Suite Rerun
+
+- `apps/next/scripts/smoke-admin-auth.mjs` — self-contained admin auth smoke using real route handlers + mocked Better Auth. Tests login→session→admin RBAC for admin, customer, ops, unauthenticated roles across catalog/CMS/ops domains.
+- `admin-route-auth.test.ts` requires `NODE_ENV=test` — `resolveAppOwnedRoleForUser` bypasses Prisma in test mode via `inferRoleFromEmail`. With `NODE_ENV=development`, Prisma query fails → 401.
+- Full API suite (225/225) runs clean via direct `node`/`tsx` command. Previous ENOSPC was Yarn pipe buffer issue, not disk space. Always use direct Node command (`node ../../node_modules/tsx/dist/cli.mjs --test`) for full suite, not `yarn test:api`.
+- Line 285 was last code-verifiable `[ ]` in checklist — all remaining items deferred, blocked by device/credentials/infra, or pre-launch.
+
+## 2026-04-30 - Payments Checkout Reconciliation Gate
+
+- `yarn verify:payments-checkout` is the focused Aspect 07 gate for payment intent idempotency, custom payment webhook mapping, order write-back reconciliation, loyalty reversal recording, and referral ledger failure recording.
+- `node scripts/verify-delivery.mjs --profile payments` is the consolidated payments/checkout profile.
+- Checkout reconciliation records currently persist to `.data/checkout-reconciliation-store.json` for local/operator visibility; production should move this to tenant-scoped PostgreSQL plus retry/operator tooling.
+- If payment intent creation succeeds but order write-back fails, `placeOrder()` records `order_write_back_failed`; if loyalty history was already touched, it also records `loyalty_reversal_required`.
+- Referral ledger write failure after a successful order should not fail the customer order; it records `referral_ledger_failed` for follow-up.
+- Client custom payment gateway sandbox/live verification remains blocked on vendor credentials/endpoints.
+
+## 2026-04-30 - Search Discovery Gate
+
+- `SearchProvider` now supports `filters`, `sort`, `facets`, result `meta`, and health settings (`filterableAttributes`, `sortableAttributes`, `typoToleranceEnabled`).
+- Meilisearch search requests include facets, optional filters, and optional sort; health checks `/health` and `/indexes/:index/settings`.
+- `scripts/sync-meilisearch-products.ts` is the catalog-provider-to-Meilisearch indexing job. It supports `--dry-run` without a live Meilisearch host.
+- `yarn verify:search-discovery` is the focused Aspect 08 gate; `node scripts/verify-delivery.mjs --profile search` is the consolidated search profile.
+- Live Meilisearch deployment details, live health, and production reindex scheduling remain external/deployment work.
+
+## 2026-04-30 - Notifications Gate
+
+- `NotificationProvider` now supports `recipientEmail` and `multi-channel` delivery results.
+- `packages/adapters/email/` is the generic REST email notification adapter, enabled by `USE_EMAIL_NOTIFICATIONS=true`, `EMAIL_NOTIFICATION_ENDPOINT`, and `EMAIL_NOTIFICATION_FROM`.
+- `packages/adapters/notification-mux/` routes push registrations/push messages to the push provider and email messages to the email adapter when configured.
+- Failed deliveries are recorded through `notification-dead-letter.service.ts` with `retryCount` and `nextRetryAt`; production should move this to tenant-scoped PostgreSQL with an operator retry view.
+- `getNotificationStatus()` exposes provider readiness and dead-letter backlog.
+- `yarn verify:notifications` is the focused Aspect 09 gate; `node scripts/verify-delivery.mjs --profile notifications` is the consolidated notifications profile.
+- Physical push smoke remains blocked on EAS/APNs/FCM credentials; live email smoke remains blocked on the client email vendor.
+
+## 2026-04-30 - Admin Notification Control Center
+
+- Web admin notification controls live at `/admin/marketing/notifications`; mobile app remains receive-only.
+- Admin APIs:
+  - `GET /api/admin/notifications`
+  - `PATCH /api/admin/notifications/templates/:id`
+  - `GET/POST /api/admin/notifications/campaigns`
+- Marketing full access can update templates and create campaigns; marketing/operations read access can view notification status.
+- `notification-control.service.ts` owns event templates, campaigns, test sends, provider status, and dead-letter visibility.
+- `yarn verify:notifications` now checks control service, admin APIs, admin page, nav link, and focused tests.
+
 ## 2026-04-30 - Client Provisioning Command
 
 - `scripts/new-client.ts` is the idempotent provisioning command for new tenant/client deployments.
@@ -48,6 +152,14 @@
 - The adapter includes a health method against `/health`; production search still needs the indexing pipeline, facet/filter/sort config, and live Meilisearch verification.
 - `yarn verify:meilisearch-adapter` runs static checks plus focused adapter tests.
 - `node scripts/verify-delivery.mjs --profile backend` is the consolidated Aspect 05 gate.
+
+## 2026-04-30 - User And Account Management Gate
+
+- `yarn verify:account-management` is the focused Aspect 06 gate for Better Auth session behavior, account page/test detail, address service, tenant membership schema, OAuth setup direction, and native account route presence.
+- `node scripts/verify-delivery.mjs --profile account` is the consolidated Aspect 06 profile.
+- Prisma now has `Tenant` and `TenantUser` models plus migration `20260430180000_tenant_user_membership`; isolated deployments can keep using `default`, while shared infrastructure can use `tenantId + userId` membership.
+- Customer-visible account test detail includes `questionnaire` in the shared app type, matching provider/service data for hair/skin consultations.
+- OAuth provider activation is client-dependent; current repo state documents Google/Apple env placeholders and setup direction but does not enable a provider without credentials.
 
 ## 2026-04-30 - CMS Lifecycle Gate
 
@@ -728,3 +840,24 @@ Verification:
 - `yarn guard:checks`
 - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
 - `yarn --cwd apps/next test:api`
+## 2026-04-30 - Delivery Quality Profile
+
+- `yarn verify:delivery:quality` is the local client-review quality profile. It currently runs guards, Next typecheck, Expo functional/typecheck, notifications, retention/consultation, account management, payments/checkout, search/discovery, CMS lifecycle, storefront static smoke, full Next API tests, and production Next build.
+- `retention-consultation-focused` is now part of the current required profile because referral, loyalty, and pharmacist consultation flows are client-critical.
+- CMS lifecycle smoke starts its own Next dev server on port 3104 by default. It intentionally runs Next directly instead of `yarn web`/`dev:stable` to avoid Windows Prisma query-engine file locks during smoke verification.
+- If `yarn verify:cms-lifecycle` reports another Next dev server is already running, stop the stale app dev process or set `CMS_START_SERVER=false` only when intentionally testing a known-good running server with matching auth env.
+## 2026-05-01 - DevOps Deployment Gate
+
+- `yarn verify:devops-deployment` checks staging/deploy readiness without external credentials: package scripts, delivery verifier wiring, `new-client.ts`, EAS preview/production config, CI guard/type/test/build jobs, staging runbook, backup/PITR runbook, and `new-client` dry-run.
+- `yarn verify:delivery:deploy` runs guards, Next typecheck, DevOps smoke, and production Next build.
+- `scripts/new-client.ts --output <dir>` is supported; generated client config should go to `clients/<slug>` by default or explicit output dir for smoke/testing.
+- Staging process lives at `docs/delivery/runbooks/staging-deployment.md`: generate client config, provision staging DB, set Vercel preview env, run Prisma migrate deploy, build EAS preview, verify functional/a11y smoke, then rollback with Vercel/EAS/DB backup paths if needed.
+- Real deployment remains blocked on client/Vercel/EAS/store credentials, but local deployment readiness is now verifiable.
+## 2026-05-01 - Operations Health Gate
+
+- `GET /api/health` is public no-store health endpoint. It returns `200` unless aggregate status is `unhealthy`, then `503`.
+- Operations health service reports runtime, provider readiness, search provider health, and notification provider/dead-letter status.
+- `yarn verify:operations-observability` checks route/service/runbook/operator-handbook wiring and runs focused health service test.
+- `node scripts/verify-delivery.mjs --profile operations` runs guard checks, Next typecheck, and operations/observability smoke.
+- Uptime setup lives at `docs/delivery/runbooks/uptime-monitoring.md`; incident response/rollback lives at `docs/delivery/runbooks/incident-response.md`.
+- Sentry, hosted uptime, centralized logs, alert delivery, and provider health dashboard remain vendor/credential/UI work.

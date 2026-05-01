@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { normalizeTenantId } from '../services/tenant/context'
 
 /**
  * Lazy Prisma client singleton.
@@ -38,3 +39,22 @@ export const prisma = new Proxy({} as PrismaClient, {
     return getPrisma()[prop]
   },
 })
+
+/**
+ * Execute work within a tenant-scoped transaction.
+ * Sets app.current_tenant_id on the connection so RLS policies enforce
+ * row-level tenant isolation for all queries inside `fn`.
+ *
+ * Usage:
+ *   const result = await withTenant(tenantId, (tx) => tx.cmsSiteConfig.findFirst())
+ */
+export async function withTenant<T>(
+  tenantId: string | undefined,
+  fn: () => Promise<T>,
+): Promise<T> {
+  const tid = normalizeTenantId(tenantId)
+  return getPrisma().$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(`SET LOCAL app.current_tenant_id = '${tid.replace(/'/g, "''")}'`)
+    return fn()
+  })
+}

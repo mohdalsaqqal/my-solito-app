@@ -12,6 +12,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   FileText,
+  HeartPulse,
   Image as ImageIcon,
   Languages,
   LayoutDashboard,
@@ -87,6 +88,7 @@ const navItems: NavItem[] = [
     items: [
       { id: 'marketing-promotions', domain: 'marketing', title: 'Promotions', href: '/admin/marketing/promotions', icon: Megaphone },
       { id: 'marketing-referrals', domain: 'marketing', title: 'Referrals', href: '/admin/marketing/referrals', icon: Users },
+      { id: 'marketing-notifications', domain: 'marketing', title: 'Notifications', href: '/admin/marketing/notifications', icon: Bell },
       {
         id: 'marketing-cms',
         domain: 'marketing',
@@ -131,6 +133,7 @@ const navItems: NavItem[] = [
       { id: 'operations-cache', domain: 'operations', title: 'Cache', href: '/admin/operations/cache', icon: Server },
       { id: 'operations-audit', domain: 'operations', title: 'Audit', href: '/admin/operations/audit', icon: Activity },
       { id: 'operations-translations', domain: 'operations', title: 'Translations', href: '/admin/operations/translations', icon: Languages },
+      { id: 'operations-health', domain: 'operations', title: 'Health', href: '/admin/operations/health', icon: HeartPulse },
     ],
   },
   { id: 'customers', domain: 'customers', title: 'Customers', href: '/admin/customers', icon: Users },
@@ -189,6 +192,7 @@ export function AdminShell({ children }: PropsWithChildren) {
   const [userName, setUserName] = useState('Admin User')
   const [userEmail, setUserEmail] = useState('admin@realcosmetics.com')
   const [role, setRole] = useState<AdminRole>('admin')
+  const [domainPermissions, setDomainPermissions] = useState<Partial<Record<string, 'none' | 'read' | 'full'>>>()
   const [viewportWidth, setViewportWidth] = useState<number>(layout.admin.containerDefault)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false)
@@ -231,19 +235,25 @@ export function AdminShell({ children }: PropsWithChildren) {
       setUserName(session.name || session.email || 'Admin User')
       setUserEmail(session.email || 'admin@realcosmetics.com')
       setRole(resolveAdminRole(session.role))
+
+      // Load per-user domain permissions
+      apiClient.admin.listUsers().then((users) => {
+        const me = users.find((u) => u.email === session.email)
+        if (me?.domainPermissions) setDomainPermissions(me.domainPermissions)
+      }).catch(() => undefined)
     }).catch(() => undefined)
   }, [])
 
   const visibleItems = useMemo(() => {
     const filterItem = (item: NavItem): NavItem | null => {
-      if (!canAccessDomain(role, item.domain)) return null
+      if (!canAccessDomain(role, item.domain, domainPermissions)) return null
       if (!item.items) return item
       const children = item.items.map(filterItem).filter(Boolean) as NavItem[]
       if (children.length === 0 && !item.href) return null
       return { ...item, items: children }
     }
     return navItems.map(filterItem).filter(Boolean) as NavItem[]
-  }, [role])
+  }, [role, domainPermissions])
 
   const breadcrumbSegments = formatBreadcrumb(pathname)
   const visibleBreadcrumbSegments = isNarrowViewport ? breadcrumbSegments.slice(-1) : breadcrumbSegments

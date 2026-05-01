@@ -1,5 +1,6 @@
-import { AuthSession } from '@real/app/lib/types'
+import { AdminDomainPermissionSet, AuthSession } from '@real/app/lib/types'
 import { AdminDomain, hasAdminDomainPermission } from './admin-rbac'
+import { readAdminControlsState } from './admin-controls-store'
 import { fail } from './response'
 import { ensureRequestConnection } from './route-connection'
 import {
@@ -26,6 +27,15 @@ export async function requireAuthSession(request: Request): Promise<AuthSession 
   return session
 }
 
+async function resolveUserDomainPermissions(
+  userId: string
+): Promise<Partial<AdminDomainPermissionSet> | undefined> {
+  const state = await readAdminControlsState()
+  return state.userOverrides[userId]?.domainPermissions as
+    | Partial<AdminDomainPermissionSet>
+    | undefined
+}
+
 export async function requireAdminDomainSession(
   request: Request,
   domain: AdminDomain,
@@ -36,7 +46,8 @@ export async function requireAdminDomainSession(
   if (session instanceof Response) {
     return session
   }
-  if (!hasAdminDomainPermission(session.role, domain, required)) {
+  const customPermissions = await resolveUserDomainPermissions(session.userId)
+  if (!hasAdminDomainPermission(session.role, domain, required, customPermissions)) {
     return fail('AUTH_FORBIDDEN', 'Permission denied for this admin area.', 403)
   }
   return session
@@ -52,8 +63,9 @@ export async function requireAdminAnyDomainSession(
   if (session instanceof Response) {
     return session
   }
+  const customPermissions = await resolveUserDomainPermissions(session.userId)
   const allowed = domains.some((domain) =>
-    hasAdminDomainPermission(session.role, domain, required)
+    hasAdminDomainPermission(session.role, domain, required, customPermissions)
   )
   if (!allowed) {
     return fail('AUTH_FORBIDDEN', 'Permission denied for this admin area.', 403)

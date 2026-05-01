@@ -255,6 +255,22 @@ export type BrandDealBannerBlock = {
   items: BrandDealBannerItem[]
 }
 
+export type FaqItem = {
+  id: string
+  questionEn: string
+  questionAr: string
+  answerEn: string
+  answerAr: string
+}
+
+export type FaqAccordionBlock = {
+  id: string
+  type: 'faq_accordion'
+  titleEn?: string
+  titleAr?: string
+  items: FaqItem[]
+}
+
 // ─── Union types ─────────────────────────────────────────────────────────────
 
 export type HomeBlock =
@@ -278,6 +294,7 @@ export type HomeBlock =
   | PdpOfferClusterBlock
   | CartUpsellRailBlock
   | BrandDealBannerBlock
+  | FaqAccordionBlock
 
 export type BlockType = HomeBlock['type']
 
@@ -587,6 +604,26 @@ const brandDealBannerItemSchema = z.object({
   href: hrefSchema,
 })
 
+const faqItemSchema = z
+  .object({
+    id: z.string().min(1),
+    questionEn: z.string().min(1),
+    questionAr: z.string().min(1),
+    answerEn: z.string().min(1),
+    answerAr: z.string().min(1),
+  })
+  .strict()
+
+const faqAccordionBlockSchema = z
+  .object({
+    id: z.string().min(1),
+    type: z.literal('faq_accordion'),
+    titleEn: z.string().optional(),
+    titleAr: z.string().optional(),
+    items: z.array(faqItemSchema).min(1),
+  })
+  .strict()
+
 const brandDealBannerBlockSchema = z
   .object({
     id: z.string().min(1),
@@ -620,6 +657,7 @@ export const homeBlockSchema = z.discriminatedUnion('type', [
   pdpOfferClusterBlockSchema,
   cartUpsellRailBlockSchema,
   brandDealBannerBlockSchema,
+  faqAccordionBlockSchema,
 ])
 
 export function parseHomeBlock(value: unknown): HomeBlock | null {

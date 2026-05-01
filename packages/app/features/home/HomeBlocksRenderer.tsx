@@ -18,6 +18,7 @@ import { renderRecentlyViewedBlock } from './renderers/renderRecentlyViewedBlock
 import { renderFeatureBannerBlock } from './renderers/renderFeatureBannerBlock'
 import { renderBrandPanelBlock } from './renderers/renderBrandPanelBlock'
 import { renderBrandDealBannerBlock } from './renderers/renderBrandDealBannerBlock'
+import { renderFaqAccordionBlock } from './renderers/renderFaqAccordionBlock'
 import type {
   HomeBlockRendererRailAutoplaySettings,
   RegisteredHomePageBlock,
@@ -150,6 +151,10 @@ function resolveHomeRenderer(p: DispatchProps) {
 
   if (block.type === 'brand_deal_banner') {
     return renderBrandDealBannerBlock({ slot: p.slot, onNavigate: p.onNavigate })
+  }
+
+  if (block.type === 'faq_accordion') {
+    return renderFaqAccordionBlock({ slot: p.slot, onNavigate: p.onNavigate })
   }
 
   if (block.type === 'promo_strip') {

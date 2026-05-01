@@ -79,6 +79,13 @@ export function resolveAdminRole(input: unknown): AdminRole {
   return 'admin'
 }
 
-export function canAccessDomain(role: AdminRole, domain: AdminDomain) {
+export function canAccessDomain(
+  role: AdminRole,
+  domain: AdminDomain,
+  customPermissions?: Partial<Record<string, 'none' | 'read' | 'full'>>
+) {
+  if (customPermissions && Object.keys(customPermissions).length > 0) {
+    return (customPermissions[domain] ?? 'none') !== 'none'
+  }
   return permissionMatrix[role][domain] !== 'none'
 }

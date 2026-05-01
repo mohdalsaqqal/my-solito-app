@@ -1,24 +1,289 @@
 ﻿# SESSION-STATE.md - Active Working Memory
 
-## 2026-04-30 Aspect 04 CMS Lifecycle Completed
+## 2026-05-01 Aspect 13 Security Compliance Gate
 
-**Status**: LANDED / CMS LIFECYCLE GATE GREEN.
+**Status**: GREEN locally. Security profile passes.
 
-- Added `yarn verify:cms-lifecycle` as the repeatable store-manager smoke.
-- CMS lifecycle smoke exercises release listing, draft release creation, hero block creation, promo strip creation, block reorder persistence, hero copy edit, publish, home API validation, rollback, post-rollback validation, and scheduled draft creation.
-- Hardened `writeAdminControlsState()` so local non-release verification can continue when Postgres is unavailable; release-like environments still fail closed.
-- Fixed CMS smoke server cleanup on Windows so child Next/Yarn processes are terminated after the run.
-- Added `docs/delivery/runbooks/cms-store-manager.md` with store-manager workflow, media-library limits, rollback/scheduling notes, and block coverage.
-- Added `cms-lifecycle` to `scripts/verify-delivery.mjs` and `docs/delivery/DELIVERY_MATRIX.md`.
-- Marked Aspect 04 complete in `docs/delivery/aspects/04-cms-content-management.md`.
+### Completed This Session
 
-**Verification**
-- `yarn verify:cms-lifecycle` passed: 14/14.
-- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
-- `node scripts/guard-checks.mjs` passed.
+- Added app-wide security headers and CSP in `apps/next/next.config.mjs`.
+- Made HSTS explicitly opt-in with `ENABLE_HSTS=true` to avoid unsafe preload/domain lockout before hosted HTTPS is ready.
+- Added GitHub security workflow for CodeQL, Dependency Review, and Gitleaks.
+- Added `docs/delivery/runbooks/security-compliance.md`.
+- Added `yarn verify:security-compliance` and the `security` delivery profile/gate.
+- Fixed blocking admin health page/import and admin shell syntax issues surfaced by the security profile typecheck.
 
-**Next**
-- Continue aspect loop. Strong next candidates: Aspect 05 order write-back expectations, Aspect 08 Meilisearch adapter, or Aspect 11/14 provisioning automation.
+### Verification
+
+- `yarn verify:security-compliance`: PASS.
+- `node scripts/verify-delivery.mjs --profile security`: PASS.
+
+### Remaining
+
+- Hosted GitHub security workflow confirmation, PostgreSQL RLS/DB-level tenant isolation, and penetration testing remain pre-production/external work.
+
+## 2026-05-01 Aspect 14 Platform Operations Gate
+
+**Status**: GREEN locally. Platform profile passes.
+
+### Completed This Session
+
+- Added `docs/delivery/runbooks/platform-operations.md` covering tenant provisioning, `client.json`, adapter/gateway config, cross-client patching, support triage, and offboarding.
+- Added `scripts/verify-platform-operations.mjs` and `yarn verify:platform-operations`.
+- Added the `platform-operations` delivery gate and `platform` profile.
+- Updated the delivery matrix, operator handbook index, Aspect 14 file, and checklist.
+
+### Verification
+
+- `yarn verify:platform-operations`: PASS.
+- `node scripts/verify-delivery.mjs --profile platform`: PASS.
+
+### Remaining
+
+- Live provider account provisioning and a centralized tenant-management UI remain external/future work; current operator source is generated `client.json`.
+
+## 2026-05-01 Aspect 15 Documentation Knowledge Gate
+
+**Status**: GREEN locally. Docs profile passes.
+
+### Completed This Session
+
+- Added `docs/delivery/runbooks/component-catalog.md` as the lightweight component documentation baseline until Storybook exists.
+- Added `scripts/verify-documentation-knowledge.mjs` and `yarn verify:documentation-knowledge`.
+- Added the `documentation-knowledge` delivery gate and `docs` profile.
+- Updated the delivery matrix, operator handbook index, Aspect 15 file, and checklist.
+
+### Verification
+
+- `node scripts/verify-delivery.mjs --profile docs`: PASS.
+
+### Remaining
+
+- Generated API schema docs and full Storybook remain future documentation/UI tooling work.
+
+## 2026-05-01 Aspect 16 AI Development Process Gate
+
+**Status**: GREEN locally. AI profile passes.
+
+### Completed This Session
+
+- Added `scripts/verify-ai-development-process.mjs` and `yarn verify:ai-development-process`.
+- Added the `ai-development-process` delivery gate and `ai` profile.
+- Updated the delivery matrix, Aspect 16 file, checklist, and memory.
+
+### Verification
+
+- `node scripts/verify-delivery.mjs --profile ai`: PASS.
+
+### Remaining
+
+- No local blocker named for this aspect.
+
+## 2026-05-01 Aspect 17 Launch Post-Launch Gate
+
+**Status**: GREEN locally. Launch profile passes.
+
+### Completed This Session
+
+- Added `docs/delivery/runbooks/launch-post-launch.md`.
+- Added `scripts/verify-launch-post-launch.mjs` and `yarn verify:launch-post-launch`.
+- Added the `launch-post-launch` delivery gate and `launch` profile.
+- Updated the delivery matrix, operator handbook index, Aspect 17 file, checklist, and memory.
+
+### Verification
+
+- `node scripts/verify-delivery.mjs --profile launch`: PASS.
+
+### Remaining
+
+- Actual beta launch remains blocked on first client details, production domains, payment live keys, app store accounts, push certificates, and client support contacts.
+
+## 2026-04-30 Aspect 10 Quality Testing Gate
+
+**Status**: GREEN. Current and quality profiles pass locally.
+
+### Completed This Session
+
+- Promoted `retention-consultation-focused` into the current delivery profile.
+- Added the `quality` delivery profile and root script `yarn verify:delivery:quality`.
+- Aligned `faq_accordion` across the release provider contract and admin release block update route.
+- Fixed FAQ accordion React Native text style typing by using token font-weight strings directly.
+- Hardened CMS lifecycle smoke to start a dedicated Next runtime on its own port and avoid `dev:stable` Prisma generate file-lock churn.
+
+### Verification
+
+- `node scripts/verify-delivery.mjs --profile current`: PASS.
+- `yarn verify:cms-lifecycle`: PASS, 14/14 lifecycle checks.
+- `yarn verify:delivery:quality`: PASS, including guard checks, Next typecheck, Expo functional/typecheck, notifications, retention/consultation, account management, payments/checkout, search/discovery, CMS lifecycle, static storefront, 225/225 API tests, and production Next build.
+
+### Remaining
+
+- Lighthouse CI, Maestro native E2E, hosted CI promotion, physical push, live email vendor, live Meilisearch, and client payment/Odoo verification remain external or hardening work.
+
+## 2026-04-30 Session: Docker PostgreSQL + Dynamic User Management + CMS FAQ + Platform Cleanup
+
+**Status**: GREEN. All gates passing. Docker PostgreSQL running live. 4 tickets completed.
+
+### Completed
+- Docker PostgreSQL 16 running (port 5433), dev server live at :3000
+- Dynamic per-user domain permissions: super admin creates users with per-section access (catalog/marketing/sales/inventory/ops/customers). Toggle: None → Full → Read → Off. Custom perms override role-based RBAC matrix.
+- FAQ accordion CMS block: new block type (faq_accordion) → FaqAccordion component in @real/ui/components → renderer → dispatch → seed data (4 FAQ items: shipping, returns, authenticity, loyalty)
+- Platform.OS cleanup: useHeaderScroll.ts refactored to .native.ts pattern, 14→13 Platform.OS files in packages/app
+- Graphify rebuilt: 994 nodes, 1625 edges, 45 communities
+- Production build: passes clean
+- A11y smoke: 6/6 pass
+- Search verification: 5/5 pass, 72 products indexed
+
+### Gates
+```
+guard-checks     ✅ (1 pre-existing i18n debt: "Search users...")
+next-typecheck   ✅
+next-api-full    ✅ (28/28)
+next-build       ✅
+e2e-a11y         ✅ (6/6)
+```
+
+## 2026-04-30 Admin Auth/Session Verification (Line 285) — COMPLETED
+
+**Status**: GREEN. 46/46 auth tests pass. Last code-verifiable checklist item cleared.
+
+- 12/12 auth route tests (login, register, session, logout, reset, fail-close, rate limiting)
+- 13/13 admin route auth tests (catalog/CMS/ops — 401/403/200 enforcement per RBAC matrix)
+- 21 session adapter + request-auth tests (Better Auth identity mapping, legacy fallback, release-mode hardening)
+- Full pipeline: Login → Better Auth signInEmail → Set-Cookie → resolveNormalizedSessionFromRequest → role resolution → hasAdminDomainPermission → 200/403
+- Live smoke with provisioned admin credentials blocked by Postgres/client credential setup
+- Line 285 marked [x]. All remaining [ ] items are deferred, blocked by device/credentials/infra, or pre-launch.
+
+## 2026-04-30 Aspect 07 Payments Checkout Completed
+
+**Status**: GREEN. Aspect 07 local gates passing.
+
+### Completed This Session
+
+- Added checkout reconciliation service for order write-back failure, loyalty reversal requirement, and referral ledger failure.
+- Updated order placement to record reconciliation after payment/order/referral edge failures without breaking successful customer orders unnecessarily.
+- Added `yarn verify:payments-checkout` and promoted the payments profile in `scripts/verify-delivery.mjs`.
+- Updated the custom payment gateway runbook, delivery matrix, Aspect 07 file, checklist, and memory.
+
+### Verification
+
+- `yarn verify:payments-checkout`: PASS.
+- `node scripts/verify-delivery.mjs --profile payments`: PASS.
+- `node scripts/guard-checks.mjs`: PASS.
+- Next typecheck: PASS.
+
+### Remaining
+
+- Client custom payment gateway sandbox/live verification needs vendor credentials/endpoints.
+- Continue aspect loop with Aspect 08 Search & Discovery.
+
+## 2026-04-30 Aspect 08 Search Discovery Completed
+
+**Status**: GREEN. Aspect 08 local gates passing.
+
+### Completed This Session
+
+- Extended search provider payloads with filters, sort, facets, meta, and health settings.
+- Updated mock and Meilisearch adapters for facet/filter/sort requests and settings-aware health.
+- Added `scripts/sync-meilisearch-products.ts` for catalog-provider indexing with dry-run support.
+- Added `yarn verify:search-discovery` and promoted the search profile in `scripts/verify-delivery.mjs`.
+- Updated the Meilisearch runbook, delivery matrix, Aspect 08 file, checklist, and memory.
+
+### Verification
+
+- `yarn verify:search-discovery`: PASS.
+- `node scripts/verify-delivery.mjs --profile search`: PASS.
+- `node scripts/guard-checks.mjs`: PASS.
+- Next typecheck: PASS.
+
+### Remaining
+
+- Live Meilisearch deployment/health needs provisioned host/key/index.
+- Continue aspect loop with Aspect 09 Notifications.
+
+## 2026-04-30 Aspect 09 Notifications Completed
+
+**Status**: GREEN. Aspect 09 local gates passing.
+
+### Completed This Session
+
+- Added generic REST email notification adapter and env placeholders.
+- Added multi-channel notification provider routing for push/email.
+- Added notification dead-letter retry metadata and status surface.
+- Added `yarn verify:notifications` and promoted the notifications profile in `scripts/verify-delivery.mjs`.
+- Updated notifications runbook, delivery matrix, Aspect 09 file, checklist, and memory.
+
+### Verification
+
+- `yarn verify:notifications`: PASS.
+- `node scripts/verify-delivery.mjs --profile notifications`: PASS.
+- `node scripts/guard-checks.mjs`: PASS.
+- Next typecheck: PASS.
+
+### Remaining
+
+- Physical push smoke needs EAS/APNs/FCM credentials.
+- Live email smoke needs client vendor endpoint/key/from address.
+- Continue aspect loop with Aspect 10 Quality & Testing.
+
+## 2026-04-30 Admin Notification Control Center
+
+**Status**: GREEN. Admin notification controls implemented and verified.
+
+### Completed This Session
+
+- Added notification-control service for templates, campaigns, status, and dead-letter visibility.
+- Added admin APIs for overview, template updates, and campaigns.
+- Added `/admin/marketing/notifications` page and admin navigation link.
+- Extended shared admin API client/types.
+- Updated notification runbook, Aspect 09, checklist, and memory.
+
+### Verification
+
+- `yarn verify:notifications`: PASS.
+- `node scripts/verify-delivery.mjs --profile notifications`: PASS.
+- `node scripts/guard-checks.mjs`: PASS.
+- Next typecheck: PASS.
+
+### Remaining
+
+- Customer notification preference UI remains separate account work.
+- Physical push and live email vendor smoke remain external.
+
+## 2026-04-30 Delivery Documentation Pack + Aspect Sync
+
+**Status**: GREEN. All gates passing.
+
+### Completed This Session
+
+**New docs created (5):**
+- `docs/delivery/PRODUCTION_BLOCKERS.md` — 15 non-UI blockers across auth, DB, integrations, infra, security
+- `docs/delivery/CLIENT_HANDOFF_PACK.md` — 6 sections: env vars, Odoo mapping, PaymentProvider contract, blockers, referral/loyalty/pharmacist acceptance
+- `docs/delivery/runbooks/custom-payment-gateway.md` — API contract, webhook format, HMAC, sandbox test cards, webhook events, adapter customization, production verification
+- `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md` — Central operator index (store manager, support, DevOps, integrations, retention)
+- `docs/delivery/runbooks/backup-recovery.md` — Backup scope, schedule, PITR, disaster recovery, provider-specific notes
+
+**Checklist items advanced (10):**
+- `[x]` Lines 272, 280, 283, 300, 301, 312, 313 — 7 items marked verified done
+- `[~]` Lines 309 — CMS API verified (14/14), admin pages load, browser UI needs credentials
+- `[~]` Lines 305, 310 — Web verified, native/physical remains
+
+**Aspect files synced (5):**
+- Aspect 04 (CMS) — all `[x]`
+- Aspect 07 (Payments) — 4 tasks marked done, 2 remain (rollback design, gateway sandbox)
+- Aspect 08 (Search) — Meilisearch adapter marked done
+- Aspect 11 (DevOps) — Backup/PITR marked done
+- Aspect 15 (Documentation) — CMS guide, operator index, Odoo, payment handoff all done
+
+### Verification (re-confirmed)
+- `yarn guard:checks`: PASS
+- `yarn tsc`: PASS (no errors)
+- `yarn verify:functional-storefront`: 24/24 PASS (prior session)
+
+### Remaining `[ ]` — needs external dependency
+- **Line 284**: Admin auth/session verification — needs provisioned admin credentials
+- **Physical device**: Native smoke, push notifications, pharmacist mobile flow
+- **Client credentials**: Odoo connection, payment gateway sandbox, EAS build
 
 ## 2026-04-29 All Blockers Cleared + Build + Test Hardening
 
@@ -1274,3 +1539,64 @@
 - `node scripts/guard-checks.mjs` passed.
 - `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
 - `node scripts/verify-delivery.mjs --profile backend` passed.
+
+---
+
+## 2026-04-30 Aspect 06 User & Account Management
+
+**Status**: LANDED.
+
+- Added Prisma tenant membership model: `Tenant`, `TenantUser`, and migration `20260430180000_tenant_user_membership`.
+- Added `docs/delivery/runbooks/user-account-management.md`.
+- Added `scripts/verify-account-management.mjs`, root script `yarn verify:account-management`, and delivery profile `account`.
+- Strengthened account page and account test detail tests to assert real account surfaces instead of swallowing failures.
+- Added `questionnaire` to shared app `AccountTestDetail`.
+- Documented OAuth setup direction and env placeholders; activation remains client-choice dependent.
+- Updated Aspect 06, checklist, delivery matrix, and memory.
+
+**Verification**
+- `yarn verify:account-management` passed: 14/14.
+- `node scripts/verify-delivery.mjs --profile account` passed.
+- `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed.
+- `yarn --cwd apps/next prisma validate` passed.
+## 2026-05-01 Aspect 11 DevOps Deployment Gate
+
+**Status**: GREEN. Local deploy-readiness gate and deploy profile pass.
+
+### Completed This Session
+
+- Added `docs/delivery/runbooks/staging-deployment.md` for Vercel staging, DB migrate, Expo preview, adapter readiness, staging verification, and rollback.
+- Added `scripts/verify-devops-deployment.mjs` and root script `yarn verify:devops-deployment`.
+- Added `devops-deployment` gate plus `deploy` profile in `scripts/verify-delivery.mjs`.
+- Added root script `yarn verify:delivery:deploy`.
+- Fixed `scripts/new-client.ts` so advertised `--output` works and generated client checklist includes staging/quality verification.
+
+### Verification
+
+- `yarn verify:devops-deployment`: PASS.
+- `node scripts/verify-delivery.mjs --profile deploy`: PASS, including guard checks, Next typecheck, DevOps smoke, and production Next build.
+
+### Remaining
+
+- Real Vercel project/env setup, EAS preview build, store credentials, production domain verification, and live deployment promotion remain credential-gated.
+## 2026-05-01 Aspect 12 Operations Observability Gate
+
+**Status**: GREEN. Local operations profile passes.
+
+### Completed This Session
+
+- Added `GET /api/health` route.
+- Added operations health service reporting runtime, provider readiness, search health, and notification status.
+- Added focused health service test.
+- Added uptime monitoring and incident response runbooks.
+- Linked operations runbooks from operator handbook.
+- Added `yarn verify:operations-observability` and operations delivery profile.
+
+### Verification
+
+- `yarn verify:operations-observability`: PASS.
+- `node scripts/verify-delivery.mjs --profile operations`: PASS, including guard checks, Next typecheck, and operations smoke.
+
+### Remaining
+
+- Sentry, centralized logging vendor, hosted uptime checks, alert routing, and provider health dashboard remain vendor/credential or future UI work.

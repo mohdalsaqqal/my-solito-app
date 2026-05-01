@@ -181,6 +181,99 @@ export type AdminJobCreateInput = {
   input?: Record<string, unknown>
 }
 
+export type AdminNotificationEvent =
+  | 'order_placed'
+  | 'order_shipped'
+  | 'order_delivered'
+  | 'order_cancelled'
+  | 'payment_failed'
+  | 'pharmacist_result_ready'
+  | 'loyalty_points_added'
+  | 'referral_reward_earned'
+  | 'marketing_campaign'
+
+export type AdminNotificationChannels = {
+  push: boolean
+  email: boolean
+}
+
+export type AdminNotificationTemplate = {
+  id: string
+  event: AdminNotificationEvent
+  name: string
+  enabled: boolean
+  channels: AdminNotificationChannels
+  subject: {
+    en: string
+    ar: string
+  }
+  body: {
+    en: string
+    ar: string
+  }
+  updatedAt: string
+  updatedBy?: {
+    userId: string
+    email: string
+  }
+}
+
+export type AdminNotificationDelivery = {
+  id: string
+  provider: 'mock' | 'expo-push' | 'email' | 'multi-channel'
+  status: 'queued' | 'sent' | 'skipped' | 'failed'
+  tokenCount?: number
+  error?: string
+}
+
+export type AdminNotificationCampaign = {
+  id: string
+  name: string
+  audience: 'test_user' | 'segment'
+  userId?: string
+  recipientEmail?: string
+  segment?: 'all_customers' | 'loyalty_members' | 'inactive_customers'
+  channels: AdminNotificationChannels
+  title: string
+  body: string
+  status: 'draft' | 'scheduled' | 'sent' | 'failed'
+  scheduledAt?: string
+  createdAt: string
+  createdBy: {
+    userId: string
+    email: string
+  }
+  deliveries: AdminNotificationDelivery[]
+}
+
+export type AdminNotificationDeadLetter = {
+  id: string
+  tenantId?: string
+  userId?: string
+  orderId?: string
+  channel?: string
+  status: AdminNotificationDelivery['status']
+  provider: AdminNotificationDelivery['provider']
+  error?: string
+  retryCount: number
+  nextRetryAt?: string
+  createdAt: string
+}
+
+export type AdminNotificationStatus = {
+  provider: string
+  ready: boolean
+  deadLetterCount: number
+  pendingRetryCount: number
+}
+
+export type AdminNotificationControlCenter = {
+  templates: AdminNotificationTemplate[]
+  campaigns: AdminNotificationCampaign[]
+  status: AdminNotificationStatus
+  deadLetters: AdminNotificationDeadLetter[]
+}
+
 export type AdminListInput = {
   limit: number
   cursor?: string
@@ -549,6 +642,7 @@ export type ReleaseBlockType =
   | 'pdp_offer_cluster'
   | 'cart_upsell_rail'
   | 'brand_deal_banner'
+  | 'faq_accordion'
 
 export type AdminReleaseRecord = {
   id: string
@@ -1212,6 +1306,19 @@ export type SearchResult = {
   suggestions: SearchSuggestion[]
   trendingSearches: string[]
   popularBrands: string[]
+  facets?: {
+    brands: Array<{ value: string; count: number }>
+    categories: Array<{ value: string; count: number }>
+    price?: {
+      min: number
+      max: number
+    }
+  }
+  meta?: {
+    totalHits?: number
+    processingTimeMs?: number
+    indexName?: string
+  }
 }
 
 export type OrderStatus = 'placed' | 'shipped' | 'delivered' | 'cancelled'
@@ -1377,6 +1484,34 @@ export type AdminOfferBannerRecord = HomeOfferBannerConfig & {
   } | null
 }
 
+export type AdminDomainPermissionSet = {
+  dashboard: 'none' | 'read' | 'full'
+  catalog: 'none' | 'read' | 'full'
+  sales: 'none' | 'read' | 'full'
+  inventory: 'none' | 'read' | 'full'
+  marketplace: 'none' | 'read' | 'full'
+  marketing: 'none' | 'read' | 'full'
+  customers: 'none' | 'read' | 'full'
+  operations: 'none' | 'read' | 'full'
+  settings: 'none' | 'read' | 'full'
+}
+
+export type AdminCreateUserInput = {
+  name: string
+  email: string
+  password: string
+  role: AuthRole
+  domainPermissions?: Partial<AdminDomainPermissionSet>
+}
+
+export type AdminCreateUserResponse = {
+  id: string
+  name: string
+  email: string
+  role: AuthRole
+  status: 'active'
+}
+
 export type AdminUserControlRecord = {
   id: string
   name: string
@@ -1385,6 +1520,7 @@ export type AdminUserControlRecord = {
   status: 'active' | 'invited' | 'disabled'
   lastActiveAt?: string
   permissions?: AdminPermissionSet
+  domainPermissions?: Partial<AdminDomainPermissionSet>
 }
 
 export type AdminOpsAuditEntry = {
@@ -1526,6 +1662,7 @@ export type AccountTestDetail = {
     label: string
     value: string
   }>
+  questionnaire?: Record<string, unknown>
   recommendedProducts: AccountTestRecommendedProduct[]
 }
 

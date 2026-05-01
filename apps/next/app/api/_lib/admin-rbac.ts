@@ -1,4 +1,4 @@
-import { AuthRole } from '@real/app/lib/types'
+import { AdminDomainPermissionSet, AuthRole } from '@real/app/lib/types'
 
 export type AdminDomain =
   | 'dashboard'
@@ -87,8 +87,16 @@ export function isAdminPanelRole(role: AuthRole): role is AdminPanelRole {
 export function hasAdminDomainPermission(
   role: AuthRole,
   domain: AdminDomain,
-  required: 'read' | 'full'
+  required: 'read' | 'full',
+  customPermissions?: Partial<AdminDomainPermissionSet>
 ) {
+  if (customPermissions && Object.keys(customPermissions).length > 0) {
+    if (!isAdminPanelRole(role)) return false
+    const value = customPermissions[domain as keyof AdminDomainPermissionSet] ?? 'none'
+    if (required === 'full') return value === 'full'
+    return value !== 'none'
+  }
+
   if (!isAdminPanelRole(role)) {
     return false
   }

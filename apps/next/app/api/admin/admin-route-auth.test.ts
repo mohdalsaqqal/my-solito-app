@@ -10,6 +10,8 @@
  *
  * Representative endpoints are chosen to cover each admin domain.
  */
+process.env.REQUIRE_PRODUCTION_AUTH = 'false'
+
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { auth } from '../../../lib/auth'

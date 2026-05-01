@@ -44,7 +44,7 @@ async function seedRails() {
 
   for (const rail of rails) {
     await prisma.cmsMarketingRail.upsert({
-      where: { railId: rail.railId },
+      where: { tenantId_railId: { tenantId: 'default', railId: rail.railId } },
       create: rail,
       update: rail,
     })
@@ -111,7 +111,7 @@ async function seedCampaigns() {
 
   for (const c of campaigns) {
     await prisma.cmsCampaign.upsert({
-      where: { campaignId: c.campaignId },
+      where: { tenantId_campaignId: { tenantId: 'default', campaignId: c.campaignId } },
       create: c,
       update: c,
     })
@@ -181,7 +181,7 @@ async function seedHeroCards() {
 
   for (const card of cards) {
     await prisma.cmsHeroCard.upsert({
-      where: { cardId: card.cardId },
+      where: { tenantId_cardId: { tenantId: 'default', cardId: card.cardId } },
       create: card,
       update: card,
     })
@@ -261,7 +261,7 @@ async function seedRailAutoplay() {
 
   for (const s of settings) {
     await prisma.cmsRailAutoplay.upsert({
-      where: { railKey: s.railKey },
+      where: { tenantId_railKey: { tenantId: 'default', railKey: s.railKey } },
       create: s,
       update: {},
     })

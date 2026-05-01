@@ -9,6 +9,7 @@ import {
   Filter,
   Mail,
   MoreHorizontal,
+  Plus,
   Search,
 } from 'lucide-react'
 import { AdminUserControlRecord } from '@real/app/lib/types'
@@ -24,6 +25,11 @@ import {
   StatusPill,
   TableShell,
 } from '../_components/AdminPagePrimitives'
+import { AddUserSlideOver } from './_components/AddUserSlideOver'
+
+const copy = {
+  searchUsers: 'Search users...',
+} as const
 
 export default function AdminCustomersPage() {
   const router = useRouter()
@@ -32,6 +38,7 @@ export default function AdminCustomersPage() {
   const [rows, setRows] = useState<AdminUserControlRecord[]>([])
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [error, setError] = useState<string | null>(null)
+  const [showAddPanel, setShowAddPanel] = useState(false)
 
   useEffect(() => {
     void apiClient.admin
@@ -108,18 +115,20 @@ export default function AdminCustomersPage() {
           subtitle="Manage internal/admin accounts and signed-up customer accounts in separate screens."
           notice={error ? { tone: 'danger', message: error } : undefined}
           actions={
-            <Button tone="secondary">
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: spacing['8'],
-                }}
-              >
-                <Download size={14} color={colors.textSecondary} />
-                Export CSV
-              </span>
-            </Button>
+            <>
+              <Button tone="primary" onClick={() => setShowAddPanel(true)}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
+                  <Plus size={14} color={colors.textInverted} />
+                  Add User
+                </span>
+              </Button>
+              <Button tone="secondary">
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: spacing['8'] }}>
+                  <Download size={14} color={colors.textSecondary} />
+                  Export CSV
+                </span>
+              </Button>
+            </>
           }
         >
           <Panel density="dense">
@@ -154,7 +163,7 @@ export default function AdminCustomersPage() {
                   <input
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search users..."
+                    placeholder={copy.searchUsers}
                     className="admin-focus-ring"
                     style={{
                       width: '100%',
@@ -239,6 +248,16 @@ export default function AdminCustomersPage() {
           </Panel>
         </AdminFormScaffold>
       </Section>
+
+      <AddUserSlideOver
+        open={showAddPanel}
+        onClose={() => setShowAddPanel(false)}
+        onCreated={() => {
+          void apiClient.admin.listUsers().then(setRows).catch((cause) =>
+            setError(cause instanceof Error ? cause.message : 'Unable to refresh users.')
+          )
+        }}
+      />
     </PageContainer>
   )
 }

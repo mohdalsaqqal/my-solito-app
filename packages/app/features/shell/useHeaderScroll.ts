@@ -1,29 +1,11 @@
-// packages/app/features/shell/useHeaderScroll.ts
-import { Platform } from 'react-native'
 import { useEffect, useState } from 'react'
-import { subscribeNativeScrollOffset } from '@real/ui'
 
-type UseHeaderScrollReturn =
-  | { isAtTop: boolean } // web
-  | { isAtTop: boolean } // native
+type UseHeaderScrollReturn = { isAtTop: boolean }
 
 export function useHeaderScroll(): UseHeaderScrollReturn {
-  const isWeb = Platform.OS === 'web'
-
-  // Keep SSR and the first client render deterministic, then sync with real scroll after mount.
   const [isAtTop, setIsAtTop] = useState<boolean>(true)
 
   useEffect(() => {
-    if (isWeb) return
-
-    return subscribeNativeScrollOffset((offsetY) => {
-      setIsAtTop(offsetY === 0)
-    })
-  }, [isWeb])
-
-  useEffect(() => {
-    if (!isWeb) return
-
     let ticking = false
 
     const onScroll = () => {
@@ -37,11 +19,10 @@ export function useHeaderScroll(): UseHeaderScrollReturn {
       }
     }
 
-    // Run once immediately to sync state with current scroll position
     onScroll()
     globalThis.addEventListener?.('scroll', onScroll, { passive: true })
     return () => globalThis.removeEventListener?.('scroll', onScroll)
-  }, [isWeb])
+  }, [])
 
   return { isAtTop }
 }
