@@ -114,20 +114,12 @@ async function writeUserOverridesFile(data: Record<string, UserOverride>) {
 }
 
 export async function readAdminControlsState(): Promise<AdminControlsState> {
-  async function safePrisma<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
-    try {
-      return await fn()
-    } catch {
-      return fallback
-    }
-  }
-
   try {
     const [dbToggles, dbSpotlights, dbOfferBanners, dbAudits, userOverrides] = await Promise.all([
-      safePrisma(() => prisma.cmsToggleOverride.findMany(), []),
-      safePrisma(() => prisma.cmsBrandSpotlight.findMany({ orderBy: { position: 'asc' } }), []),
-      safePrisma(() => prisma.cmsOfferBanner.findMany({ orderBy: { position: 'asc' } }), []),
-      safePrisma(() => prisma.cmsAuditLog.findMany({ orderBy: { createdAt: 'desc' }, take: MAX_AUDIT }), []),
+      prisma.cmsToggleOverride.findMany().catch(() => [] as Awaited<ReturnType<typeof prisma.cmsToggleOverride.findMany>>),
+      prisma.cmsBrandSpotlight.findMany({ orderBy: { position: 'asc' } }).catch(() => [] as Awaited<ReturnType<typeof prisma.cmsBrandSpotlight.findMany>>),
+      prisma.cmsOfferBanner.findMany({ orderBy: { position: 'asc' } }).catch(() => [] as Awaited<ReturnType<typeof prisma.cmsOfferBanner.findMany>>),
+      prisma.cmsAuditLog.findMany({ orderBy: { createdAt: 'desc' }, take: MAX_AUDIT }).catch(() => [] as Awaited<ReturnType<typeof prisma.cmsAuditLog.findMany>>),
       readUserOverridesFile(),
     ])
 
