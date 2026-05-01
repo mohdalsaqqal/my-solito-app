@@ -113,7 +113,7 @@ class PrismaRateLimitStore implements RateLimitStore {
 
     return {
       count: Number(row.count),
-      resetAt: new Date(row.resetAt).getTime(),
+      resetAt: new Date(row.resetAt as string).getTime(),
     }
   }
 
