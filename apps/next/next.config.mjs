@@ -138,9 +138,6 @@ const withTurbopack = {
 const nextConfig = {
   cacheComponents: true,
   devIndicators: false,
-  experimental: {
-    instrumentationHook: true,
-  },
   transpilePackages: [
     '@real/app',
     '@real/ui',
