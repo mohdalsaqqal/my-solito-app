@@ -45,7 +45,7 @@ export async function readUGCState(): Promise<UGCState> {
 }
 
 export async function writeUGCState(state: UGCState): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.cmsUgcItem.deleteMany()
     for (let i = 0; i < state.items.length; i++) {
       const item = state.items[i]

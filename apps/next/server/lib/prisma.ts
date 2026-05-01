@@ -53,7 +53,7 @@ export async function withTenant<T>(
   fn: () => Promise<T>,
 ): Promise<T> {
   const tid = normalizeTenantId(tenantId)
-  return getPrisma().$transaction(async (tx) => {
+  return getPrisma().$transaction(async (tx: any) => {
     await tx.$executeRawUnsafe(`SET LOCAL app.current_tenant_id = '${tid.replace(/'/g, "''")}'`)
     return fn()
   })

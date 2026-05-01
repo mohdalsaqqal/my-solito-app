@@ -79,7 +79,7 @@ export async function readBannersState(): Promise<BannersState> {
 }
 
 export async function writeBannersState(state: BannersState): Promise<void> {
-  await prisma.$transaction(async (tx) => {
+  await prisma.$transaction(async (tx: any) => {
     await tx.cmsTickerSettings.upsert({
       where: { id: 'default' },
       create: { speedMs: state.ticker.speedMs },

@@ -137,7 +137,7 @@ export async function POST(request: Request) {
 
     const hashedPassword = hashBetterAuthPassword(body.password)
 
-    const created = await prisma.$transaction(async (tx) => {
+    const created = await prisma.$transaction(async (tx: any) => {
       const user = await tx.user.create({
         data: {
           id: crypto.randomUUID(),

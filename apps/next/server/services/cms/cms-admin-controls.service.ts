@@ -195,7 +195,7 @@ export async function writeAdminControlsState(state: AdminControlsState): Promis
   await writeUserOverridesFile(state.userOverrides)
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       await tx.cmsToggleOverride.deleteMany()
       for (const [id, toggle] of Object.entries(state.toggleOverrides)) {
         await tx.cmsToggleOverride.create({
