@@ -1,5 +1,22 @@
 ﻿# SESSION-STATE.md - Active Working Memory
 
+## 2026-05-01 Production Hardening Sprint — Committed c4ccb82 (46 files, +4745/-591)
+
+**Status**: GREEN. All gates passing.
+
+### Completed
+- Wave 1: TenantId scoping (24 tables), PostgreSQL RLS (24 tables), Prisma referral/loyalty storage, production rate limiting
+- Wave 2: Sentry SDK installed (dormant), email adapter scaffolded
+- Wave 3: Lighthouse CI in GitHub Actions, CodeQL/security scanning confirmed
+- Dynamic user management: per-domain permissions, CREATOR_DELEGATABLE role gating, privilege escalation fixes (2 rounds)
+- CMS: FAQ accordion block, Platform.OS cleanup, health dashboard
+- Security review: 2 rounds, all findings fixed
+- Simplify: AddUserSlideOver extracted (~200 lines out of page.tsx)
+- Hooks: session-init.py + phase-end.py, fixed cwd drift with ${CLAUDE_PROJECT_DIR}
+- `.claude/agents/security-auditor.md` created
+
+### Remaining: Wave 2 credentials (payment/Odoo/Meilisearch/push/email), penetration test (external), Maestro E2E
+
 ## 2026-05-01 Aspect 13 Security Compliance Gate
 
 **Status**: GREEN locally. Security profile passes.
