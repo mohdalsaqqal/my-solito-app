@@ -1,5 +1,35 @@
 ﻿# SESSION-STATE.md - Active Working Memory
 
+## 2026-05-01 Final Sprint — 14 commits pushed. All gates passing.
+
+**Status**: GREEN. Branch ready for human review.
+
+### Completed this session
+- **Wave 1**: TenantId scoping (24 tables), PostgreSQL RLS, Prisma referral/loyalty/pharmacist storage
+- **Wave 2**: Sentry SDK, email adapter scaffolding
+- **Wave 3**: Lighthouse CI, CodeQL security scanning
+- **Admin/CMS**: Block editor bugs (5 types surfaced), V2 registry, SEO product fields, RBAC edit, health dashboard, settings page
+- **Customer account**: Referral tab rendered, QR dedup, address validation, settings buttons
+- **Pharmacist**: Prisma persistence, branch config (PHARMACIST_BRANCH_NAME), notification trigger
+- **Checkout**: Cart cleared AFTER order, atomic set-quantity, success screen error state
+- **Security**: 2 review rounds, privilege escalation fixes (role + domain permissions)
+- **E2E**: 35 Playwright tests across 4 suites (admin, pharmacist, checkout, smoke)
+- **Simplify**: AddUserSlideOver extracted, settings page built
+- **Hooks**: session-init.py + phase-end.py, opsera removed
+
+### Gates
+```
+guard:style     ✅ (1 pre-existing i18n debt)
+guard:arch      ✅
+typescript      ✅
+E2E (admin)     ✅ 7/7
+E2E (pharmacist) ✅ 8/8
+E2E (checkout)  ✅ 12/12
+E2E (smoke)     ✅ 8/8
+CMS lifecycle   ✅ 14/14
+API tests       ✅ 28/28
+```
+
 ## 2026-05-01 Production Hardening Sprint — Committed c4ccb82 (46 files, +4745/-591)
 
 **Status**: GREEN. All gates passing.
