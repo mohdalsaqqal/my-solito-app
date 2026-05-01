@@ -81,7 +81,7 @@ const TAB_LABEL_KEY_MAP: Record<AccountTab, TranslationKey> = {
   loyalty: 'account.tabs.loyalty',
   wishlist: 'account.tabs.wishlist',
   settings: 'account.tabs.settings',
-  referral: 'account.tabs.referral',
+  referral: 'account.tabs.orders',
 }
 
 function getTabLabel(key: AccountTab, t: (k: TranslationKey) => string): string {
@@ -137,6 +137,7 @@ export const AccountScreen = React.memo(function AccountScreen({
   onEditAddress,
   onRemoveAddress,
   onSetDefaultAddress,
+  referralSummary = null,
 }: AccountScreenProps) {
   const { t } = useTranslation('account')
   const resolvedPromoTitle = promoTitle ?? t('account.promo.title')
@@ -918,39 +919,32 @@ export const AccountScreen = React.memo(function AccountScreen({
                   </Card>
                   <div style={{ display: 'flex', flexDirection: 'row', gap: spacing['8'] }}>
                     <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
-                      <Text variant='title'>{referralSummary.analytics?.followerCount ?? 0}</Text>
-                      <Text variant='caption' tone='muted'>Followers</Text>
+                      <Text variant='title'>{referralSummary.analytics?.clicks ?? 0}</Text>
+                      <Text variant='caption' tone='muted'>Clicks</Text>
                     </Card>
                     <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
                       <Text variant='title'>{referralSummary.analytics?.attributedOrders ?? 0}</Text>
                       <Text variant='caption' tone='muted'>Orders</Text>
                     </Card>
                     <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
-                      <Text variant='title'>{referralSummary.rewardSummary?.totalEarned ?? 0}</Text>
-                      <Text variant='caption' tone='muted'>Earned (SAR)</Text>
+                      <Text variant='title'>{referralSummary.analytics?.totalEarnedValue ?? 0}</Text>
+                      <Text variant='caption' tone='muted'>Earned</Text>
                     </Card>
                   </div>
                   {referralSummary.recentActivity && referralSummary.recentActivity.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
                       <Text variant='label'>Recent Activity</Text>
-                      {referralSummary.recentActivity.slice(0, 5).map((item, i) => (
-                        <div key={i} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing['4'], borderBottomWidth: 1, borderBottomColor: c.border }}>
-                          <Text variant='caption'>{item.description ?? item.type}</Text>
-                          <Text variant='caption' tone='muted'>{item.date}</Text>
+                      {referralSummary.recentActivity.slice(0, 5).map((item) => (
+                        <div key={item.id} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing['4'], paddingBottom: spacing['4'], borderBottomWidth: 1, borderBottomColor: c.border }}>
+                          <Text variant='caption'>{item.status}</Text>
+                          <Text variant='caption' tone='muted'>{item.createdAt}</Text>
                         </div>
                       ))}
                     </div>
                   ) : null}
                 </>
               ) : (
-                <Card
-                  tone='subtle'
-                  style={{
-                    alignItems: 'center',
-                    gap: spacing['8'],
-                    padding: spacing['24'],
-                  }}
-                >
+                <Card tone='subtle' style={{ gap: spacing['8'], padding: spacing['24'], alignItems: 'center' }}>
                   <Text variant='label'>Not enrolled</Text>
                   <Text variant='caption' tone='muted'>Start sharing to earn rewards on referred orders.</Text>
                 </Card>
@@ -964,12 +958,12 @@ export const AccountScreen = React.memo(function AccountScreen({
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
                 <Text variant='label'>{t('account.settings.notifications.title')}</Text>
                 <Text variant='caption' tone='muted'>{t('account.settings.notifications.subtitle')}</Text>
-                <Button size='sm' variant='outline' onPress={() => onNavigate?.('/account?tab=settings')}>{t('account.settings.notifications.manage')}</Button>
+                <Button size='sm' variant='outline'>{t('account.settings.notifications.manage')}</Button>
               </Card>
               <Card tone='subtle' style={{ gap: spacing['8'] }}>
                 <Text variant='label'>{t('account.settings.password.title')}</Text>
                 <Text variant='caption' tone='muted'>{t('account.settings.password.subtitle')}</Text>
-                <Button size='sm' variant='outline' onPress={() => onNavigate?.('/auth/login')}>{t('account.settings.password.change')}</Button>
+                <Button size='sm' variant='outline'>{t('account.settings.password.change')}</Button>
               </Card>
             </Card>
           ) : null}

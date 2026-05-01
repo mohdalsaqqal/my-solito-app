@@ -235,6 +235,7 @@ export default function AdminCustomersPage() {
                     emptyTitle="No admin/system users found"
                     emptyDescription="No internal users match your current search."
                     onToggleStatus={toggleUserStatus}
+                    onEditPermissions={(item) => { setEditingUser(item); setShowEditPermissions(true) }}
                   />
                 ) : (
                   <UserSegmentTable
@@ -244,6 +245,7 @@ export default function AdminCustomersPage() {
                     emptyTitle="No customer users found"
                     emptyDescription="No signed-up customers match your current search."
                     onToggleStatus={toggleUserStatus}
+                    onEditPermissions={undefined}
                   />
                 )}
               </>
@@ -282,6 +284,7 @@ function UserSegmentTable({
   emptyTitle,
   emptyDescription,
   onToggleStatus,
+  onEditPermissions,
 }: {
   title: string
   subtitle: string
@@ -289,6 +292,7 @@ function UserSegmentTable({
   emptyTitle: string
   emptyDescription: string
   onToggleStatus: (item: AdminUserControlRecord) => Promise<void>
+  onEditPermissions?: ((item: AdminUserControlRecord) => void) | undefined
 }) {
   return (
     <div style={{ display: 'grid', gap: spacing['12'] }}>
@@ -467,10 +471,8 @@ function UserSegmentTable({
                           color: colors.textSecondary,
                         }}
                         onClick={() => {
-                          const selected = rows.find((r) => r.id === item.id)
-                          if (selected?.role !== 'customer') {
-                            setEditingUser(selected ?? null)
-                            setShowEditPermissions(true)
+                          if (item.role !== 'customer' && onEditPermissions) {
+                            onEditPermissions(item)
                           }
                         }}
                       >

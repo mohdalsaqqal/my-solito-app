@@ -585,6 +585,35 @@ model CmsCompleteSet {
   @@index([tenantId])
 }
 
+// ============================================================================
+// Pharmacist — Prisma-backed consultation persistence
+// ============================================================================
+
+model PharmacistConsultation {
+  id                   String   @id @default(cuid())
+  tenantId             String   @default("default")
+  customerId           String
+  pharmacistId         String
+  pharmacistName       String
+  branchName           String   @default("Main Branch")
+  templateType         String   @default("skin")
+  title                String
+  summary              String
+  notes                String   @default("")
+  metricsJson          Json     @default("[]")
+  questionnaireJson    Json?
+  recommendedProductIds Json    @default("[]")
+  status               String   @default("submitted")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([customerId])
+  @@index([pharmacistId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+}
+
 model RateLimitBucket {
   tenantId  String   @default("default")
   key       String   @id

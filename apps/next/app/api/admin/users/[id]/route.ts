@@ -110,10 +110,10 @@ export async function POST(
     }
 
     const existingOverride = state.userOverrides[id]
-    const nextDomainPermissions: Record<string, 'none' | 'read' | 'full'> | undefined =
-      hasDomainPermissionsInput
-        ? (payload.domainPermissions as Record<string, 'none' | 'read' | 'full'>)
-        : existingOverride?.domainPermissions
+    const nextDomainPermissions =
+      (hasDomainPermissionsInput
+        ? payload.domainPermissions
+        : existingOverride?.domainPermissions) as Record<string, 'none' | 'read' | 'full'> | undefined
 
     // Prevent privilege escalation: creator can only grant permissions they hold
     if (hasDomainPermissionsInput && payload.domainPermissions) {
