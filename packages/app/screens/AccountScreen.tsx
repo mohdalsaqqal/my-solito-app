@@ -944,7 +944,14 @@ export const AccountScreen = React.memo(function AccountScreen({
                   ) : null}
                 </>
               ) : (
-                <Card tone='subtle' style={{ gap: spacing['8'], padding: spacing['24'], alignItems: 'center' }}>
+                <Card
+                  tone='subtle'
+                  style={{
+                    gap: spacing['8'],
+                    padding: spacing['24'],
+                    alignItems: 'center',
+                  }}
+                >
                   <Text variant='label'>Not enrolled</Text>
                   <Text variant='caption' tone='muted'>Start sharing to earn rewards on referred orders.</Text>
                 </Card>
