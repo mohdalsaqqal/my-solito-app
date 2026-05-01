@@ -27,6 +27,8 @@ type BlockType =
   | 'personalized_rail'
   | 'pdp_offer_cluster'
   | 'cart_upsell_rail'
+  | 'brand_deal_banner'
+  | 'faq_accordion'
 
 type PatchPayload = {
   position?: number

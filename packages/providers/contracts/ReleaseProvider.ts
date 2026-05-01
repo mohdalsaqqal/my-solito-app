@@ -23,6 +23,7 @@ export type ReleaseBlockType =
   | 'pdp_offer_cluster'
   | 'cart_upsell_rail'
   | 'brand_deal_banner'
+  | 'faq_accordion'
 
 export type ReleaseBlockRecord = {
   id: string
