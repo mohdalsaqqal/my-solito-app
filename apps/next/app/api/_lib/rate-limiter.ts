@@ -85,7 +85,7 @@ export class MemoryRateLimitStore implements RateLimitStore {
 class PrismaRateLimitStore implements RateLimitStore {
   async consume(key: string, windowMs: number) {
     const resetAt = new Date(Date.now() + windowMs)
-    const rows = await prisma.$queryRawUnsafe<Array<{ count: number; resetAt: Date }>>(
+    const rows = await prisma.$queryRawUnsafe(
       `
         INSERT INTO "RateLimitBucket" ("key", "count", "resetAt", "updatedAt")
         VALUES ($1, 1, $2, NOW())
@@ -106,7 +106,7 @@ class PrismaRateLimitStore implements RateLimitStore {
       resetAt,
     )
 
-    const row = rows[0]
+    const row = (rows as Array<{ count: unknown; resetAt: unknown }>)[0]
     if (!row) {
       throw new Error('Prisma rate limiter did not return a bucket row.')
     }
