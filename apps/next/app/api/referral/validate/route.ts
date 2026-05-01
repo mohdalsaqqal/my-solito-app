@@ -4,10 +4,13 @@ import {
   validateReferralRequest,
 } from '@real/app/lib/referral/referral-schema'
 import { fail, ok } from '../../_lib/response'
+import { requireAuthSession } from '../../_lib/request-auth'
 import { getReferralProfileByCode } from '../../_lib/referral-profile-store'
 import { readReferralProgramSettings } from '../../_lib/referral-program-store'
 
 export async function POST(request: Request) {
+  const session = await requireAuthSession(request)
+  if (session instanceof Response) return session
   try {
     const body = await request.json().catch(() => ({}))
     const normalized = normalizeReferralValidationRequest(body)

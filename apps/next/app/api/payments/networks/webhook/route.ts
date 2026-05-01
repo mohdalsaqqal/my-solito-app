@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { processNetworksWebhook } from '../../../../../server/services/payments/networks-webhook.service'
 
 export async function POST(request: NextRequest) {
-  const result = await processNetworksWebhook(request)
+  try {
+    const result = await processNetworksWebhook(request)
 
   if (result.kind === 'not-configured') {
     return NextResponse.json({ error: 'Networks payment not configured' }, { status: 503 })
@@ -21,4 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ received: true, orderId: result.orderId })
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

@@ -1,6 +1,7 @@
 import { reviewProvider } from '@real/providers'
 import { matchProviderResult } from '@real/providers/contracts'
 import { ensureRequestConnection } from '../_lib/route-connection'
+import { requireAuthSession } from '../_lib/request-auth'
 import { fail, ok } from '../_lib/response'
 
 export async function GET(request: Request) {
@@ -28,6 +29,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await requireAuthSession(request)
+    if (session instanceof Response) return session
+
     const body = (await request.json()) as {
       productId?: string
       rating?: number

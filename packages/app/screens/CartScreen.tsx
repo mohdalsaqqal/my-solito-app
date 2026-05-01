@@ -7,7 +7,7 @@ import { Box, Divider, Text } from '@real/ui/primitives'
 import { Button, Card, PaymentBadges, QuantityInput } from '@real/ui/components'
 import { passThroughPricingService } from '@real/app/lib/pricing'
 import { useBreakpoint, useThemeColors } from '@real/ui/responsive'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'solito/navigation'
 
 type CartScreenItem = {
   productId: string
