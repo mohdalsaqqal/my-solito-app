@@ -898,13 +898,25 @@ export const AccountScreen = React.memo(function AccountScreen({
             </Card>
           ) : null}
 
-          {activeTab === 'referral' ? (
+          {activeTab === 'referral' ? (() => {
+            const rc = {
+              title: 'Referral Program',
+              yourCode: 'Your Code',
+              clicks: 'Clicks',
+              orders: 'Orders',
+              earned: 'Earned',
+              recentActivity: 'Recent Activity',
+              notEnrolled: 'Not enrolled',
+              notEnrolledHint: 'Start sharing to earn rewards on referred orders.',
+            } as const
+
+            return (
             <Card variant='flat' style={{ gap: spacing['16'] }}>
-              <Text variant='title'>Referral Program</Text>
+              <Text variant='title'>{rc.title}</Text>
               {referralSummary && referralSummary.code ? (
                 <>
                   <Card tone='subtle' style={{ gap: spacing['8'], alignItems: 'center' }}>
-                    <Text variant='label'>Your Code</Text>
+                    <Text variant='label'>{rc.yourCode}</Text>
                     <Text
                       variant='title'
                       style={{
@@ -920,20 +932,20 @@ export const AccountScreen = React.memo(function AccountScreen({
                   <div style={{ display: 'flex', flexDirection: 'row', gap: spacing['8'] }}>
                     <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
                       <Text variant='title'>{referralSummary.analytics?.clicks ?? 0}</Text>
-                      <Text variant='caption' tone='muted'>Clicks</Text>
+                      <Text variant='caption' tone='muted'>{rc.clicks}</Text>
                     </Card>
                     <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
                       <Text variant='title'>{referralSummary.analytics?.attributedOrders ?? 0}</Text>
-                      <Text variant='caption' tone='muted'>Orders</Text>
+                      <Text variant='caption' tone='muted'>{rc.orders}</Text>
                     </Card>
                     <Card tone='subtle' style={{ flex: 1, alignItems: 'center', gap: spacing['4'] }}>
                       <Text variant='title'>{referralSummary.analytics?.totalEarnedValue ?? 0}</Text>
-                      <Text variant='caption' tone='muted'>Earned</Text>
+                      <Text variant='caption' tone='muted'>{rc.earned}</Text>
                     </Card>
                   </div>
                   {referralSummary.recentActivity && referralSummary.recentActivity.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing['8'] }}>
-                      <Text variant='label'>Recent Activity</Text>
+                      <Text variant='label'>{rc.recentActivity}</Text>
                       {referralSummary.recentActivity.slice(0, 5).map((item) => (
                         <div key={item.id} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing['4'], paddingBottom: spacing['4'], borderBottomWidth: 1, borderBottomColor: c.border }}>
                           <Text variant='caption'>{item.status}</Text>
@@ -952,12 +964,13 @@ export const AccountScreen = React.memo(function AccountScreen({
                     alignItems: 'center',
                   }}
                 >
-                  <Text variant='label'>Not enrolled</Text>
-                  <Text variant='caption' tone='muted'>Start sharing to earn rewards on referred orders.</Text>
+                  <Text variant='label'>{rc.notEnrolled}</Text>
+                  <Text variant='caption' tone='muted'>{rc.notEnrolledHint}</Text>
                 </Card>
               )}
             </Card>
-          ) : null}
+            )
+          })() : null}
 
           {activeTab === 'settings' ? (
             <Card variant='flat' style={{ gap: spacing['12'] }}>

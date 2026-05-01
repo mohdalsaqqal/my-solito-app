@@ -3,6 +3,19 @@ import { PageScaffold, Section } from '@real/ui'
 import { Box, Text } from '@real/ui/primitives'
 import { Button, Card } from '@real/ui/components'
 
+const copy = {
+  orderPlaced: 'Order placed',
+  orderSuccess: 'Your order was submitted successfully.',
+  orderIdLabel: 'Order ID:',
+  totalLabel: 'Total:',
+  placedAtLabel: 'Placed at:',
+  continueShopping: 'Continue shopping',
+  viewAccount: 'View account',
+  errorTitle: 'Something went wrong',
+  errorFallback: 'Your order could not be confirmed. Please check your account or contact support.',
+  returnToShop: 'Return to shop',
+} as const
+
 type CheckoutSuccessScreenProps = {
   orderId: string
   orderTotal: string
@@ -28,41 +41,43 @@ export function CheckoutSuccessScreen({
         <Section>
           {hasValidOrder ? (
             <Card variant='raised' style={{ gap: spacing['16'] }}>
-              <Text variant='h1'>Order placed</Text>
-              <Text tone='muted'>Your order was submitted successfully.</Text>
+              <Text variant='h1'>{copy.orderPlaced}</Text>
+              <Text tone='muted'>{copy.orderSuccess}</Text>
               <Box style={{ gap: spacing['8'] }}>
-                <Text variant='bodySm'>Order ID: {orderId}</Text>
-                <Text variant='bodySm'>Total: {orderTotal}</Text>
-                {createdAt ? <Text variant='caption' tone='muted'>Placed at: {createdAt}</Text> : null}
+                <Text variant='bodySm'>{copy.orderIdLabel} {orderId}</Text>
+                <Text variant='bodySm'>{copy.totalLabel} {orderTotal}</Text>
+                {createdAt ? (
+                  <Text variant='caption' tone='muted'>{copy.placedAtLabel} {createdAt}</Text>
+                ) : null}
               </Box>
               <Box style={{ flexDirection: 'row', gap: spacing['16'], flexWrap: 'wrap' }}>
                 <Box style={{ width: spacing.xxl * 4 }}>
                   <Button variant='outline' onPress={onContinueShopping}>
-                    Continue shopping
+                    {copy.continueShopping}
                   </Button>
                 </Box>
                 <Box style={{ width: spacing.xxl * 4 }}>
                   <Button onPress={onViewAccount}>
-                    View account
+                    {copy.viewAccount}
                   </Button>
                 </Box>
               </Box>
             </Card>
           ) : (
             <Card variant='raised' style={{ gap: spacing['16'] }}>
-              <Text variant='h1'>Something went wrong</Text>
+              <Text variant='h1'>{copy.errorTitle}</Text>
               <Text tone='muted'>
-                {error ?? 'Your order could not be confirmed. Please check your account or contact support.'}
+                {error ?? copy.errorFallback}
               </Text>
               <Box style={{ flexDirection: 'row', gap: spacing['16'], flexWrap: 'wrap' }}>
                 <Box style={{ width: spacing.xxl * 4 }}>
                   <Button variant='outline' onPress={onContinueShopping}>
-                    Return to shop
+                    {copy.returnToShop}
                   </Button>
                 </Box>
                 <Box style={{ width: spacing.xxl * 4 }}>
                   <Button onPress={onViewAccount}>
-                    View account
+                    {copy.viewAccount}
                   </Button>
                 </Box>
               </Box>

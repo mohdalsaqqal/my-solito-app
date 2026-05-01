@@ -31,21 +31,29 @@ async function seedReferralProfile() {
     update: {},
   })
 
-  await prisma.referralProfile.deleteMany({ where: { userId: 'u-1' } })
-  await prisma.referralProfile.create({
-    data: {
-      id: 'ref-prof-u-1',
-      storeId: 'default',
-      userId: 'u-1',
-      userEmail: 'user@realcosmetics.local',
-      actorType: 'influencer',
-      code: 'GLOWWITHU1',
-      shareLink: 'https://realcosmetics.local/r/GLOWWITHU1',
-      approved: true,
-      displayName: 'Customer User',
-      audienceCount: 18200,
-    },
-  })
+  // Upsert: force the expected code even if a profile was auto-created
+  const existing = await prisma.referralProfile.findFirst({ where: { userId: 'u-1' } })
+  if (existing) {
+    await prisma.referralProfile.update({
+      where: { id: existing.id },
+      data: { code: 'GLOWWITHU1', shareLink: 'https://realcosmetics.local/r/GLOWWITHU1', approved: true },
+    })
+  } else {
+    await prisma.referralProfile.create({
+      data: {
+        id: 'ref-prof-u-1',
+        storeId: 'default',
+        userId: 'u-1',
+        userEmail: 'user@realcosmetics.local',
+        actorType: 'influencer',
+        code: 'GLOWWITHU1',
+        shareLink: 'https://realcosmetics.local/r/GLOWWITHU1',
+        approved: true,
+        displayName: 'Customer User',
+        audienceCount: 18200,
+      },
+    })
+  }
 }
 
 test('account-page - happy path returns expected shape', async () => {
