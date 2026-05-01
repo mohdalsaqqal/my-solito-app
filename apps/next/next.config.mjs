@@ -57,7 +57,10 @@ const securityHeaders = [
   },
 ]
 
-if (process.env.ENABLE_HSTS === 'true') {
+// HSTS enabled by default in production, opt-out with ENABLE_HSTS=false
+const enableHsts = process.env.ENABLE_HSTS !== 'false'
+  && process.env.NODE_ENV === 'production'
+if (enableHsts) {
   securityHeaders.push({
     key: 'Strict-Transport-Security',
     value: 'max-age=31536000; includeSubDomains',
