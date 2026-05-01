@@ -113,6 +113,7 @@ export function CheckoutSuccessPageClient({
         orderId={orderId}
         orderTotal={orderTotal}
         createdAt={createdAt}
+        error={error}
         onContinueShopping={() => router.push('/shop')}
         onViewAccount={() => router.push('/account')}
       />

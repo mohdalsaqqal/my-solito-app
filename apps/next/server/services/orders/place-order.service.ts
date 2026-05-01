@@ -2,6 +2,7 @@ import { accountProvider, cartProvider, cmsProvider, orderProvider, paymentProvi
 import type { Order, PaymentProviderIntent } from '@real/providers/contracts'
 import { passThroughPricingService } from '@real/app/lib/pricing'
 import { buildCartHash, hasSingleCurrency, isQuoteExpired, normalizeCouponCode } from '../checkout/pricing-quote'
+import { recordCheckoutReconciliation } from '../checkout/checkout-reconciliation.service'
 import { createReferralLedgerEntry } from '../referral'
 import { ServiceError } from '../_lib/service-error'
 import { resolveNormalizedSessionFromRequest } from '../auth'
@@ -84,6 +85,25 @@ function isSameAddress(
     normalizeAddressValue(left.floor) === normalizeAddressValue(right.floor) &&
     normalizeAddressValue(left.apartment) === normalizeAddressValue(right.apartment)
   )
+}
+
+function errorDetails(cause: unknown) {
+  if (cause instanceof ServiceError) {
+    return {
+      code: cause.code,
+      message: cause.message,
+    }
+  }
+  if (cause instanceof Error) {
+    return {
+      code: cause.name || 'CHECKOUT_RECONCILIATION_ERROR',
+      message: cause.message,
+    }
+  }
+  return {
+    code: 'CHECKOUT_RECONCILIATION_ERROR',
+    message: 'Unknown checkout reconciliation failure.',
+  }
 }
 
 export async function placeOrder(request: Request) {
@@ -382,15 +402,6 @@ export async function placeOrder(request: Request) {
   const discount = promoDiscount + loyaltyDiscount + referralDiscount
   const total = Math.max(0, Math.round((subtotal + shipping - discount) * 100) / 100)
 
-  if (cartItems.length > 0) {
-    for (const line of cartItems) {
-      const removed = await cartProvider.remove(line.productId)
-      if (!removed.ok) {
-        throw new ServiceError(removed.error.code, removed.error.message, 500)
-      }
-    }
-  }
-
   const summaryItems = effectiveItems.flatMap((line) => {
     const product = productsResult.data.find((item) => item.id === line.productId)
     if (!product) {
@@ -498,23 +509,71 @@ export async function placeOrder(request: Request) {
     order: summary,
   })
   if (!placedOrderResult.ok) {
+    await recordCheckoutReconciliation({
+      kind: 'order_write_back_failed',
+      orderId: summary.id,
+      pricingQuoteId,
+      userId: session.userId,
+      paymentIntentId: paymentIntent.id,
+      loyaltyHistoryEntryIds: loyaltyResult.data.historyEntryIds,
+      referralCode: quote.quote.referral?.code,
+      errorCode: placedOrderResult.error.code,
+      errorMessage: placedOrderResult.error.message,
+    })
+    if (loyaltyResult.data.historyEntryIds.length > 0) {
+      await recordCheckoutReconciliation({
+        kind: 'loyalty_reversal_required',
+        orderId: summary.id,
+        pricingQuoteId,
+        userId: session.userId,
+        paymentIntentId: paymentIntent.id,
+        loyaltyHistoryEntryIds: loyaltyResult.data.historyEntryIds,
+        referralCode: quote.quote.referral?.code,
+        errorCode: placedOrderResult.error.code,
+        errorMessage: 'Loyalty changes were applied before order write-back failed.',
+      })
+    }
     throw new ServiceError(placedOrderResult.error.code, placedOrderResult.error.message, 500)
   }
   const placedOrder = placedOrderResult.data
 
+  // Clear cart AFTER order is confirmed — prevents lost items on write-back failure
+  if (cartItems.length > 0) {
+    for (const line of cartItems) {
+      await cartProvider.remove(line.productId).catch(() => {
+        // Cart clear failure is non-fatal — order is already placed
+      })
+    }
+  }
+
   if (quote.quote.referral) {
-    await createReferralLedgerEntry({
-      storeId: 'default',
-      profileId: quote.quote.referral.profileId,
-      referredUserId: session.userId,
-      orderId: placedOrder.id,
-      code: quote.quote.referral.code,
-      status: 'pending',
-      currency: placedOrder.currency,
-      subtotal: Math.round(subtotal * 100) / 100,
-      followerRewardValue: quote.quote.referral.followerDiscountAmount,
-      influencerRewardValue: quote.quote.referral.influencerRewardValue,
-    })
+    try {
+      await createReferralLedgerEntry({
+        storeId: 'default',
+        profileId: quote.quote.referral.profileId,
+        referredUserId: session.userId,
+        orderId: placedOrder.id,
+        code: quote.quote.referral.code,
+        status: 'pending',
+        currency: placedOrder.currency,
+        subtotal: Math.round(subtotal * 100) / 100,
+        followerRewardValue: quote.quote.referral.followerDiscountAmount,
+        influencerRewardValue: quote.quote.referral.influencerRewardValue,
+      })
+    } catch (cause) {
+      const details = errorDetails(cause)
+      await recordCheckoutReconciliation({
+        kind: 'referral_ledger_failed',
+        orderId: placedOrder.id,
+        pricingQuoteId,
+        userId: session.userId,
+        paymentIntentId: paymentIntent.id,
+        loyaltyHistoryEntryIds: loyaltyResult.data.historyEntryIds,
+        referralCode: quote.quote.referral.code,
+        errorCode: details.code,
+        errorMessage: details.message,
+      })
+    }
   }
 
   return placedOrder

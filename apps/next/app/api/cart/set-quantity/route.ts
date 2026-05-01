@@ -26,6 +26,13 @@ export async function POST(request: Request) {
       if (quantity === 0) {
         return ok(removed.data)
       }
+      // Atomic: if add fails, restore the item at its previous quantity
+      const added = await cartProvider.add(productId, quantity)
+      if (!added.ok) {
+        await cartProvider.add(productId, existing.quantity).catch(() => {})
+        return fail(added.error.code, added.error.message, 500)
+      }
+      return ok(added.data)
     } else if (quantity === 0) {
       return ok(current.data)
     }
