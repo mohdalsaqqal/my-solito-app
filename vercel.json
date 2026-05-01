@@ -1,6 +1,7 @@
 {
-  "buildCommand": "cd apps/next && npx next build",
-  "outputDirectory": "apps/next/.next",
-  "installCommand": "yarn install",
-  "framework": "nextjs"
+  "installCommand": "yarn install --frozen-lockfile",
+  "buildCommand": "npx next build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "rootDirectory": "apps/next"
 }
