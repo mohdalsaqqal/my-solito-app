@@ -129,10 +129,10 @@ class PrismaRateLimitStore implements RateLimitStore {
   }
 
   async size() {
-    const rows = await prisma.$queryRawUnsafe<Array<{ count: bigint | number }>>(
+    const rows = await prisma.$queryRawUnsafe(
       `SELECT COUNT(*)::bigint AS "count" FROM "RateLimitBucket"`,
     )
-    const value = rows[0]?.count ?? 0
+    const value = (rows as Array<{ count: bigint | number }>)[0]?.count ?? 0
     return typeof value === 'bigint' ? Number(value) : Number(value)
   }
 }
