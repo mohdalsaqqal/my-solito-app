@@ -1,8 +1,8 @@
-import { AdminPermissionSet, AuthRole, CMSHome } from '@real/app/lib/types'
+import { AdminDomainPermissionSet, AdminPermissionSet, AuthRole, CMSHome } from '@real/app/lib/types'
 import { cmsProvider } from '@real/providers'
 import { fail, ok } from '../../../_lib/response'
 import { requireAdminDomainSession } from '../../../_lib/request-auth'
-import { isAdminPanelRole } from '../../../_lib/admin-rbac'
+import { AdminDomain, hasAdminDomainPermission, isAdminPanelRole } from '../../../_lib/admin-rbac'
 import {
   applyAdminControlsToCms,
   pushAudit,
@@ -13,6 +13,7 @@ type UserPayload = {
   role?: AuthRole
   status?: 'active' | 'invited' | 'disabled'
   permissions?: Partial<AdminPermissionSet>
+  domainPermissions?: Partial<AdminDomainPermissionSet>
 }
 
 function hasRole(value: unknown): value is AuthRole {
@@ -52,9 +53,10 @@ export async function POST(
     const hasStatusInput = payload.status !== undefined
 
     const hasPermissionsInput = payload.permissions !== undefined
+    const hasDomainPermissionsInput = payload.domainPermissions !== undefined
 
-    if (!hasRoleInput && !hasStatusInput && !hasPermissionsInput) {
-      return fail('ADMIN_USER_UPDATE_EMPTY', 'Provide role, status, or permissions to update.', 400)
+    if (!hasRoleInput && !hasStatusInput && !hasPermissionsInput && !hasDomainPermissionsInput) {
+      return fail('ADMIN_USER_UPDATE_EMPTY', 'Provide role, status, permissions, or domainPermissions to update.', 400)
     }
 
     if (hasRoleInput && !hasRole(payload.role)) {
@@ -107,10 +109,31 @@ export async function POST(
       return fail('ADMIN_SELF_PERMISSION_LOCKOUT', 'You cannot remove your own user-management permission.', 409)
     }
 
+    const existingOverride = state.userOverrides[id]
+    const nextDomainPermissions: Record<string, 'none' | 'read' | 'full'> | undefined =
+      hasDomainPermissionsInput
+        ? (payload.domainPermissions as Record<string, 'none' | 'read' | 'full'>)
+        : existingOverride?.domainPermissions
+
+    // Prevent privilege escalation: creator can only grant permissions they hold
+    if (hasDomainPermissionsInput && payload.domainPermissions) {
+      const creatorPerms = existingOverride?.domainPermissions
+      for (const [domain, level] of Object.entries(payload.domainPermissions)) {
+        if (!hasAdminDomainPermission(session.role, domain as AdminDomain, level as 'read' | 'full', creatorPerms)) {
+          return fail(
+            'ADMIN_USER_UPDATE_PERMISSION_DENIED',
+            `You cannot grant ${level} access to ${domain}.`,
+            403,
+          )
+        }
+      }
+    }
+
     state.userOverrides[id] = {
       role: nextRole,
       status: nextStatus,
       permissions: nextPermissions,
+      domainPermissions: nextDomainPermissions,
       updatedAt: new Date().toISOString(),
       updatedBy: {
         userId: session.userId,

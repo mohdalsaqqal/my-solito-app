@@ -58,6 +58,8 @@ const emptyDraft: ProductUpsertInput = {
   image: '',
   vendor: '',
   description: '',
+  metaTitle: '',
+  metaDescription: '',
   currency: 'USD',
   sales: 0,
   variantCount: 1,
@@ -80,6 +82,8 @@ function toDraft(detail: ProductDetail): ProductUpsertInput {
     image: detail.image ?? '',
     vendor: detail.vendor ?? '',
     description: detail.description ?? '',
+    metaTitle: (detail as Record<string, unknown>).metaTitle as string ?? '',
+    metaDescription: (detail as Record<string, unknown>).metaDescription as string ?? '',
     currency: detail.currency ?? 'USD',
     sales: detail.sales ?? 0,
     variantCount: detail.variantCount ?? 1,
@@ -492,6 +496,22 @@ export function ProductManagementPage({
                     ...prev,
                     description: event.target.value,
                   }))
+                }
+              />
+            </Field>
+            <Field label="Meta Title" hint="SEO — page title shown in search results">
+              <TextInput
+                value={draft.metaTitle ?? ''}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, metaTitle: event.target.value }))
+                }
+              />
+            </Field>
+            <Field label="Meta Description" hint="SEO — description shown in search results">
+              <TextAreaInput
+                value={draft.metaDescription ?? ''}
+                onChange={(event) =>
+                  setDraft((prev) => ({ ...prev, metaDescription: event.target.value }))
                 }
               />
             </Field>

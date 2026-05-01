@@ -15,7 +15,10 @@ import {
 import type { OfferBannerBlock } from '@real/ui/components'
 import { componentTokens, layout } from '@real/tokens'
 import type { HomeBlockRendererComponent, RegisteredStorefrontPageBlock } from './block-types'
+import { PromoDealBannerRow } from '@real/ui/components'
+import { FaqAccordion } from '@real/ui/components'
 import type { HomeHeroItem, HomeUgcItem } from '@real/ui/components/home/types'
+import type { FaqAccordionItem } from '@real/ui/components'
 import {
   mapBrandItems,
   mapProductsToHomeItems,
@@ -444,6 +447,42 @@ const PromoStripBlockComponent: HomeBlockRendererComponent = ({ block, tickerSpe
   )
 }
 
+const PromoDealBannerBlockComponent: HomeBlockRendererComponent = ({ block, onNavigate }) => {
+  const published = block.props
+  if (published.type !== 'brand_deal_banner') return null
+  return (
+    <PromoDealBannerRow
+      title={published.titleText ?? resolvePairString(published.locale, published.titleEn, published.titleAr)}
+      items={(published.items ?? []).map((item) => ({
+        id: item.id,
+        brandName: resolvePairString(published.locale, item.brandNameEn, item.brandNameAr, item.brandNameEn),
+        preLabel: resolvePairString(published.locale, item.preLabelEn, item.preLabelAr),
+        discountLabel: resolvePairString(published.locale, item.discountLabelEn, item.discountLabelAr, item.discountLabelEn),
+        backgroundColor: item.backgroundColor,
+        imageUrl: item.imageUrl,
+        href: item.href,
+      }))}
+      onNavigate={onNavigate}
+    />
+  )
+}
+
+const FaqAccordionBlockComponent: HomeBlockRendererComponent = ({ block }) => {
+  const published = block.props
+  if (published.type !== 'faq_accordion') return null
+  const items: FaqAccordionItem[] = (published.items ?? []).map((item) => ({
+    id: item.id,
+    question: resolvePairString(published.locale, item.questionEn, item.questionAr, ''),
+    answer: resolvePairString(published.locale, item.answerEn, item.answerAr, ''),
+  }))
+  return (
+    <FaqAccordion
+      title={published.titleText ?? resolvePairString(published.locale, published.titleEn, published.titleAr)}
+      items={items}
+    />
+  )
+}
+
 export function getBlockRegistryKey(type: string, version: string) {
   return `${type}:${version}`
 }
@@ -466,6 +505,8 @@ export const blockRegistry = {
   [getBlockRegistryKey('category_shortcuts', 'v1')]: CategoryShortcutsBlockComponent,
   [getBlockRegistryKey('editorial_hotspot', 'v1')]: EditorialHotspotBlockComponent,
   [getBlockRegistryKey('promo_strip', 'v1')]: PromoStripBlockComponent,
+  [getBlockRegistryKey('brand_deal_banner', 'v1')]: PromoDealBannerBlockComponent,
+  [getBlockRegistryKey('faq_accordion', 'v1')]: FaqAccordionBlockComponent,
 } satisfies Record<string, HomeBlockRendererComponent>
 
 export function getBlockComponent(block: RegisteredStorefrontPageBlock) {

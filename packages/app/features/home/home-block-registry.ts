@@ -34,6 +34,8 @@ export const SUPPORTED_HOME_BLOCK_TYPES: readonly string[] = [
   'category_shortcuts',
   'editorial_hotspot',
   'promo_strip',
+  'brand_deal_banner',
+  'faq_accordion',
 ] as const
 
 /**

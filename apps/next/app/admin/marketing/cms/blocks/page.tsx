@@ -29,6 +29,11 @@ type BlockType =
   | 'ugc_gallery'
   | 'personalized_rail'
   | 'editorial_hotspot'
+  | 'category_shortcuts'
+  | 'offer_stack'
+  | 'sticky_listing_promo'
+  | 'brand_deal_banner'
+  | 'faq_accordion'
 
 function formatAdminBrandName(value?: string) {
   if (!value) return ''
@@ -54,6 +59,11 @@ const blockTypeOptions: Array<{ value: BlockType; label: string }> = [
   { value: 'ugc_gallery', label: 'UGC Gallery' },
   { value: 'personalized_rail', label: 'Personalized Rail' },
   { value: 'editorial_hotspot', label: 'Editorial Hotspot' },
+  { value: 'category_shortcuts', label: 'Category Shortcuts' },
+  { value: 'offer_stack', label: 'Offer Stack' },
+  { value: 'sticky_listing_promo', label: 'Sticky Listing Promo' },
+  { value: 'brand_deal_banner', label: 'Brand Deal Banner' },
+  { value: 'faq_accordion', label: 'FAQ Accordion' },
 ]
 
 const BLOCK_TYPE_LABELS: Record<string, string> = {
@@ -71,6 +81,11 @@ const BLOCK_TYPE_LABELS: Record<string, string> = {
   ugc_gallery: 'UGC Gallery',
   personalized_rail: 'Personalized Rail',
   editorial_hotspot: 'Editorial Hotspot',
+  category_shortcuts: 'Category Shortcuts',
+  offer_stack: 'Offer Stack',
+  sticky_listing_promo: 'Sticky Listing Promo',
+  brand_deal_banner: 'Brand Deal Banner',
+  faq_accordion: 'FAQ Accordion',
 }
 
 const UI_STRINGS = {
@@ -845,15 +860,21 @@ export default function AdminCmsBlocksPage() {
       }
     }
     // personalized_rail
-    const f = personalizedRailFields
-    return {
-      id: blockId,
-      type: 'personalized_rail' as const,
-      titleEn: f.titleEn,
-      titleAr: f.titleAr,
-      mode: f.mode,
-      ...(f.mode === 'static' && f.querySlug ? { querySlug: f.querySlug } : {}),
+    if (activeType === 'personalized_rail') {
+      const f = personalizedRailFields
+      return {
+        id: blockId,
+        type: 'personalized_rail' as const,
+        titleEn: f.titleEn,
+        titleAr: f.titleAr,
+        mode: f.mode,
+        ...(f.mode === 'static' && f.querySlug ? { querySlug: f.querySlug } : {}),
+      }
     }
+    // Types without form editors — return existing payload as-is (JSON editor mode)
+    const existing = (selected.payloadJson as Record<string, unknown> | null) ?? {}
+    if (existing.type === activeType) return { ...existing, id: existing.id ?? blockId }
+    return null
   }, [
     activeType,
     heroFields,
@@ -1122,6 +1143,75 @@ export default function AdminCmsBlocksPage() {
         title: { en: 'Brand Promo', ar: 'عرض العلامة' },
         imageUrl: DEFAULT_MARKETING_IMAGE_URL,
         ...(querySlug ? { querySlug } : {}),
+      }
+    }
+
+    if (blockType === 'category_shortcuts') {
+      return {
+        id: `category-shortcuts-${pos}`,
+        type: 'category_shortcuts',
+        title: { en: 'Shop Categories', ar: 'تسوق حسب الفئة' },
+        items: [{ id: 'cat-sample', label: { en: 'Skincare', ar: 'عناية' }, href: '/shop?categories=skincare' }],
+      }
+    }
+
+    if (blockType === 'offer_stack') {
+      return {
+        id: `offer-stack-${pos}`,
+        type: 'offer_stack',
+        items: [{
+          id: `offer-stack-item-${pos}`,
+          imageUrl: DEFAULT_MARKETING_IMAGE_URL,
+          href: '/shop',
+          title: { en: 'Special Offer', ar: 'عرض خاص' },
+          subtitle: { en: 'Limited time', ar: 'لفترة محدودة' },
+        }],
+      }
+    }
+
+    if (blockType === 'sticky_listing_promo') {
+      return {
+        id: `sticky-listing-promo-${pos}`,
+        type: 'sticky_listing_promo',
+        title: { en: 'Special Offer', ar: 'عرض خاص' },
+        imageUrl: DEFAULT_MARKETING_IMAGE_URL,
+      }
+    }
+
+    if (blockType === 'brand_deal_banner') {
+      return {
+        id: `brand-deal-banner-${pos}`,
+        type: 'brand_deal_banner',
+        items: [
+          {
+            id: `deal-item-${pos}`,
+            brandNameEn: 'Featured Brand',
+            brandNameAr: 'علامة مميزة',
+            preLabelEn: 'DEALS UP TO',
+            preLabelAr: 'عروض تصل إلى',
+            discountLabelEn: '20%',
+            discountLabelAr: '20%',
+            backgroundColor: 'hsl(0 0% 97%)',
+          },
+        ],
+      }
+    }
+
+    if (blockType === 'faq_accordion') {
+      return {
+        id: `faq-${pos}`,
+        type: 'faq_accordion',
+        titleEn: 'Frequently Asked Questions',
+        titleAr: 'الأسئلة الشائعة',
+        items: [
+          {
+            id: `faq-item-${pos}`,
+            questionEn: 'How long does shipping take?',
+            questionAr: 'كم تستغرق عملية الشحن؟',
+            answerEn: 'Standard shipping takes 3-5 business days.',
+            answerAr: 'يستغرق الشحن القياسي 3-5 أيام عمل.',
+          },
+        ],
       }
     }
 

@@ -332,6 +332,8 @@ export type ProductUpsertInput = {
   image?: string
   vendor?: string
   description?: string
+  metaTitle?: string
+  metaDescription?: string
   currency?: string
   sales?: number
   variantCount?: number

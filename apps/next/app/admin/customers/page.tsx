@@ -26,6 +26,7 @@ import {
   TableShell,
 } from '../_components/AdminPagePrimitives'
 import { AddUserSlideOver } from './_components/AddUserSlideOver'
+import { EditPermissionsSlideOver } from './_components/EditPermissionsSlideOver'
 
 const copy = {
   searchUsers: 'Search users...',
@@ -39,6 +40,8 @@ export default function AdminCustomersPage() {
   const [query, setQuery] = useState(searchParams.get('q') ?? '')
   const [error, setError] = useState<string | null>(null)
   const [showAddPanel, setShowAddPanel] = useState(false)
+  const [showEditPermissions, setShowEditPermissions] = useState(false)
+  const [editingUser, setEditingUser] = useState<AdminUserControlRecord | null>(null)
 
   useEffect(() => {
     void apiClient.admin
@@ -258,6 +261,16 @@ export default function AdminCustomersPage() {
           )
         }}
       />
+      <EditPermissionsSlideOver
+        user={editingUser}
+        open={showEditPermissions}
+        onClose={() => { setShowEditPermissions(false); setEditingUser(null) }}
+        onUpdated={() => {
+          void apiClient.admin.listUsers().then(setRows).catch((cause) =>
+            setError(cause instanceof Error ? cause.message : 'Unable to refresh users.')
+          )
+        }}
+      />
     </PageContainer>
   )
 }
@@ -442,7 +455,7 @@ function UserSegmentTable({
                       </button>
                       <button
                         type="button"
-                        aria-label={`Actions for ${item.name}`}
+                        aria-label={`Edit permissions for ${item.name}`}
                         className="admin-focus-ring"
                         style={{
                           border: 0,
@@ -452,6 +465,13 @@ function UserSegmentTable({
                           borderRadius: radius.md,
                           cursor: 'pointer',
                           color: colors.textSecondary,
+                        }}
+                        onClick={() => {
+                          const selected = rows.find((r) => r.id === item.id)
+                          if (selected?.role !== 'customer') {
+                            setEditingUser(selected ?? null)
+                            setShowEditPermissions(true)
+                          }
                         }}
                       >
                         <MoreHorizontal size={16} />
