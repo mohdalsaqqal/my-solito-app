@@ -66,7 +66,7 @@ type DbToggleOverride = {
 
 type DbBrandSpotlight = {
   id: string
-  spotlightJson: Record<string, unknown>
+  spotlightJson: unknown
   updatedAt: Date
   updatedByUserId: string
   updatedByEmail: string
@@ -74,7 +74,7 @@ type DbBrandSpotlight = {
 
 type DbOfferBanner = {
   id: string
-  bannerJson: Record<string, unknown>
+  bannerJson: unknown
   updatedAt: Date
   updatedByUserId: string
   updatedByEmail: string
@@ -87,7 +87,7 @@ type DbAuditLogRow = {
   actorUserId: string
   actorEmail: string
   createdAt: Date
-  changes: Record<string, unknown>
+  changes: unknown
 }
 
 const STORAGE_DIR = path.join(process.cwd(), '.data')
@@ -148,12 +148,25 @@ async function writeUserOverridesFile(data: Record<string, UserOverride>) {
 }
 
 export async function readAdminControlsState(): Promise<AdminControlsState> {
+  async function readToggles(): Promise<DbToggleOverride[]> {
+    try { return await prisma.cmsToggleOverride.findMany() } catch { return [] }
+  }
+  async function readSpotlights(): Promise<DbBrandSpotlight[]> {
+    try { return await prisma.cmsBrandSpotlight.findMany({ orderBy: { position: 'asc' } }) } catch { return [] }
+  }
+  async function readBanners(): Promise<DbOfferBanner[]> {
+    try { return await prisma.cmsOfferBanner.findMany({ orderBy: { position: 'asc' } }) } catch { return [] }
+  }
+  async function readAudits(): Promise<DbAuditLogRow[]> {
+    try { return await prisma.cmsAuditLog.findMany({ orderBy: { createdAt: 'desc' }, take: MAX_AUDIT }) } catch { return [] }
+  }
+
   try {
     const [dbToggles, dbSpotlights, dbOfferBanners, dbAudits, userOverrides] = await Promise.all([
-      prisma.cmsToggleOverride.findMany().catch((): DbToggleOverride[] => []),
-      prisma.cmsBrandSpotlight.findMany({ orderBy: { position: 'asc' } }).catch((): DbBrandSpotlight[] => []),
-      prisma.cmsOfferBanner.findMany({ orderBy: { position: 'asc' } }).catch((): DbOfferBanner[] => []),
-      prisma.cmsAuditLog.findMany({ orderBy: { createdAt: 'desc' }, take: MAX_AUDIT }).catch((): DbAuditLogRow[] => []),
+      readToggles(),
+      readSpotlights(),
+      readBanners(),
+      readAudits(),
       readUserOverridesFile(),
     ])
 
