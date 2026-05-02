@@ -1,6 +1,6 @@
 {
   "installCommand": "yarn install --frozen-lockfile",
-  "buildCommand": "cd apps/next && npx prisma generate --schema prisma/schema.prisma && npx next build",
+  "buildCommand": "cd apps/next && npx next build",
   "outputDirectory": "apps/next/.next",
   "framework": "nextjs"
 }
