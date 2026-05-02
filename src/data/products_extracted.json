@@ -1,0 +1,1136 @@
+[
+  {
+    "brand": "ACM",
+    "name": "Depiwhite Body Milk Brighten & Even Skin Tone",
+    "price": 30.07,
+    "category": "body",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71241"
+  },
+  {
+    "brand": "ACM",
+    "name": "Depiwhite Brighten & Even Skin Tone",
+    "price": 32.31,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71236"
+  },
+  {
+    "brand": "ACM",
+    "name": "Depiwhite Fade Dark Spots & Glow",
+    "price": 20.91,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "68284"
+  },
+  {
+    "brand": "ACM",
+    "name": "Depiwhite Peel Off Mask Instant Radiance",
+    "price": 30.89,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "68285"
+  },
+  {
+    "brand": "ACM",
+    "name": "DEPIWHITE S Brighten & Even Skin Tone",
+    "price": 17.91,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "71238"
+  },
+  {
+    "brand": "Av\u00e8ne",
+    "name": "A-Oxitive Aqua Day Hydrating & Protective",
+    "price": 18.86,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "65150"
+  },
+  {
+    "brand": "Av\u00e8ne",
+    "name": "A-Oxitive Cream Night Radiant Overnight Skin",
+    "price": 23.9,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65152"
+  },
+  {
+    "brand": "Av\u00e8ne",
+    "name": "A-Oxitive Cream Night+",
+    "price": 34.25,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "72283"
+  },
+  {
+    "brand": "Av\u00e8ne",
+    "name": "A-Oxitive Eye Brighten & Revive Your Eyes",
+    "price": 23.37,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65151"
+  },
+  {
+    "brand": "Av\u00e8ne",
+    "name": "A-Oxitive Serum Radiant, Youthful Skin",
+    "price": 29.33,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65153"
+  },
+  {
+    "brand": "Av\u00e8ne",
+    "name": "Cleanance Clear Blemishes & Shine",
+    "price": 33.91,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1573461160327-f9c45f4cfc3b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "67395"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Aquafluid: Tinted SPF50+  Sun Protection",
+    "price": 36.21,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "36800"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Aquafluide 25-Hour Sun Protection",
+    "price": 34.76,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77843"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Aquafluide Teinte Light SPF 50+  Glow",
+    "price": 24.67,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77842"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Atoderm Cream Intense Hydration & Relief",
+    "price": 40.97,
+    "category": "fragrance",
+    "image": "https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "76856"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Atoderm Dry Hand Relief",
+    "price": 20.45,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "70754"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Atoderm Intense Skin Hydration",
+    "price": 20.32,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1573461160327-f9c45f4cfc3b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "67683"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Atoderm Intense Skin Hydration",
+    "price": 32.49,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1570194065650-d99fb4bedf0a?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "75043"
+  },
+  {
+    "brand": "BIODERMA",
+    "name": "Atoderm Intense Skin Relief",
+    "price": 35.51,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1601049541271-f679200e1d27?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "66861"
+  },
+  {
+    "brand": "CeraVe",
+    "name": "Cream Moisturizer Hydrated, Healthy Skin",
+    "price": 15.25,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "74690"
+  },
+  {
+    "brand": "CeraVe",
+    "name": "Eye Repair Cream Reduce Dark Circles",
+    "price": 14.79,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "74684"
+  },
+  {
+    "brand": "CeraVe",
+    "name": "Facial Moisturizer Hydrated, Healthy Skin",
+    "price": 22.29,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "74688"
+  },
+  {
+    "brand": "CeraVe",
+    "name": "Facial Moisturizer SPF 30 Daily Hydration",
+    "price": 22.85,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "74692"
+  },
+  {
+    "brand": "CeraVe",
+    "name": "Foam Cleanser Gentle & Balanced Skin",
+    "price": 19.77,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "75236"
+  },
+  {
+    "brand": "CeraVe",
+    "name": "Foaming Cleanser Healthy, Hydrated Skin",
+    "price": 14.46,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1573461160327-f9c45f4cfc3b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "75238"
+  },
+  {
+    "brand": "Eucerin",
+    "name": "Dark Circle Eye Care Brighter Eyes",
+    "price": 27.92,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77981"
+  },
+  {
+    "brand": "Eucerin",
+    "name": "Dermo Purifyer Clear Blemish-Prone Skin",
+    "price": 29.4,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "67393"
+  },
+  {
+    "brand": "Eucerin",
+    "name": "Dermo Purifyer Scrub Clear Blemish-Free Skin",
+    "price": 20.84,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "67386"
+  },
+  {
+    "brand": "Eucerin",
+    "name": "Dermo Purifyer Toner Clearer, Balanced Skin",
+    "price": 25.44,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "67384"
+  },
+  {
+    "brand": "Eucerin",
+    "name": "Dermopurifyer Serum Clearer Skin Now!",
+    "price": 16.93,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71251"
+  },
+  {
+    "brand": "Eucerin",
+    "name": "Dermopurifyer SPF30 Clear, Protected Skin",
+    "price": 17.77,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71250"
+  },
+  {
+    "brand": "Evagarden",
+    "name": "82 Dark Eyebrow Pencil Flawless Brows",
+    "price": 18.42,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "19475"
+  },
+  {
+    "brand": "Evagarden",
+    "name": "Adobe Dust Lip Cream Long-Lasting Color",
+    "price": 17.31,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1631214500115-598fc2cb8d2d?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "36037"
+  },
+  {
+    "brand": "Evagarden",
+    "name": "Apricot Concealer Flawless Coverage",
+    "price": 16.41,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77350"
+  },
+  {
+    "brand": "Evagarden",
+    "name": "AquaProof Mascara Long-Lasting Lashes",
+    "price": 11.96,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "19401"
+  },
+  {
+    "brand": "Evagarden",
+    "name": "Baddie Pink Lipstick Get the Perfect Pout",
+    "price": 13.24,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "77342"
+  },
+  {
+    "brand": "Evagarden",
+    "name": "Beauty Fix Radiant, Flawless Skin",
+    "price": 12.64,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77333"
+  },
+  {
+    "brand": "Filorga",
+    "name": "Age-Purify Mask Clear & Youthful Skin",
+    "price": 77.14,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77956"
+  },
+  {
+    "brand": "Filorga",
+    "name": "Age-Purify Serum Youthful, Clear Skin",
+    "price": 46.45,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77954"
+  },
+  {
+    "brand": "Filorga",
+    "name": "Age-Purify: Clear & Youthful Skin",
+    "price": 75.25,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "69686"
+  },
+  {
+    "brand": "Filorga",
+    "name": "Age-Purify: Youthful, Clear Skin",
+    "price": 48.39,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77955"
+  },
+  {
+    "brand": "Filorga",
+    "name": "Global Repair - Youthful Skin Now",
+    "price": 80.66,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "66849"
+  },
+  {
+    "brand": "Filorga",
+    "name": "Global Repair Serum Younger-Looking Skin",
+    "price": 78.82,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1573461160327-f9c45f4cfc3b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "66850"
+  },
+  {
+    "brand": "ISDIN",
+    "name": "Acniben Clear & Mattifying Face Wash",
+    "price": 27.53,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "75304"
+  },
+  {
+    "brand": "ISDIN",
+    "name": "Age Repair SPF50 Youthful Skin",
+    "price": 32.29,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65255"
+  },
+  {
+    "brand": "ISDIN",
+    "name": "CEUTICS Anti-Aging Skin Revival",
+    "price": 25.71,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "65264"
+  },
+  {
+    "brand": "ISDIN",
+    "name": "CEUTICS FLAVO C MELATONIN Youthful Skin",
+    "price": 28.41,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65263"
+  },
+  {
+    "brand": "ISDIN",
+    "name": "CEUTICS K-OX Eye Cream Brighten Your Eyes",
+    "price": 36.01,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65261"
+  },
+  {
+    "brand": "JOKO",
+    "name": "509 Baked Eyeshadow Effortless Eye Color",
+    "price": 8.86,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "73042"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Anti-Pollution Makeup Base Protect & Perfect",
+    "price": 8.59,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1631214500115-598fc2cb8d2d?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73061"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Automatic Eyepencil Long-Lasting Eye Definition",
+    "price": 13.98,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73010"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Baked Blush 13 Achieve a Radiant Glow",
+    "price": 9.59,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73046"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Baked Blush 17 Radiant, Lit-From-Within Glow",
+    "price": 11.8,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73044"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Baked Blush Achieve a Radiant Glow",
+    "price": 6.38,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73048"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Baked Blush Achieve a Radiant Glow",
+    "price": 12.13,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "73050"
+  },
+  {
+    "brand": "JOKO",
+    "name": "Baked Eye Shadow Golden Bronze Eyes",
+    "price": 10.37,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "73040"
+  },
+  {
+    "brand": "K18",
+    "name": "Airwash Dry Shampoo Fresh, Clean Hair",
+    "price": 45.94,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1599307767928-4b72ff24e41b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "78121"
+  },
+  {
+    "brand": "K18",
+    "name": "AstroLift: Volume & Repair for Healthy Hair",
+    "price": 52.87,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "78122"
+  },
+  {
+    "brand": "K18",
+    "name": "Damage Shield Shampoo Protect & Repair Hair",
+    "price": 68.46,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "76816"
+  },
+  {
+    "brand": "K18",
+    "name": "Damage Shield Shampoo Stronger, Healthier Hair",
+    "price": 59.97,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1595956553066-fe24a8c33395?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "76817"
+  },
+  {
+    "brand": "K18",
+    "name": "Detox Shampoo Healthy, Shiny Hair",
+    "price": 60.04,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1614786269829-d24616faf56d?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "76815"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Afterwork Drink Long-Lasting Matte Lipstick",
+    "price": 36.78,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "74674"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Air Mega Volum Mascara Fuller Lashes Now!",
+    "price": 15.68,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1631214500115-598fc2cb8d2d?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "72342"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Air Mega Volum Mascara Instant Volume Lashes",
+    "price": 17.22,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "63471"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al A-Lister Long-Lasting Matte Foundation",
+    "price": 43.48,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "74675"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Brow Lamination 24-Hour Brow Hold",
+    "price": 44.07,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "77565"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Brow Xpert Auburn Brow Perfection",
+    "price": 28.75,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "72814"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Brow Xpert Brunette Perfect Brows, All Day Long",
+    "price": 40.73,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73142"
+  },
+  {
+    "brand": "L'Or\u00e9al",
+    "name": "\u00c3\u00a9al Brow Xpert Perfect Brows, All Day Long",
+    "price": 39.78,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "73141"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Baby Skin Primer Flawless Makeup Base",
+    "price": 14.09,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "27916"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Brow Satin Defined & Natural Brows",
+    "price": 11.74,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1631214500115-598fc2cb8d2d?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "68206"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Brow Satin Defined Brows, Effortlessly",
+    "price": 13.39,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "68207"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Buff Nude Lipstick Flawless Nude Finish",
+    "price": 17.18,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "68808"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Burgundy Bar Palette Stunning Eye Looks",
+    "price": 11.24,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "32061"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Col Kajal Long-Lasting Eyeliner",
+    "price": 9.12,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71566"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Colossal 36HR Mascara Lasting Volume",
+    "price": 16.79,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "69036"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Eraser Concealer Brighten & Renew",
+    "price": 10.39,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "73525"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Eraser Concealer Brighten Dark Circles",
+    "price": 16.78,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "34827"
+  },
+  {
+    "brand": "Maybelline",
+    "name": "Eraser Concealer Brighten Dark Circles",
+    "price": 8.86,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1541643600914-78b084683702?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "71153"
+  },
+  {
+    "brand": "MIYO",
+    "name": "40 Ambition Eyeshadow Stunning Color Looks",
+    "price": 14.16,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "38732"
+  },
+  {
+    "brand": "MIYO",
+    "name": "4-Ever Matte Powder Flawless, Acne-Free Skin",
+    "price": 13.66,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1631214500115-598fc2cb8d2d?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "38683"
+  },
+  {
+    "brand": "MIYO",
+    "name": "Ammo Pink Caramel Lipstick Radiant Lips",
+    "price": 12.6,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "72862"
+  },
+  {
+    "brand": "MIYO",
+    "name": "Ammo Pink Lipstick Peachy Pink Shade",
+    "price": 7.65,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "72861"
+  },
+  {
+    "brand": "MIYO",
+    "name": "Ammo Pink Lipstick Perfect Toffee Pink Shade",
+    "price": 14.72,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "38802"
+  },
+  {
+    "brand": "MIYO",
+    "name": "Ammo Pink Lipstick Radiant, Long-Lasting Color",
+    "price": 15.64,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "38805"
+  },
+  {
+    "brand": "MIYO",
+    "name": "Ammo Pink Lipstick Red Is The Best",
+    "price": 13.55,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "38800"
+  },
+  {
+    "brand": "MIYO",
+    "name": "Ammo Pink Lipstick Rose-Tinted Lips",
+    "price": 13.13,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "72860"
+  },
+  {
+    "brand": "Nashi",
+    "name": "After Sun Repairing Mask Hydrated Hair",
+    "price": 51.85,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1599307767928-4b72ff24e41b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "69928"
+  },
+  {
+    "brand": "Nashi",
+    "name": "Argan After Sun Cream Soothe & Hydrate Skin",
+    "price": 35.14,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "69932"
+  },
+  {
+    "brand": "Nashi",
+    "name": "Argan After Sun Shampoo Healthy Hair After Sun",
+    "price": 35.54,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71142"
+  },
+  {
+    "brand": "Nashi",
+    "name": "Argan Body Oil Radiant, Dry Skin",
+    "price": 28.74,
+    "category": "body",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "1015545"
+  },
+  {
+    "brand": "Nashi",
+    "name": "Argan Brush Detangle & Shine Wet Hair",
+    "price": 22.63,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1614786269829-d24616faf56d?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "72153"
+  },
+  {
+    "brand": "Olaplex",
+    "name": "0+ 3+ BRUSH BOX Stronger, Healthier Hair",
+    "price": 30.3,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1599307767928-4b72ff24e41b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71176"
+  },
+  {
+    "brand": "Olaplex",
+    "name": "3*4*5 Kit Stronger, Healthier Hair",
+    "price": 28.07,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "74887"
+  },
+  {
+    "brand": "Olaplex",
+    "name": "3+ 4+ 5 Brush Box Stronger, Healthier Hair",
+    "price": 30.29,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "71175"
+  },
+  {
+    "brand": "Olaplex",
+    "name": "Bond Maintenance Conditioner Stronger, Healthier Hair",
+    "price": 36.6,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1595956553066-fe24a8c33395?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "63900"
+  },
+  {
+    "brand": "Olaplex",
+    "name": "Bond Smoother Smooth & Shiny Hair",
+    "price": 33.14,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1614786269829-d24616faf56d?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "63902"
+  },
+  {
+    "brand": "Olaplex",
+    "name": "Discovery Kit Stronger, Healthier Hair",
+    "price": 34.69,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "72731"
+  },
+  {
+    "brand": "Palmer's",
+    "name": "s Acne Toner Clearer, Healthier Skin",
+    "price": 14.93,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "36513"
+  },
+  {
+    "brand": "Palmer's",
+    "name": "'s Baby Lotion Soft, Hydrated Skin",
+    "price": 15.34,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "63888"
+  },
+  {
+    "brand": "Palmer's",
+    "name": "'s Bergamot Jar Soft, Fragrant Hair",
+    "price": 17.63,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "30222"
+  },
+  {
+    "brand": "Palmer's",
+    "name": "'s Body Gloss Radiant, Soft Skin",
+    "price": 11.09,
+    "category": "body",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "34212"
+  },
+  {
+    "brand": "Palmer's",
+    "name": "'s CBF Body Lotion Soft & Healing Skin",
+    "price": 16.25,
+    "category": "body",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "30224"
+  },
+  {
+    "brand": "Sebamed",
+    "name": "Active Deo 24 Hour Freshness",
+    "price": 18.78,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "66558"
+  },
+  {
+    "brand": "Sebamed",
+    "name": "After Sun Lotion Soothe & Restore Skin",
+    "price": 25.82,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "66537"
+  },
+  {
+    "brand": "Sebamed",
+    "name": "Anti Hair Loss Shampoo Thicker, Fuller Hair",
+    "price": 22.77,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "66519"
+  },
+  {
+    "brand": "Sebamed",
+    "name": "Anti-Dandruff Healthy, Flake-Free Hair",
+    "price": 12.97,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1595956553066-fe24a8c33395?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "66515"
+  },
+  {
+    "brand": "Sebamed",
+    "name": "Anti-Dry Day Cream Hydrated, Calm Skin",
+    "price": 24.81,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "66567"
+  },
+  {
+    "brand": "SVR",
+    "name": "Ampoule Lift Youthful, Radiant Skin",
+    "price": 19.22,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "69859"
+  },
+  {
+    "brand": "SVR",
+    "name": "B3 Ampoule Hydra Intense Hydration",
+    "price": 25.26,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "69860"
+  },
+  {
+    "brand": "SVR",
+    "name": "C Ampoule Radiant & Youthful Skin",
+    "price": 22.86,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "69861"
+  },
+  {
+    "brand": "SVR",
+    "name": "Cicavit SPF50+  Sun Protection & Skin Repair",
+    "price": 23.72,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "72588"
+  },
+  {
+    "brand": "SVR",
+    "name": "Clairial Serum Brighten Dark Spots",
+    "price": 23.31,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1571290274554-6a2eaa771e5f?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "71757"
+  },
+  {
+    "brand": "Uriage",
+    "name": "Age Protect Radiant Overnight Skin",
+    "price": 13.57,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65373"
+  },
+  {
+    "brand": "Uriage",
+    "name": "Age Protect Reduce Eye Wrinkles",
+    "price": 25.38,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "65241"
+  },
+  {
+    "brand": "Uriage",
+    "name": "Age Protect Serum Reduce Wrinkles Now",
+    "price": 26.82,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "65374"
+  },
+  {
+    "brand": "Uriage",
+    "name": "Bari\u00c3\u00a9derm Hand Cream Soothe & Repair Dry Hands",
+    "price": 14.66,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65372"
+  },
+  {
+    "brand": "Uriage",
+    "name": "Bari\u00c3\u00a9sun SPF50+  Fragrance-Free Sun Protection",
+    "price": 19.7,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "65948"
+  },
+  {
+    "brand": "Vichy",
+    "name": "Anti-Dandruff Shampoo Clear Scalp, Confidence Boost",
+    "price": 35.85,
+    "category": "hair",
+    "image": "https://images.unsplash.com/photo-1599307767928-4b72ff24e41b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "39964"
+  },
+  {
+    "brand": "Vichy",
+    "name": "Anti-Dark Spot Radiant, Even Skin",
+    "price": 24.34,
+    "category": "sunscreen",
+    "image": "https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "37264"
+  },
+  {
+    "brand": "Vichy",
+    "name": "Anti-Transpirant Lasting Freshness",
+    "price": 21.83,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "37236"
+  },
+  {
+    "brand": "Vichy",
+    "name": "AQ Riche Intense Hydration for Dry Skin",
+    "price": 22.28,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1595349954524-9aa0a9c26e5b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "37277"
+  },
+  {
+    "brand": "Vichy",
+    "name": "Arosol Anti-Traces Stain-Free Confidence",
+    "price": 30.56,
+    "category": "body",
+    "image": "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "37253"
+  },
+  {
+    "brand": "Vichy",
+    "name": "AutoBronz Get a Natural Tan",
+    "price": 19.41,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1573461160327-f9c45f4cfc3b?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "64393"
+  },
+  {
+    "brand": "Vichy",
+    "name": "Clinical Control Deodorant 96H Freshness",
+    "price": 20.79,
+    "category": "skincare",
+    "image": "https://images.unsplash.com/photo-1570194065650-d99fb4bedf0a?auto=format&fit=crop&q=80&w=400",
+    "rating": 4,
+    "id": "72084"
+  },
+  {
+    "brand": "Vichy",
+    "name": "Correct 35 Flawless, Long-Lasting Coverage",
+    "price": 28.74,
+    "category": "makeup",
+    "image": "https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&q=80&w=400",
+    "rating": 5,
+    "id": "29241"
+  }
+]

@@ -56,6 +56,40 @@ export type AdminControlsState = {
   audits: AdminOpsAuditEntry[]
 }
 
+type DbToggleOverride = {
+  id: string
+  enabled: boolean
+  updatedAt: Date
+  updatedByUserId: string
+  updatedByEmail: string
+}
+
+type DbBrandSpotlight = {
+  id: string
+  spotlightJson: Record<string, unknown>
+  updatedAt: Date
+  updatedByUserId: string
+  updatedByEmail: string
+}
+
+type DbOfferBanner = {
+  id: string
+  bannerJson: Record<string, unknown>
+  updatedAt: Date
+  updatedByUserId: string
+  updatedByEmail: string
+}
+
+type DbAuditLogRow = {
+  id: string
+  type: string
+  targetId: string
+  actorUserId: string
+  actorEmail: string
+  createdAt: Date
+  changes: Record<string, unknown>
+}
+
 const STORAGE_DIR = path.join(process.cwd(), '.data')
 const USER_OVERRIDES_FILE = path.join(STORAGE_DIR, 'admin-user-overrides.json')
 const MAX_AUDIT = 80
@@ -116,10 +150,10 @@ async function writeUserOverridesFile(data: Record<string, UserOverride>) {
 export async function readAdminControlsState(): Promise<AdminControlsState> {
   try {
     const [dbToggles, dbSpotlights, dbOfferBanners, dbAudits, userOverrides] = await Promise.all([
-      prisma.cmsToggleOverride.findMany().catch(() => [] as Awaited<ReturnType<typeof prisma.cmsToggleOverride.findMany>>),
-      prisma.cmsBrandSpotlight.findMany({ orderBy: { position: 'asc' } }).catch(() => [] as Awaited<ReturnType<typeof prisma.cmsBrandSpotlight.findMany>>),
-      prisma.cmsOfferBanner.findMany({ orderBy: { position: 'asc' } }).catch(() => [] as Awaited<ReturnType<typeof prisma.cmsOfferBanner.findMany>>),
-      prisma.cmsAuditLog.findMany({ orderBy: { createdAt: 'desc' }, take: MAX_AUDIT }).catch(() => [] as Awaited<ReturnType<typeof prisma.cmsAuditLog.findMany>>),
+      prisma.cmsToggleOverride.findMany().catch((): DbToggleOverride[] => []),
+      prisma.cmsBrandSpotlight.findMany({ orderBy: { position: 'asc' } }).catch((): DbBrandSpotlight[] => []),
+      prisma.cmsOfferBanner.findMany({ orderBy: { position: 'asc' } }).catch((): DbOfferBanner[] => []),
+      prisma.cmsAuditLog.findMany({ orderBy: { createdAt: 'desc' }, take: MAX_AUDIT }).catch((): DbAuditLogRow[] => []),
       readUserOverridesFile(),
     ])
 
