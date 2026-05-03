@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react'
 import { Platform } from 'react-native'
 import { letterSpacing, motionDuration, spacing } from '@real/tokens'

@@ -1,5 +1,4 @@
 import { headers } from 'next/headers'
-import { cacheLife, cacheTag } from 'next/cache'
 import { brandProvider, categoryProvider } from '@real/providers'
 import { listProducts } from '../catalog/product-list.service'
 
@@ -31,24 +30,7 @@ export async function createInternalServiceRequest(
   })
 }
 
-async function getCachedPublicCatalogCollections(options: PublicCatalogOptions) {
-  'use cache'
-
-  cacheLife('minutes')
-  cacheTag('home')
-  cacheTag('shop')
-  cacheTag('sales')
-  cacheTag('search')
-  if (options.includeProducts) {
-    cacheTag('products:list')
-  }
-  if (options.includeCategories) {
-    cacheTag('catalog:categories')
-  }
-  if (options.includeBrands) {
-    cacheTag('catalog:brands')
-  }
-
+function getCachedPublicCatalogCollections(options: PublicCatalogOptions) {
   return getPublicCatalogCollectionsCore(options)
 }
 

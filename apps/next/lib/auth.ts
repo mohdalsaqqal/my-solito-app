@@ -8,35 +8,52 @@ import {
   getBetterAuthTrustedOrigins,
 } from '../app/api/_lib/security-policy'
 
-const betterAuthSecret = getBetterAuthSecret()
+let _auth: any = null
 
-if (!betterAuthSecret) {
-  throw new Error(
-    'A valid BETTER_AUTH_SECRET is required to initialize Better Auth in this environment.'
-  )
+function createAuth() {
+  const betterAuthSecret = getBetterAuthSecret()
+
+  if (!betterAuthSecret) {
+    throw new Error(
+      'A valid BETTER_AUTH_SECRET is required to initialize Better Auth in this environment.'
+    )
+  }
+
+  return betterAuth({
+    baseURL: getBetterAuthBaseUrl(),
+    secret: betterAuthSecret,
+    trustedOrigins: getBetterAuthTrustedOrigins(),
+    database: prismaAdapter(prisma, {
+      provider: 'postgresql',
+    }),
+    emailAndPassword: {
+      enabled: true,
+      revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({ user, url }: { user: any; url: string }) => {
+        if (!isBetterAuthPasswordResetDeliveryEnabled()) {
+          throw new Error('Better Auth password reset delivery is not configured in this environment.')
+        }
+
+        if (process.env.NODE_ENV !== 'test') {
+          console.info('[auth] password-reset-link-created', {
+            email: user.email,
+            url,
+          })
+        }
+      },
+    },
+  })
 }
 
-export const auth = betterAuth({
-  baseURL: getBetterAuthBaseUrl(),
-  secret: betterAuthSecret,
-  trustedOrigins: getBetterAuthTrustedOrigins(),
-  database: prismaAdapter(prisma, {
-    provider: 'postgresql',
-  }),
-  emailAndPassword: {
-    enabled: true,
-    revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, url }) => {
-      if (!isBetterAuthPasswordResetDeliveryEnabled()) {
-        throw new Error('Better Auth password reset delivery is not configured in this environment.')
-      }
-
-      if (process.env.NODE_ENV !== 'test') {
-        console.info('[auth] password-reset-link-created', {
-          email: user.email,
-          url,
-        })
-      }
-    },
+export const auth = new Proxy({} as any, {
+  get(_target: any, prop: string | symbol) {
+    if (!_auth) {
+      _auth = createAuth()
+    }
+    const value = _auth[prop]
+    if (typeof value === 'function') {
+      return value.bind(_auth)
+    }
+    return value
   },
-})
+}) as ReturnType<typeof betterAuth>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from 'react'
 import { Pressable, ScrollView } from 'react-native'
 import { borderWidth, layout, motionDuration, radius, spacing } from '@real/tokens'

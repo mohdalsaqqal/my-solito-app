@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache'
 import { productProvider, reviewProvider } from '@real/providers'
 import { getCachedHomeCmsResponseData } from '../home/home-cms.service'
 import { getPublicCatalogCollections } from '../_lib/public-discovery'
@@ -9,14 +8,6 @@ function toErrorMessage(cause: unknown, fallback: string) {
 }
 
 async function getCachedPublicProductData(productId: string) {
-  'use cache'
-
-  cacheLife('minutes')
-  cacheTag('home')
-  cacheTag('shop')
-  cacheTag('sales')
-  cacheTag('search')
-
   const [productResult, productsResult, reviewsResult] = await Promise.allSettled([
     productProvider.get(productId),
     getPublicCatalogCollections({ includeProducts: true }),

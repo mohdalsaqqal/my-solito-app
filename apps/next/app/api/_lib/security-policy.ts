@@ -36,6 +36,12 @@ export function isReleaseLikeEnvironment() {
     return true
   }
 
+  // Vercel preview deployments should not be treated as release-like.
+  const vercelEnv = process.env.VERCEL_ENV?.trim().toLowerCase()
+  if (vercelEnv === 'preview') {
+    return false
+  }
+
   return process.env.NODE_ENV === 'production'
 }
 

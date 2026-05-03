@@ -1,8 +1,10 @@
+import { Suspense } from 'react'
 import { ShopPageClient } from './ShopPageClient'
+import { ShopPageSkeleton } from './ShopPageSkeleton'
 import { getHomePageInitialData } from '../../server/services/home/home-page.service'
 import { createStorefrontServiceContext } from '../../server/services/_lib/storefront-service-context'
 
-export default async function ShopPage() {
+async function ShopPageContent() {
   const context = await createStorefrontServiceContext({
     pathname: '/api/cms/home',
   })
@@ -14,6 +16,14 @@ export default async function ShopPage() {
       initialCmsHome={cmsHome}
       initialError={error}
     />
+  )
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<ShopPageSkeleton />}>
+      <ShopPageContent />
+    </Suspense>
   )
 }
 

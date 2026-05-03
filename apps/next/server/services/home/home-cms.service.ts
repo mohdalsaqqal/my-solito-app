@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache'
 import { cmsProvider, productProvider, productQueryProvider, releaseProvider } from '@real/providers'
 import { parseHomeBlock, localizeString } from '@real/app/lib/cms/blocks'
 import { createHomePagePayload } from '@real/app/lib/layout/page-schema'
@@ -554,34 +553,14 @@ export async function getHomeCmsResponseData(request: Request) {
 
 const HOME_CACHE_TTL_MS = 3 * 60 * 1000 // 3 minutes
 
-/**
- * Fetch CMS home data with an in-memory cache layer.
- *
- * Non-preview requests are cached by locale + storeId + release environment.
- * Preview requests always bypass the cache.
- *
- * Next.js Data Cache ('use cache') with `cacheLife('minutes')` and `cacheTag('cms-home')`.
- * Preview requests bypass the cache immediately.
- * Cache is invalidated by revalidation tags when a release is published.
- */
 export async function getCachedHomeCmsResponseData(requestUrl: string) {
-  'use cache'
-
-  cacheLife('minutes')
-  cacheTag('cms-home')
-
   const url = new URL(requestUrl)
   const previewContext = resolvePreviewContext(requestUrl)
-
-  // Reconstruct a Request for downstream functions that expect it
   const request = new Request(requestUrl)
 
-  // Preview requests are never cached — bypass immediately.
   if (previewContext.valid) {
     return getHomeCmsResponseData(request)
   }
 
-  // Next.js 'use cache' handles deduplication and invalidation via cacheTag.
-  // The manual cmsCache (cms-cache.ts) is NOT used here to avoid dual-cache confusion.
   return getHomeCmsResponseData(request)
 }

@@ -250,21 +250,30 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  const session = await parseSessionCookie(request.cookies.get(AUTH_SESSION_COOKIE)?.value)
+  const BETTER_AUTH_COOKIE = 'better-auth.session_token'
 
-  if (session && adminPanelRoles.includes(session.role) && matchesPrefix(pathname, customerProtectedPrefixes)) {
+  const session = await parseSessionCookie(request.cookies.get(AUTH_SESSION_COOKIE)?.value)
+  const hasBetterAuthCookie = Boolean(request.cookies.get(BETTER_AUTH_COOKIE)?.value)
+  const hasSession = Boolean(session) || hasBetterAuthCookie
+  const sessionRole = session?.role
+
+  // Route admin/ops users away from customer pages
+  if (session && adminPanelRoles.includes(sessionRole as Role) && matchesPrefix(pathname, customerProtectedPrefixes)) {
     return redirectTo(request, locale, '/admin')
   }
 
-  if (session?.role === 'pharmacist' && matchesPrefix(pathname, customerProtectedPrefixes)) {
+  if (sessionRole === 'pharmacist' && matchesPrefix(pathname, customerProtectedPrefixes)) {
     return redirectTo(request, locale, '/pharmacist')
   }
 
+  // Admin routes: require any session. Role enforcement is at the route level.
   if (matchesPrefix(pathname, adminPrefixes)) {
-    if (!session) {
+    if (!hasSession) {
       return redirectTo(request, locale, '/auth/login', request.nextUrl.pathname)
     }
-    if (!adminPanelRoles.includes(session.role)) {
+    // If we have a legacy session with known role, enforce it.
+    // Better Auth sessions pass through — routes enforce roles via request-auth.
+    if (session && !adminPanelRoles.includes(sessionRole as Role)) {
       return redirectTo(request, locale, '/')
     }
 
@@ -275,11 +284,12 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
+  // Pharmacist routes
   if (matchesPrefix(pathname, pharmacistPrefixes)) {
-    if (!session) {
+    if (!hasSession) {
       return redirectTo(request, locale, '/auth/login', request.nextUrl.pathname)
     }
-    if (session.role !== 'pharmacist' && session.role !== 'admin') {
+    if (session && sessionRole !== 'pharmacist' && sessionRole !== 'admin') {
       return redirectTo(request, locale, '/')
     }
 
@@ -290,20 +300,28 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
+  // Customer-protected routes
   if (matchesPrefix(pathname, customerProtectedPrefixes)) {
-    if (!session) {
+    if (!hasSession) {
       return redirectTo(request, locale, '/auth/login', request.nextUrl.pathname)
     }
   }
 
-  if (pathname.startsWith('/auth') && session) {
-    if (adminPanelRoles.includes(session.role)) {
+  // Redirect logged-in users away from auth pages
+  if (pathname.startsWith('/auth') && hasSession) {
+    if (session && adminPanelRoles.includes(sessionRole as Role)) {
       return redirectTo(request, locale, '/admin')
     }
-    if (session.role === 'pharmacist') {
+    if (sessionRole === 'pharmacist') {
       return redirectTo(request, locale, '/pharmacist')
     }
-    return redirectTo(request, locale, '/account')
+    // Better Auth sessions without known role → go to account
+    if (!session && hasBetterAuthCookie) {
+      return redirectTo(request, locale, '/account')
+    }
+    if (session) {
+      return redirectTo(request, locale, '/account')
+    }
   }
 
   if (!matchesPrefix(pathname, publicPrefixes) && !matchesPrefix(pathname, customerProtectedPrefixes) && !matchesPrefix(pathname, adminPrefixes) && !matchesPrefix(pathname, pharmacistPrefixes)) {

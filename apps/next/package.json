@@ -7,7 +7,7 @@
     "dev": "NODE_OPTIONS=--max-old-space-size=8192 next dev",
     "predev": "prisma generate --schema prisma/schema.prisma",
     "dev:stable": "NODE_OPTIONS=--max-old-space-size=8192 node scripts/dev-stable.mjs",
-    "prebuild": "prisma generate --schema prisma/schema.prisma",
+    "prebuild": "prisma generate --schema prisma/schema.prisma && prisma migrate deploy --schema prisma/schema.prisma",
     "build": "NODE_OPTIONS=--max-old-space-size=8192 next build",
     "start": "next start",
     "lint": "next lint",

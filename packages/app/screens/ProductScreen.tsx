@@ -198,6 +198,7 @@ export const ProductScreen = React.memo(function ProductScreen({
   const pdpTokens = componentTokens.storefrontCommerce.pdp
   const loadErrorTitle = locale === 'ar' ? 'تعذر تحميل المنتج' : 'Unable to load product'
   const retryLabel = locale === 'ar' ? 'إعادة المحاولة' : 'Retry'
+  const browseShopLabel = locale === 'ar' ? 'تصفح المتجر' : 'Browse shop'
   const notFoundTitle = locale === 'ar' ? 'المنتج غير موجود' : 'Product not found'
   const notFoundMessage =
     locale === 'ar'
@@ -328,6 +329,13 @@ export const ProductScreen = React.memo(function ProductScreen({
     )
   }
 
+  const handleBrowseShop = () => {
+    if (Platform.OS === 'web') {
+      const win = (globalThis as { open?: (url?: string, target?: string) => void }).open
+      win?.('/shop', '_self')
+    }
+  }
+
   if (error) {
     return (
       <PageScaffold variant='product' density='tight' scroll='auto'>
@@ -336,8 +344,9 @@ export const ProductScreen = React.memo(function ProductScreen({
             <Box gap='md'>
               <Text variant='h2'>{loadErrorTitle}</Text>
               <Text tone='muted'>{error}</Text>
-              <Box style={isCompact ? undefined : { width: spacing.xxl * 3 }}>
+              <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                 <Button variant='outline' onPress={onReload}>{retryLabel}</Button>
+                <Button variant='ghost' onPress={handleBrowseShop}>{browseShopLabel}</Button>
               </Box>
             </Box>
           </Section>
@@ -354,8 +363,9 @@ export const ProductScreen = React.memo(function ProductScreen({
             <Box gap='md'>
               <Text variant='h2'>{notFoundTitle}</Text>
               <Text tone='muted'>{notFoundMessage}</Text>
-              <Box style={isCompact ? undefined : { width: spacing.xxl * 3 }}>
+              <Box style={{ flexDirection: 'row', gap: spacing['8'] }}>
                 <Button variant='outline' onPress={onReload}>{refreshLabel}</Button>
+                <Button variant='ghost' onPress={handleBrowseShop}>{browseShopLabel}</Button>
               </Box>
             </Box>
           </Section>

@@ -396,6 +396,7 @@ export function Header({
   const [authDrawerOpen, setAuthDrawerOpen] = useState(false)
   const [authDrawerLoading, setAuthDrawerLoading] = useState(false)
   const [authDrawerError, setAuthDrawerError] = useState<string | null>(null)
+  const [authUser, setAuthUser] = useState<{ name: string; email: string } | null>(null)
   const [showCartToast, setShowCartToast] = useState(false)
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
   const [activeMegaCategoryId, setActiveMegaCategoryId] = useState('')
@@ -725,6 +726,8 @@ export function Header({
             success?: boolean
             data?: {
               userId?: string
+              name?: string
+              email?: string
               role?:
                 | 'customer'
                 | 'pharmacist'
@@ -736,32 +739,68 @@ export function Header({
             } | null
           }
         | null
-      const role = response.ok && payload?.success ? payload?.data?.role : undefined
-      if (role === 'pharmacist') {
-        navigateToHref('/pharmacist')
-        return
-      }
-      if (
-        role === 'admin' ||
-        role === 'marketing' ||
-        role === 'catalog' ||
-        role === 'support' ||
-        role === 'ops'
-      ) {
-        navigateToHref('/admin')
-        return
-      }
       const hasSession = Boolean(response.ok && payload?.success && payload?.data?.userId)
       if (hasSession) {
-        navigateToHref('/account')
+        setAuthUser({ name: payload?.data?.name ?? '', email: payload?.data?.email ?? '' })
       } else {
-        setAuthDrawerError(null)
-        setAuthDrawerOpen(true)
+        setAuthUser(null)
       }
+      setAuthDrawerError(null)
+      setAuthDrawerOpen(true)
     } catch {
+      setAuthUser(null)
       setAuthDrawerError(null)
       setAuthDrawerOpen(true)
     }
+  }
+
+  const handleAuthRegister = async (input: { name: string; email: string; password: string }) => {
+    setAuthDrawerLoading(true)
+    setAuthDrawerError(null)
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+        credentials: 'include',
+      })
+      const json = await response.json()
+      if (!response.ok || !json?.success) {
+        setAuthDrawerError(
+          json?.error?.message || 'Unable to create account. Please try again.'
+        )
+        return
+      }
+      setAuthUser({ name: json.data?.name ?? '', email: json.data?.email ?? '' })
+      setAuthDrawerOpen(false)
+      const role = json.data?.role as string | undefined
+      if (role === 'pharmacist') {
+        navigateToHref('/pharmacist')
+      } else if (role === 'admin' || role === 'marketing' || role === 'catalog' || role === 'support' || role === 'ops') {
+        navigateToHref('/admin')
+      } else {
+        navigateToHref('/account')
+      }
+    } catch {
+      setAuthDrawerError('Something went wrong. Please try again.')
+    } finally {
+      setAuthDrawerLoading(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      })
+    } catch {
+      // Logout is best-effort
+    }
+    setAuthUser(null)
+    setAuthDrawerOpen(false)
+    navigateToHref('/')
   }
 
   const handleAuthLogin = async (input: { email: string; password: string }) => {
@@ -782,6 +821,7 @@ export function Header({
         return
       }
       // Login succeeded — close drawer and navigate
+      setAuthUser({ name: json.data?.name ?? '', email: json.data?.email ?? '' })
       setAuthDrawerOpen(false)
       const role = json.data?.role as string | undefined
       if (role === 'pharmacist') {
@@ -1361,7 +1401,7 @@ export function Header({
                       }}
                     >
                       <Text variant='bodySm' weight='700' tone={item.luxury ? 'primary' : 'default'}>
-                        {item.luxury ? '? ' : ''}{item.label}
+                        {item.label}
                       </Text>
                     </Box>
                   </ReusableButton>
@@ -1431,6 +1471,7 @@ export function Header({
         onIncrease={onCartIncrease}
         onDecrease={onCartDecrease}
         onRemove={onCartRemove}
+        locale={locale}
         onViewCart={() => {
           onViewCart?.()
           if (Platform.OS === 'web') {
@@ -1451,6 +1492,9 @@ export function Header({
         error={authDrawerError}
         onClose={() => setAuthDrawerOpen(false)}
         onLogin={handleAuthLogin}
+        onRegister={handleAuthRegister}
+        onSignOut={handleSignOut}
+        user={authUser}
         onGoToRegister={() => {
           setAuthDrawerOpen(false)
           navigateToHref('/auth/register?next=/account')

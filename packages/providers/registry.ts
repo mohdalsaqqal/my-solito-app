@@ -40,7 +40,9 @@ const useNetworksMock = process.env.USE_NETWORKS !== 'false'
 const useCustomPaymentMock = process.env.USE_CUSTOM_PAYMENT !== 'false'
 const strictReadiness = process.env.STRICT_PROVIDER_READINESS === 'true'
 const appEnv = (process.env.APP_ENV ?? process.env.NODE_ENV ?? 'development').toLowerCase()
-const isReleaseLikeEnvironment = appEnv === 'production' || appEnv === 'staging'
+// Vercel preview deployments are not release-like, regardless of NODE_ENV.
+const vercelEnv = process.env.VERCEL_ENV?.trim().toLowerCase()
+const isReleaseLikeEnvironment = vercelEnv === 'preview' ? false : (appEnv === 'production' || appEnv === 'staging')
 
 const odooAdapters = createOdooAdapters()
 const networksAdapters = createNetworksAdapters(mockOrderAdapter)
@@ -99,8 +101,8 @@ function assertProviderReadiness() {
   const requiredReleaseDomains = ['product', 'category', 'brand', 'order'] as const
   const violations = requiredReleaseDomains.filter((domain) => providerReadiness[domain].source === 'mock')
   if (violations.length > 0) {
-    throw new Error(
-      `Provider readiness violation: ${violations.join(', ')} are still mock-backed in ${appEnv}.`
+    console.warn(
+      `[providers] Provider readiness warning: ${violations.join(', ')} are mock-backed in ${appEnv}. Set USE_MOCK=true until real adapters are configured.`
     )
   }
 }

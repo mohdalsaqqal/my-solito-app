@@ -2,6 +2,19 @@ import { useEffect, useMemo, useState } from 'react'
 import type { AppNamespace } from './config'
 import { getI18n, initI18n } from './index'
 import { useCurrentLocale } from './locale-store'
+import { resources } from './resources-loader'
+
+function getEnglishFallback(namespace: string, key: string): string | null {
+  const ns = resources.en[namespace as keyof typeof resources.en]
+  if (!ns) return null
+  const keys = key.split('.')
+  let value: any = ns
+  for (const k of keys) {
+    value = value?.[k]
+    if (value === undefined) return null
+  }
+  return typeof value === 'string' ? value : null
+}
 
 export function useTranslation(namespace: AppNamespace | string = 'common') {
   const locale = useCurrentLocale()
@@ -27,7 +40,7 @@ export function useTranslation(namespace: AppNamespace | string = 'common') {
               ns: namespace,
               ...options,
             })
-          : key,
+          : getEnglishFallback(namespace as string, key) ?? key,
     }),
     [namespace, ready]
   )

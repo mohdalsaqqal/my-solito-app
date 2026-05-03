@@ -1,4 +1,3 @@
-import { cacheLife, cacheTag } from 'next/cache'
 import { createPagePayload } from '@real/app/lib/layout/page-schema'
 import { SEARCH_PAGE_SLUG, SEARCH_PAGE_TYPE } from '@real/app/lib/layout/page-types'
 import type { CMSHomeBlock, SearchResult } from '@real/app/lib/types'
@@ -66,15 +65,6 @@ async function getCachedSearchDiscovery(
   query: string,
   tenantId: string,
 ): Promise<SearchDiscoveryResult> {
-  'use cache'
-
-  cacheLife('minutes')
-  cacheTag('home')
-  cacheTag('shop')
-  cacheTag('sales')
-  cacheTag('search')
-  cacheTag(`tenant:${tenantId}`)
-
   const providerResult = await searchProvider.search(
     { storeId, locale, query },
     createProviderContext({ tenantId, storeId }),
