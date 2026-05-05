@@ -1,7 +1,6 @@
 {
   "framework": "nextjs",
   "installCommand": "yarn install",
-  "buildCommand": "cd apps/next && npx prisma generate --schema prisma/schema.prisma && npx next build",
-  "outputDirectory": "apps/next/.next",
-  "rootDirectory": "."
+  "buildCommand": "cd apps/next && yarn build",
+  "outputDirectory": "apps/next/.next"
 }

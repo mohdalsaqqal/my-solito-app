@@ -1,8 +1,12 @@
 import { matchProviderResult } from '@real/providers/contracts'
 import { cartProvider } from '@real/providers'
 import { fail, ok } from '../_lib/response'
+import { requireAuthSession } from '../_lib/request-auth'
 
-export async function GET() {
+export async function GET(request: Request) {
+  const session = await requireAuthSession(request)
+  if (session instanceof Response) return session
+
   try {
     const result = await cartProvider.get()
     return matchProviderResult(result, {
