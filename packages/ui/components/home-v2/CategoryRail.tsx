@@ -250,7 +250,7 @@ export const CategoryRail = React.memo(function CategoryRail({
                     accessibilityLabel={item.label}
                     onPress={() => onPressItem?.(item)}
                     variant='ghost'
-                    style={({ hovered, focused }) => {
+                    style={({ hovered, focused }: any) => {
                   const active = hovered || focused
                   return {
                     width: tileSize,

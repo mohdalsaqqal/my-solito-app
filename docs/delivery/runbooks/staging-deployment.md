@@ -8,7 +8,7 @@ Purpose: make every client deploy reviewable in staging before production DNS, s
 |---|---|---|
 | Client slug | Platform operator | Lowercase URL-safe tenant id. |
 | Staging domain | Platform operator | Example: `client-staging.example.com`. |
-| Postgres staging database | Platform operator | Separate from production. |
+| Postgres staging database | Platform operator | Neon Postgres recommended for preview; separate from production. |
 | Vercel project or environment | Platform operator | Isolated project preferred for first clients. |
 | Expo EAS project | Platform operator/client | Required before preview build and push smoke. |
 | Odoo sandbox | Client | Optional until client backend is ready. |
@@ -28,10 +28,11 @@ Generated files stay local and secret-managed. Do not commit `clients/`.
 
 ## 2. Provision Staging Database
 
-Create a dedicated Postgres database. Set:
+Create a dedicated Neon Postgres database for preview. Use the pooled connection string for runtime traffic and the direct connection string for Prisma migrations/admin tooling. Set:
 
 ```bash
 DATABASE_URL=postgresql://user:password@host:5432/client_staging
+DIRECT_URL=postgresql://user:password@host:5432/client_staging
 TENANT_ID=client-slug
 ```
 
@@ -56,6 +57,7 @@ Set staging env vars from generated `.env` through the Vercel dashboard or CLI:
 
 ```bash
 vercel env add DATABASE_URL preview
+vercel env add DIRECT_URL preview
 vercel env add TENANT_ID preview
 vercel env add BETTER_AUTH_SECRET preview
 vercel env add AUTH_SESSION_SECRET preview
@@ -75,10 +77,40 @@ AUTH_COOKIE_SECURE=true
 STRICT_PROVIDER_READINESS=true
 ```
 
+For an admin/CMS preview before live commerce credentials exist, explicitly keep commerce mock-backed while Prisma-backed admin/auth/CMS use Neon:
+
+```bash
+USE_MOCK=true
+STRICT_PROVIDER_READINESS=false
+USE_MEILISEARCH=false
+USE_EMAIL_NOTIFICATIONS=false
+USE_EXPO_PUSH=false
+ENABLE_HSTS=false
+RATE_LIMIT_STORE=prisma
+```
+
 Deploy preview:
 
 ```bash
 vercel deploy
+```
+
+Bootstrap the preview admin user once after migrations succeed. Use strong temporary shell env values and clear them after the command:
+
+```bash
+ADMIN_EMAIL=admin@example.com \
+ADMIN_PASSWORD="replace-with-strong-password" \
+yarn seed:admin
+```
+
+Optional pharmacist bootstrap:
+
+```bash
+ADMIN_EMAIL=admin@example.com \
+ADMIN_PASSWORD="replace-with-strong-password" \
+PHARMACIST_EMAIL=pharmacist@example.com \
+PHARMACIST_PASSWORD="replace-with-strong-password" \
+yarn seed:admin
 ```
 
 Promote only after verification:

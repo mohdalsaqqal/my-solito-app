@@ -1,6 +1,6 @@
 # Commerce Platform Delivery Checklist
 
-Last reviewed: 2026-05-01
+Last reviewed: 2026-05-05
 
 This file is the production-readiness tracker. `AGENTS.md` remains the sole source of truth for architecture rules; this checklist records delivery status against the commerce platform lifecycle.
 
@@ -134,12 +134,12 @@ Legend:
 - [x] EAS/Expo app shell exists.
 - [~] Environment example and Better Auth secret contracts exist; Infisical/Doppler integration is not implemented.
 - [x] `new-client.ts` provisioning automation exists with dry-run, generated env, and custom output support.
-- [~] Per-client database/app provisioning automation has a generated config/runbook path; live Vercel/EAS/database provisioning still requires credentials.
+- [~] Per-client database/app provisioning automation has a generated config/runbook path; Vercel Preview + Neon preview DB were provisioned for the first hosted preview on 2026-05-05. Preview is Ready but currently Vercel Deployment Protection-gated for public browser/API smoke. EAS/store provisioning still requires credentials.
 - [x] Automated Postgres backups and PITR are documented in `docs/delivery/runbooks/backup-recovery.md`.
 - [x] EAS Build/Submit/Update rollout runbook exists in `docs/eas-runbook.md`; real Expo project/store credentials still need client setup.
 - [x] Per-client staging deployment process is documented in `docs/delivery/runbooks/staging-deployment.md`.
 - [x] DevOps deploy-readiness smoke passes through `yarn verify:devops-deployment`.
-- [x] Deploy profile passes through `yarn verify:delivery:deploy`.
+- [x] Deploy profile passes through `yarn verify:delivery --profile deploy`.
 
 ## 6. Operations & Observability
 

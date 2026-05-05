@@ -49,7 +49,7 @@ function SurfaceButton({
       onPress={onPress}
       variant='ghost'
       size='default'
-      style={({ hovered, focused }) => {
+      style={({ hovered, focused }: any) => {
         const active = hovered || focused
         return {
           minHeight: sharedCtaTokens.minHeight,
@@ -238,7 +238,7 @@ export const BrandSpotlightPanel = React.memo(function BrandSpotlightPanel({
                   onPress={() => brand.href && onNavigate?.(brand.href)}
                   variant='ghost'
                 >
-                  {({ hovered, focused }) => {
+                  {({ hovered, focused }: any) => {
                     const active = hovered || focused
                     return (
                       <Box

@@ -7,6 +7,9 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const ROOT_DIR = path.resolve(__dirname, '..')
 const PORT = 3000
+const baseUrl = process.env.A11Y_BASE_URL ?? process.env.FUNCTIONAL_BASE_URL ?? 'http://localhost:3000'
+const useExternalServer = baseUrl !== 'http://localhost:3000'
+const vercelProtectionBypass = process.env.VERCEL_PROTECTION_BYPASS
 
 function run(command, args) {
   return spawnSync(command, args, {
@@ -67,7 +70,9 @@ function cleanupPortListener(port) {
   stopProcessTree(pid)
 }
 
-cleanupPortListener(PORT)
+if (!useExternalServer) {
+  cleanupPortListener(PORT)
+}
 
 function wait(ms) {
   return new Promise((resolve) => {
@@ -76,10 +81,14 @@ function wait(ms) {
 }
 
 async function waitForServer(url, timeoutMs) {
+  const readyUrl = new URL(url)
+  if (vercelProtectionBypass) {
+    readyUrl.searchParams.set('x-vercel-protection-bypass', vercelProtectionBypass)
+  }
   const startedAt = Date.now()
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      const response = await fetch(url)
+      const response = await fetch(readyUrl)
       if (response.ok) {
         return
       }
@@ -92,7 +101,9 @@ async function waitForServer(url, timeoutMs) {
 }
 
 async function main() {
-  const server = process.platform === 'win32'
+  const server = useExternalServer
+    ? null
+    : process.platform === 'win32'
     ? spawn('cmd.exe', ['/c', 'yarn web:dev'], {
         cwd: ROOT_DIR,
         stdio: 'inherit',
@@ -103,7 +114,7 @@ async function main() {
       })
 
   try {
-    await waitForServer('http://localhost:3000', 120_000)
+    await waitForServer(baseUrl, 120_000)
 
     const result = spawnSync(
       process.execPath,
@@ -113,6 +124,7 @@ async function main() {
         stdio: 'inherit',
         env: {
           ...process.env,
+          PLAYWRIGHT_BASE_URL: baseUrl,
           PLAYWRIGHT_SKIP_WEBSERVER: 'true',
         },
       },
@@ -124,6 +136,9 @@ async function main() {
 
     process.exit(result.status ?? 1)
   } finally {
+    if (!server) {
+      return
+    }
     if (process.platform === 'win32' && server.pid) {
       stopProcessTree(server.pid)
     } else {

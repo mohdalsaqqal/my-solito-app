@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const shouldManageWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER !== 'true'
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000'
 
 /**
  * Playwright E2E configuration for REAL Cosmetics Commerce Platform.
@@ -19,7 +20,7 @@ export default defineConfig({
   ],
   outputDir: 'test-results/test-artifacts',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

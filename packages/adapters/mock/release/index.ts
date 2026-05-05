@@ -9,7 +9,7 @@ import {
   ReleaseBlockType,
 } from '@real/providers/contracts'
 
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
+const STORAGE_DIR = process.env.VERCEL ? path.join('/tmp', 'real-commerce') : path.join(process.cwd(), '.tmp')
 const STORAGE_FILE = path.join(STORAGE_DIR, 'mock-releases.json')
 
 type ReleaseStore = {
@@ -357,15 +357,24 @@ async function readStore(): Promise<ReleaseStore> {
       blocks: Array.isArray(parsed.blocks) ? (parsed.blocks as ReleaseBlockRecord[]) : [],
     }
   } catch {
-    await fs.mkdir(STORAGE_DIR, { recursive: true })
-    await fs.writeFile(STORAGE_FILE, JSON.stringify(seedStore), 'utf8')
+    try {
+      await fs.mkdir(STORAGE_DIR, { recursive: true })
+      await fs.writeFile(STORAGE_FILE, JSON.stringify(seedStore), 'utf8')
+    } catch {
+      return seedStore
+    }
     return seedStore
   }
 }
 
 async function writeStore(store: ReleaseStore) {
-  await fs.mkdir(STORAGE_DIR, { recursive: true })
-  await fs.writeFile(STORAGE_FILE, JSON.stringify(store), 'utf8')
+  try {
+    await fs.mkdir(STORAGE_DIR, { recursive: true })
+    await fs.writeFile(STORAGE_FILE, JSON.stringify(store), 'utf8')
+  } catch {
+    // Serverless preview bundles are read-only. Mutations against the mock
+    // adapter are best-effort because production CMS data lives in Prisma.
+  }
 }
 
 export const mockReleaseAdapter: ReleaseProvider = {

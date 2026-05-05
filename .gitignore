@@ -158,3 +158,5 @@ buck-out/
 */fastlane/screenshots/
 .env*.local
 .gstack/
+
+.vercel

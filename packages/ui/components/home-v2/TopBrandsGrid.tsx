@@ -126,7 +126,7 @@ function BrandTile({
       onPress={() => onPressItem?.(item)}
       variant='ghost'
       size='default'
-      style={({ hovered, focused }) => {
+      style={({ hovered, focused }: any) => {
         const active = hovered || focused
         return {
           width: tileSize,

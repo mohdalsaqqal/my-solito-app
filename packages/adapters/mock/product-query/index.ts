@@ -2,7 +2,7 @@ import { ProductQueryProvider, ProductQuery } from '@real/providers/contracts'
 import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
+const STORAGE_DIR = process.env.VERCEL ? path.join('/tmp', 'real-commerce') : path.join(process.cwd(), '.tmp')
 const STORAGE_FILE = path.join(STORAGE_DIR, 'mock-product-queries.json')
 
 const seedQueries: ProductQuery[] = [
@@ -34,15 +34,23 @@ async function readQueries(): Promise<ProductQuery[]> {
     if (!Array.isArray(parsed)) return []
     return parsed as ProductQuery[]
   } catch {
-    await fs.mkdir(STORAGE_DIR, { recursive: true })
-    await fs.writeFile(STORAGE_FILE, JSON.stringify(seedQueries), 'utf8')
+    try {
+      await fs.mkdir(STORAGE_DIR, { recursive: true })
+      await fs.writeFile(STORAGE_FILE, JSON.stringify(seedQueries), 'utf8')
+    } catch {
+      return seedQueries
+    }
     return seedQueries
   }
 }
 
 async function writeQueries(queries: ProductQuery[]) {
-  await fs.mkdir(STORAGE_DIR, { recursive: true })
-  await fs.writeFile(STORAGE_FILE, JSON.stringify(queries), 'utf8')
+  try {
+    await fs.mkdir(STORAGE_DIR, { recursive: true })
+    await fs.writeFile(STORAGE_FILE, JSON.stringify(queries), 'utf8')
+  } catch {
+    // Serverless preview bundles are read-only; mock query mutations are best-effort.
+  }
 }
 
 export const mockProductQueryAdapter: ProductQueryProvider = {

@@ -1,5 +1,16 @@
 ﻿# MEMORY.md - Long-Term Decisions & Conventions
 
+## 2026-05-05 - Vercel Preview Deployment With Neon Prisma
+
+- First hosted preview uses Neon Postgres for Prisma-backed admin/auth/CMS data and keeps commerce/search/payment/email/push providers mock or disabled.
+- Preview Neon project: `plain-tree-32144170`; branch: `br-sweet-band-ajcelzun`; database: `neondb`.
+- Vercel Preview URL: `https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app`.
+- `DATABASE_URL` should use the Neon pooled/runtime connection; `DIRECT_URL` should use the Neon direct connection for Prisma migrations/admin tooling.
+- `scripts/seed-admin.mjs` is env-driven: requires `ADMIN_EMAIL` and `ADMIN_PASSWORD`, optional pharmacist vars, idempotent upserts, Better Auth scrypt hash format.
+- Do not use the live Neon preview DB as the fixture DB for local route tests; referral tests expect isolated seeded state.
+- `apps/next/package.json` must not set package-scope `"type": "module"` for Vercel serverless output; Vercel's Next launcher requires the emitted route files as CommonJS.
+- Mock commerce adapters that persist fallback state must use `/tmp/real-commerce` on Vercel, not `process.cwd()/.tmp`, because the deployed function bundle is read-only.
+
 ## 2026-05-01 - Security Compliance Gate
 
 - Security headers are centralized in `apps/next/next.config.mjs`.
@@ -44,7 +55,7 @@
 - `hasAdminDomainPermission(role, domain, required, customPermissions?)` — if customPermissions has entries, they override role matrix. Domains NOT in customPermissions default to 'none'.
 - `requireAdminDomainSession` reads per-user permissions from `.data/admin-user-overrides.json` via `resolveUserDomainPermissions`.
 - Client-side: `canAccessDomain(role, domain, customPermissions?)` in `admin-permissions.ts`. AdminShell fetches user list on mount to get domainPermissions.
-- Admin creates users via `POST /api/admin/users` (customers:full). Slide-over form at `/admin/customers` toggles per-domain: None → Full → Read → Off.
+- Admin creates users via `POST /api/admin/users` (customers:full). Slide-over form at `/admin/customers` toggles per-domain: None ? Full ? Read ? Off.
 
 ## 2026-04-30 — CMS FAQ Accordion Block
 
@@ -56,13 +67,13 @@
 
 ## 2026-04-30 — Platform.OS Cleanup Pattern
 
-- `useHeaderScroll.ts` → `useHeaderScroll.native.ts`: web uses `addEventListener('scroll')`, native uses `subscribeNativeScrollOffset()`.
+- `useHeaderScroll.ts` ? `useHeaderScroll.native.ts`: web uses `addEventListener('scroll')`, native uses `subscribeNativeScrollOffset()`.
 - Guard check: `style={{...}}` with tokens on SAME LINE triggers violation. Multiline style objects pass.
 
 ## 2026-04-30 - Admin Auth Smoke + Full API Suite Rerun
 
-- `apps/next/scripts/smoke-admin-auth.mjs` — self-contained admin auth smoke using real route handlers + mocked Better Auth. Tests login→session→admin RBAC for admin, customer, ops, unauthenticated roles across catalog/CMS/ops domains.
-- `admin-route-auth.test.ts` requires `NODE_ENV=test` — `resolveAppOwnedRoleForUser` bypasses Prisma in test mode via `inferRoleFromEmail`. With `NODE_ENV=development`, Prisma query fails → 401.
+- `apps/next/scripts/smoke-admin-auth.mjs` — self-contained admin auth smoke using real route handlers + mocked Better Auth. Tests login?session?admin RBAC for admin, customer, ops, unauthenticated roles across catalog/CMS/ops domains.
+- `admin-route-auth.test.ts` requires `NODE_ENV=test` — `resolveAppOwnedRoleForUser` bypasses Prisma in test mode via `inferRoleFromEmail`. With `NODE_ENV=development`, Prisma query fails ? 401.
 - Full API suite (225/225) runs clean via direct `node`/`tsx` command. Previous ENOSPC was Yarn pipe buffer issue, not disk space. Always use direct Node command (`node ../../node_modules/tsx/dist/cli.mjs --test`) for full suite, not `yarn test:api`.
 - Line 285 was last code-verifiable `[ ]` in checklist — all remaining items deferred, blocked by device/credentials/infra, or pre-launch.
 
@@ -352,15 +363,15 @@
 
 All 11 phases from `joyful-stirring-breeze.md` implemented and verified. Key decisions baked in:
 
-- **Phase 9 (Token foundations):** `amberWarm` darkened for WCAG 4.66:1, `salePrice` → commerce burgundy, `surface` → warm white, caption/label lineHeight → `normal`, card brand weight → 500, countdown digits → white
-- **Phase 10 (Quality polish):** Unified hover system (ProductCard lift 2px + shadow, image scale 1.03, 200ms easeOut); 3-tier radius (md=6px cards, xl=12px hero, full=pills); product image `contain→cover`
-- **Phase 0 (TopPromoBar demotion):** `c.inkBlack→c.roseBlush`, weight 700→500, `tone='inverse'→'default'`
-- **Phase 6 (Section headers):** Tiered `size` prop (lg/28px serif, md/18px sans, sm/16px sans); eyebrow → `c.roseDeep` on `c.roseBlush` (6.00:1 WCAG); meta weight 600→500; action label appends " →"
-- **Phase 1 (Category strip):** Ghost buttons → 56px circles with icon/label below; removed header; added `icon` to `HomeCategoryItem` type
-- **Phase 3 (Product rail density):** Card width 240px → 180px
-- **Phase 7 (Brand rail):** Plain text → `MarketplaceSectionHeader` (size=sm); added `onPressViewAll`
-- **Phase 4 (Hero carousel):** Gradient 30%→40%/height 60%→70%; title/subtitle overlays (Playfair serif 48px, Manrope 14px); CTA → commercePrimary burgundy; `cardsInViewport` 2.8→2.2
-- **Phase 5 (Section spacing):** `getSectionGap()` helper with type-pair logic (hero→cat=16px, flash=40px, newsletter=64px, editorial=48px, default=32px)
+- **Phase 9 (Token foundations):** `amberWarm` darkened for WCAG 4.66:1, `salePrice` ? commerce burgundy, `surface` ? warm white, caption/label lineHeight ? `normal`, card brand weight ? 500, countdown digits ? white
+- **Phase 10 (Quality polish):** Unified hover system (ProductCard lift 2px + shadow, image scale 1.03, 200ms easeOut); 3-tier radius (md=6px cards, xl=12px hero, full=pills); product image `contain?cover`
+- **Phase 0 (TopPromoBar demotion):** `c.inkBlack?c.roseBlush`, weight 700?500, `tone='inverse'?'default'`
+- **Phase 6 (Section headers):** Tiered `size` prop (lg/28px serif, md/18px sans, sm/16px sans); eyebrow ? `c.roseDeep` on `c.roseBlush` (6.00:1 WCAG); meta weight 600?500; action label appends " ?"
+- **Phase 1 (Category strip):** Ghost buttons ? 56px circles with icon/label below; removed header; added `icon` to `HomeCategoryItem` type
+- **Phase 3 (Product rail density):** Card width 240px ? 180px
+- **Phase 7 (Brand rail):** Plain text ? `MarketplaceSectionHeader` (size=sm); added `onPressViewAll`
+- **Phase 4 (Hero carousel):** Gradient 30%?40%/height 60%?70%; title/subtitle overlays (Playfair serif 48px, Manrope 14px); CTA ? commercePrimary burgundy; `cardsInViewport` 2.8?2.2
+- **Phase 5 (Section spacing):** `getSectionGap()` helper with type-pair logic (hero?cat=16px, flash=40px, newsletter=64px, editorial=48px, default=32px)
 - **Phase 8 (Scroll reveals):** `RevealOnScroll` wrapper with staggered `delayMs=index*40`, `liftY=12`; hero/promo_strip skip
 - **Phase 2 (Flash deals):** `HomeFlashDealsSection` component ready; CMS block has no products field so `FlashSaleBand` remains fallback
 
@@ -369,11 +380,11 @@ All 11 phases from `joyful-stirring-breeze.md` implemented and verified. Key dec
 - `TopBrandsGrid.tsx:170` — `as const` on `textAlign` and `maxWidth`
 
 ### Audit finding fixed
-- `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` → replaced with `colors.black` + `opacity.overlayLight`
+- `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` ? replaced with `colors.black` + `opacity.overlayLight`
 
 ### Verification baseline
-- `yarn guard:checks` ✅ — all 15 checks
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅ — zero errors
+- `yarn guard:checks` ? — all 15 checks
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? — zero errors
 
 ---
 
@@ -757,9 +768,9 @@ Verification:
 - **Lifecycle cache invalidation rule**: successful CMS publish and rollback operations must invalidate the `cms-home` cache tag.
 - **Shared admin client surface updated**: rollback is now part of the admin release contract through `packages/app/lib/endpoints.ts` and `packages/app/lib/api-client.ts`.
 - **Current 004 verification baseline**:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-  - `yarn --cwd apps/next test:api` ✅ (`148/148`)
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+  - `yarn --cwd apps/next test:api` ? (`148/148`)
 - **Current blocker is broader than 004**: `yarn --cwd apps/next build --webpack --debug-prerender` still fails because multiple authenticated/request-bound API routes trigger `NEXT_PRERENDER_INTERRUPTED` during prerender analysis by reading `request.headers` or `request.url`.
 
 ## 2026-04-14 - Next Prerender Route-Handler Boundary Rule
@@ -861,3 +872,12 @@ Verification:
 - `node scripts/verify-delivery.mjs --profile operations` runs guard checks, Next typecheck, and operations/observability smoke.
 - Uptime setup lives at `docs/delivery/runbooks/uptime-monitoring.md`; incident response/rollback lives at `docs/delivery/runbooks/incident-response.md`.
 - Sentry, hosted uptime, centralized logs, alert delivery, and provider health dashboard remain vendor/credential/UI work.
+
+## 2026-05-05 - Vercel Preview Deployment State
+
+- Active Preview deployment: `https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app` (`dpl_DSDncbFqbRiapFazQEwaxopHJuGV`), target `preview`, status `Ready`.
+- Neon preview DB migrations have been applied, including RLS tenant policy migration `20260501000000_rls_tenant_policies`.
+- Preview is protected by Vercel Deployment Protection. Plain public smoke requests will see Vercel auth HTML until protection is bypassed or disabled for testing.
+- Direct protected CLI calls can reach app routes, but `/api/auth/login` should be tested from browser context because non-browser CLI POSTs can be rejected as `AUTH_UNTRUSTED_REQUEST`.
+- Keep project-level Vercel Preview env persistence noted as branch-gated; current working Preview used deployment-scoped env vars.
+

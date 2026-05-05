@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { Order, OrderProvider, OrderStatus } from '@real/providers/contracts'
 
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
+const STORAGE_DIR = process.env.VERCEL ? path.join('/tmp', 'real-commerce') : path.join(process.cwd(), '.tmp')
 const STORAGE_FILE = path.join(STORAGE_DIR, 'mock-orders.json')
 
 const SEED_ORDERS: Order[] = [

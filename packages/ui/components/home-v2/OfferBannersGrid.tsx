@@ -76,7 +76,7 @@ function OfferBannerCard({
       onPress={block.href ? () => onNavigate?.(block.href!) : undefined}
       variant='ghost'
     >
-      {({ hovered, focused }) => {
+      {({ hovered, focused }: any) => {
         const active = hovered || focused
         return (
           <Box

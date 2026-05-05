@@ -22,6 +22,7 @@ function argValue(flag: string): string | null {
 const SLUG = argValue('--slug')
 const NAME = argValue('--name')
 const DOMAINS = argValue('--domains')
+const OUTPUT = argValue('--output')
 const FORCE = args.includes('--force')
 const DRY_RUN = args.includes('--dry-run')
 const HELP = args.includes('--help') || args.includes('-h')
@@ -60,7 +61,7 @@ if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(SLUG)) {
 }
 
 const displayName = NAME ?? SLUG
-const outputDir = join(CLIENTS_DIR, SLUG)
+const outputDir = OUTPUT ? resolve(ROOT, OUTPUT) : join(CLIENTS_DIR, SLUG)
 const envFilePath = join(outputDir, '.env')
 const configFilePath = join(outputDir, 'client.json')
 
@@ -130,6 +131,7 @@ const envContent = [
   '# ── Database ──',
   `# Replace with the provisioned database URL for ${SLUG}.`,
   `DATABASE_URL=postgresql://user:password@host:5432/${SLUG}_db`,
+  `DIRECT_URL=postgresql://user:password@host:5432/${SLUG}_db`,
   '',
   '# ── Rate Limiting ──',
   'RATE_LIMIT_STORE=prisma',
@@ -212,8 +214,9 @@ const clientConfig = {
   },
   provisioningChecklist: [
     'Provision database and update DATABASE_URL in .env',
+    'Set DIRECT_URL to the database direct connection string for Prisma migrations',
     'Provision secrets in secret manager (Infisical/Doppler)',
-    'Configure Vercel/Next deployment with this .env',
+    'Configure staging Vercel/Next deployment with this .env',
     'Run yarn prisma migrate deploy against provisioned database',
     domainList.length > 0
       ? 'Verify DNS and SSL for production domains'
@@ -256,6 +259,7 @@ const requiredKeys = [
   'BETTER_AUTH_SECRET',
   'PREVIEW_TOKEN_SECRET',
   'DATABASE_URL',
+  'DIRECT_URL',
   'STRICT_PROVIDER_READINESS',
 ]
 
@@ -289,10 +293,11 @@ Generated files:
 Next steps:
   1. Copy ${envFilePath} to your deployment environment (Vercel, Infisical, etc.)
   2. Provision a PostgreSQL database and update DATABASE_URL
-  3. Run: npx prisma migrate deploy (from apps/next)
-  4. Run: yarn verify:delivery
-  5. Complete adapter configuration (Odoo, payment, search) per the runbooks
-  6. Follow docs/delivery/runbooks/client-onboarding.md for full checklist
+  3. Set DIRECT_URL to the direct database connection string
+  4. Run: npx prisma migrate deploy (from apps/next)
+  5. Run: yarn verify:delivery
+  6. Complete adapter configuration (Odoo, payment, search) per the runbooks
+  7. Follow docs/delivery/runbooks/client-onboarding.md for full checklist
 `)
 
 process.exit(0)

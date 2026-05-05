@@ -204,7 +204,7 @@ export const TopPromoBar = React.memo(function TopPromoBar({
                     disabled={state === 'disabled'}
                     onPress={() => onPressItem?.(item)}
                     variant='ghost'
-                    style={({ hovered, focused }) => ({
+                    style={({ hovered, focused }: any) => ({
                       opacity: hovered || focused ? 0.9 : 1,
                       transitionProperty: Platform.OS === 'web' ? 'opacity' : undefined,
                       transitionDuration: Platform.OS === 'web' ? `${motionDuration.microInteraction}ms` : undefined,

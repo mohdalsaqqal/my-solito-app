@@ -54,11 +54,13 @@ export function Touchable({
       )}
       {...webInteractionProps}
       style={(state) => {
+        const hovered = (state as any).hovered ?? false
+        const focused = (state as any).focused ?? false
         const dynamicOpacity = disabled
           ? opacity.disabled
           : state.pressed
             ? opacity.medium
-            : state.hovered
+            : hovered
               ? opacity.high
               : 1
 
@@ -84,8 +86,8 @@ export function Touchable({
         typeof children === 'function'
           ? children({
               pressed: state.pressed,
-              hovered: state.hovered ?? false,
-              focused: state.focused ?? false,
+              hovered: (state as any).hovered ?? false,
+              focused: (state as any).focused ?? false,
             })
           : children
       }

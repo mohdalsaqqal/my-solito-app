@@ -1,7 +1,7 @@
 import { TextClassContext } from '@real/ui/reusables/text';
 import { cn } from '@real/ui/reusables/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Platform, Pressable } from 'react-native';
+import { Platform, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 // NOTE: group-* is not supported yet by Uniwind
 
@@ -93,13 +93,21 @@ const buttonTextVariants = cva(
   }
 );
 
-type ButtonProps = React.ComponentProps<typeof Pressable> &
+type WebPressableState = {
+  pressed: boolean;
+  hovered?: boolean;
+  focused?: boolean;
+};
+
+type ButtonProps = Omit<PressableProps, 'children' | 'style'> &
   VariantProps<typeof buttonVariants> & {
+    children?: React.ReactNode | ((state: WebPressableState) => React.ReactNode);
     className?: string;
     href?: string;
     target?: string;
     rel?: string;
     download?: string;
+    style?: StyleProp<ViewStyle> | ((state: WebPressableState) => StyleProp<ViewStyle> | Record<string, unknown>);
   };
 
 const NativePressable = Pressable as unknown as React.ComponentType<any>;

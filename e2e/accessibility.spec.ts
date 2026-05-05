@@ -4,8 +4,13 @@ test.describe('Accessibility', () => {
   test.describe.configure({ mode: 'serial' })
 
   async function gotoHome(page: Page) {
+    const protectionBypass = process.env.VERCEL_PROTECTION_BYPASS
+    const homePath = protectionBypass
+      ? `/?x-vercel-protection-bypass=${encodeURIComponent(protectionBypass)}&x-vercel-set-bypass-cookie=true`
+      : '/'
+
     try {
-      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 })
+      await page.goto(homePath, { waitUntil: 'domcontentloaded', timeout: 60_000 })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       if (!message.includes('ERR_ABORTED') && !message.includes('frame was detached')) {
@@ -13,7 +18,7 @@ test.describe('Accessibility', () => {
       }
 
       await page.waitForTimeout(1_000)
-      await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60_000 })
+      await page.goto(homePath, { waitUntil: 'domcontentloaded', timeout: 60_000 })
     }
 
     await expect(page.locator('body')).toBeVisible()
