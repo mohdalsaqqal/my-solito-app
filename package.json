@@ -42,7 +42,10 @@
     "verify:shopify-scope": "node scripts/smoke-shopify-adapter-scope.mjs",
     "verify:postgresql-mapping": "node scripts/smoke-postgresql-adapter-mapping.mjs",
     "verify:meilisearch-adapter": "node scripts/smoke-meilisearch-adapter.mjs",
+    "verify:notifications": "node scripts/smoke-notifications.mjs",
     "verify:delivery": "node scripts/verify-delivery.mjs",
+    "verify:devops-deployment": "node scripts/verify-devops-deployment.mjs",
+    "verify:delivery:quality": "node scripts/verify-delivery.mjs --profile quality",
     "verify:delivery:functional": "node scripts/verify-delivery.mjs --profile functional",
     "verify:delivery:full": "node scripts/verify-delivery.mjs --profile full",
     "test": "turbo run test",
@@ -67,7 +70,8 @@
     "e2e:a11y": "node scripts/run-e2e-a11y.mjs",
     "e2e:ui": "playwright test --ui",
     "e2e:report": "playwright show-report test-results/html-report",
-    "verify:audit-remediation": "yarn guard:checks && yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false && yarn --cwd apps/next test:api && yarn e2e:a11y"
+    "verify:audit-remediation": "yarn guard:checks && yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false && yarn --cwd apps/next test:api && yarn e2e:a11y",
+    "seed:admin": "node scripts/seed-admin.mjs"
   },
   "packageManager": "yarn@4.13.0",
   "eslintConfig": {

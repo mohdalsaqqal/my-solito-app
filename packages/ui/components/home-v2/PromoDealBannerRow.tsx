@@ -76,7 +76,7 @@ function PromoDealBanner({
       accessibilityLabel={`${item.brandName} — ${item.discountLabel}`}
       onPress={item.href ? () => onNavigate?.(item.href!) : undefined}
       variant='ghost'
-      style={({ hovered, focused }) => {
+      style={({ hovered, focused }: any) => {
         const active = hovered || focused
         return {
           flex: 1,

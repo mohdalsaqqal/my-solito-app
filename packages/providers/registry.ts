@@ -28,12 +28,23 @@ import {
 import { createOdooAdapters } from '@real/adapters/odoo-erp'
 import { createNetworksAdapters } from '@real/adapters/payment-networks'
 import { createCustomPaymentAdapterFromEnv } from '@real/adapters/custom-payment'
+import { createEmailNotificationAdapterFromEnv } from '@real/adapters/email'
 import { createExpoPushNotificationAdapterFromEnv } from '@real/adapters/expo-push'
 import { createMeilisearchSearchAdapterFromEnv } from '@real/adapters/meilisearch'
+import { createMultiChannelNotificationProvider } from '@real/adapters/notification-mux'
 import type { NetworksWebhookPayload } from '@real/adapters/payment-networks'
 
 type ReadinessTier = 'development-only' | 'test-safe' | 'release-ready'
-type ProviderSource = 'mock' | 'odoo' | 'networks' | 'crowdin' | 'custom-payment' | 'expo-push' | 'meilisearch'
+type ProviderSource =
+  | 'mock'
+  | 'odoo'
+  | 'networks'
+  | 'crowdin'
+  | 'custom-payment'
+  | 'expo-push'
+  | 'email'
+  | 'multi-channel'
+  | 'meilisearch'
 
 const useMock = process.env.USE_MOCK !== 'false'
 const useNetworksMock = process.env.USE_NETWORKS !== 'false'
@@ -48,7 +59,9 @@ const odooAdapters = createOdooAdapters()
 const networksAdapters = createNetworksAdapters(mockOrderAdapter)
 const customPaymentAdapter = createCustomPaymentAdapterFromEnv()
 const expoPushAdapter = createExpoPushNotificationAdapterFromEnv()
+const emailNotificationAdapter = createEmailNotificationAdapterFromEnv()
 const meilisearchSearchAdapter = createMeilisearchSearchAdapterFromEnv()
+const pushNotificationProvider = expoPushAdapter ?? mockNotificationAdapter
 
 export const providerEnvironment = {
   appEnv,
@@ -69,7 +82,7 @@ export const providerReadiness: Record<string, { tier: ReadinessTier; source: Pr
   },
   notification: {
     tier: 'development-only',
-    source: expoPushAdapter ? 'expo-push' : 'mock',
+    source: emailNotificationAdapter ? 'multi-channel' : expoPushAdapter ? 'expo-push' : 'mock',
   },
   cart: { tier: 'development-only', source: 'mock' },
   auth: { tier: 'development-only', source: 'mock' },
@@ -114,7 +127,10 @@ export const categoryProvider = useMock ? mockCategoryAdapter : (odooAdapters?.c
 export const brandProvider = useMock ? mockBrandAdapter : (odooAdapters?.brandProvider ?? mockBrandAdapter)
 export const orderProvider = useNetworksMock ? mockOrderAdapter : (networksAdapters?.orderProvider ?? mockOrderAdapter)
 export const paymentProvider = useCustomPaymentMock ? mockPaymentAdapter : (customPaymentAdapter ?? mockPaymentAdapter)
-export const notificationProvider = expoPushAdapter ?? mockNotificationAdapter
+export const notificationProvider = createMultiChannelNotificationProvider({
+  push: pushNotificationProvider,
+  email: emailNotificationAdapter,
+})
 
 export const cartProvider = mockCartAdapter
 export const authProvider = mockAuthAdapter

@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs'
 import * as path from 'node:path'
 import { PricingQuote, Promotion, PromotionProvider } from '@real/providers/contracts'
 
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
+const STORAGE_DIR = process.env.VERCEL ? path.join('/tmp', 'real-commerce') : path.join(process.cwd(), '.tmp')
 const PROMOTIONS_FILE = path.join(STORAGE_DIR, 'mock-promotions.json')
 const QUOTES_FILE = path.join(STORAGE_DIR, 'mock-pricing-quotes.json')
 
@@ -121,8 +121,12 @@ async function readPromotions(): Promise<Promotion[]> {
     return parsed.map(normalizePromotion).filter((item): item is Promotion => Boolean(item))
   } catch {
     const seed = buildSeedPromotions(nowIso())
-    await fs.mkdir(STORAGE_DIR, { recursive: true })
-    await fs.writeFile(PROMOTIONS_FILE, JSON.stringify(seed), 'utf8')
+    try {
+      await fs.mkdir(STORAGE_DIR, { recursive: true })
+      await fs.writeFile(PROMOTIONS_FILE, JSON.stringify(seed), 'utf8')
+    } catch {
+      return seed
+    }
     return seed
   }
 }
@@ -139,8 +143,21 @@ async function readQuotes(): Promise<PricingQuote[]> {
 }
 
 async function writeQuotes(quotes: PricingQuote[]) {
-  await fs.mkdir(STORAGE_DIR, { recursive: true })
-  await fs.writeFile(QUOTES_FILE, JSON.stringify(quotes), 'utf8')
+  try {
+    await fs.mkdir(STORAGE_DIR, { recursive: true })
+    await fs.writeFile(QUOTES_FILE, JSON.stringify(quotes), 'utf8')
+  } catch {
+    // Serverless preview bundles are read-only; mock quote persistence is best-effort.
+  }
+}
+
+async function writePromotions(promotions: Promotion[]) {
+  try {
+    await fs.mkdir(STORAGE_DIR, { recursive: true })
+    await fs.writeFile(PROMOTIONS_FILE, JSON.stringify(promotions), 'utf8')
+  } catch {
+    // Serverless preview bundles are read-only; mock promotion mutations are best-effort.
+  }
 }
 
 function isPromotionActive(promotion: Promotion, atIso: string) {
@@ -177,8 +194,7 @@ export const mockPromotionAdapter: PromotionProvider = {
       code: normalizeCouponCode(input.code) || undefined,
       priority: round2(input.priority),
     })
-    await fs.mkdir(STORAGE_DIR, { recursive: true })
-    await fs.writeFile(PROMOTIONS_FILE, JSON.stringify(promotions), 'utf8')
+    await writePromotions(promotions)
     return { ok: true, data: input }
   },
   async update(id, input) {
@@ -211,8 +227,7 @@ export const mockPromotionAdapter: PromotionProvider = {
       rewards: input.rewards ?? current.rewards,
     }
     promotions[index] = updated
-    await fs.mkdir(STORAGE_DIR, { recursive: true })
-    await fs.writeFile(PROMOTIONS_FILE, JSON.stringify(promotions), 'utf8')
+    await writePromotions(promotions)
     return { ok: true, data: updated }
   },
   async delete(id) {
@@ -225,8 +240,7 @@ export const mockPromotionAdapter: PromotionProvider = {
       }
     }
     const next = promotions.filter((item) => item.id !== id)
-    await fs.mkdir(STORAGE_DIR, { recursive: true })
-    await fs.writeFile(PROMOTIONS_FILE, JSON.stringify(next), 'utf8')
+    await writePromotions(next)
     return { ok: true, data: { id, deleted: true } }
   },
 

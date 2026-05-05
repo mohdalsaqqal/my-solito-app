@@ -192,7 +192,7 @@ const HeroTileCard = React.memo(function HeroTileCard({
       onPress={item.href ? () => onNavigate?.(item.href!) : undefined}
       variant='ghost'
     >
-      {({ hovered, focused }) => {
+      {({ hovered, focused }: any) => {
         const active = hovered || focused
         return (
           <Box

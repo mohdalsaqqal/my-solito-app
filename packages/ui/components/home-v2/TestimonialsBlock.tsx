@@ -38,7 +38,7 @@ function SurfaceButton({
       onPress={onPress}
       variant='ghost'
       size='default'
-      style={({ hovered, focused }) => {
+      style={({ hovered, focused }: any) => {
         const active = hovered || focused
         return {
           minHeight: sharedCtaTokens.minHeight,

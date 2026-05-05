@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { I18nManager, Platform } from 'react-native'
-import { borderWidth, motionDuration, radius, spacing, zIndex } from '@real/tokens'
+import { borderWidth, fontWeights, motionDuration, radius, spacing, typography, zIndex } from '@real/tokens'
 import { Box, Text } from '../../primitives'
 import { useThemeColors } from '../../responsive'
 import { Icon } from '../Icon'
@@ -71,6 +71,13 @@ export const AuthDrawer = React.memo(function AuthDrawer({
   locale = 'en',
 }: AuthDrawerProps) {
   const c = useThemeColors()
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: typography.h5,
+    fontWeight: fontWeights.semibold,
+    marginBottom: spacing.space2,
+    color: c.text,
+  }
   const passwordInputRef = useRef<HTMLInputElement | null>(null)
   const nameInputRef = useRef<HTMLInputElement | null>(null)
   const [mode, setMode] = useState<'signin' | 'register'>('signin')
@@ -463,7 +470,7 @@ export const AuthDrawer = React.memo(function AuthDrawer({
             <div style={{ marginBottom: spacing.space5 }}>
               <label
                 htmlFor="auth-drawer-name"
-                style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: spacing.space2, color: c.text }}
+                style={labelStyle}
               >
                 {registerLabels.nameLabel} *
               </label>
@@ -506,7 +513,7 @@ export const AuthDrawer = React.memo(function AuthDrawer({
           <div style={{ marginBottom: spacing.space5 }}>
             <label
               htmlFor="auth-drawer-email"
-              style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: spacing.space2, color: c.text }}
+              style={labelStyle}
             >
               {labels.identifierLabel} *
             </label>
@@ -550,7 +557,7 @@ export const AuthDrawer = React.memo(function AuthDrawer({
           <div style={{ marginBottom: spacing.space4 }}>
             <label
               htmlFor="auth-drawer-password"
-              style={{ display: 'block', fontSize: 13, fontWeight: 600, marginBottom: spacing.space2, color: c.text }}
+              style={labelStyle}
             >
               {labels.passwordLabel} *
             </label>

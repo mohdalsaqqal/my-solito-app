@@ -175,7 +175,7 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                   }}
                   onPointerEnter={Platform.OS === 'web' ? () => setActiveProductId(product.id) : undefined}
                   variant='ghost'
-                  style={({ hovered, focused }) => {
+                  style={({ hovered, focused }: any) => {
                     const interactive = active || hovered || focused
                     return {
                       flex: 1,
@@ -302,7 +302,7 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
                   }}
                   disabled={soldOut}
                   variant='ghost'
-                  style={({ hovered, focused }) => {
+                  style={({ hovered, focused }: any) => {
                     const ctaActive = !soldOut && (hovered || focused)
                     return {
                       minHeight: spacing['20'],
@@ -343,7 +343,7 @@ export const EditorialHotspotSection = React.memo(function EditorialHotspotSecti
             variant='ghost'
             style={{ paddingHorizontal: 0, paddingVertical: 0, alignItems: isRTL ? 'flex-end' : 'flex-start' }}
           >
-            {({ hovered, focused }) => {
+            {({ hovered, focused }: any) => {
               const active = hovered || focused
               return (
                 <Text

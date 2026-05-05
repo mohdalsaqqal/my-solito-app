@@ -1,5 +1,35 @@
 ﻿# SESSION-STATE.md - Active Working Memory
 
+## 2026-05-05 Vercel Preview + Neon Prisma Admin DB
+
+**Status**: PREVIEW DEPLOYED. Vercel Preview is ready and backed by Neon Postgres for Prisma admin/auth/CMS data.
+
+### Completed this session
+- Created Neon project `plain-tree-32144170`, branch `br-sweet-band-ajcelzun`, database `neondb`.
+- Applied Prisma migrations to Neon, including `20260501000000_rls_tenant_policies`.
+- Reworked `scripts/seed-admin.mjs` into an env-driven, idempotent seed using Better Auth scrypt hashes; no destructive hardcoded `admin/admin` or `pharma/pharma`.
+- Seeded preview admin user `admin@realcosmetics.local`.
+- Added `DIRECT_URL` support to examples/provisioning/devops verification and updated the staging deployment runbook.
+- Fixed Vercel runtime ESM/CJS mismatch by removing `type: module` from `apps/next/package.json`.
+- Deployed corrected Vercel Preview: `https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app`.
+- Removed accidental production-target deployment `dpl_7YSycyJFhprtzns7YBqwKZ4HbKVa`.
+
+### Verification
+```
+yarn verify:devops-deployment [PASS]
+yarn verify:delivery --profile deploy [PASS]
+npx prisma validate --schema apps/next/prisma/schema.prisma [PASS]
+vercel inspect dpl_DSDncbFqbRiapFazQEwaxopHJuGV [PASS] target=preview, status=Ready
+remote admin login/session smoke [PASS]
+remote public storefront/API smoke [PASS through CMS home API]
+yarn e2e:a11y [PASS locally]
+```
+
+### Notes
+- Vercel project-level Preview env creation is still branch-gated until a non-production branch exists in the connected Git repo. This preview used deployment-scoped env vars.
+- `yarn verify:delivery:quality` was not completed because referral tests failed when pointed at the live Neon preview DB; do not use the preview DB as the fixture DB for those tests.
+- Remote Playwright a11y against the protected Vercel URL hit Chromium `ERR_CONNECTION_RESET` before app load; curl/Node fetch reached the deployment, and local a11y passed.
+
 ## 2026-05-01 Final Sprint — 14 commits pushed. All gates passing.
 
 **Status**: GREEN. Branch ready for human review.
@@ -19,15 +49,15 @@
 
 ### Gates
 ```
-guard:style     ✅ (1 pre-existing i18n debt)
-guard:arch      ✅
-typescript      ✅
-E2E (admin)     ✅ 7/7
-E2E (pharmacist) ✅ 8/8
-E2E (checkout)  ✅ 12/12
-E2E (smoke)     ✅ 8/8
-CMS lifecycle   ✅ 14/14
-API tests       ✅ 28/28
+guard:style     ? (1 pre-existing i18n debt)
+guard:arch      ?
+typescript      ?
+E2E (admin)     ? 7/7
+E2E (pharmacist) ? 8/8
+E2E (checkout)  ? 12/12
+E2E (smoke)     ? 8/8
+CMS lifecycle   ? 14/14
+API tests       ? 28/28
 ```
 
 ## 2026-05-01 Production Hardening Sprint — Committed c4ccb82 (46 files, +4745/-591)
@@ -173,9 +203,9 @@ API tests       ✅ 28/28
 
 ### Completed
 - Docker PostgreSQL 16 running (port 5433), dev server live at :3000
-- Dynamic per-user domain permissions: super admin creates users with per-section access (catalog/marketing/sales/inventory/ops/customers). Toggle: None → Full → Read → Off. Custom perms override role-based RBAC matrix.
-- FAQ accordion CMS block: new block type (faq_accordion) → FaqAccordion component in @real/ui/components → renderer → dispatch → seed data (4 FAQ items: shipping, returns, authenticity, loyalty)
-- Platform.OS cleanup: useHeaderScroll.ts refactored to .native.ts pattern, 14→13 Platform.OS files in packages/app
+- Dynamic per-user domain permissions: super admin creates users with per-section access (catalog/marketing/sales/inventory/ops/customers). Toggle: None ? Full ? Read ? Off. Custom perms override role-based RBAC matrix.
+- FAQ accordion CMS block: new block type (faq_accordion) ? FaqAccordion component in @real/ui/components ? renderer ? dispatch ? seed data (4 FAQ items: shipping, returns, authenticity, loyalty)
+- Platform.OS cleanup: useHeaderScroll.ts refactored to .native.ts pattern, 14?13 Platform.OS files in packages/app
 - Graphify rebuilt: 994 nodes, 1625 edges, 45 communities
 - Production build: passes clean
 - A11y smoke: 6/6 pass
@@ -183,11 +213,11 @@ API tests       ✅ 28/28
 
 ### Gates
 ```
-guard-checks     ✅ (1 pre-existing i18n debt: "Search users...")
-next-typecheck   ✅
-next-api-full    ✅ (28/28)
-next-build       ✅
-e2e-a11y         ✅ (6/6)
+guard-checks     ? (1 pre-existing i18n debt: "Search users...")
+next-typecheck   ?
+next-api-full    ? (28/28)
+next-build       ?
+e2e-a11y         ? (6/6)
 ```
 
 ## 2026-04-30 Admin Auth/Session Verification (Line 285) — COMPLETED
@@ -197,7 +227,7 @@ e2e-a11y         ✅ (6/6)
 - 12/12 auth route tests (login, register, session, logout, reset, fail-close, rate limiting)
 - 13/13 admin route auth tests (catalog/CMS/ops — 401/403/200 enforcement per RBAC matrix)
 - 21 session adapter + request-auth tests (Better Auth identity mapping, legacy fallback, release-mode hardening)
-- Full pipeline: Login → Better Auth signInEmail → Set-Cookie → resolveNormalizedSessionFromRequest → role resolution → hasAdminDomainPermission → 200/403
+- Full pipeline: Login ? Better Auth signInEmail ? Set-Cookie ? resolveNormalizedSessionFromRequest ? role resolution ? hasAdminDomainPermission ? 200/403
 - Live smoke with provisioned admin credentials blocked by Postgres/client credential setup
 - Line 285 marked [x]. All remaining [ ] items are deferred, blocked by device/credentials/infra, or pre-launch.
 
@@ -868,9 +898,9 @@ e2e-a11y         ✅ (6/6)
 **Verification**
 - Red test failed first with missing service module.
 - Focused pharmacist service tests passed: `5/5`.
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- `yarn guard:checks` ✅
-- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` ✅ with known no-dedicated-worktree warning.
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- `yarn guard:checks` ?
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` ? with known no-dedicated-worktree warning.
 
 ### 2026-04-26 Dev Lifecycle Phase 4: Pharmacist Validation Alignment
 
@@ -884,10 +914,10 @@ e2e-a11y         ✅ (6/6)
 **Verification**
 - Red validation test failed first because `PharmacistConsultationBodySchema` was missing.
 - Focused validation/pharmacist tests passed: `8/8`.
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- `yarn guard:checks` ✅
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- `yarn guard:checks` ?
 - Source search found no remaining legacy `barcode` or `recommendations:` contract usage in pharmacist validation/routes.
-- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` ✅ with known no-dedicated-worktree warning.
+- `npx ai-devkit@latest lint --feature commerce-platform-roadmap` ? with known no-dedicated-worktree warning.
 
 ### 2026-04-25 Service Boundary Cleanup: Pricing + Referral Helpers
 
@@ -900,9 +930,9 @@ e2e-a11y         ✅ (6/6)
 - Added `yarn guard:checks` enforcement so server services cannot reintroduce imports from the moved pricing/referral API helper paths.
 
 **Verification**
-- `yarn guard:checks` ✅
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- Focused service tests passed: `6/6` ✅
+- `yarn guard:checks` ?
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- Focused service tests passed: `6/6` ?
 - Local Postgres was unavailable at `localhost:5432`, causing expected Prisma fallback logs during account service tests.
 
 ### Previous State: Better Auth Audit Findings Fixed
@@ -914,8 +944,8 @@ e2e-a11y         ✅ (6/6)
 **Audit findings fixed** — LANDED.
 - Checkout quote and order placement now resolve sessions through `resolveNormalizedSessionFromRequest(...)` instead of parsing the legacy `rc_auth_session` cookie directly.
 - Password reset routes now delegate to Better Auth APIs:
-  - `/api/auth/request-reset` → `auth.api.requestPasswordReset`
-  - `/api/auth/reset-password` → `auth.api.resetPassword`
+  - `/api/auth/request-reset` ? `auth.api.requestPasswordReset`
+  - `/api/auth/reset-password` ? `auth.api.resetPassword`
 - Password reset delivery fails closed when unavailable in release-like environments.
 - `/api/checkout/quote` now requires trusted mutation provenance and uses a dedicated `checkoutQuoteLimiter`.
 - `x-rc-trusted-request` now requires `TRUSTED_REQUEST_BYPASS_SECRET`; a bare value of `1` is rejected.
@@ -923,9 +953,9 @@ e2e-a11y         ✅ (6/6)
 
 **Verification**
 - Targeted auth/checkout/order suite passed: `44/44`.
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- `yarn guard:checks` ✅
-- `py -3 scripts/build_graphify_contexts.py` ✅
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- `yarn guard:checks` ?
+- `py -3 scripts/build_graphify_contexts.py` ?
 
 ### Previous State: AGENTS Startup Status Rule Added
 
@@ -1015,14 +1045,14 @@ e2e-a11y         ✅ (6/6)
 - [tasks.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/tasks.md) now includes explicit completed US3 tasks for release-secret hardening, env/CI/doc sync, and prerender-noise cleanup
 
 ### Verification
-- `yarn guard:checks` ✅
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- `yarn --cwd apps/next prisma:generate` ✅
-- targeted auth tests ✅
-- `yarn --cwd apps/next test:api` ✅ (`159/159`)
-- `yarn --cwd apps/next build --webpack` ✅
-- `yarn --cwd apps/next build --webpack --debug-prerender` ✅
-- focused auth regression suite ✅ (`29/29`)
+- `yarn guard:checks` ?
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- `yarn --cwd apps/next prisma:generate` ?
+- targeted auth tests ?
+- `yarn --cwd apps/next test:api` ? (`159/159`)
+- `yarn --cwd apps/next build --webpack` ?
+- `yarn --cwd apps/next build --webpack --debug-prerender` ?
+- focused auth regression suite ? (`29/29`)
 
 ### Remaining Follow-Up
 - Production/staging must set a real high-entropy `BETTER_AUTH_SECRET`; release-like envs now fail closed instead of silently falling back
@@ -1070,7 +1100,7 @@ e2e-a11y         ✅ (6/6)
 - `/api/search`
 
 **Current verification state**
-- `yarn --cwd apps/next build --webpack` ✅
+- `yarn --cwd apps/next build --webpack` ?
 - `yarn --cwd apps/next build --webpack --debug-prerender` still crashes on Windows with a `VirtualAlloc failed` worker exit after compile/typecheck, which now looks like a separate environment/memory issue rather than the original prerender bailout.
 
 **Remaining architecture debt surfaced by the successful build**
@@ -1092,12 +1122,12 @@ e2e-a11y         ✅ (6/6)
 **Dedicated lifecycle test files** — ADDED. `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts` now exist so the `004` task list no longer points at missing files.
 
 ### Verification After Audit Fixes
-- `yarn guard:checks` ✅
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- `yarn --cwd apps/next test:api` ✅ (`148/148`)
+- `yarn guard:checks` ?
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- `yarn --cwd apps/next test:api` ? (`148/148`)
 
 ### Current Blocker
-- `yarn --cwd apps/next build --webpack --debug-prerender` ❌
+- `yarn --cwd apps/next build --webpack --debug-prerender` ?
 - Current failure is broader than `004`: the build still hits `NEXT_PRERENDER_INTERRUPTED` bailouts across authenticated/request-bound API routes that read `request.headers` or `request.url` during prerender analysis. `004` remediation landed, but the final build gate is still open at the repo level.
 
 ---
@@ -1110,14 +1140,14 @@ e2e-a11y         ✅ (6/6)
 
 ### All Phases Complete
 - **Phase 9** — Token Foundation Fixes (6 files): brand font min, caption/label lineHeight, card brand weight, amber WCAG, sale price burgundy, surface warm, flash bg token, countdown white digits
-- **Phase 10** — Quality Polish: unified hover system (ProductCard, CategoryStrip, BrandRail, OfferBannersGrid, Button), 3-tier radius normalization (2px→6px cards, 16px→12px hero), product image `contain→cover`
-- **Phase 0** — TopPromoBar Demotion: black→roseBlush bg, weight 700→500, inverse→default tone
+- **Phase 10** — Quality Polish: unified hover system (ProductCard, CategoryStrip, BrandRail, OfferBannersGrid, Button), 3-tier radius normalization (2px?6px cards, 16px?12px hero), product image `contain?cover`
+- **Phase 0** — TopPromoBar Demotion: black?roseBlush bg, weight 700?500, inverse?default tone
 - **Phase 6** — Section Headers: tiered sizes (lg/28px serif, md/18px sans, sm/16px sans), eyebrow roseDeep on roseBlush (6:1 WCAG), meta weight 500
-- **Phase 1** — Category Strip: ghost buttons→56px circles with icon/label below, removed header
-- **Phase 3** — Product Rail Density: card width 240px→180px for 5-6 visible cards
+- **Phase 1** — Category Strip: ghost buttons?56px circles with icon/label below, removed header
+- **Phase 3** — Product Rail Density: card width 240px?180px for 5-6 visible cards
 - **Phase 7** — Brand Rail: replaced plain text with MarketplaceSectionHeader (size=sm), added `onPressViewAll`
-- **Phase 4** — Hero Carousel: gradient 30%→40%/height 60%→70%, title/subtitle overlays (Playfair serif), CTA commercePrimary burgundy
-- **Phase 5** — Section Spacing Rhythm: `getSectionGap()` helper with type-pair logic (hero→cat=16px, flash=40px, newsletter=64px, editorial=48px)
+- **Phase 4** — Hero Carousel: gradient 30%?40%/height 60%?70%, title/subtitle overlays (Playfair serif), CTA commercePrimary burgundy
+- **Phase 5** — Section Spacing Rhythm: `getSectionGap()` helper with type-pair logic (hero?cat=16px, flash=40px, newsletter=64px, editorial=48px)
 - **Phase 8** — Scroll Reveals: `RevealOnScroll` wrapper with staggered `delayMs=index*40`, `liftY=12`; hero/promo_strip skip
 - **Phase 2** — Flash Deals Section: `HomeFlashDealsSection` component created (serif header + countdown + product rail); `FlashSaleBand` kept as fallback since CMS block has no products yet
 
@@ -1126,11 +1156,11 @@ e2e-a11y         ✅ (6/6)
 - `TopBrandsGrid.tsx:170` — added `as const` to `textAlign` and `maxWidth`
 
 ### Audit Finding Fixed
-- `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` hardcoded → replaced with `colors.black` + `opacity.overlayLight`
+- `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` hardcoded ? replaced with `colors.black` + `opacity.overlayLight`
 
 ### Verification
-- `yarn guard:checks` ✅ — all 15 checks passed
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅ — zero type errors
+- `yarn guard:checks` ? — all 15 checks passed
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? — zero type errors
 
 ---
 
@@ -1168,9 +1198,9 @@ e2e-a11y         ✅ (6/6)
   - `packages/ui/components/chrome/SearchPanel.tsx`
 
 ### Verification
-- `yarn guard:checks` ✅
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- Browser QA on `http://localhost:3000/en` ✅
+- `yarn guard:checks` ?
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- Browser QA on `http://localhost:3000/en` ?
   - `0` console errors
   - `0` console warnings
 
@@ -1216,9 +1246,9 @@ e2e-a11y         ✅ (6/6)
   - `apps/next/app/pharmacist/_components/pharmacist-route-shell-data.ts`
 - Important behavior note: this refactor intentionally preserved current CMS behavior. `getCachedHomeCmsResponseData(...)` still receives only `requestUrl`, so CMS locale/store semantics were not widened in this pass.
 - Verification after Sprint 3:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-  - `yarn --cwd apps/next test:api` ✅ (`124/124`)
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+  - `yarn --cwd apps/next test:api` ? (`124/124`)
 - Expanded the same boundary pattern into home, home-layout, categories, cart, and checkout page services.
 - Updated page boundaries for:
   - `apps/next/app/page.tsx`
@@ -1229,8 +1259,8 @@ e2e-a11y         ✅ (6/6)
   - `apps/next/app/checkout/page.tsx`
 - Updated related service tests for the new context contract.
 - Verification after Sprint 3 batch 2:
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-  - `yarn --cwd apps/next test:api` ✅ (`124/124`)
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+  - `yarn --cwd apps/next test:api` ? (`124/124`)
 
 ## 003 Platform Hygiene Remediation - Current Summary
 
@@ -1288,12 +1318,12 @@ e2e-a11y         ✅ (6/6)
   - `apps/next/server/services/product/product-page.service.ts`
   - `apps/next/server/services/search/search.service.ts`
 - Verification after the fix:
-  - `yarn guard:checks` ✅
-  - `yarn guard:hygiene` ✅
-  - `yarn guard:agent-docs` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-  - `yarn --cwd apps/next test:api` ✅ (`118/118`)
-  - `yarn e2e:a11y` ✅
+  - `yarn guard:checks` ?
+  - `yarn guard:hygiene` ?
+  - `yarn guard:agent-docs` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+  - `yarn --cwd apps/next test:api` ? (`118/118`)
+  - `yarn e2e:a11y` ?
 - Follow-up note: package-level shared TypeScript boundaries remain a future hardening track; branch protection should stay aligned to the 9 credible hosted checks until those compile targets are designed and made green.
 
 ## 2026-04-12 Sprint 2 Security Hardening
@@ -1310,9 +1340,9 @@ e2e-a11y         ✅ (6/6)
   - `apps/next/app/api/_lib/auth-session.test.ts`
   - `apps/next/app/api/_lib/rate-limiter.test.ts`
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-  - `yarn --cwd apps/next test:api` ✅ (`122/122`)
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+  - `yarn --cwd apps/next test:api` ? (`122/122`)
 
 ## 2026-04-12 Sprint 2 Shared Rate-Limit Backend
 - Added explicit backend switch via `RATE_LIMIT_STORE=memory|prisma` in `.env.example`.
@@ -1325,9 +1355,9 @@ e2e-a11y         ✅ (6/6)
   - safe fallback to memory with a warning if Prisma store access fails
 - Auth routes continue to use the same API surface while now awaiting async limiter operations.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-  - `yarn --cwd apps/next test:api` ✅ (`123/123`)
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+  - `yarn --cwd apps/next test:api` ? (`123/123`)
 
 ## 2026-04-13 Design System Foundations Realigned
 
@@ -1349,8 +1379,8 @@ e2e-a11y         ✅ (6/6)
 - Cleaned a pre-existing shared-package guard violation in `packages/ui/components/chrome/AuthDrawer.tsx`.
 
 ### Verification
-- `node scripts/generate-css-token-bridge.mjs` ✅
-- `yarn guard:checks` ✅
+- `node scripts/generate-css-token-bridge.mjs` ?
+- `yarn guard:checks` ?
 
 ## 2026-04-13 Shared UI Normalization Pass
 - Refined high-impact shared reusables to better reflect the new design-system guidance:
@@ -1364,8 +1394,8 @@ e2e-a11y         ✅ (6/6)
   - `packages/ui/components/Badge.tsx`
 - Re-aligned `AuthDrawer` again so the shared-package token guard and Next typecheck both pass after the token changes.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ## 2026-04-13 Chrome Normalization Pass
 - Extended the second-pass normalization into high-traffic shared chrome:
@@ -1380,8 +1410,8 @@ e2e-a11y         ✅ (6/6)
 - Footer hierarchy now leans on overline/body/caption roles instead of older footer/meta drift.
 - AuthDrawer spacing and motion were tightened to reflect the canonical 4px rhythm and interactive timing tokens.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ## 2026-04-13 Storefront Search/Cart Normalization
 - Extended chrome normalization into discovery and cart interaction surfaces:
@@ -1392,8 +1422,8 @@ e2e-a11y         ✅ (6/6)
 - Search overlay and panel now use the updated spacing rhythm and interaction timing more consistently.
 - Cart drawer header, progress area, item list spacing, and sticky footer now better reflect the semantic type/spacing system.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ## 2026-04-13 Merchandising Rail Normalization
 - Extended the design-system pass into shared merchandising surfaces:
@@ -1405,8 +1435,8 @@ e2e-a11y         ✅ (6/6)
   - `packages/ui/components/ProductCard.tsx`
 - Tightened rail gaps, section spacing, badge offsets, price/rating rhythm, and banner CTA timing to better reflect the semantic spacing and motion contract.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ## 2026-04-13 Editorial Home-V2 Normalization
 - Extended the shared UI normalization into the larger editorial home-v2 sections:
@@ -1417,8 +1447,8 @@ e2e-a11y         ✅ (6/6)
   - `packages/ui/components/home-v2/EditorialHotspotSection.tsx`
 - Tightened section gaps, inner spacing, and interactive timing so these larger storytelling surfaces better match the normalized token system.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ## 2026-04-13 Final Home-V2 Module Sweep
 - Finished the remaining smaller home-v2 storefront modules:
@@ -1429,8 +1459,8 @@ e2e-a11y         ✅ (6/6)
   - `packages/ui/components/home-v2/UgcGallery.tsx`
 - Tightened spacing rhythm and CTA/hover timing so the smaller merchandising/community modules match the same normalized system as the larger sections.
 - Verification:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ## 2026-04-13 Storefront Visual QA
 - Launched the Next dev server with `yarn web` and visually checked `http://localhost:3000/en`.
@@ -1445,8 +1475,8 @@ e2e-a11y         ✅ (6/6)
     - deprecated `shadow*` style props warning
     - `useNativeDriver` fallback warning from animated module support
 - Verification after visual QA polish:
-  - `yarn guard:checks` ✅
-  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
+  - `yarn guard:checks` ?
+  - `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
 
 ---
 
@@ -1494,8 +1524,8 @@ e2e-a11y         ✅ (6/6)
 
 **Verification**
 - Focused tests passed: `24/24`.
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ✅
-- `yarn guard:checks` ✅
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ?
+- `yarn guard:checks` ?
 
 ---
 
@@ -1647,3 +1677,14 @@ e2e-a11y         ✅ (6/6)
 ### Remaining
 
 - Sentry, centralized logging vendor, hosted uptime checks, alert routing, and provider health dashboard remain vendor/credential or future UI work.
+
+## 2026-05-05 Vercel Preview Deployment Continuation
+
+**Status**: DEPLOYED, externally access-gated.
+
+- Vercel Preview remains Ready at `https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app` (`dpl_DSDncbFqbRiapFazQEwaxopHJuGV`).
+- Public unauthenticated browser/fetch requests are intercepted by Vercel Deployment Protection before they reach Next.js.
+- `vercel curl /api/health --deployment https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app` reaches the protected deployment path.
+- Direct CLI login reaches the app when tunneled through Vercel, but app auth rejects non-browser-like context as `AUTH_UNTRUSTED_REQUEST`.
+- Local deploy readiness remains green: Next typecheck, `node scripts/verify-devops-deployment.mjs`, and `yarn verify:delivery --profile deploy` pass.
+

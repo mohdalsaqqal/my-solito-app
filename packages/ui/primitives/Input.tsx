@@ -51,8 +51,12 @@ function resolveInputContainerStyle({ invalid, focused, readOnly, tone }: InputS
     paddingHorizontal: inputTokens.paddingX.md,
     paddingVertical: spacing.sm,
     boxShadow: focused ? elevation.xs : elevation.none,
-    transitionProperty: 'border-color, box-shadow, background-color',
-    transitionDuration: `${motionDuration.microInteraction}ms`,
+    ...(Platform.OS === 'web'
+      ? ({
+          transitionProperty: 'border-color, box-shadow, background-color',
+          transitionDuration: `${motionDuration.microInteraction}ms`,
+        } as any)
+      : null),
   }
 }
 

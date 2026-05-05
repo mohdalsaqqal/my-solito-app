@@ -9,6 +9,7 @@ const args = new Set(process.argv.slice(2))
 const staticOnly = args.has('--static-only')
 const shouldStartServer = !staticOnly && process.env.FUNCTIONAL_START_SERVER !== 'false'
 const baseUrl = process.env.FUNCTIONAL_BASE_URL ?? 'http://127.0.0.1:3000'
+const vercelProtectionBypass = process.env.VERCEL_PROTECTION_BYPASS
 const timeoutMs = Number.parseInt(process.env.FUNCTIONAL_TIMEOUT_MS ?? '180000', 10)
 const authSessionSecret =
   process.env.AUTH_SESSION_SECRET ??
@@ -103,7 +104,7 @@ function runStaticChecks() {
 
 async function isServerReady() {
   try {
-    const response = await fetch(baseUrl, { redirect: 'follow' })
+    const response = await fetch(withProtectionBypass('/'), { redirect: 'follow' })
     return response.status < 500
   } catch {
     return false
@@ -152,9 +153,17 @@ function stopServer(child) {
 }
 
 async function fetchText(path) {
-  const response = await fetch(new URL(path, baseUrl), { redirect: 'follow' })
+  const response = await fetch(withProtectionBypass(path), { redirect: 'follow' })
   const text = await response.text()
   return { response, text }
+}
+
+function withProtectionBypass(path) {
+  const url = new URL(path, baseUrl)
+  if (vercelProtectionBypass) {
+    url.searchParams.set('x-vercel-protection-bypass', vercelProtectionBypass)
+  }
+  return url
 }
 
 function assertNoForbiddenText(label, text) {
@@ -230,7 +239,7 @@ function createPharmacistSessionCookie() {
 }
 
 async function postJson(path, body, cookie) {
-  const response = await fetch(new URL(path, baseUrl), {
+  const response = await fetch(withProtectionBypass(path), {
     method: 'POST',
     redirect: 'follow',
     headers: {
@@ -248,7 +257,7 @@ async function postJson(path, body, cookie) {
 }
 
 async function getJson(path, cookie) {
-  const response = await fetch(new URL(path, baseUrl), {
+  const response = await fetch(withProtectionBypass(path), {
     redirect: 'follow',
     headers: {
       Cookie: cookie,

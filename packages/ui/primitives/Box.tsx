@@ -3,9 +3,15 @@ import { View, ViewProps, ViewStyle } from 'react-native'
 import { colors, spacing } from '@real/tokens'
 
 type SpaceValue = keyof typeof spacing | number
+const NativeView = View as unknown as React.ComponentType<any>
 
-type BoxProps = ViewProps & {
+type BoxProps = Omit<ViewProps, 'accessibilityRole'> & {
   children?: ReactNode
+  style?: any
+  accessibilityRole?: ViewProps['accessibilityRole'] | 'dialog'
+  onClick?: (event: any) => void
+  tabIndex?: number
+  'aria-modal'?: boolean
   flex?: number
   bg?: keyof typeof colors
   gap?: SpaceValue
@@ -46,7 +52,7 @@ export const Box = forwardRef<View, BoxProps>(function Box({
   ...props
 }, ref) {
   return (
-    <View
+    <NativeView
       ref={ref}
       style={[
         {
@@ -68,6 +74,6 @@ export const Box = forwardRef<View, BoxProps>(function Box({
       {...props}
     >
       {children}
-    </View>
+    </NativeView>
   )
 })

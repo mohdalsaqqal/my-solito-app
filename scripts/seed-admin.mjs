@@ -1,85 +1,128 @@
+#!/usr/bin/env node
 import { PrismaClient } from '@prisma/client'
 import { scryptSync, randomBytes } from 'node:crypto'
+
+const prisma = new PrismaClient()
+
+function requiredEnv(name) {
+  const value = process.env[name]?.trim()
+  if (!value) {
+    throw new Error(`${name} is required`)
+  }
+  return value
+}
+
+function optionalEnv(name) {
+  const value = process.env[name]?.trim()
+  return value || null
+}
 
 function hashBetterAuthPassword(password) {
   const salt = randomBytes(16).toString('hex')
   const key = scryptSync(password.normalize('NFKC'), salt, 64, {
-    N: 16384, r: 16, p: 1, maxmem: 128 * 16384 * 16 * 2,
+    N: 16384,
+    r: 16,
+    p: 1,
+    maxmem: 128 * 16384 * 16 * 2,
   })
-  return salt + ':' + key.toString('hex')
+  return `${salt}:${key.toString('hex')}`
 }
 
-async function seed() {
-  const prisma = new PrismaClient()
+function normalizeEmail(email) {
+  return email.trim().toLowerCase()
+}
 
-  const userId = 'seed-admin-001'
-  const email = 'admin@realcosmetics.local'
-  const password = 'admin'
+function userIdFromEmail(role, email) {
+  return `seed-${role}-${Buffer.from(email).toString('base64url').slice(0, 24)}`
+}
 
-  await prisma.account.deleteMany({ where: { userId } }).catch(() => {})
-  await prisma.session.deleteMany({ where: { userId } }).catch(() => {})
-  await prisma.appAuthRoleMapping.deleteMany({ where: { userId } }).catch(() => {})
-  await prisma.user.deleteMany({ where: { id: userId } }).catch(() => {})
+async function seedCredentialUser({ email, password, name, role }) {
+  const normalizedEmail = normalizeEmail(email)
+  const userId = userIdFromEmail(role, normalizedEmail)
+  const accountId = `seed-${role}-acct-${Buffer.from(normalizedEmail).toString('base64url').slice(0, 24)}`
+  const roleId = `seed-${role}-role-${Buffer.from(normalizedEmail).toString('base64url').slice(0, 24)}`
+  const passwordHash = hashBetterAuthPassword(password)
 
-  const user = await prisma.user.create({
-    data: {
-      id: userId,
-      name: 'Admin User',
-      email,
+  const user = await prisma.user.upsert({
+    where: { email: normalizedEmail },
+    update: {
+      name,
       emailVerified: true,
-    }
+    },
+    create: {
+      id: userId,
+      name,
+      email: normalizedEmail,
+      emailVerified: true,
+    },
   })
-  console.log('User created:', user.id)
 
-  const hash = hashBetterAuthPassword(password)
-  await prisma.account.create({
-    data: {
-      id: 'seed-admin-acct-001',
-      accountId: email,
+  await prisma.account.upsert({
+    where: { id: accountId },
+    update: {
+      accountId: normalizedEmail,
       providerId: 'credential',
-      userId,
-      password: hash,
-    }
+      userId: user.id,
+      password: passwordHash,
+    },
+    create: {
+      id: accountId,
+      accountId: normalizedEmail,
+      providerId: 'credential',
+      userId: user.id,
+      password: passwordHash,
+    },
   })
-  console.log('Account created with password hash')
 
-  await prisma.appAuthRoleMapping.create({
-    data: {
-      id: 'seed-admin-role-001',
-      userId,
-      role: 'admin',
-    }
+  await prisma.appAuthRoleMapping.upsert({
+    where: { userId: user.id },
+    update: {
+      role,
+      updatedByEmail: 'seed-admin',
+    },
+    create: {
+      id: roleId,
+      userId: user.id,
+      role,
+      updatedByEmail: 'seed-admin',
+    },
   })
-  console.log('Role mapping created (admin)')
 
-  console.log('')
-  console.log('Admin credentials:')
-  console.log('  Email:    ' + email)
-  console.log('  Password: ' + password)
-
-  // Pharmacist
-  const pharmaId = 'seed-pharma-001'
-  const pharmaEmail = 'pharma@realcosmetics.local'
-  const pharmaPass = 'pharma'
-
-  await prisma.account.deleteMany({ where: { userId: pharmaId } }).catch(() => {})
-  await prisma.session.deleteMany({ where: { userId: pharmaId } }).catch(() => {})
-  await prisma.appAuthRoleMapping.deleteMany({ where: { userId: pharmaId } }).catch(() => {})
-  await prisma.user.deleteMany({ where: { id: pharmaId } }).catch(() => {})
-
-  await prisma.user.create({ data: { id: pharmaId, name: 'Pharmacist User', email: pharmaEmail, emailVerified: true } })
-  const phHash = hashBetterAuthPassword(pharmaPass)
-  await prisma.account.create({ data: { id: 'seed-pharma-acct-001', accountId: pharmaEmail, providerId: 'credential', userId: pharmaId, password: phHash } })
-  await prisma.appAuthRoleMapping.create({ data: { id: 'seed-pharma-role-001', userId: pharmaId, role: 'pharmacist' } })
-  console.log('')
-  console.log('Pharmacist credentials:')
-  console.log('  Email:    ' + pharmaEmail)
-  console.log('  Password: ' + pharmaPass)
-
-  await prisma.$disconnect()
+  console.log(`[seed-admin] ${role} ready: ${normalizedEmail}`)
 }
 
-seed().catch((e) => {
-  console.error(e.message)
-  process.exit(1)
-})
+async function main() {
+  const adminEmail = requiredEnv('ADMIN_EMAIL')
+  const adminPassword = requiredEnv('ADMIN_PASSWORD')
+  const adminName = optionalEnv('ADMIN_NAME') ?? 'Admin User'
+
+  await seedCredentialUser({
+    email: adminEmail,
+    password: adminPassword,
+    name: adminName,
+    role: 'admin',
+  })
+
+  const pharmacistEmail = optionalEnv('PHARMACIST_EMAIL')
+  const pharmacistPassword = optionalEnv('PHARMACIST_PASSWORD')
+  if (pharmacistEmail || pharmacistPassword) {
+    if (!pharmacistEmail || !pharmacistPassword) {
+      throw new Error('PHARMACIST_EMAIL and PHARMACIST_PASSWORD must be set together')
+    }
+    await seedCredentialUser({
+      email: pharmacistEmail,
+      password: pharmacistPassword,
+      name: optionalEnv('PHARMACIST_NAME') ?? 'Pharmacist User',
+      role: 'pharmacist',
+    })
+  }
+}
+
+main()
+  .catch((error) => {
+    console.error(`[seed-admin] FAIL ${error.message}`)
+    process.exitCode = 1
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })

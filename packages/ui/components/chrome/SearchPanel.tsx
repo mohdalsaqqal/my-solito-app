@@ -184,7 +184,7 @@ export const SearchPanel = React.memo(function SearchPanel({
                   onPress={() => onSelectRecent(item)}
                   accessibilityRole='button'
                   accessibilityLabel={`Search ${item}`}
-                  style={({ hovered, focused }) => ({
+                  style={({ hovered, focused }: any) => ({
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: spacing.space2,
@@ -223,7 +223,7 @@ export const SearchPanel = React.memo(function SearchPanel({
                     onPress={() => onSelectRecent(brand)}
                     accessibilityRole='button'
                     accessibilityLabel={`Search brand ${brand}`}
-                    style={({ hovered, focused }) => ({
+                    style={({ hovered, focused }: any) => ({
                       minHeight: spacing['48'],
                       justifyContent: 'center',
                       paddingHorizontal: spacing.space4,
@@ -266,7 +266,7 @@ export const SearchPanel = React.memo(function SearchPanel({
                     onPress={() => onSelectRecent(recentQuery)}
                     accessibilityRole='button'
                     accessibilityLabel={`Search recent ${recentQuery}`}
-                    style={({ hovered, focused }) => ({
+                    style={({ hovered, focused }: any) => ({
                       minHeight: spacing['48'],
                       justifyContent: 'center',
                       paddingHorizontal: spacing.space4,
@@ -300,7 +300,7 @@ export const SearchPanel = React.memo(function SearchPanel({
                     onPress={() => onSelectSuggestion(item)}
                     accessibilityRole='button'
                     accessibilityLabel={`Suggestion ${item.label}`}
-                    style={({ hovered, focused }) => ({
+                    style={({ hovered, focused }: any) => ({
                       flexDirection: 'row',
                       alignItems: 'center',
                       gap: spacing.space2,
@@ -340,7 +340,7 @@ export const SearchPanel = React.memo(function SearchPanel({
                     onPress={() => onSelectSuggestion(item)}
                     accessibilityRole='button'
                     accessibilityLabel={`Product ${item.productName ?? item.label}`}
-                    style={({ hovered, focused }) => ({
+                    style={({ hovered, focused }: any) => ({
                       flexDirection: 'row',
                       alignItems: 'center',
                       justifyContent: 'space-between',

@@ -7,7 +7,7 @@ import type {
   MenuUpdateInput,
 } from '@real/providers/contracts'
 
-const STORAGE_DIR = path.join(process.cwd(), '.tmp')
+const STORAGE_DIR = process.env.VERCEL ? path.join('/tmp', 'real-commerce') : path.join(process.cwd(), '.tmp')
 const STORAGE_FILE = path.join(STORAGE_DIR, 'mock-menus.json')
 
 const now = () => new Date().toISOString()

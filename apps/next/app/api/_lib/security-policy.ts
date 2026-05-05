@@ -104,6 +104,11 @@ export function getBetterAuthBaseUrl() {
     return configured
   }
 
+  const vercelUrl = process.env.VERCEL_URL?.trim()
+  if (vercelUrl) {
+    return `https://${vercelUrl}`
+  }
+
   return BETTER_AUTH_FALLBACK_URL
 }
 

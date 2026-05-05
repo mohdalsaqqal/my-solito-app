@@ -1,16 +1,1 @@
-{
-  "projectId": "prj_lZ0XXW7R6DcO2Wrh2h4TkfV6xVv1",
-  "orgId": "team_4zvsfnrh481zxMdEUJOQuIjP",
-  "projectName": "my-solito-app",
-  "settings": {
-    "createdAt": 1777658235837,
-    "framework": "nextjs",
-    "devCommand": null,
-    "installCommand": "yarn install",
-    "buildCommand": "cd ../.. && yarn workspace next-app build",
-    "outputDirectory": ".next",
-    "rootDirectory": "apps/next",
-    "directoryListing": false,
-    "nodeVersion": "24.x"
-  }
-}
+{"projectId":"prj_mXmtGka28iWGGwdCg5ccH641qF7H","orgId":"team_4zvsfnrh481zxMdEUJOQuIjP","projectName":"my-solito-app"}
