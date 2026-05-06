@@ -250,10 +250,16 @@ export async function proxy(request: NextRequest) {
     return response
   }
 
-  const BETTER_AUTH_COOKIE = 'better-auth.session_token'
+  const BETTER_AUTH_COOKIES = [
+    'better-auth.session_token',
+    '__Secure-better-auth.session_token',
+    '__Host-better-auth.session_token',
+  ] as const
 
   const session = await parseSessionCookie(request.cookies.get(AUTH_SESSION_COOKIE)?.value)
-  const hasBetterAuthCookie = Boolean(request.cookies.get(BETTER_AUTH_COOKIE)?.value)
+  const hasBetterAuthCookie = BETTER_AUTH_COOKIES.some((cookieName) =>
+    Boolean(request.cookies.get(cookieName)?.value)
+  )
   const hasSession = Boolean(session) || hasBetterAuthCookie
   const sessionRole = session?.role
 
