@@ -63,3 +63,23 @@ test('.env.example includes required Odoo and payment readiness placeholders', a
   assert.match(envSource, /^NETWORKS_MERCHANT_ID=/m)
   assert.match(envSource, /^STRICT_PROVIDER_READINESS=/m)
 })
+
+test('provider readiness command classifies customer-ready versus demo-only environments', async () => {
+  const packagePath = path.join(REPO_ROOT, 'package.json')
+  const scriptPath = path.join(REPO_ROOT, 'scripts', 'verify-provider-readiness.mjs')
+  const registryPath = path.join(REPO_ROOT, 'packages', 'providers', 'registry.ts')
+  const [packageSource, scriptSource, registrySource] = await Promise.all([
+    fs.readFile(packagePath, 'utf8'),
+    fs.readFile(scriptPath, 'utf8'),
+    fs.readFile(registryPath, 'utf8'),
+  ])
+
+  assert.match(packageSource, /"verify:provider-readiness"/)
+  assert.match(scriptSource, /customer-ready/)
+  assert.match(scriptSource, /demo-only blockers/)
+  assert.match(scriptSource, /cmsPageConfig/)
+  assert.match(scriptSource, /cmsPageVersion/)
+  assert.match(registrySource, /requiredForCustomerProduction/)
+  assert.match(registrySource, /cmsPageConfig/)
+  assert.match(registrySource, /cmsPageVersion/)
+})

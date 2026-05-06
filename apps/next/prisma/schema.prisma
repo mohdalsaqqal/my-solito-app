@@ -406,6 +406,39 @@ model CmsPageBlock {
   @@index([blockType])
 }
 
+model CmsPageConfig {
+  id         String   @id
+  tenantId   String   @default("default")
+  releaseId  String
+  storeId    String   @default("default")
+  slug       String   @default("/")
+  pageType   String   @default("home")
+  blocksJson Json
+  updatedAt  DateTime @updatedAt
+
+  @@unique([tenantId, releaseId])
+  @@index([tenantId])
+  @@index([tenantId, storeId, slug, pageType])
+}
+
+model CmsPageVersion {
+  id         String   @id
+  tenantId   String   @default("default")
+  versionId  String
+  releaseId  String
+  storeId    String   @default("default")
+  slug       String   @default("/")
+  pageType   String   @default("home")
+  source     String   @default("publish")
+  blocksJson Json
+  createdAt  DateTime @default(now())
+
+  @@unique([tenantId, versionId])
+  @@index([tenantId])
+  @@index([tenantId, releaseId, storeId, slug])
+  @@index([createdAt(sort: Desc)])
+}
+
 // Homepage marketing rails
 model CmsMarketingRail {
   id          String   @id @default(cuid())

@@ -7,7 +7,9 @@ import {
   type PageBlockContractVersion,
 } from '@real/app/lib/layout/page-types'
 import type { ReleaseBlockRecord, ReleaseBlockType } from '@real/providers/contracts'
+import { prisma } from '../../../server/lib/prisma'
 import { ADMIN_DATA_DIR, ensureAdminDataDir } from './admin-site-config-store'
+import { isReleaseLikeEnvironment } from './security-policy'
 
 export type PageConfigBlockRecord = {
   id: string
@@ -38,6 +40,17 @@ type CreatePageConfigStoreOptions = {
 }
 
 const DEFAULT_STORAGE_FILE = path.join(ADMIN_DATA_DIR, 'page-config-store.json')
+const TENANT_ID = 'default'
+
+type DbPageConfigRow = {
+  id: string
+  releaseId: string
+  storeId: string
+  slug: string
+  pageType: string
+  blocksJson: unknown
+  updatedAt: Date
+}
 
 export function buildPageConfigId(input: {
   storeId: string
@@ -82,6 +95,22 @@ function normalizePageConfigRecord(record: PageConfigRecord): PageConfigRecord {
 
 function initialState(): PageConfigStoreState {
   return { pages: [] }
+}
+
+function serializeJson(value: unknown) {
+  return JSON.parse(JSON.stringify(value)) as unknown
+}
+
+function rowToPageConfigRecord(row: DbPageConfigRow): PageConfigRecord {
+  return normalizePageConfigRecord({
+    pageConfigId: row.id,
+    releaseId: row.releaseId,
+    storeId: row.storeId,
+    slug: row.slug,
+    pageType: row.pageType,
+    updatedAt: row.updatedAt.toISOString(),
+    blocks: Array.isArray(row.blocksJson) ? (row.blocksJson as PageConfigBlockRecord[]) : [],
+  })
 }
 
 export function toPageConfigBlocks(releaseId: string, blocks: ReleaseBlockRecord[]): PageConfigBlockRecord[] {
@@ -134,18 +163,123 @@ function createStoreInternals(storageFile: string) {
 export function createPageConfigStore(options: CreatePageConfigStoreOptions = {}) {
   const storageFile = options.storageFile ?? DEFAULT_STORAGE_FILE
   const { readState, writeState } = createStoreInternals(storageFile)
+  const useFileStore = Boolean(options.storageFile)
+
+  async function readDbState(): Promise<PageConfigStoreState> {
+    try {
+      const pages = await (prisma as any).cmsPageConfig.findMany({
+        where: { tenantId: TENANT_ID },
+        orderBy: { updatedAt: 'desc' },
+      })
+      return { pages: pages.map(rowToPageConfigRecord) }
+    } catch (cause) {
+      if (isReleaseLikeEnvironment()) throw cause
+      return readState()
+    }
+  }
+
+  async function writeDbState(state: PageConfigStoreState) {
+    try {
+      await prisma.$transaction(async (tx: any) => {
+        await tx.cmsPageConfig.deleteMany({ where: { tenantId: TENANT_ID } })
+        for (const page of state.pages.map((record) => normalizePageConfigRecord(record))) {
+          await tx.cmsPageConfig.create({
+            data: {
+              id: page.pageConfigId,
+              tenantId: TENANT_ID,
+              releaseId: page.releaseId,
+              storeId: page.storeId,
+              slug: page.slug,
+              pageType: page.pageType,
+              blocksJson: serializeJson(page.blocks),
+            },
+          })
+        }
+      })
+    } catch (cause) {
+      if (isReleaseLikeEnvironment()) throw cause
+      await writeState(state)
+    }
+  }
+
+  async function upsertDbPageConfig(record: PageConfigRecord) {
+    const normalized = normalizePageConfigRecord(record)
+    try {
+      const page = await (prisma as any).cmsPageConfig.upsert({
+        where: { tenantId_releaseId: { tenantId: TENANT_ID, releaseId: normalized.releaseId } },
+        create: {
+          id: normalized.pageConfigId,
+          tenantId: TENANT_ID,
+          releaseId: normalized.releaseId,
+          storeId: normalized.storeId,
+          slug: normalized.slug,
+          pageType: normalized.pageType,
+          blocksJson: serializeJson(normalized.blocks),
+        },
+        update: {
+          id: normalized.pageConfigId,
+          storeId: normalized.storeId,
+          slug: normalized.slug,
+          pageType: normalized.pageType,
+          blocksJson: serializeJson(normalized.blocks),
+        },
+      })
+      return rowToPageConfigRecord(page)
+    } catch (cause) {
+      if (isReleaseLikeEnvironment()) throw cause
+      const state = await readState()
+      const index = state.pages.findIndex((page) => page.releaseId === normalized.releaseId)
+      if (index >= 0) state.pages[index] = normalized
+      else state.pages.push(normalized)
+      await writeState(state)
+      return normalized
+    }
+  }
+
+  async function getDbPageConfig(storeId: string, slug: string, pageType: string) {
+    try {
+      const page = await (prisma as any).cmsPageConfig.findFirst({
+        where: { tenantId: TENANT_ID, storeId, slug, pageType },
+        orderBy: { updatedAt: 'desc' },
+      })
+      return page ? rowToPageConfigRecord(page) : null
+    } catch (cause) {
+      if (isReleaseLikeEnvironment()) throw cause
+      const state = await readState()
+      return (
+        state.pages.find(
+          (page) => page.storeId === storeId && page.slug === slug && page.pageType === pageType,
+        ) ?? null
+      )
+    }
+  }
+
+  async function getDbPageConfigByReleaseId(releaseId: string) {
+    try {
+      const page = await (prisma as any).cmsPageConfig.findUnique({
+        where: { tenantId_releaseId: { tenantId: TENANT_ID, releaseId } },
+      })
+      return page ? rowToPageConfigRecord(page) : null
+    } catch (cause) {
+      if (isReleaseLikeEnvironment()) throw cause
+      const state = await readState()
+      return state.pages.find((page) => page.releaseId === releaseId) ?? null
+    }
+  }
 
   return {
     async readPageConfigState() {
-      return readState()
+      return useFileStore ? readState() : readDbState()
     },
 
     async writePageConfigState(state: PageConfigStoreState) {
-      await writeState(state)
+      if (useFileStore) await writeState(state)
+      else await writeDbState(state)
     },
 
     async upsertPageConfig(record: PageConfigRecord) {
       const normalized = normalizePageConfigRecord(record)
+      if (!useFileStore) return upsertDbPageConfig(normalized)
       const state = await readState()
       const index = state.pages.findIndex((page) => page.releaseId === normalized.releaseId)
 
@@ -157,6 +291,7 @@ export function createPageConfigStore(options: CreatePageConfigStoreOptions = {}
     },
 
     async getPageConfig(storeId: string, slug: string, pageType: string = HOME_PAGE_TYPE) {
+      if (!useFileStore) return getDbPageConfig(storeId, slug, pageType)
       const state = await readState()
       return (
         state.pages.find(
@@ -166,6 +301,7 @@ export function createPageConfigStore(options: CreatePageConfigStoreOptions = {}
     },
 
     async getPageConfigByReleaseId(releaseId: string) {
+      if (!useFileStore) return getDbPageConfigByReleaseId(releaseId)
       const state = await readState()
       return state.pages.find((page) => page.releaseId === releaseId) ?? null
     },

@@ -1,8 +1,40 @@
-﻿# RECENT_CONTEXT.md â€” Auto-Updated Highlights
+# RECENT_CONTEXT.md — Auto-Updated Highlights
 
-## 2026-04-30 â€” Docker PostgreSQL + Dynamic User Management + CMS FAQ + Platform Cleanup
+## 2026-05-06 - Environment/Data Source Audit Slice
 
-## 2026-05-05 â€” Vercel Preview With Neon Prisma Admin DB
+## 2026-05-06 - FAS-17 Architecture And Technical Org Staffing
+
+- Added `docs/delivery/runbooks/technical-org-staffing.md` with architecture assessment, risk map, staffing model, hiring sequence, and 90-day execution plan.
+- Assessment conclusion: architecture boundaries are strong; primary delivery risk is provider-readiness and production-operations throughput, not platform shape.
+- Recommended minimum core squad: Tech Lead (1), Backend Integrations (2), Frontend Platform (1), Mobile/Expo (1), DevOps/SRE (1), plus part-time QA/security/TPM support.
+- Updated `docs/delivery/aspects/01-product-business-foundation.md` to record FAS-17 completion.
+- Updated `checklist.md` Product & Business Foundation to track staffing-plan documentation.
+- Next action: create child execution issues per required provider-readiness blocker domain with role-based ownership.
+- Added `docs/delivery/runbooks/environment-data-source-matrix.md` for Local Dev, Local Production Build, Vercel Preview, and Vercel Production data-source rules.
+- Linked the matrix from the operator handbook index.
+- `GET /api/admin/users` is now DB-first: Prisma `AppAuthRoleMapping` + `User` are canonical, and mock CMS `identity.admin.rolePreview` is only a non-release fallback when no DB admin users are available.
+- Page config/version persistence is now Prisma-backed by default through `CmsPageConfig` and `CmsPageVersion`; JSON storage remains explicit `storageFile` test/dev fallback only.
+- Added `scripts/bootstrap-release.mjs` with `yarn bootstrap:preview` and `yarn bootstrap:production`; it is check-only by default and requires `--apply` before running migrations/client generation/admin seed.
+- Added `scripts/verify-provider-readiness.mjs` with `yarn verify:provider-readiness`; it prints `customer-ready` vs `demo-only`, lists blockers, and fails strict production/staging when required domains are mock-backed.
+- Current env readiness now reports auth/CMS/CMS page config/CMS page versions as release-ready, but release/product/category/brand/order/payment remain demo-only blockers.
+- `AGENTS.md` is now v4.9 and includes the P0 Professional Delivery Workflow so all agents follow the same IT-company-style procedure.
+- Added root `verify:documentation-knowledge` script.
+- Verification passed:
+  - `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+  - `$env:DATABASE_URL='postgresql://user:pass@localhost:5432/db'; $env:DIRECT_URL=$env:DATABASE_URL; yarn --cwd apps/next prisma validate --schema prisma/schema.prisma`
+  - `node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/app/api/admin/layout-versioning.test.ts apps/next/app/api/admin/release-persistence.test.ts`
+  - `yarn bootstrap:preview` with local dummy DB/auth env for check-only validation
+  - `yarn verify:provider-readiness`
+  - strict production-like provider readiness negative check
+  - `node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/app/api/provider-readiness.test.ts packages/providers/registry.test.ts`
+  - `node scripts/verify-devops-deployment.mjs`
+  - `node scripts/verify-documentation-knowledge.mjs`
+  - `node scripts/guard-checks.mjs`
+  - Prisma generate was blocked by a Windows file lock while the local dev server held the Prisma engine DLL.
+
+## 2026-04-30 — Docker PostgreSQL + Dynamic User Management + CMS FAQ + Platform Cleanup
+
+## 2026-05-05 — Vercel Preview With Neon Prisma Admin DB
 
 Preview deployment is live at `https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app` (`dpl_DSDncbFqbRiapFazQEwaxopHJuGV`, target `preview`, status `Ready`).
 
@@ -18,25 +50,25 @@ Verification: `yarn verify:devops-deployment`, `yarn verify:delivery --profile d
 **4 tickets completed.** All gates green.
 
 - Docker PostgreSQL 16 running on port 5433 (Windows PostgreSQL removed). Dev server at :3000.
-- Dynamic per-user domain permissions: super admin creates users with custom section access. `hasAdminDomainPermission` accepts `customPermissions` param â€” domains not listed default to 'none'. `requireAdminDomainSession` reads per-user overrides from `.data/admin-user-overrides.json`.
+- Dynamic per-user domain permissions: super admin creates users with custom section access. `hasAdminDomainPermission` accepts `customPermissions` param — domains not listed default to 'none'. `requireAdminDomainSession` reads per-user overrides from `.data/admin-user-overrides.json`.
 - FAQ accordion CMS block: `FaqAccordionBlock` (type: 'faq_accordion'), `FaqAccordion` component in `@real/ui/components/home/`, renderer + dispatch + seed data.
-- Platform.OS cleanup: `useHeaderScroll.ts` â†’ `useHeaderScroll.native.ts` pattern (web uses scroll listener, native uses `subscribeNativeScrollOffset`).
+- Platform.OS cleanup: `useHeaderScroll.ts` → `useHeaderScroll.native.ts` pattern (web uses scroll listener, native uses `subscribeNativeScrollOffset`).
 - Production build passes clean. A11y 6/6. Search 5/5. TypeScript clean.
 - Admin user (admin@realcosmetics.local / admin) seeded with Better Auth scrypt hash. Test users: pharm@test.local / test1234 (pharmacist), mkt@test.local / test1234 (admin with catalog+marketing only).
 
-**Key technical detail:** Better Auth uses `node:crypto.scrypt` (N=16384, r=16, p=1, dkLen=64) for password hashing, format: `salt:hexKey`. bcryptjs hashes will NOT work â€” hash must be created at `apps/next/app/api/_lib/password-hash.ts`.
+**Key technical detail:** Better Auth uses `node:crypto.scrypt` (N=16384, r=16, p=1, dkLen=64) for password hashing, format: `salt:hexKey`. bcryptjs hashes will NOT work — hash must be created at `apps/next/app/api/_lib/password-hash.ts`.
 
-## 2026-04-30 â€” Admin Auth Verification + Full API Suite Rerun
+## 2026-04-30 — Admin Auth Verification + Full API Suite Rerun
 
 **Line 285 verified.** Full admin auth/session pipeline smoke-tested using real route handlers:
 - 46/46 auth tests pass (12 route + 13 admin RBAC + 21 session adapter)
-- 5/5 smoke tests pass (loginâ†’cookieâ†’sessionâ†’admin RBAC across catalog/CMS/ops)
+- 5/5 smoke tests pass (login→cookie→session→admin RBAC across catalog/CMS/ops)
 - 225/225 full API suite rerun in 6min (previous ENOSPC was Yarn-specific, direct Node command clean)
 - New smoke script: `apps/next/scripts/smoke-admin-auth.mjs`
 - Checklist line 285 `[x]`, line 202 `[x]`
 - All guard checks pass. No code-verifiable `[ ]` items remain.
 
-**Key finding:** `admin-route-auth.test.ts` requires `NODE_ENV=test` â€” `resolveAppOwnedRoleForUser` has test-mode bypass that skips Prisma. With wrong NODE_ENV, 10/13 tests fail with 401.
+**Key finding:** `admin-route-auth.test.ts` requires `NODE_ENV=test` — `resolveAppOwnedRoleForUser` has test-mode bypass that skips Prisma. With wrong NODE_ENV, 10/13 tests fail with 401.
 
 ## Last Session: Aspect 07 Payments And Checkout
 
@@ -325,7 +357,7 @@ Resolved BLK-002: full API test suite was timing out and failing due to test sta
 - Added `connect_timeout=2` to `DATABASE_URL` in the `test:api` script.
 - Added `--test-timeout=30000` safety net.
 - Promoted `next-api-full` into the current required delivery gate.
-- Updated `BLOCKERS.md` (BLK-002 â†’ resolved), `DELIVERY_MATRIX.md`, and `checklist.md` (3 lines).
+- Updated `BLOCKERS.md` (BLK-002 → resolved), `DELIVERY_MATRIX.md`, and `checklist.md` (3 lines).
 
 ### Verification
 - `yarn --cwd apps/next test:api` passed: `217/217` in ~160s.
@@ -927,11 +959,11 @@ The safe production-ready follow-up for Better Auth landed. The repo now enforce
   - [auth/route.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/route.test.ts)
 
 ### Verification
-- âœ… `yarn guard:checks`
-- âœ… `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
-- âœ… `yarn --cwd apps/next test:api`
-- âœ… `yarn --cwd apps/next build --webpack`
-- âœ… `yarn --cwd apps/next build --webpack --debug-prerender`
+- ✅ `yarn guard:checks`
+- ✅ `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- ✅ `yarn --cwd apps/next test:api`
+- ✅ `yarn --cwd apps/next build --webpack`
+- ✅ `yarn --cwd apps/next build --webpack --debug-prerender`
 
 ### Remaining Follow-Up
 - production and staging must set a real high-entropy `BETTER_AUTH_SECRET`
@@ -965,11 +997,11 @@ The Better Auth migration moved from planning into implementation. The repo now 
   - [session-resolver.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/session/session-resolver.test.ts)
 
 ### Verification
-- âœ… `yarn guard:checks`
-- âœ… `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
-- âœ… `yarn --cwd apps/next test:api`
-- âœ… `yarn --cwd apps/next build --webpack`
-- âœ… `yarn --cwd apps/next build --webpack --debug-prerender`
+- ✅ `yarn guard:checks`
+- ✅ `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- ✅ `yarn --cwd apps/next test:api`
+- ✅ `yarn --cwd apps/next build --webpack`
+- ✅ `yarn --cwd apps/next build --webpack --debug-prerender`
 
 ### Remaining Follow-Up
 - production/staging must use a strong `BETTER_AUTH_SECRET`
@@ -1078,7 +1110,7 @@ The `NEXT_PRERENDER_INTERRUPTED` build blocker was traced to request-bound API r
 - Confirmed that `dynamic = 'force-dynamic'` is not allowed here because this repo keeps `cacheComponents` enabled
 
 ### Verification
-- âœ… `yarn --cwd apps/next build --webpack`
+- ✅ `yarn --cwd apps/next build --webpack`
 
 ### Remaining Follow-Up
 - `--debug-prerender` still crashes on Windows with a `VirtualAlloc failed` worker exit after compile/typecheck
@@ -1092,23 +1124,23 @@ The `NEXT_PRERENDER_INTERRUPTED` build blocker was traced to request-bound API r
 The `004-production-cms` feature was not actually complete, so the implementation pass did not skip it. The remaining audit gaps were fixed across the CMS preview, publish, rollback, merchandising, and admin release layers.
 
 ### Key Fixes
-- **Preview correctness fixed** â€” `cms-preview.service.ts` now resolves explicit `versionId` previews via `getPageVersionById(...)` before falling back to latest release lookup
-- **Publish flow moved behind services** â€” `apps/next/app/api/admin/releases/[id]/publish/route.ts` now delegates to `apps/next/server/services/cms/cms-publish.service.ts`
-- **Rollback operator path exposed** â€” added `apps/next/app/api/admin/releases/[id]/rollback/route.ts` plus shared client endpoint support
-- **Merchandising fallback safety fixed** â€” `cms-home-merchandising.service.ts` no longer treats partial Prisma failures as canonical empty merchandising; failed subqueries now return `{ ok: false }` so the explicit fallback path remains intact
-- **Lifecycle cache invalidation added** â€” publish and rollback now call `revalidateTag('cms-home', 'max')`
-- **Missing lifecycle tests added** â€” created dedicated `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts`
+- **Preview correctness fixed** — `cms-preview.service.ts` now resolves explicit `versionId` previews via `getPageVersionById(...)` before falling back to latest release lookup
+- **Publish flow moved behind services** — `apps/next/app/api/admin/releases/[id]/publish/route.ts` now delegates to `apps/next/server/services/cms/cms-publish.service.ts`
+- **Rollback operator path exposed** — added `apps/next/app/api/admin/releases/[id]/rollback/route.ts` plus shared client endpoint support
+- **Merchandising fallback safety fixed** — `cms-home-merchandising.service.ts` no longer treats partial Prisma failures as canonical empty merchandising; failed subqueries now return `{ ok: false }` so the explicit fallback path remains intact
+- **Lifecycle cache invalidation added** — publish and rollback now call `revalidateTag('cms-home', 'max')`
+- **Missing lifecycle tests added** — created dedicated `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts`
 
 ### Verification
-- âœ… `yarn guard:checks`
-- âœ… `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
-- âœ… `yarn --cwd apps/next test:api` (`148/148`)
+- ✅ `yarn guard:checks`
+- ✅ `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- ✅ `yarn --cwd apps/next test:api` (`148/148`)
 
 ### Open Blocker
-- âŒ `yarn --cwd apps/next build --webpack --debug-prerender`
+- ❌ `yarn --cwd apps/next build --webpack --debug-prerender`
 - The current failure is broader than `004`: Next prerender analysis still interrupts on multiple authenticated/request-bound API routes that read `request.headers` or `request.url`
 
-## Last Session: Homepage "Souk Energy" Redesign â€” All 11 Phases Complete
+## Last Session: Homepage "Souk Energy" Redesign — All 11 Phases Complete
 
 **Date**: 2026-04-13
 
@@ -1116,10 +1148,10 @@ The `004-production-cms` feature was not actually complete, so the implementatio
 All 11 phases from `joyful-stirring-breeze.md` implemented and verified. The homepage homepage now features: warm rose color palette, unified hover interactions, normalized radius tiers, denser product rails, tiered section headers, scroll-reveal animations, and corrected accessibility contrast.
 
 ### Key Decisions
-- **Tokens over hardcoded values** â€” enforced across all changes; found and fixed pre-existing violations (`rgba(0,0,0,0.40)` â†’ `colors.black` + `opacity.overlayLight`)
-- **Read AGENTS.md/QWEN.md before every phase** â€” followed startup protocol to prevent violations
-- **TypeScript strictness** â€” all changes pass `yarn tsc --noEmit` with zero errors
-- **Pre-existing type errors fixed** â€” `HeaderMainRow.tsx:303`, `TopBrandsGrid.tsx:170`
+- **Tokens over hardcoded values** — enforced across all changes; found and fixed pre-existing violations (`rgba(0,0,0,0.40)` → `colors.black` + `opacity.overlayLight`)
+- **Read AGENTS.md/QWEN.md before every phase** — followed startup protocol to prevent violations
+- **TypeScript strictness** — all changes pass `yarn tsc --noEmit` with zero errors
+- **Pre-existing type errors fixed** — `HeaderMainRow.tsx:303`, `TopBrandsGrid.tsx:170`
 
 ### Files Changed (21 files across all phases)
 **Tokens:**
@@ -1145,17 +1177,17 @@ All 11 phases from `joyful-stirring-breeze.md` implemented and verified. The hom
 - `packages/app/features/home/HomeBlocksRenderer.tsx` (Phase 5: getSectionGap, Phase 8: RevealOnScroll)
 - `packages/app/screens/LegacyHomeScreen.tsx` (removed onPressViewAll from HomeCategoryStrip)
 **Pre-existing fixes:**
-- `packages/ui/components/chrome/HeaderMainRow.tsx` (styleâ†’Text wrapper)
+- `packages/ui/components/chrome/HeaderMainRow.tsx` (style→Text wrapper)
 - `packages/ui/components/home-v2/TopBrandsGrid.tsx` (as const textAlign/maxWidth)
 
 ### Verification
-- âœ… `yarn guard:checks` â€” all 15 checks passed
-- âœ… `yarn tsc -p apps/next/tsconfig.json --noEmit` â€” zero type errors
-- âœ… CSS token bridge regenerated
+- ✅ `yarn guard:checks` — all 15 checks passed
+- ✅ `yarn tsc -p apps/next/tsconfig.json --noEmit` — zero type errors
+- ✅ CSS token bridge regenerated
 
 ### Open Items
-- Phase 2 `HomeFlashDealsSection` ready but CMS `FlashSaleBlock` has no products field â€” needs CMS schema extension to wire products
-- Pre-existing hex violation in `OfferBannersGrid.tsx:226` (`hsl(0 0% 15%)`) â€” not introduced by this work
+- Phase 2 `HomeFlashDealsSection` ready but CMS `FlashSaleBlock` has no products field — needs CMS schema extension to wire products
+- Pre-existing hex violation in `OfferBannersGrid.tsx:226` (`hsl(0 0% 15%)`) — not introduced by this work
 ## 2026-04-30 - Aspect 10 Quality Profile Green
 
 Current and quality delivery profiles now pass locally.
@@ -1251,4 +1283,5 @@ Launch/post-launch local gate is green.
   - `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false`
   - `node scripts/verify-devops-deployment.mjs`
   - `yarn verify:delivery --profile deploy`
+
 

@@ -3,9 +3,10 @@ import { cmsProvider } from '@real/providers'
 import { fail, ok } from '../../_lib/response'
 import { requireAdminDomainSession } from '../../_lib/request-auth'
 import { applyAdminControlsToCms, readAdminControlsState, writeAdminControlsState, pushAudit } from '../../_lib/admin-controls-store'
-import { AdminCreateUserInput, AdminDomainPermissionSet, AuthRole } from '@real/app/lib/types'
+import { AdminCreateUserInput, AdminDomainPermissionSet, AdminPermissionSet, AdminUserControlRecord, AuthRole } from '@real/app/lib/types'
 import { AdminDomain, hasAdminDomainPermission } from '../../_lib/admin-rbac'
 import { hashBetterAuthPassword } from '../../_lib/password-hash'
+import { isReleaseLikeEnvironment } from '../../_lib/security-policy'
 
 const VALID_DOMAINS = ['dashboard', 'catalog', 'sales', 'inventory', 'marketplace', 'marketing', 'customers', 'operations', 'settings'] as const
 const VALID_PERMISSION_VALUES = ['none', 'read', 'full'] as const
@@ -20,6 +21,59 @@ function isValidDomainPermissionSet(input: unknown): input is Partial<AdminDomai
   return true
 }
 
+function defaultAdminPermissions(role: AuthRole): AdminPermissionSet {
+  return {
+    canManageCmsToggles: role === 'admin',
+    canManageUsers: role === 'admin',
+    canRunCacheOps: role === 'admin' || role === 'ops',
+  }
+}
+
+async function readDbAdminUsers(): Promise<AdminUserControlRecord[]> {
+  const state = await readAdminControlsState()
+  const dbRoleMappings = await prisma.appAuthRoleMapping.findMany({
+    where: { role: { not: 'customer' } },
+    include: { user: true },
+    orderBy: { updatedAt: 'desc' },
+  })
+
+  return dbRoleMappings.map((mapping) => {
+    const override = state.userOverrides[mapping.user.id]
+    const role = override?.role ?? mapping.role
+    return {
+      id: mapping.user.id,
+      name: mapping.user.name,
+      email: mapping.user.email,
+      role,
+      status: override?.status ?? 'active',
+      lastActiveAt: undefined,
+      permissions: override?.permissions ?? defaultAdminPermissions(role),
+      domainPermissions: override?.domainPermissions,
+    }
+  })
+}
+
+async function readMockRolePreviewUsers(): Promise<AdminUserControlRecord[]> {
+  const cmsResult = await cmsProvider.getHome()
+  if (!cmsResult.ok) {
+    throw new Error(`${cmsResult.error.code}: ${cmsResult.error.message}`)
+  }
+
+  const state = await readAdminControlsState()
+  const home = applyAdminControlsToCms(cmsResult.data, state)
+  return (home.identity?.admin?.rolePreview ?? []).map((user) => {
+    const override = state.userOverrides[user.id]
+    const role = override?.role ?? user.role
+    return {
+      ...user,
+      role,
+      status: override?.status ?? user.status,
+      permissions: override?.permissions ?? user.permissions ?? defaultAdminPermissions(role),
+      domainPermissions: override?.domainPermissions,
+    }
+  })
+}
+
 export async function GET(request: Request) {
   try {
     const session = await requireAdminDomainSession(request, 'customers')
@@ -27,41 +81,17 @@ export async function GET(request: Request) {
       return session
     }
 
-    const cmsResult = await cmsProvider.getHome()
-    if (!cmsResult.ok) {
-      return fail(cmsResult.error.code, cmsResult.error.message, 500)
+    let users: AdminUserControlRecord[] = []
+    try {
+      users = await readDbAdminUsers()
+    } catch (cause) {
+      if (isReleaseLikeEnvironment()) {
+        throw cause
+      }
     }
 
-    const state = await readAdminControlsState()
-    const home = applyAdminControlsToCms(cmsResult.data, state)
-    const users = (home.identity?.admin?.rolePreview ?? []).map((u) => {
-      const override = state.userOverrides[u.id]
-      return {
-        ...u,
-        domainPermissions: override?.domainPermissions,
-      }
-    })
-
-    // Merge DB-backed users not in CMS list
-    const existingEmails = new Set(users.map((u) => u.email.toLowerCase()))
-    const dbRoleMappings = await prisma.appAuthRoleMapping.findMany({
-      where: { role: { not: 'customer' } },
-      include: { user: true },
-    })
-    for (const mapping of dbRoleMappings) {
-      if (!existingEmails.has(mapping.user.email.toLowerCase())) {
-        const override = state.userOverrides[mapping.user.id]
-        users.push({
-          id: mapping.user.id,
-          name: mapping.user.name,
-          email: mapping.user.email,
-          role: override?.role ?? mapping.role,
-          status: override?.status ?? 'active',
-          lastActiveAt: undefined,
-          permissions: override?.permissions ?? { canManageCmsToggles: false, canManageUsers: false, canRunCacheOps: false },
-          domainPermissions: override?.domainPermissions,
-        })
-      }
+    if (users.length === 0 && !isReleaseLikeEnvironment()) {
+      users = await readMockRolePreviewUsers()
     }
 
     return ok(users)

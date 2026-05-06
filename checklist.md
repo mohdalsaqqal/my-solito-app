@@ -26,6 +26,7 @@ Legend:
 - [x] Client onboarding process has an executable runbook under `docs/delivery/runbooks/client-onboarding.md`.
 - [x] SLA/support expectations are documented.
 - [x] Source-code buyout handoff package is documented.
+- [x] Technical org staffing plan is documented in `docs/delivery/runbooks/technical-org-staffing.md`.
 
 ## 2. Architecture & Design System
 
@@ -187,6 +188,11 @@ Legend:
 - [x] Component catalog exists in `docs/delivery/runbooks/component-catalog.md`; full Storybook remains future UI tooling.
 - [x] CMS user guide for store managers exists in `docs/delivery/runbooks/cms-store-manager.md`.
 - [x] Operator handbook index exists in `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md`.
+- [x] Environment/data-source matrix exists in `docs/delivery/runbooks/environment-data-source-matrix.md` for local dev, local production build, Vercel Preview, and Vercel Production.
+- [x] CMS page config/page version persistence is Prisma-backed by default; JSON storage is explicit test/dev fallback only.
+- [x] Release bootstrap exists through `yarn bootstrap:preview` / `yarn bootstrap:production`; mutation requires explicit `--apply`.
+- [x] Provider readiness verifier exists through `yarn verify:provider-readiness` and reports customer-ready versus demo-only blockers.
+- [x] `AGENTS.md` defines the strict professional delivery workflow as a P0 rule.
 - [x] Documentation/knowledge smoke passes through `yarn verify:documentation-knowledge`.
 
 ## 10. AI-Augmented Development Process

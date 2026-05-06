@@ -1,4 +1,60 @@
-ï»¿# SESSION-STATE.md - Active Working Memory
+# SESSION-STATE.md - Active Working Memory
+
+## 2026-05-06 FAS-17 Architecture + Technical Org Staffing
+
+**Status**: LANDED LOCALLY. Architecture assessment and staffing proposal added as a delivery runbook artifact.
+
+### Completed this session
+- Added `docs/delivery/runbooks/technical-org-staffing.md` with architecture maturity assessment, risk map, target org, hiring sequence, role-to-backlog mapping, 90-day model, and governance rules.
+- Updated `docs/delivery/aspects/01-product-business-foundation.md` to track FAS-17 completion.
+- Updated `checklist.md` Product & Business Foundation section with staffing-plan documentation status.
+
+### Verification
+```
+docs updated and linked:
+- docs/delivery/runbooks/technical-org-staffing.md
+- docs/delivery/aspects/01-product-business-foundation.md
+- checklist.md
+```
+
+### Next
+- Create child execution issues for each required provider-readiness blocker domain and assign owners by target role.
+## 2026-05-06 Environment/Data Source Audit Slice
+
+**Status**: LANDED LOCALLY. Environment/data-source audit cleanup is in progress with two persistence fixes complete.
+
+### Completed this session
+- Added `docs/delivery/runbooks/environment-data-source-matrix.md` to clarify Local Dev, Local Production Build, Vercel Preview, and Vercel Production data-source rules.
+- Linked the matrix from `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md`.
+- Made `GET /api/admin/users` DB-first: Prisma `AppAuthRoleMapping` + `User` now drive the admin user list, with mock CMS `identity.admin.rolePreview` only as a non-release fallback when no DB-backed admin users are available.
+- Added Prisma `CmsPageConfig` and `CmsPageVersion` tables plus migration `20260506110000_cms_page_config_versions`.
+- Made default page config/page version stores Prisma-backed; JSON files remain explicit `storageFile` test/dev fallback only.
+- Added the missing root `verify:documentation-knowledge` script.
+- Added `scripts/bootstrap-release.mjs` plus `yarn bootstrap:preview` / `yarn bootstrap:production`; check-only by default, `--apply` required for migrations/client generation/admin seed.
+- Extended devops verification to cover the release bootstrap command.
+- Added `scripts/verify-provider-readiness.mjs` plus `yarn verify:provider-readiness`; it classifies the active env as `customer-ready` or `demo-only` and fails in strict production/staging when required domains are mock-backed.
+- Expanded `packages/providers/registry.ts` readiness metadata to cover auth, CMS, CMS page config/version, release, product/category/brand, order, payment, search, and notifications.
+- Updated `AGENTS.md` to v4.9 with the P0 Professional Delivery Workflow: Local Dev -> local gates -> preview bootstrap/readiness -> Vercel Preview staging truth -> production bootstrap/promotion.
+
+### Verification
+```
+node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false [PASS]
+$env:DATABASE_URL='postgresql://user:pass@localhost:5432/db'; $env:DIRECT_URL=$env:DATABASE_URL; yarn --cwd apps/next prisma validate --schema prisma/schema.prisma [PASS]
+node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/app/api/admin/layout-versioning.test.ts apps/next/app/api/admin/release-persistence.test.ts [PASS]
+$env:DATABASE_URL='postgresql://user:pass@localhost:5432/db'; $env:DIRECT_URL=$env:DATABASE_URL; $env:AUTH_SESSION_SECRET='test-auth-session-secret-32-characters-minimum'; $env:BETTER_AUTH_SECRET='test-better-auth-secret-32-characters-minimum'; yarn bootstrap:preview [PASS]
+yarn verify:provider-readiness [PASS; current env classified demo-only with blockers: release, product, category, brand, order, payment]
+$env:APP_ENV='production'; $env:STRICT_PROVIDER_READINESS='true'; $env:USE_MOCK='true'; yarn verify:provider-readiness [EXPECTED FAIL; strict demo-only blockers reported]
+node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/app/api/provider-readiness.test.ts packages/providers/registry.test.ts [PASS]
+node scripts/verify-devops-deployment.mjs [PASS]
+node scripts/verify-documentation-knowledge.mjs [PASS]
+node scripts/guard-checks.mjs [PASS]
+```
+
+### Next
+- Replace remaining customer-production blockers: release, product, category, brand, order, payment.
+
+### Notes
+- `yarn --cwd apps/next prisma:generate` hit a Windows file lock on `node_modules/.prisma/client/query_engine-windows.dll.node` while the local dev server was running. Schema validation passed; rerun Prisma generate after stopping the dev server if regenerated client files are needed locally.
 
 ## 2026-05-05 Vercel Preview + Neon Prisma Admin DB
 
@@ -30,7 +86,7 @@ yarn e2e:a11y [PASS locally]
 - `yarn verify:delivery:quality` was not completed because referral tests failed when pointed at the live Neon preview DB; do not use the preview DB as the fixture DB for those tests.
 - Remote Playwright a11y against the protected Vercel URL hit Chromium `ERR_CONNECTION_RESET` before app load; curl/Node fetch reached the deployment, and local a11y passed.
 
-## 2026-05-01 Final Sprint â€” 14 commits pushed. All gates passing.
+## 2026-05-01 Final Sprint — 14 commits pushed. All gates passing.
 
 **Status**: GREEN. Branch ready for human review.
 
@@ -60,7 +116,7 @@ CMS lifecycle   ? 14/14
 API tests       ? 28/28
 ```
 
-## 2026-05-01 Production Hardening Sprint â€” Committed c4ccb82 (46 files, +4745/-591)
+## 2026-05-01 Production Hardening Sprint — Committed c4ccb82 (46 files, +4745/-591)
 
 **Status**: GREEN. All gates passing.
 
@@ -220,12 +276,12 @@ next-build       ?
 e2e-a11y         ? (6/6)
 ```
 
-## 2026-04-30 Admin Auth/Session Verification (Line 285) â€” COMPLETED
+## 2026-04-30 Admin Auth/Session Verification (Line 285) — COMPLETED
 
 **Status**: GREEN. 46/46 auth tests pass. Last code-verifiable checklist item cleared.
 
 - 12/12 auth route tests (login, register, session, logout, reset, fail-close, rate limiting)
-- 13/13 admin route auth tests (catalog/CMS/ops â€” 401/403/200 enforcement per RBAC matrix)
+- 13/13 admin route auth tests (catalog/CMS/ops — 401/403/200 enforcement per RBAC matrix)
 - 21 session adapter + request-auth tests (Better Auth identity mapping, legacy fallback, release-mode hardening)
 - Full pipeline: Login ? Better Auth signInEmail ? Set-Cookie ? resolveNormalizedSessionFromRequest ? role resolution ? hasAdminDomainPermission ? 200/403
 - Live smoke with provisioned admin credentials blocked by Postgres/client credential setup
@@ -334,31 +390,31 @@ e2e-a11y         ? (6/6)
 ### Completed This Session
 
 **New docs created (5):**
-- `docs/delivery/PRODUCTION_BLOCKERS.md` â€” 15 non-UI blockers across auth, DB, integrations, infra, security
-- `docs/delivery/CLIENT_HANDOFF_PACK.md` â€” 6 sections: env vars, Odoo mapping, PaymentProvider contract, blockers, referral/loyalty/pharmacist acceptance
-- `docs/delivery/runbooks/custom-payment-gateway.md` â€” API contract, webhook format, HMAC, sandbox test cards, webhook events, adapter customization, production verification
-- `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md` â€” Central operator index (store manager, support, DevOps, integrations, retention)
-- `docs/delivery/runbooks/backup-recovery.md` â€” Backup scope, schedule, PITR, disaster recovery, provider-specific notes
+- `docs/delivery/PRODUCTION_BLOCKERS.md` — 15 non-UI blockers across auth, DB, integrations, infra, security
+- `docs/delivery/CLIENT_HANDOFF_PACK.md` — 6 sections: env vars, Odoo mapping, PaymentProvider contract, blockers, referral/loyalty/pharmacist acceptance
+- `docs/delivery/runbooks/custom-payment-gateway.md` — API contract, webhook format, HMAC, sandbox test cards, webhook events, adapter customization, production verification
+- `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md` — Central operator index (store manager, support, DevOps, integrations, retention)
+- `docs/delivery/runbooks/backup-recovery.md` — Backup scope, schedule, PITR, disaster recovery, provider-specific notes
 
 **Checklist items advanced (10):**
-- `[x]` Lines 272, 280, 283, 300, 301, 312, 313 â€” 7 items marked verified done
-- `[~]` Lines 309 â€” CMS API verified (14/14), admin pages load, browser UI needs credentials
-- `[~]` Lines 305, 310 â€” Web verified, native/physical remains
+- `[x]` Lines 272, 280, 283, 300, 301, 312, 313 — 7 items marked verified done
+- `[~]` Lines 309 — CMS API verified (14/14), admin pages load, browser UI needs credentials
+- `[~]` Lines 305, 310 — Web verified, native/physical remains
 
 **Aspect files synced (5):**
-- Aspect 04 (CMS) â€” all `[x]`
-- Aspect 07 (Payments) â€” 4 tasks marked done, 2 remain (rollback design, gateway sandbox)
-- Aspect 08 (Search) â€” Meilisearch adapter marked done
-- Aspect 11 (DevOps) â€” Backup/PITR marked done
-- Aspect 15 (Documentation) â€” CMS guide, operator index, Odoo, payment handoff all done
+- Aspect 04 (CMS) — all `[x]`
+- Aspect 07 (Payments) — 4 tasks marked done, 2 remain (rollback design, gateway sandbox)
+- Aspect 08 (Search) — Meilisearch adapter marked done
+- Aspect 11 (DevOps) — Backup/PITR marked done
+- Aspect 15 (Documentation) — CMS guide, operator index, Odoo, payment handoff all done
 
 ### Verification (re-confirmed)
 - `yarn guard:checks`: PASS
 - `yarn tsc`: PASS (no errors)
 - `yarn verify:functional-storefront`: 24/24 PASS (prior session)
 
-### Remaining `[ ]` â€” needs external dependency
-- **Line 284**: Admin auth/session verification â€” needs provisioned admin credentials
+### Remaining `[ ]` — needs external dependency
+- **Line 284**: Admin auth/session verification — needs provisioned admin credentials
 - **Physical device**: Native smoke, push notifications, pharmacist mobile flow
 - **Client credentials**: Odoo connection, payment gateway sandbox, EAS build
 
@@ -941,7 +997,7 @@ e2e-a11y         ? (6/6)
 
 ### 2026-04-22 Better Auth Audit Remediation
 
-**Audit findings fixed** â€” LANDED.
+**Audit findings fixed** — LANDED.
 - Checkout quote and order placement now resolve sessions through `resolveNormalizedSessionFromRequest(...)` instead of parsing the legacy `rc_auth_session` cookie directly.
 - Password reset routes now delegate to Better Auth APIs:
   - `/api/auth/request-reset` ? `auth.api.requestPasswordReset`
@@ -961,7 +1017,7 @@ e2e-a11y         ? (6/6)
 
 ### 2026-04-22 AGENTS Startup Status Rule
 
-**AGENTS.md updated** â€” LANDED.
+**AGENTS.md updated** — LANDED.
 - Version bumped to `v4.3`
 - Last updated set to `2026-04-22`
 - Added `Mandatory Startup Status` requiring agents to report:
@@ -973,7 +1029,7 @@ e2e-a11y         ? (6/6)
 
 ### 2026-04-22 Better Auth Audit
 
-**Audit artifact** â€” ADDED:
+**Audit artifact** — ADDED:
 - [docs/reports/better-auth-audit-2026-04-22.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/reports/better-auth-audit-2026-04-22.md)
 
 **Key findings**
@@ -988,27 +1044,27 @@ e2e-a11y         ? (6/6)
 
 ### Better Auth Implementation
 
-**Foundational auth migration** â€” LANDED. The repo now has a working Better Auth foundation in code, not just in docs:
+**Foundational auth migration** — LANDED. The repo now has a working Better Auth foundation in code, not just in docs:
 - Better Auth config/bootstrap lives in [apps/next/lib/auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/lib/auth.ts)
 - Better Auth security/config helpers were added to [security-policy.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/security-policy.ts)
 - Prisma now includes Better Auth identity/session/account/verification tables plus app-owned role mapping in [schema.prisma](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/prisma/schema.prisma)
 - Migration added: [20260414103000_better_auth_foundation](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/prisma/migrations/20260414103000_better_auth_foundation/migration.sql)
 
-**Auth service boundary** â€” LANDED. `apps/next/server/services/auth/` now exists as the canonical Better Auth integration layer:
+**Auth service boundary** — LANDED. `apps/next/server/services/auth/` now exists as the canonical Better Auth integration layer:
 - [auth-session-adapter.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-session-adapter.service.ts)
 - [auth-role-resolution.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-role-resolution.service.ts)
 
-**Auth route cutover** â€” LANDED. The low-risk auth routes now issue/resolve Better Auth-backed sessions:
+**Auth route cutover** — LANDED. The low-risk auth routes now issue/resolve Better Auth-backed sessions:
 - `/api/auth/login`
 - `/api/auth/logout`
 - `/api/auth/register`
 - `/api/auth/session`
 
-**Protected-route helper cutover** â€” LANDED. [request-auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/request-auth.ts) now resolves Better Auth-backed normalized sessions first and falls back to legacy cookie sessions during the transition window. Protected account, order, pharmacist, admin, CMS, and release routes were updated to await the async helper path.
+**Protected-route helper cutover** — LANDED. [request-auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/request-auth.ts) now resolves Better Auth-backed normalized sessions first and falls back to legacy cookie sessions during the transition window. Protected account, order, pharmacist, admin, CMS, and release routes were updated to await the async helper path.
 
 ### Production Hardening Follow-Up
 
-**Dedicated Better Auth secret enforcement** â€” LANDED. Better Auth no longer treats the legacy auth secret as an acceptable production substitute:
+**Dedicated Better Auth secret enforcement** — LANDED. Better Auth no longer treats the legacy auth secret as an acceptable production substitute:
 - [security-policy.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/security-policy.ts) now requires a dedicated `BETTER_AUTH_SECRET` in release-like environments and rejects weak secrets under 32 characters
 - [auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/lib/auth.ts) now fails closed with an explicit Better Auth secret error when release config is invalid
 - CI and operator docs now reflect the real contract:
@@ -1017,7 +1073,7 @@ e2e-a11y         ? (6/6)
   - [docs/adapter-integration-guide.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/adapter-integration-guide.md)
   - [docs/production-blueprint.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/production-blueprint.md)
 
-**Request-bound prerender cleanup** â€” PARTIALLY LANDED. The safe route-handler pass now centralizes request-bound auth/session handling more cleanly and reduces false-alarm debug noise:
+**Request-bound prerender cleanup** — PARTIALLY LANDED. The safe route-handler pass now centralizes request-bound auth/session handling more cleanly and reduces false-alarm debug noise:
 - [request-auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/request-auth.ts) now establishes a request connection before protected session resolution
 - request-bound GET handlers were explicitly marked where needed:
   - [api/auth/session/route.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/session/route.ts)
@@ -1025,12 +1081,12 @@ e2e-a11y         ? (6/6)
   - [api/reviews/route.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/reviews/route.ts)
 - [response.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/response.ts) now suppresses expected prerender bailout noise (`NEXT_PRERENDER_INTERRUPTED`, `HANGING_PROMISE_REJECTION`) so `--debug-prerender` is readable again
 
-**Regression coverage** â€” EXPANDED.
+**Regression coverage** — EXPANDED.
 - [auth-session.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/auth-session.test.ts) now covers release-mode secret strength enforcement
 - [auth/route.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/route.test.ts) now covers fail-closed behavior for weak/missing Better Auth secrets in release-like environments
 - [apps/next/package.json](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/package.json) test script now seeds a strong test `BETTER_AUTH_SECRET` so auth imports are stable under test
 
-**Production auth hardening** â€” TIGHTENED AGAIN.
+**Production auth hardening** — TIGHTENED AGAIN.
 - [auth-role-resolution.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-role-resolution.service.ts) no longer upserts inferred roles in release-like environments; missing mapping now resolves to least-privilege `customer`
 - release-like environments also fail closed when Prisma role lookup throws instead of re-inferring elevated seeded roles
 - [auth-session-adapter.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-session-adapter.service.ts) now rejects legacy cookie fallback entirely in release-like environments
@@ -1039,7 +1095,7 @@ e2e-a11y         ? (6/6)
   - release-mode rejection of legacy cookie fallback
   - existing email-verification and session-rate-limit behavior
 
-**Spec Kit sync** â€” LANDED. `specs/005-better-auth/` now reflects the real implementation approach instead of the earlier generic migration draft:
+**Spec Kit sync** — LANDED. `specs/005-better-auth/` now reflects the real implementation approach instead of the earlier generic migration draft:
 - [spec.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/spec.md) is now `In Progress` and includes release-secret enforcement plus prerender-compatibility requirements
 - [plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/plan.md) now records the landed Better Auth foundation and the safe hardening pass
 - [tasks.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/tasks.md) now includes explicit completed US3 tasks for release-secret hardening, env/CI/doc sync, and prerender-noise cleanup
@@ -1062,19 +1118,19 @@ e2e-a11y         ? (6/6)
 
 ---
 
-## Previous State: 004-production-cms â€” Audit Remediation Landed, Final Build Still Open
+## Previous State: 004-production-cms — Audit Remediation Landed, Final Build Still Open
 
 **Last Updated**: 2026-04-14
 
 ### Better Auth Planning
 
-**Repo-native auth migration plan** â€” ADDED. The repo now has a concrete phased migration plan for moving from the current custom encrypted-cookie auth system to `Better Auth` without replacing the existing custom admin/CMS authorization model:
+**Repo-native auth migration plan** — ADDED. The repo now has a concrete phased migration plan for moving from the current custom encrypted-cookie auth system to `Better Auth` without replacing the existing custom admin/CMS authorization model:
 - [2026-04-14-better-auth-migration-plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/plans/2026-04-14-better-auth-migration-plan.md)
 
-**Execution backlog** â€” ADDED. The migration now also has a dependency-ordered backlog with concrete repo file targets and an MVP cut line:
+**Execution backlog** — ADDED. The migration now also has a dependency-ordered backlog with concrete repo file targets and an MVP cut line:
 - [2026-04-14-better-auth-migration-backlog.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/plans/2026-04-14-better-auth-migration-backlog.md)
 
-**Spec Kit feature set** â€” ADDED. A full implementation/security/audit/delivery feature set now exists under:
+**Spec Kit feature set** — ADDED. A full implementation/security/audit/delivery feature set now exists under:
 - [specs/005-better-auth/spec.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/spec.md)
 - [specs/005-better-auth/plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/plan.md)
 - [specs/005-better-auth/tasks.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/tasks.md)
@@ -1086,7 +1142,7 @@ e2e-a11y         ? (6/6)
 
 ### Prerender Follow-Up
 
-**Original `NEXT_PRERENDER_INTERRUPTED` build blocker** â€” PARTIALLY RESOLVED. The specific request-bound API routes that previously stopped the build now call `await connection()` before touching auth headers, cookies, or request URLs:
+**Original `NEXT_PRERENDER_INTERRUPTED` build blocker** — PARTIALLY RESOLVED. The specific request-bound API routes that previously stopped the build now call `await connection()` before touching auth headers, cookies, or request URLs:
 - `/api/admin/capabilities`
 - `/api/admin/cms/toggles`
 - `/api/admin/i18n/status`
@@ -1109,17 +1165,17 @@ e2e-a11y         ? (6/6)
 
 ### Latest 004 Remediation
 
-**Preview version correctness** â€” FIXED. `cms-preview.service.ts` now resolves explicit `versionId` previews via `getPageVersionById(...)` before falling back to latest-by-release lookup, so preview links point at the intended snapshot instead of drifting to newer drafts.
+**Preview version correctness** — FIXED. `cms-preview.service.ts` now resolves explicit `versionId` previews via `getPageVersionById(...)` before falling back to latest-by-release lookup, so preview links point at the intended snapshot instead of drifting to newer drafts.
 
-**Publish lifecycle delegation** â€” FIXED. `apps/next/app/api/admin/releases/[id]/publish/route.ts` now delegates release publication to `apps/next/server/services/cms/cms-publish.service.ts` instead of re-owning the publish logic in the route.
+**Publish lifecycle delegation** — FIXED. `apps/next/app/api/admin/releases/[id]/publish/route.ts` now delegates release publication to `apps/next/server/services/cms/cms-publish.service.ts` instead of re-owning the publish logic in the route.
 
-**Rollback route exposure** â€” ADDED. `apps/next/app/api/admin/releases/[id]/rollback/route.ts` now exposes the service-owned rollback flow, and shared client endpoints now include `adminReleaseRollback`.
+**Rollback route exposure** — ADDED. `apps/next/app/api/admin/releases/[id]/rollback/route.ts` now exposes the service-owned rollback flow, and shared client endpoints now include `adminReleaseRollback`.
 
-**Homepage merchandising partial-failure safety** â€” FIXED. `cms-home-merchandising.service.ts` no longer treats partial Prisma query failure as canonical empty merchandising. Any failed merchandising subquery now returns `{ ok: false }`, preserving explicit mock fallback instead of blanking sections.
+**Homepage merchandising partial-failure safety** — FIXED. `cms-home-merchandising.service.ts` no longer treats partial Prisma query failure as canonical empty merchandising. Any failed merchandising subquery now returns `{ ok: false }`, preserving explicit mock fallback instead of blanking sections.
 
-**Lifecycle cache invalidation** â€” FIXED. `cms-publish.service.ts` and `cms-rollback.service.ts` now invalidate `cms-home` via `revalidateTag(...)` after successful lifecycle changes.
+**Lifecycle cache invalidation** — FIXED. `cms-publish.service.ts` and `cms-rollback.service.ts` now invalidate `cms-home` via `revalidateTag(...)` after successful lifecycle changes.
 
-**Dedicated lifecycle test files** â€” ADDED. `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts` now exist so the `004` task list no longer points at missing files.
+**Dedicated lifecycle test files** — ADDED. `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts` now exist so the `004` task list no longer points at missing files.
 
 ### Verification After Audit Fixes
 - `yarn guard:checks` ?
@@ -1139,28 +1195,28 @@ e2e-a11y         ? (6/6)
 **State**: All 11 phases from the `joyful-stirring-breeze.md` homepage redesign plan are implemented and verified. The homepage now features: warm rose color palette, unified hover interactions, normalized radius tiers, denser product rails, tiered section headers, scroll-reveal animations, and corrected accessibility contrast.
 
 ### All Phases Complete
-- **Phase 9** â€” Token Foundation Fixes (6 files): brand font min, caption/label lineHeight, card brand weight, amber WCAG, sale price burgundy, surface warm, flash bg token, countdown white digits
-- **Phase 10** â€” Quality Polish: unified hover system (ProductCard, CategoryStrip, BrandRail, OfferBannersGrid, Button), 3-tier radius normalization (2px?6px cards, 16px?12px hero), product image `contain?cover`
-- **Phase 0** â€” TopPromoBar Demotion: black?roseBlush bg, weight 700?500, inverse?default tone
-- **Phase 6** â€” Section Headers: tiered sizes (lg/28px serif, md/18px sans, sm/16px sans), eyebrow roseDeep on roseBlush (6:1 WCAG), meta weight 500
-- **Phase 1** â€” Category Strip: ghost buttons?56px circles with icon/label below, removed header
-- **Phase 3** â€” Product Rail Density: card width 240px?180px for 5-6 visible cards
-- **Phase 7** â€” Brand Rail: replaced plain text with MarketplaceSectionHeader (size=sm), added `onPressViewAll`
-- **Phase 4** â€” Hero Carousel: gradient 30%?40%/height 60%?70%, title/subtitle overlays (Playfair serif), CTA commercePrimary burgundy
-- **Phase 5** â€” Section Spacing Rhythm: `getSectionGap()` helper with type-pair logic (hero?cat=16px, flash=40px, newsletter=64px, editorial=48px)
-- **Phase 8** â€” Scroll Reveals: `RevealOnScroll` wrapper with staggered `delayMs=index*40`, `liftY=12`; hero/promo_strip skip
-- **Phase 2** â€” Flash Deals Section: `HomeFlashDealsSection` component created (serif header + countdown + product rail); `FlashSaleBand` kept as fallback since CMS block has no products yet
+- **Phase 9** — Token Foundation Fixes (6 files): brand font min, caption/label lineHeight, card brand weight, amber WCAG, sale price burgundy, surface warm, flash bg token, countdown white digits
+- **Phase 10** — Quality Polish: unified hover system (ProductCard, CategoryStrip, BrandRail, OfferBannersGrid, Button), 3-tier radius normalization (2px?6px cards, 16px?12px hero), product image `contain?cover`
+- **Phase 0** — TopPromoBar Demotion: black?roseBlush bg, weight 700?500, inverse?default tone
+- **Phase 6** — Section Headers: tiered sizes (lg/28px serif, md/18px sans, sm/16px sans), eyebrow roseDeep on roseBlush (6:1 WCAG), meta weight 500
+- **Phase 1** — Category Strip: ghost buttons?56px circles with icon/label below, removed header
+- **Phase 3** — Product Rail Density: card width 240px?180px for 5-6 visible cards
+- **Phase 7** — Brand Rail: replaced plain text with MarketplaceSectionHeader (size=sm), added `onPressViewAll`
+- **Phase 4** — Hero Carousel: gradient 30%?40%/height 60%?70%, title/subtitle overlays (Playfair serif), CTA commercePrimary burgundy
+- **Phase 5** — Section Spacing Rhythm: `getSectionGap()` helper with type-pair logic (hero?cat=16px, flash=40px, newsletter=64px, editorial=48px)
+- **Phase 8** — Scroll Reveals: `RevealOnScroll` wrapper with staggered `delayMs=index*40`, `liftY=12`; hero/promo_strip skip
+- **Phase 2** — Flash Deals Section: `HomeFlashDealsSection` component created (serif header + countdown + product rail); `FlashSaleBand` kept as fallback since CMS block has no products yet
 
 ### Pre-existing Type Errors Fixed
-- `HeaderMainRow.tsx:303` â€” removed `style` from `Button`, wrapped child in `<Text>`
-- `TopBrandsGrid.tsx:170` â€” added `as const` to `textAlign` and `maxWidth`
+- `HeaderMainRow.tsx:303` — removed `style` from `Button`, wrapped child in `<Text>`
+- `TopBrandsGrid.tsx:170` — added `as const` to `textAlign` and `maxWidth`
 
 ### Audit Finding Fixed
 - `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` hardcoded ? replaced with `colors.black` + `opacity.overlayLight`
 
 ### Verification
-- `yarn guard:checks` ? â€” all 15 checks passed
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? â€” zero type errors
+- `yarn guard:checks` ? — all 15 checks passed
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? — zero type errors
 
 ---
 
@@ -1215,7 +1271,7 @@ e2e-a11y         ? (6/6)
 ### Deletion Rationale
 - `apps/strapi/`: Excluded from yarn workspaces (`"!apps/strapi"`), zero imports from `apps/next/` or `packages/`, no content types, no data flows.
 - `real-cosmetics-admin/`: Standalone Vite app with `localStorage` only, zero HTTP connection to monorepo, not in workspaces.
-- Real admin UI is at `apps/next/app/admin/` (60 files) â€” full sidebar navigation, CMS management, catalog, orders, etc.
+- Real admin UI is at `apps/next/app/admin/` (60 files) — full sidebar navigation, CMS management, catalog, orders, etc.
 
 ### CMS Architecture (Working)
 - Base data: `packages/adapters/mock/cms/index.ts`
@@ -1687,4 +1743,7 @@ e2e-a11y         ? (6/6)
 - `vercel curl /api/health --deployment https://my-solito-gzefksc8i-moes-projects-cfd9e85f.vercel.app` reaches the protected deployment path.
 - Direct CLI login reaches the app when tunneled through Vercel, but app auth rejects non-browser-like context as `AUTH_UNTRUSTED_REQUEST`.
 - Local deploy readiness remains green: Next typecheck, `node scripts/verify-devops-deployment.mjs`, and `yarn verify:delivery --profile deploy` pass.
+
+
+
 

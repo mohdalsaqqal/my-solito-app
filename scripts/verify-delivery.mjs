@@ -107,6 +107,11 @@ const gates = {
     aspect: 'DevOps & Deployment',
     required: false,
   },
+  'provider-readiness': {
+    command: 'yarn verify:provider-readiness',
+    aspect: 'DevOps & Deployment',
+    required: false,
+  },
   'operations-observability': {
     command: 'yarn verify:operations-observability',
     aspect: 'Operations & Observability',
@@ -213,6 +218,7 @@ const profiles = {
     'guard-checks',
     'next-typecheck',
     'devops-deployment',
+    'provider-readiness',
     'next-build',
   ],
   operations: [

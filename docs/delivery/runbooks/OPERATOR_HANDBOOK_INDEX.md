@@ -22,6 +22,7 @@ One-stop index for operators: store managers, support staff, DevOps, and client 
 | Runbook | Covers |
 |---|---|
 | `architecture-design-system.md` | Architecture overview, design system, provider/contract/adapter pattern |
+| `environment-data-source-matrix.md` | Local dev, local production build, Vercel Preview, and Vercel Production data-source rules |
 | `backup-recovery.md` | Backup scope, schedule, PITR, disaster recovery, provider-specific notes, retention policy |
 | `uptime-monitoring.md` | `/api/health`, external monitors, alert routing, verification |
 | `incident-response.md` | Severity, triage, rollback, communication, post-incident closeout |

@@ -1,6 +1,6 @@
 ﻿# AGENTS VERSION
-- Version: `v4.8`
-- Last updated: `2026-04-29`
+- Version: `v4.9`
+- Last updated: `2026-05-06`
 - This file is the **sole source of truth** for architecture rules, platform operating model, and non-negotiables.
 
 ## Source of Truth
@@ -39,6 +39,69 @@ Any architecture rule duplicated in a shim file is a violation enforced by `yarn
 - `packages/app` owns shared screens and flows
 - `packages/providers` owns contracts plus registry
 - `packages/adapters` owns external integrations
+
+---
+
+# Professional Delivery Workflow (P0)
+
+This repo is operated like a professional IT delivery team, even when one solo owner and AI agents do the work.
+
+## Environment Roles
+
+| Environment | Purpose | Data rule |
+|---|---|---|
+| Local Dev | Fast feature work and AI-agent iteration | Mock/fallback providers are allowed; Prisma is used when local DB is available |
+| Local Production Build | Preflight verification only | Production build behavior, never customer production data |
+| Vercel Preview | Staging truth for QA/customer review | Preview DB and preview secrets; mocks only when explicitly accepted as demo-only |
+| Vercel Production | Real customer runtime | Production DB/secrets only; no mock authority for release-critical domains |
+
+## Required Work Loop
+
+Agents must use this flow for delivery work:
+
+1. Build in Local Dev for speed.
+2. Run focused tests for the touched area.
+3. Run minimum quality gates before marking work done:
+   - `yarn guard:checks`
+   - `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+4. Run `yarn bootstrap:preview` before hosted QA; add `--apply` only when the target preview DB/secrets are confirmed.
+5. Run `yarn verify:provider-readiness` to classify the environment as `customer-ready` or `demo-only`.
+6. Use Vercel Preview as staging truth before production.
+7. Promote to Vercel Production only after Preview is accepted, then run `yarn bootstrap:production --apply` against production env.
+
+## Provider Readiness Rule
+
+`yarn verify:provider-readiness` is the release-readiness truth gate.
+
+Required customer-production domains must not be mock-backed:
+
+| Domain | Customer-ready source |
+|---|---|
+| Auth | Better Auth + Prisma DB |
+| CMS shell/content | App CMS + Prisma DB |
+| CMS page config | Prisma `CmsPageConfig` |
+| CMS page versions | Prisma `CmsPageVersion` |
+| Release lifecycle | Non-mock release provider |
+| Product/category/brand | Real commerce/catalog provider |
+| Order | Real order/payment network provider |
+| Payment | Real custom/payment gateway provider |
+
+Optional but expected for high-end delivery:
+
+| Domain | Customer-ready source |
+|---|---|
+| Search | Meilisearch |
+| Notifications | Email or Expo push provider |
+
+When `APP_ENV=production` or `APP_ENV=staging` and `STRICT_PROVIDER_READINESS=true`, mock-backed required domains must fail readiness.
+
+## Mock/Fallback Boundaries
+
+- Mock data is allowed in Local Dev and tests.
+- Mock data may exist in Vercel Preview only when the deployment is explicitly treated as demo-only.
+- Vercel Production must not rely on mock authority for auth, admin users, admin roles, CMS persistence, page config, page versions, release lifecycle, catalog, order, or payment.
+- Prisma/Postgres is the canonical store for mutable CMS/admin/customer-owned production data.
+- `.data` JSON stores are dev/test fallback only unless AGENTS.md explicitly grants an exception.
 
 ---
 

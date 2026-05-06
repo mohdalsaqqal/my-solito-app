@@ -45,6 +45,9 @@ type ProviderSource =
   | 'email'
   | 'multi-channel'
   | 'meilisearch'
+  | 'better-auth'
+  | 'prisma'
+  | 'app-cms'
 
 const useMock = process.env.USE_MOCK !== 'false'
 const useNetworksMock = process.env.USE_NETWORKS !== 'false'
@@ -62,6 +65,8 @@ const expoPushAdapter = createExpoPushNotificationAdapterFromEnv()
 const emailNotificationAdapter = createEmailNotificationAdapterFromEnv()
 const meilisearchSearchAdapter = createMeilisearchSearchAdapterFromEnv()
 const pushNotificationProvider = expoPushAdapter ?? mockNotificationAdapter
+const hasDatabase = Boolean(process.env.DATABASE_URL?.trim())
+const hasAuthSecret = Boolean(process.env.BETTER_AUTH_SECRET?.trim() || process.env.AUTH_SESSION_SECRET?.trim())
 
 export const providerEnvironment = {
   appEnv,
@@ -71,28 +76,47 @@ export const providerEnvironment = {
   useCustomPaymentMock,
 }
 
-export const providerReadiness: Record<string, { tier: ReadinessTier; source: ProviderSource }> = {
-  product: { tier: 'release-ready', source: useMock ? 'mock' : odooAdapters?.productProvider ? 'odoo' : 'mock' },
-  category: { tier: 'release-ready', source: useMock ? 'mock' : odooAdapters?.categoryProvider ? 'odoo' : 'mock' },
-  brand: { tier: 'release-ready', source: useMock ? 'mock' : odooAdapters?.brandProvider ? 'odoo' : 'mock' },
-  order: { tier: 'release-ready', source: useNetworksMock ? 'mock' : networksAdapters?.orderProvider ? 'networks' : 'mock' },
+export const providerReadiness: Record<string, { tier: ReadinessTier; source: ProviderSource; requiredForCustomerProduction?: boolean }> = {
+  product: { tier: 'release-ready', source: useMock ? 'mock' : odooAdapters?.productProvider ? 'odoo' : 'mock', requiredForCustomerProduction: true },
+  category: { tier: 'release-ready', source: useMock ? 'mock' : odooAdapters?.categoryProvider ? 'odoo' : 'mock', requiredForCustomerProduction: true },
+  brand: { tier: 'release-ready', source: useMock ? 'mock' : odooAdapters?.brandProvider ? 'odoo' : 'mock', requiredForCustomerProduction: true },
+  order: { tier: 'release-ready', source: useNetworksMock ? 'mock' : networksAdapters?.orderProvider ? 'networks' : 'mock', requiredForCustomerProduction: true },
   payment: {
-    tier: 'development-only',
+    tier: customPaymentAdapter ? 'release-ready' : 'development-only',
     source: useCustomPaymentMock ? 'mock' : customPaymentAdapter ? 'custom-payment' : 'mock',
+    requiredForCustomerProduction: true,
   },
   notification: {
-    tier: 'development-only',
+    tier: emailNotificationAdapter || expoPushAdapter ? 'release-ready' : 'development-only',
     source: emailNotificationAdapter ? 'multi-channel' : expoPushAdapter ? 'expo-push' : 'mock',
   },
   cart: { tier: 'development-only', source: 'mock' },
-  auth: { tier: 'development-only', source: 'mock' },
-  cms: { tier: 'development-only', source: 'mock' },
+  auth: {
+    tier: hasDatabase && hasAuthSecret ? 'release-ready' : 'development-only',
+    source: hasDatabase && hasAuthSecret ? 'better-auth' : 'mock',
+    requiredForCustomerProduction: true,
+  },
+  cms: {
+    tier: hasDatabase ? 'release-ready' : 'development-only',
+    source: hasDatabase ? 'app-cms' : 'mock',
+    requiredForCustomerProduction: true,
+  },
+  cmsPageConfig: {
+    tier: hasDatabase ? 'release-ready' : 'development-only',
+    source: hasDatabase ? 'prisma' : 'mock',
+    requiredForCustomerProduction: true,
+  },
+  cmsPageVersion: {
+    tier: hasDatabase ? 'release-ready' : 'development-only',
+    source: hasDatabase ? 'prisma' : 'mock',
+    requiredForCustomerProduction: true,
+  },
   account: { tier: 'development-only', source: 'mock' },
   pharmacist: { tier: 'development-only', source: 'mock' },
   referral: { tier: 'development-only', source: 'mock' },
   review: { tier: 'development-only', source: 'mock' },
   promotion: { tier: 'development-only', source: 'mock' },
-  release: { tier: 'development-only', source: 'mock' },
+  release: { tier: 'development-only', source: 'mock', requiredForCustomerProduction: true },
   productQuery: { tier: 'development-only', source: 'mock' },
   search: {
     tier: meilisearchSearchAdapter ? 'release-ready' : 'development-only',
@@ -111,7 +135,9 @@ export const providerReadiness: Record<string, { tier: ReadinessTier; source: Pr
 function assertProviderReadiness() {
   if (!isReleaseLikeEnvironment || !strictReadiness) return
 
-  const requiredReleaseDomains = ['product', 'category', 'brand', 'order'] as const
+  const requiredReleaseDomains = Object.entries(providerReadiness)
+    .filter(([, readiness]) => readiness.requiredForCustomerProduction)
+    .map(([domain]) => domain)
   const violations = requiredReleaseDomains.filter((domain) => providerReadiness[domain].source === 'mock')
   if (violations.length > 0) {
     console.warn(
