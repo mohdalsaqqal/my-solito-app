@@ -1,9 +1,11 @@
 import { promises as fs } from 'node:fs'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import * as path from 'node:path'
 import { Cart, CartProvider } from '@real/providers/contracts'
 
 const STORAGE_DIR = process.env.VERCEL ? path.join('/tmp', 'real-commerce') : path.join(process.cwd(), '.tmp')
 const STORAGE_FILE = path.join(STORAGE_DIR, 'mock-cart.json')
+const cartScopeStorage = new AsyncLocalStorage<string>()
 
 const EMPTY_CART: Cart = {
   items: [],
@@ -34,7 +36,7 @@ function normalizeCart(input: unknown): Cart {
 
 async function readCart(): Promise<Cart> {
   try {
-    const raw = await fs.readFile(STORAGE_FILE, 'utf8')
+    const raw = await fs.readFile(resolveStorageFile(), 'utf8')
     return normalizeCart(JSON.parse(raw))
   } catch {
     return { ...EMPTY_CART, updatedAt: new Date().toISOString() }
@@ -45,8 +47,24 @@ async function writeCart(cart: Cart): Promise<Cart> {
   const next = normalizeCart(cart)
   next.updatedAt = new Date().toISOString()
   await fs.mkdir(STORAGE_DIR, { recursive: true })
-  await fs.writeFile(STORAGE_FILE, JSON.stringify(next), 'utf8')
+  await fs.writeFile(resolveStorageFile(), JSON.stringify(next), 'utf8')
   return next
+}
+
+function normalizeScope(input: string | null | undefined) {
+  const value = input?.trim()
+  if (!value) return 'default'
+  return value.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 96)
+}
+
+function resolveStorageFile() {
+  const scope = normalizeScope(cartScopeStorage.getStore())
+  if (scope === 'default') return STORAGE_FILE
+  return path.join(STORAGE_DIR, `mock-cart-${scope}.json`)
+}
+
+export function runWithMockCartScope<T>(scope: string, callback: () => Promise<T>) {
+  return cartScopeStorage.run(normalizeScope(scope), callback)
 }
 
 export const mockCartAdapter: CartProvider = {

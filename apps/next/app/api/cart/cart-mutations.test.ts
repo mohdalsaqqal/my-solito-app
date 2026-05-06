@@ -36,13 +36,14 @@ function withNoAuth() {
 
 // ── Add ──
 
-test('POST /api/cart/add — 401 when unauthenticated', async () => {
+test('POST /api/cart/add — allows guest cart and sets cart cookie', async () => {
   const restore = withNoAuth()
   try {
     const res = await cartAdd(makeRequest('/api/cart/add', {
       body: JSON.stringify({ productId: 'prod_1', quantity: 1 }),
     }))
-    assert.equal(res.status, 401)
+    assert.equal(res.status, 200)
+    assert.match(res.headers.get('set-cookie') ?? '', /rc_cart_id=/)
   } finally { restore() }
 })
 
@@ -68,13 +69,13 @@ test('POST /api/cart/add — adds item when authenticated', async () => {
 
 // ── Remove ──
 
-test('POST /api/cart/remove — 401 when unauthenticated', async () => {
+test('POST /api/cart/remove — allows guest cart', async () => {
   const restore = withNoAuth()
   try {
     const res = await cartRemove(makeRequest('/api/cart/remove', {
       body: JSON.stringify({ productId: 'prod_1' }),
     }))
-    assert.equal(res.status, 401)
+    assert.equal(res.status, 200)
   } finally { restore() }
 })
 
@@ -90,13 +91,13 @@ test('POST /api/cart/remove — 400 when missing productId', async () => {
 
 // ── Set Quantity ──
 
-test('POST /api/cart/set-quantity — 401 when unauthenticated', async () => {
+test('POST /api/cart/set-quantity — allows guest cart', async () => {
   const restore = withNoAuth()
   try {
     const res = await cartSetQuantity(makeRequest('/api/cart/set-quantity', {
       body: JSON.stringify({ productId: 'prod_1', quantity: 2 }),
     }))
-    assert.equal(res.status, 401)
+    assert.equal(res.status, 200)
   } finally { restore() }
 })
 
