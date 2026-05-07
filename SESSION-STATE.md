@@ -1,5 +1,105 @@
 # SESSION-STATE.md - Active Working Memory
 
+## 2026-05-07 Production DB Schema Drift Fix â€” COMPLETED
+
+**Status**: VERIFIED DONE. All 31 tenant-scoped tables have `tenantId` column. All RLS policies applied. Full API audit completed.
+
+### Completed this session
+- Applied `20260501000000_rls_tenant_policies/migration.sql` to production Neon DB.
+- Fixed migration idempotency: added `DROP POLICY IF EXISTS` before all 29 `CREATE POLICY` statements to handle partial prior application.
+- Verified all 31 tenant-scoped tables have `tenantId` column via `check-tenant-columns.ts`.
+- DB audit shows 34/41 expected tables present; 7 "missing" tables (User, Tenant, Session, Account, Verification, TenantUser, AppAuthRoleMapping) exist with lowercase names â€” Better Auth naming convention, not real missing tables.
+- Fixed customer users not appearing in list: removed `where: { role: { not: 'customer' } }` from `GET /api/admin/users` query.
+- Full production DB connectivity audit: 36/36 tables accessible, all RLS policies working correctly.
+
+### Full API/DB Audit Results
+- **36/36 tables accessible** in production DB
+- Auth tables (user, account, session, verification, app_auth_role_mapping): 4 users, 4 accounts, 5 sessions, 4 role mappings
+- CMS tables: CmsSiteConfig (1 row, tenantId='default'), CmsTickerSettings (1 row, tenantId='default'), AdminUserOverride (2 rows, tenantId='default')
+- All other CMS/commerce/retention tables: 0 rows (empty, ready for use)
+- RLS policies: All 29 policies use `COALESCE(current_setting('app.current_tenant_id', true), 'default')` â€” reads/writes default to 'default' tenant
+- All Prisma models have `tenantId @default("default")` â€” inserts work without explicit tenantId
+- Services use `resolveTenantContext()` which returns 'default' when TENANT_ID env not set
+- **No RLS blocking issues** â€” system works correctly for single-tenant deployment
+
+### Verification
+```
+npx prisma db execute --file prisma/migrations/20260501000000_rls_tenant_policies/migration.sql [PASS]
+31/31 tables have tenantId [PASS]
+36/36 tables accessible [PASS]
+RLS policies working [PASS]
+```
+
+### Next
+- Redeploy to Vercel to pick up customer users list fix.
+- Test admin user creation on production to confirm end-to-end flow.
+
+## 2026-05-06 Shopping Journey Cart Scope Fix + Referral Code UI
+
+**Status**: LANDED. All verification gates pass.
+
+### Completed this session
+- **P0 Bug Fix**: Cart scope was missing in server-side page services and checkout/quote/order API services.
+  - Root cause: `cartProvider.get()` uses `AsyncLocalStorage` scope. API routes wrapped mutations in `runCartRequest()` which sets scope, but page services (`cart-page.service.ts`, `checkout-page.service.ts`, `checkout-success-page.service.ts`, `order-detail.service.ts`, `account-page.service.ts`, `account-test-detail.service.ts`) and API services (`checkout-quote.service.ts`, `place-order.service.ts`) called `cartProvider.get()` directly without scope.
+  - This caused SSR pages and quote/order operations to read from `mock-cart-default.json` instead of the user/guest scoped cart, leading to empty or wrong carts on `/cart` and `/checkout`, and quote/order pricing based on wrong items.
+- **Fix**: Created `apps/next/server/services/cart/_lib/resolve-cart-scope.ts` helper that resolves `user:{id}` or `guest:{cookie}` scope from request cookies/session.
+- Updated all 8 affected services to wrap `cartProvider.get()` and `cartProvider.remove()` calls with `withCartScope(scope, ...)`.
+- **P1 Fix**: Checkout quote UI did not send `referralCode` to the backend.
+  - Added `referralCode?: string` to `CheckoutQuoteInput` type.
+  - Added `referralCode` state and input UI to `CheckoutScreen.tsx` in the Promotion card.
+  - Added en/ar translation keys for referral code input.
+- **Smoke test fix**: `scripts/verify-functional-storefront.mjs` checkout flow used quantity 3 of a $9.5 product (subtotal $28.5). After the scope fix, the quote correctly reads the actual cart. The referral program DB minimum order amount is > $28.5, causing `REFERRAL_MINIMUM_ORDER_NOT_MET`. Increased quantity to 5 (subtotal $47.5) to safely exceed the minimum.
+
+### Verification
+```
+yarn guard:checks [PASS]
+node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false [PASS]
+node scripts/verify-functional-storefront.mjs [PASS â€” all 25 checks including cart page, checkout page, add-to-cart, checkout quote with referral, COD order placement, order history]
+```
+
+### Verification (continued)
+- Added cart/body items drift warning in `checkout-quote.service.ts` â€” logs `cart_body_items_mismatch` when scoped cart differs from body items.
+- Created `e2e/guest-cart-journey.spec.ts` browser-click E2E for guest cart -> cart page -> checkout page. Note: Playwright webserver cold-start timeouts may require `test.setTimeout(60000)` in CI; local run against warm server passes.
+
+### Vercel Production Deploy (2026-05-06)
+- **URL**: https://my-solito-app-lemon.vercel.app
+- Fixed `vercel.json` build command to gracefully handle DB unavailability during build phase.
+- Set `DATABASE_URL` and `DIRECT_URL` in Vercel production environment variables.
+- Ran `prisma migrate deploy` against production Neon database â€” all 8 migrations already applied.
+- Build completed successfully (55s), all 150 pages generated.
+- **Fixed**: `AdminUserOverride` table was missing from production database (exists in Prisma schema but never migrated). Created table manually and added migration file `20260506210000_add_admin_user_override`.
+
+### Next
+- Warm-server E2E run for `guest-cart-journey.spec.ts` to confirm browser-click regression coverage.
+- If E2E proves flaky in CI due to Next.js cold start, consider adding a lightweight `wait-for-server` precondition or splitting into a dedicated `verify:e2e-cart` script with longer timeouts.
+
+## 2026-05-06 OpenCode MCP + GitHub MCP Installation
+
+**Status**: VERIFIED DONE. Vercel MCP and GitHub MCP configured for OpenCode; repo-local skills installed; docs and checklist updated.
+
+### Completed this session
+- Created `opencode.json` with Vercel (`https://mcp.vercel.com`) and GitHub (`https://api.githubcopilot.com/mcp/`) remote MCP configs.
+- GitHub token uses `{env:GITHUB_MCP_PAT}` â€” no secrets committed.
+- Updated `.mcp.json` with Vercel remote URL for Claude/Cursor compatibility.
+- Added `.mcp.json` to `.gitignore` to prevent secret leakage.
+- Created repo-local OpenCode skills:
+  - `.opencode/skills/vercel-mcp/SKILL.md`
+  - `.opencode/skills/github-mcp/SKILL.md`
+- Added missing `verify:ai-development-process` script to `package.json`.
+- Updated `docs/delivery/aspects/16-ai-development-process.md` and `checklist.md`.
+
+### Verification
+```
+Get-Content opencode.json | ConvertFrom-Json -> valid JSON [PASS]
+Get-Content .mcp.json | ConvertFrom-Json -> valid JSON [PASS]
+yarn guard:checks [PASS]
+node scripts/verify-delivery.mjs --profile ai [PASS]
+node scripts/verify-ai-development-process.mjs [PASS]
+```
+
+### Next
+- Run `opencode mcp auth vercel` and `opencode mcp auth github` after setting `GITHUB_MCP_PAT`.
+
 ## 2026-05-06 FAS-17 Architecture + Technical Org Staffing
 
 **Status**: LANDED LOCALLY. Architecture assessment and staffing proposal added as a delivery runbook artifact.
@@ -86,7 +186,7 @@ yarn e2e:a11y [PASS locally]
 - `yarn verify:delivery:quality` was not completed because referral tests failed when pointed at the live Neon preview DB; do not use the preview DB as the fixture DB for those tests.
 - Remote Playwright a11y against the protected Vercel URL hit Chromium `ERR_CONNECTION_RESET` before app load; curl/Node fetch reached the deployment, and local a11y passed.
 
-## 2026-05-01 Final Sprint — 14 commits pushed. All gates passing.
+## 2026-05-01 Final Sprint ï¿½ 14 commits pushed. All gates passing.
 
 **Status**: GREEN. Branch ready for human review.
 
@@ -116,7 +216,7 @@ CMS lifecycle   ? 14/14
 API tests       ? 28/28
 ```
 
-## 2026-05-01 Production Hardening Sprint — Committed c4ccb82 (46 files, +4745/-591)
+## 2026-05-01 Production Hardening Sprint ï¿½ Committed c4ccb82 (46 files, +4745/-591)
 
 **Status**: GREEN. All gates passing.
 
@@ -276,12 +376,12 @@ next-build       ?
 e2e-a11y         ? (6/6)
 ```
 
-## 2026-04-30 Admin Auth/Session Verification (Line 285) — COMPLETED
+## 2026-04-30 Admin Auth/Session Verification (Line 285) ï¿½ COMPLETED
 
 **Status**: GREEN. 46/46 auth tests pass. Last code-verifiable checklist item cleared.
 
 - 12/12 auth route tests (login, register, session, logout, reset, fail-close, rate limiting)
-- 13/13 admin route auth tests (catalog/CMS/ops — 401/403/200 enforcement per RBAC matrix)
+- 13/13 admin route auth tests (catalog/CMS/ops ï¿½ 401/403/200 enforcement per RBAC matrix)
 - 21 session adapter + request-auth tests (Better Auth identity mapping, legacy fallback, release-mode hardening)
 - Full pipeline: Login ? Better Auth signInEmail ? Set-Cookie ? resolveNormalizedSessionFromRequest ? role resolution ? hasAdminDomainPermission ? 200/403
 - Live smoke with provisioned admin credentials blocked by Postgres/client credential setup
@@ -390,31 +490,31 @@ e2e-a11y         ? (6/6)
 ### Completed This Session
 
 **New docs created (5):**
-- `docs/delivery/PRODUCTION_BLOCKERS.md` — 15 non-UI blockers across auth, DB, integrations, infra, security
-- `docs/delivery/CLIENT_HANDOFF_PACK.md` — 6 sections: env vars, Odoo mapping, PaymentProvider contract, blockers, referral/loyalty/pharmacist acceptance
-- `docs/delivery/runbooks/custom-payment-gateway.md` — API contract, webhook format, HMAC, sandbox test cards, webhook events, adapter customization, production verification
-- `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md` — Central operator index (store manager, support, DevOps, integrations, retention)
-- `docs/delivery/runbooks/backup-recovery.md` — Backup scope, schedule, PITR, disaster recovery, provider-specific notes
+- `docs/delivery/PRODUCTION_BLOCKERS.md` ï¿½ 15 non-UI blockers across auth, DB, integrations, infra, security
+- `docs/delivery/CLIENT_HANDOFF_PACK.md` ï¿½ 6 sections: env vars, Odoo mapping, PaymentProvider contract, blockers, referral/loyalty/pharmacist acceptance
+- `docs/delivery/runbooks/custom-payment-gateway.md` ï¿½ API contract, webhook format, HMAC, sandbox test cards, webhook events, adapter customization, production verification
+- `docs/delivery/runbooks/OPERATOR_HANDBOOK_INDEX.md` ï¿½ Central operator index (store manager, support, DevOps, integrations, retention)
+- `docs/delivery/runbooks/backup-recovery.md` ï¿½ Backup scope, schedule, PITR, disaster recovery, provider-specific notes
 
 **Checklist items advanced (10):**
-- `[x]` Lines 272, 280, 283, 300, 301, 312, 313 — 7 items marked verified done
-- `[~]` Lines 309 — CMS API verified (14/14), admin pages load, browser UI needs credentials
-- `[~]` Lines 305, 310 — Web verified, native/physical remains
+- `[x]` Lines 272, 280, 283, 300, 301, 312, 313 ï¿½ 7 items marked verified done
+- `[~]` Lines 309 ï¿½ CMS API verified (14/14), admin pages load, browser UI needs credentials
+- `[~]` Lines 305, 310 ï¿½ Web verified, native/physical remains
 
 **Aspect files synced (5):**
-- Aspect 04 (CMS) — all `[x]`
-- Aspect 07 (Payments) — 4 tasks marked done, 2 remain (rollback design, gateway sandbox)
-- Aspect 08 (Search) — Meilisearch adapter marked done
-- Aspect 11 (DevOps) — Backup/PITR marked done
-- Aspect 15 (Documentation) — CMS guide, operator index, Odoo, payment handoff all done
+- Aspect 04 (CMS) ï¿½ all `[x]`
+- Aspect 07 (Payments) ï¿½ 4 tasks marked done, 2 remain (rollback design, gateway sandbox)
+- Aspect 08 (Search) ï¿½ Meilisearch adapter marked done
+- Aspect 11 (DevOps) ï¿½ Backup/PITR marked done
+- Aspect 15 (Documentation) ï¿½ CMS guide, operator index, Odoo, payment handoff all done
 
 ### Verification (re-confirmed)
 - `yarn guard:checks`: PASS
 - `yarn tsc`: PASS (no errors)
 - `yarn verify:functional-storefront`: 24/24 PASS (prior session)
 
-### Remaining `[ ]` — needs external dependency
-- **Line 284**: Admin auth/session verification — needs provisioned admin credentials
+### Remaining `[ ]` ï¿½ needs external dependency
+- **Line 284**: Admin auth/session verification ï¿½ needs provisioned admin credentials
 - **Physical device**: Native smoke, push notifications, pharmacist mobile flow
 - **Client credentials**: Odoo connection, payment gateway sandbox, EAS build
 
@@ -997,7 +1097,7 @@ e2e-a11y         ? (6/6)
 
 ### 2026-04-22 Better Auth Audit Remediation
 
-**Audit findings fixed** — LANDED.
+**Audit findings fixed** ï¿½ LANDED.
 - Checkout quote and order placement now resolve sessions through `resolveNormalizedSessionFromRequest(...)` instead of parsing the legacy `rc_auth_session` cookie directly.
 - Password reset routes now delegate to Better Auth APIs:
   - `/api/auth/request-reset` ? `auth.api.requestPasswordReset`
@@ -1017,7 +1117,7 @@ e2e-a11y         ? (6/6)
 
 ### 2026-04-22 AGENTS Startup Status Rule
 
-**AGENTS.md updated** — LANDED.
+**AGENTS.md updated** ï¿½ LANDED.
 - Version bumped to `v4.3`
 - Last updated set to `2026-04-22`
 - Added `Mandatory Startup Status` requiring agents to report:
@@ -1029,7 +1129,7 @@ e2e-a11y         ? (6/6)
 
 ### 2026-04-22 Better Auth Audit
 
-**Audit artifact** — ADDED:
+**Audit artifact** ï¿½ ADDED:
 - [docs/reports/better-auth-audit-2026-04-22.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/reports/better-auth-audit-2026-04-22.md)
 
 **Key findings**
@@ -1044,27 +1144,27 @@ e2e-a11y         ? (6/6)
 
 ### Better Auth Implementation
 
-**Foundational auth migration** — LANDED. The repo now has a working Better Auth foundation in code, not just in docs:
+**Foundational auth migration** ï¿½ LANDED. The repo now has a working Better Auth foundation in code, not just in docs:
 - Better Auth config/bootstrap lives in [apps/next/lib/auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/lib/auth.ts)
 - Better Auth security/config helpers were added to [security-policy.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/security-policy.ts)
 - Prisma now includes Better Auth identity/session/account/verification tables plus app-owned role mapping in [schema.prisma](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/prisma/schema.prisma)
 - Migration added: [20260414103000_better_auth_foundation](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/prisma/migrations/20260414103000_better_auth_foundation/migration.sql)
 
-**Auth service boundary** — LANDED. `apps/next/server/services/auth/` now exists as the canonical Better Auth integration layer:
+**Auth service boundary** ï¿½ LANDED. `apps/next/server/services/auth/` now exists as the canonical Better Auth integration layer:
 - [auth-session-adapter.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-session-adapter.service.ts)
 - [auth-role-resolution.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-role-resolution.service.ts)
 
-**Auth route cutover** — LANDED. The low-risk auth routes now issue/resolve Better Auth-backed sessions:
+**Auth route cutover** ï¿½ LANDED. The low-risk auth routes now issue/resolve Better Auth-backed sessions:
 - `/api/auth/login`
 - `/api/auth/logout`
 - `/api/auth/register`
 - `/api/auth/session`
 
-**Protected-route helper cutover** — LANDED. [request-auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/request-auth.ts) now resolves Better Auth-backed normalized sessions first and falls back to legacy cookie sessions during the transition window. Protected account, order, pharmacist, admin, CMS, and release routes were updated to await the async helper path.
+**Protected-route helper cutover** ï¿½ LANDED. [request-auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/request-auth.ts) now resolves Better Auth-backed normalized sessions first and falls back to legacy cookie sessions during the transition window. Protected account, order, pharmacist, admin, CMS, and release routes were updated to await the async helper path.
 
 ### Production Hardening Follow-Up
 
-**Dedicated Better Auth secret enforcement** — LANDED. Better Auth no longer treats the legacy auth secret as an acceptable production substitute:
+**Dedicated Better Auth secret enforcement** ï¿½ LANDED. Better Auth no longer treats the legacy auth secret as an acceptable production substitute:
 - [security-policy.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/security-policy.ts) now requires a dedicated `BETTER_AUTH_SECRET` in release-like environments and rejects weak secrets under 32 characters
 - [auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/lib/auth.ts) now fails closed with an explicit Better Auth secret error when release config is invalid
 - CI and operator docs now reflect the real contract:
@@ -1073,7 +1173,7 @@ e2e-a11y         ? (6/6)
   - [docs/adapter-integration-guide.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/adapter-integration-guide.md)
   - [docs/production-blueprint.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/production-blueprint.md)
 
-**Request-bound prerender cleanup** — PARTIALLY LANDED. The safe route-handler pass now centralizes request-bound auth/session handling more cleanly and reduces false-alarm debug noise:
+**Request-bound prerender cleanup** ï¿½ PARTIALLY LANDED. The safe route-handler pass now centralizes request-bound auth/session handling more cleanly and reduces false-alarm debug noise:
 - [request-auth.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/request-auth.ts) now establishes a request connection before protected session resolution
 - request-bound GET handlers were explicitly marked where needed:
   - [api/auth/session/route.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/session/route.ts)
@@ -1081,12 +1181,12 @@ e2e-a11y         ? (6/6)
   - [api/reviews/route.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/reviews/route.ts)
 - [response.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/response.ts) now suppresses expected prerender bailout noise (`NEXT_PRERENDER_INTERRUPTED`, `HANGING_PROMISE_REJECTION`) so `--debug-prerender` is readable again
 
-**Regression coverage** — EXPANDED.
+**Regression coverage** ï¿½ EXPANDED.
 - [auth-session.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/_lib/auth-session.test.ts) now covers release-mode secret strength enforcement
 - [auth/route.test.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/app/api/auth/route.test.ts) now covers fail-closed behavior for weak/missing Better Auth secrets in release-like environments
 - [apps/next/package.json](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/package.json) test script now seeds a strong test `BETTER_AUTH_SECRET` so auth imports are stable under test
 
-**Production auth hardening** — TIGHTENED AGAIN.
+**Production auth hardening** ï¿½ TIGHTENED AGAIN.
 - [auth-role-resolution.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-role-resolution.service.ts) no longer upserts inferred roles in release-like environments; missing mapping now resolves to least-privilege `customer`
 - release-like environments also fail closed when Prisma role lookup throws instead of re-inferring elevated seeded roles
 - [auth-session-adapter.service.ts](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/apps/next/server/services/auth/auth-session-adapter.service.ts) now rejects legacy cookie fallback entirely in release-like environments
@@ -1095,7 +1195,7 @@ e2e-a11y         ? (6/6)
   - release-mode rejection of legacy cookie fallback
   - existing email-verification and session-rate-limit behavior
 
-**Spec Kit sync** — LANDED. `specs/005-better-auth/` now reflects the real implementation approach instead of the earlier generic migration draft:
+**Spec Kit sync** ï¿½ LANDED. `specs/005-better-auth/` now reflects the real implementation approach instead of the earlier generic migration draft:
 - [spec.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/spec.md) is now `In Progress` and includes release-secret enforcement plus prerender-compatibility requirements
 - [plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/plan.md) now records the landed Better Auth foundation and the safe hardening pass
 - [tasks.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/tasks.md) now includes explicit completed US3 tasks for release-secret hardening, env/CI/doc sync, and prerender-noise cleanup
@@ -1118,19 +1218,19 @@ e2e-a11y         ? (6/6)
 
 ---
 
-## Previous State: 004-production-cms — Audit Remediation Landed, Final Build Still Open
+## Previous State: 004-production-cms ï¿½ Audit Remediation Landed, Final Build Still Open
 
 **Last Updated**: 2026-04-14
 
 ### Better Auth Planning
 
-**Repo-native auth migration plan** — ADDED. The repo now has a concrete phased migration plan for moving from the current custom encrypted-cookie auth system to `Better Auth` without replacing the existing custom admin/CMS authorization model:
+**Repo-native auth migration plan** ï¿½ ADDED. The repo now has a concrete phased migration plan for moving from the current custom encrypted-cookie auth system to `Better Auth` without replacing the existing custom admin/CMS authorization model:
 - [2026-04-14-better-auth-migration-plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/plans/2026-04-14-better-auth-migration-plan.md)
 
-**Execution backlog** — ADDED. The migration now also has a dependency-ordered backlog with concrete repo file targets and an MVP cut line:
+**Execution backlog** ï¿½ ADDED. The migration now also has a dependency-ordered backlog with concrete repo file targets and an MVP cut line:
 - [2026-04-14-better-auth-migration-backlog.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/docs/plans/2026-04-14-better-auth-migration-backlog.md)
 
-**Spec Kit feature set** — ADDED. A full implementation/security/audit/delivery feature set now exists under:
+**Spec Kit feature set** ï¿½ ADDED. A full implementation/security/audit/delivery feature set now exists under:
 - [specs/005-better-auth/spec.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/spec.md)
 - [specs/005-better-auth/plan.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/plan.md)
 - [specs/005-better-auth/tasks.md](/C:/Users/hamoo/Downloads/solito%20v5%20docs/my-solito-app/specs/005-better-auth/tasks.md)
@@ -1142,7 +1242,7 @@ e2e-a11y         ? (6/6)
 
 ### Prerender Follow-Up
 
-**Original `NEXT_PRERENDER_INTERRUPTED` build blocker** — PARTIALLY RESOLVED. The specific request-bound API routes that previously stopped the build now call `await connection()` before touching auth headers, cookies, or request URLs:
+**Original `NEXT_PRERENDER_INTERRUPTED` build blocker** ï¿½ PARTIALLY RESOLVED. The specific request-bound API routes that previously stopped the build now call `await connection()` before touching auth headers, cookies, or request URLs:
 - `/api/admin/capabilities`
 - `/api/admin/cms/toggles`
 - `/api/admin/i18n/status`
@@ -1165,17 +1265,17 @@ e2e-a11y         ? (6/6)
 
 ### Latest 004 Remediation
 
-**Preview version correctness** — FIXED. `cms-preview.service.ts` now resolves explicit `versionId` previews via `getPageVersionById(...)` before falling back to latest-by-release lookup, so preview links point at the intended snapshot instead of drifting to newer drafts.
+**Preview version correctness** ï¿½ FIXED. `cms-preview.service.ts` now resolves explicit `versionId` previews via `getPageVersionById(...)` before falling back to latest-by-release lookup, so preview links point at the intended snapshot instead of drifting to newer drafts.
 
-**Publish lifecycle delegation** — FIXED. `apps/next/app/api/admin/releases/[id]/publish/route.ts` now delegates release publication to `apps/next/server/services/cms/cms-publish.service.ts` instead of re-owning the publish logic in the route.
+**Publish lifecycle delegation** ï¿½ FIXED. `apps/next/app/api/admin/releases/[id]/publish/route.ts` now delegates release publication to `apps/next/server/services/cms/cms-publish.service.ts` instead of re-owning the publish logic in the route.
 
-**Rollback route exposure** — ADDED. `apps/next/app/api/admin/releases/[id]/rollback/route.ts` now exposes the service-owned rollback flow, and shared client endpoints now include `adminReleaseRollback`.
+**Rollback route exposure** ï¿½ ADDED. `apps/next/app/api/admin/releases/[id]/rollback/route.ts` now exposes the service-owned rollback flow, and shared client endpoints now include `adminReleaseRollback`.
 
-**Homepage merchandising partial-failure safety** — FIXED. `cms-home-merchandising.service.ts` no longer treats partial Prisma query failure as canonical empty merchandising. Any failed merchandising subquery now returns `{ ok: false }`, preserving explicit mock fallback instead of blanking sections.
+**Homepage merchandising partial-failure safety** ï¿½ FIXED. `cms-home-merchandising.service.ts` no longer treats partial Prisma query failure as canonical empty merchandising. Any failed merchandising subquery now returns `{ ok: false }`, preserving explicit mock fallback instead of blanking sections.
 
-**Lifecycle cache invalidation** — FIXED. `cms-publish.service.ts` and `cms-rollback.service.ts` now invalidate `cms-home` via `revalidateTag(...)` after successful lifecycle changes.
+**Lifecycle cache invalidation** ï¿½ FIXED. `cms-publish.service.ts` and `cms-rollback.service.ts` now invalidate `cms-home` via `revalidateTag(...)` after successful lifecycle changes.
 
-**Dedicated lifecycle test files** — ADDED. `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts` now exist so the `004` task list no longer points at missing files.
+**Dedicated lifecycle test files** ï¿½ ADDED. `cms-preview.service.test.ts`, `cms-publish.service.test.ts`, and `cms-rollback.service.test.ts` now exist so the `004` task list no longer points at missing files.
 
 ### Verification After Audit Fixes
 - `yarn guard:checks` ?
@@ -1195,28 +1295,28 @@ e2e-a11y         ? (6/6)
 **State**: All 11 phases from the `joyful-stirring-breeze.md` homepage redesign plan are implemented and verified. The homepage now features: warm rose color palette, unified hover interactions, normalized radius tiers, denser product rails, tiered section headers, scroll-reveal animations, and corrected accessibility contrast.
 
 ### All Phases Complete
-- **Phase 9** — Token Foundation Fixes (6 files): brand font min, caption/label lineHeight, card brand weight, amber WCAG, sale price burgundy, surface warm, flash bg token, countdown white digits
-- **Phase 10** — Quality Polish: unified hover system (ProductCard, CategoryStrip, BrandRail, OfferBannersGrid, Button), 3-tier radius normalization (2px?6px cards, 16px?12px hero), product image `contain?cover`
-- **Phase 0** — TopPromoBar Demotion: black?roseBlush bg, weight 700?500, inverse?default tone
-- **Phase 6** — Section Headers: tiered sizes (lg/28px serif, md/18px sans, sm/16px sans), eyebrow roseDeep on roseBlush (6:1 WCAG), meta weight 500
-- **Phase 1** — Category Strip: ghost buttons?56px circles with icon/label below, removed header
-- **Phase 3** — Product Rail Density: card width 240px?180px for 5-6 visible cards
-- **Phase 7** — Brand Rail: replaced plain text with MarketplaceSectionHeader (size=sm), added `onPressViewAll`
-- **Phase 4** — Hero Carousel: gradient 30%?40%/height 60%?70%, title/subtitle overlays (Playfair serif), CTA commercePrimary burgundy
-- **Phase 5** — Section Spacing Rhythm: `getSectionGap()` helper with type-pair logic (hero?cat=16px, flash=40px, newsletter=64px, editorial=48px)
-- **Phase 8** — Scroll Reveals: `RevealOnScroll` wrapper with staggered `delayMs=index*40`, `liftY=12`; hero/promo_strip skip
-- **Phase 2** — Flash Deals Section: `HomeFlashDealsSection` component created (serif header + countdown + product rail); `FlashSaleBand` kept as fallback since CMS block has no products yet
+- **Phase 9** ï¿½ Token Foundation Fixes (6 files): brand font min, caption/label lineHeight, card brand weight, amber WCAG, sale price burgundy, surface warm, flash bg token, countdown white digits
+- **Phase 10** ï¿½ Quality Polish: unified hover system (ProductCard, CategoryStrip, BrandRail, OfferBannersGrid, Button), 3-tier radius normalization (2px?6px cards, 16px?12px hero), product image `contain?cover`
+- **Phase 0** ï¿½ TopPromoBar Demotion: black?roseBlush bg, weight 700?500, inverse?default tone
+- **Phase 6** ï¿½ Section Headers: tiered sizes (lg/28px serif, md/18px sans, sm/16px sans), eyebrow roseDeep on roseBlush (6:1 WCAG), meta weight 500
+- **Phase 1** ï¿½ Category Strip: ghost buttons?56px circles with icon/label below, removed header
+- **Phase 3** ï¿½ Product Rail Density: card width 240px?180px for 5-6 visible cards
+- **Phase 7** ï¿½ Brand Rail: replaced plain text with MarketplaceSectionHeader (size=sm), added `onPressViewAll`
+- **Phase 4** ï¿½ Hero Carousel: gradient 30%?40%/height 60%?70%, title/subtitle overlays (Playfair serif), CTA commercePrimary burgundy
+- **Phase 5** ï¿½ Section Spacing Rhythm: `getSectionGap()` helper with type-pair logic (hero?cat=16px, flash=40px, newsletter=64px, editorial=48px)
+- **Phase 8** ï¿½ Scroll Reveals: `RevealOnScroll` wrapper with staggered `delayMs=index*40`, `liftY=12`; hero/promo_strip skip
+- **Phase 2** ï¿½ Flash Deals Section: `HomeFlashDealsSection` component created (serif header + countdown + product rail); `FlashSaleBand` kept as fallback since CMS block has no products yet
 
 ### Pre-existing Type Errors Fixed
-- `HeaderMainRow.tsx:303` — removed `style` from `Button`, wrapped child in `<Text>`
-- `TopBrandsGrid.tsx:170` — added `as const` to `textAlign` and `maxWidth`
+- `HeaderMainRow.tsx:303` ï¿½ removed `style` from `Button`, wrapped child in `<Text>`
+- `TopBrandsGrid.tsx:170` ï¿½ added `as const` to `textAlign` and `maxWidth`
 
 ### Audit Finding Fixed
 - `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` hardcoded ? replaced with `colors.black` + `opacity.overlayLight`
 
 ### Verification
-- `yarn guard:checks` ? — all 15 checks passed
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? — zero type errors
+- `yarn guard:checks` ? ï¿½ all 15 checks passed
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? ï¿½ zero type errors
 
 ---
 
@@ -1271,7 +1371,7 @@ e2e-a11y         ? (6/6)
 ### Deletion Rationale
 - `apps/strapi/`: Excluded from yarn workspaces (`"!apps/strapi"`), zero imports from `apps/next/` or `packages/`, no content types, no data flows.
 - `real-cosmetics-admin/`: Standalone Vite app with `localStorage` only, zero HTTP connection to monorepo, not in workspaces.
-- Real admin UI is at `apps/next/app/admin/` (60 files) — full sidebar navigation, CMS management, catalog, orders, etc.
+- Real admin UI is at `apps/next/app/admin/` (60 files) ï¿½ full sidebar navigation, CMS management, catalog, orders, etc.
 
 ### CMS Architecture (Working)
 - Base data: `packages/adapters/mock/cms/index.ts`
@@ -1747,3 +1847,163 @@ e2e-a11y         ? (6/6)
 
 
 
+
+## 2026-05-06 FAS-17 Child Issue Delegation Pack
+
+**Status**: LANDED LOCALLY. Added ready-to-delegate child issue pack for parallel execution lanes.
+
+### Completed this session
+- Added docs/delivery/runbooks/technical-org-staffing-child-issues.md with five execution lanes: release, catalog, order/payment, tenant scoping, ops+mobile.
+- Included owner role, 2-week mandate, done-means, and exact verification commands per lane.
+
+### Next
+- Create the five child issues from the pack and assign owners.
+
+
+## 2026-05-06 FAS-17 Child Issues Created (Paperclip)
+- Created child issues: FAS-18, FAS-19, FAS-20, FAS-21, FAS-22 under FAS-17 via Paperclip API.
+- Posted parent comment with execution order, risk, mitigation, and unblock owner/action.
+- Set FAS-17 status to done after delegation execution.
+
+
+## 2026-05-06 FAS-20 Order+Payment Readiness Tier Consistency
+
+**Status**: LANDED LOCALLY. Readiness classification logic corrected for order/payment lane tracking.
+
+### Completed this session
+- Fixed provider readiness tier/source mismatch in `packages/providers/registry.ts`:
+  - product/category/brand/order now report `development-only` when source is `mock`.
+  - payment now reports `development-only` when `USE_CUSTOM_PAYMENT` keeps mock authority enabled.
+- Fixed mirrored mismatch in `scripts/verify-provider-readiness.mjs` so command output matches registry semantics.
+- Updated `packages/providers/registry.test.ts` to assert tier/source consistency instead of hardcoded release-ready assumptions.
+- Updated `docs/delivery/aspects/05-backend-integration.md` current-state notes.
+
+### Verification
+```
+node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test packages/providers/registry.test.ts apps/next/app/api/provider-readiness.test.ts [PASS]
+yarn verify:provider-readiness [PASS; demo-only with blockers release, product, category, brand, order, payment]
+```
+
+### Next
+- Implement non-mock order provider authority path (`USE_NETWORKS=false` + real networks adapter config) and re-run readiness to clear `order`.
+- Implement non-mock custom payment authority path (`USE_CUSTOM_PAYMENT=false` + gateway config) and re-run readiness to clear `payment`.
+
+## 2026-05-06 FAS-22 Production Ops + Mobile Lane Hardening
+
+**Status**: LANDED LOCALLY. Added dedicated lane runbook + verifier for ops rehearsal and mobile production readiness tracking.
+
+### Completed this session
+- Added `docs/delivery/runbooks/production-ops-mobile-lane.md` with preview->production rehearsal sequence, deep-link/push checklists, owner-mapped external dependency handoff, and acceptance checklist.
+- Added `scripts/verify-production-ops-mobile-lane.mjs` and root script `yarn verify:production-ops-mobile-lane`.
+- Wired `ops-mobile-lane` gate into `scripts/verify-delivery.mjs` deploy and full profiles.
+- Updated `docs/delivery/DELIVERY_MATRIX.md`, `docs/delivery/aspects/11-devops-deployment.md`, `docs/delivery/aspects/03-storefront-web-native.md`, and `checklist.md`.
+
+### Verification
+`yarn verify:production-ops-mobile-lane` [PASS]
+
+### Next
+- Execute physical-device deep-link and push validation and record owner/action for remaining credential-gated dependencies.
+
+## 2026-05-06 FAS-19 Catalog Providers Readiness Slice
+
+**Status**: IN PROGRESS. Added a dedicated catalog-readiness gate and wired delivery docs.
+
+### Completed this session
+- Added `scripts/verify-catalog-providers.mjs`.
+- Added root script `yarn verify:catalog-providers`.
+- Updated `docs/delivery/DELIVERY_MATRIX.md` with a named `catalog-providers` gate.
+- Updated `docs/delivery/aspects/05-backend-integration.md` verification section to include the new gate.
+- Updated `checklist.md` backend integration status to track the new catalog-readiness verifier.
+
+### Verification
+```
+node scripts/verify-catalog-providers.mjs [EXPECTED FAIL when USE_MOCK=true]
+$env:USE_MOCK='false'; $env:ODOO_BASE_URL='https://example.com'; $env:ODOO_DB='demo'; $env:ODOO_API_KEY='demo-key'; node scripts/verify-catalog-providers.mjs [PASS]
+node scripts/verify-provider-readiness.mjs [PASS; reports catalog/order/payment blockers in current env]
+node scripts/guard-checks.mjs [PASS]
+```
+
+### Next
+- Run `yarn verify:catalog-providers --live` against real Odoo credentials and then re-run `yarn verify:provider-readiness` with `USE_MOCK=false` to clear product/category/brand blockers.
+
+## 2026-05-06 FAS-18 Release Lifecycle Readiness Slice
+
+**Status**: LANDED LOCALLY. Release lifecycle domain now classifies as customer-ready when app CMS DB persistence is available.
+
+### Completed this session
+- Updated `packages/providers/registry.ts` so `providerReadiness.release` reports `source: app-cms` and `tier: release-ready` when `DATABASE_URL` exists.
+- Updated `scripts/verify-provider-readiness.mjs` to align `release` classification with DB-backed app CMS persistence.
+- Extended `apps/next/app/api/provider-readiness.test.ts` readiness assertions for `app-cms`/`release-ready`.
+- Updated `docs/delivery/aspects/05-backend-integration.md` with the release-readiness status.
+
+### Verification
+```
+yarn verify:provider-readiness [PASS; demo-only blockers now: product, category, brand, order, payment]
+node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/app/api/provider-readiness.test.ts packages/providers/registry.test.ts [PASS]
+node scripts/guard-checks.mjs [PASS]
+node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false [PASS]
+```
+
+### Next
+- Continue FAS-19/FAS-20 lanes: replace remaining required mock blockers (`product`, `category`, `brand`, `order`, `payment`) with customer-ready providers.
+
+## 2026-05-06 FAS-23 Mobile Deep-Link Readiness Slice
+
+**Status**: LANDED LOCALLY. Expo deep-link routing is now implemented and statically verified.
+
+### Completed this session
+- Added `apps/expo/app/_hooks/useDeepLinkRouting.ts` to resolve initial/runtime deep links for home/categories/shop/deals/search/cart/checkout/account/orders plus `product/:id`, `orders/:id`, and `account/tests/:id`.
+- Wired deep-link handling into `apps/expo/app/index.tsx`.
+- Exposed `setActiveTestId` from `apps/expo/app/_hooks/useAccountData.ts` so account-test deep links can route directly.
+- Extended `scripts/verify-expo-functional.mjs` with deep-link assertions (hook wiring, route patterns, initial URL + runtime URL listener).
+- Updated `docs/delivery/aspects/03-storefront-web-native.md` and `checklist.md` to reflect deep-link static verification progress.
+
+### Verification
+```
+yarn verify:expo-functional [PASS]
+yarn --cwd apps/expo tsc --noEmit --incremental false [PASS]
+```
+
+### Next
+- Run physical-device universal-link and push smoke with real EAS/APNs/FCM credentials; capture evidence in Aspect 03.
+
+## 2026-05-06 FAS-21 Tenant Scoping (Service Layer Slice)
+
+**Status**: LANDED LOCALLY. Referral + pharmacist service-layer tenant scoping hardened.
+
+### Completed this session
+- Scoped referral program reads/writes to resolved tenant context in `referral-program-store.ts` (removed hardcoded tenant id).
+- Scoped referral profile reads/mutations to resolved tenant context in `referral-profile-store.ts`.
+- Scoped referral ledger reads/creates to resolved tenant context in `referral-ledger-store.ts`.
+- Scoped pharmacist consultation persistence and notification tenant propagation in `pharmacist-consultation.service.ts`.
+
+### Verification
+```
+node scripts/guard-checks.mjs [PASS]
+node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false [PASS]
+node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/server/services/pharmacist/pharmacist-consultation.service.test.ts [PASS]
+```
+
+### Next
+- Run DB-backed referral API/service tests with local Postgres up to close full tenant-scoping verification for referral routes.
+- Continue tenant scoping for CMS singleton services once schema supports tenant-safe singleton keys per tenant.
+
+## 2026-05-06 FAS-25 Vercel Admin Login Redirect/Credential Regression
+
+**Status**: LANDED LOCALLY. Fixed proxy auth cookie detection for secure Better Auth cookie variants used on hosted HTTPS deployments.
+
+### Completed this session
+- Updated `apps/next/proxy.ts` admin/auth gate session detection to accept:
+  - `better-auth.session_token`
+  - `__Secure-better-auth.session_token`
+  - `__Host-better-auth.session_token`
+- Root cause addressed: proxy previously checked only `better-auth.session_token`, which can miss secure-prefixed cookies on Vercel and trigger login redirect loops that appear as credential/login regressions.
+
+### Verification
+```
+node scripts/guard-checks.mjs [PASS]
+node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false [PASS]
+```
+
+### Next
+- Validate on Vercel Preview with browser admin login smoke (`/auth/login` -> `/admin`) using the active protected preview URL.

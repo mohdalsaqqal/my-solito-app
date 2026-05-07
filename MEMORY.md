@@ -1,5 +1,45 @@
 # MEMORY.md - Long-Term Decisions & Conventions
 
+## 2026-05-07 - Production DB Schema Drift Fix
+
+- `20260501000000_rls_tenant_policies/migration.sql` was never applied to production Neon DB, causing `P2022: The column tenantId does not exist` on `CmsAuditLog.upsert()` and 14 missing tables.
+- Migration uses `CREATE TABLE IF NOT EXISTS` and `ADD COLUMN IF NOT EXISTS` for tables/columns but lacked `DROP POLICY IF EXISTS` before `CREATE POLICY`, causing partial application failure.
+- Fixed: added `DROP POLICY IF EXISTS` before all 29 `CREATE POLICY` statements in the migration.
+- All 31 tenant-scoped tables now have `tenantId` column in production.
+- DB audit shows Better Auth tables use lowercase names (user, tenant, session, account, verification, tenant_user, app_auth_role_mapping) â€” these are present, not missing.
+- Migration file is now idempotent and safe to re-run.
+
+## 2026-05-07 - Full API/DB Connectivity Audit
+
+- All 36 Prisma tables accessible in production DB (5 auth + 31 tenant-scoped).
+- Auth tables: user (4 rows), account (4 rows), session (5 rows), verification (0), app_auth_role_mapping (4 rows).
+- CMS tables with data: CmsSiteConfig (1 row, tenantId='default'), CmsTickerSettings (1 row, tenantId='default'), AdminUserOverride (2 rows, tenantId='default').
+- All other CMS/commerce/retention tables empty but accessible.
+- RLS policies use `COALESCE(current_setting('app.current_tenant_id', true), 'default')` â€” reads/writes default to 'default' tenant.
+- All Prisma models have `tenantId @default("default")` â€” inserts work without explicit tenantId.
+- Services use `resolveTenantContext()` which returns 'default' when TENANT_ID env not set.
+- No RLS blocking issues for single-tenant deployment.
+- Customer users list fix: removed `where: { role: { not: 'customer' } }` from `GET /api/admin/users` â€” now returns all users, client filters by role.
+
+## 2026-05-06 - Cart Scope Resolution Helper
+
+- `apps/next/server/services/cart/_lib/resolve-cart-scope.ts` is the canonical helper for deriving the mock cart `AsyncLocalStorage` scope string from an incoming `Request`.
+- It resolves `user:{userId}` for authenticated sessions and `guest:{rc_cart_id}` for anonymous requests.
+- Any server service that calls `cartProvider.get()`, `cartProvider.add()`, or `cartProvider.remove()` must wrap the call with `withCartScope(scope, () => providerCall(...))` when the mock cart adapter is active.
+- This prevents the default `mock-cart-default.json` from being accidentally used during SSR page renders or checkout/quote/order API processing.
+- When the scope fix landed, it exposed a latent smoke-test bug: the old unscoped code was reading the default cart (which contained stale expensive items), masking that the real user cart subtotal ($28.5) was below the referral program DB minimum. After fixing scope, the smoke test had to be updated from quantity 3 to 5 to exceed the minimum.
+- `checkout-quote.service.ts` now warns when scoped cart items differ from body items (`cart_body_items_mismatch`), helping detect client/server drift early.
+
+## 2026-05-06 - OpenCode MCP + GitHub MCP Setup
+
+- `opencode.json` is the project-local OpenCode config. It contains Vercel MCP (OAuth) and GitHub MCP (PAT via env var).
+- GitHub PAT env var: `GITHUB_MCP_PAT`. Never commit it.
+- `.mcp.json` is gitignored. It contains Vercel remote URL for Claude/Cursor compatibility.
+- Repo-local skills live in `.opencode/skills/<name>/SKILL.md`.
+- New skills: `vercel-mcp` and `github-mcp`.
+- To authenticate: `opencode mcp auth vercel` and `opencode mcp auth github`.
+- To verify: `opencode mcp list`, `opencode mcp debug vercel`, `opencode mcp debug github`.
+
 ## 2026-05-06 - Environment/Data Source Rules
 
 ## 2026-05-06 - FAS-17 Architecture Staffing Decision
@@ -61,39 +101,39 @@
 - `yarn verify:launch-post-launch` checks the launch docs and delivery wiring.
 - `node scripts/verify-delivery.mjs --profile launch` is the consolidated launch profile.
 
-## 2026-04-30 — Better Auth Password Hashing (Critical)
+## 2026-04-30 ï¿½ Better Auth Password Hashing (Critical)
 
 - Better Auth uses `node:crypto.scrypt` (NOT bcrypt). Params: N=16384, r=16, p=1, dkLen=64, maxmem=128*N*r*2. Format: `${salt}:${key.toString('hex')}`. Password normalized with NFKC before hashing.
-- Hash utility: `apps/next/app/api/_lib/password-hash.ts` — `hashBetterAuthPassword(password)`.
+- Hash utility: `apps/next/app/api/_lib/password-hash.ts` ï¿½ `hashBetterAuthPassword(password)`.
 - bcrypt/bcryptjs hashes will fail with "Invalid password hash" error at login.
 - Docker PostgreSQL at port 5433 (Windows PostgreSQL removed). `.env` DATABASE_URL uses 5433.
 
-## 2026-04-30 — Dynamic Per-User Domain Permissions
+## 2026-04-30 ï¿½ Dynamic Per-User Domain Permissions
 
-- `hasAdminDomainPermission(role, domain, required, customPermissions?)` — if customPermissions has entries, they override role matrix. Domains NOT in customPermissions default to 'none'.
+- `hasAdminDomainPermission(role, domain, required, customPermissions?)` ï¿½ if customPermissions has entries, they override role matrix. Domains NOT in customPermissions default to 'none'.
 - `requireAdminDomainSession` reads per-user permissions from `.data/admin-user-overrides.json` via `resolveUserDomainPermissions`.
 - Client-side: `canAccessDomain(role, domain, customPermissions?)` in `admin-permissions.ts`. AdminShell fetches user list on mount to get domainPermissions.
 - Admin creates users via `POST /api/admin/users` (customers:full). Slide-over form at `/admin/customers` toggles per-domain: None ? Full ? Read ? Off.
 
-## 2026-04-30 — CMS FAQ Accordion Block
+## 2026-04-30 ï¿½ CMS FAQ Accordion Block
 
 - New block type: `faq_accordion`. Type + schema in `packages/app/lib/cms/blocks.ts`. Added to `HomeBlock` union, `homeBlockSchema` discriminated union, and `ReleaseBlockType`.
-- Component: `packages/ui/components/home/FaqAccordion.tsx` — uses React Native primitives + tokens (multiline style objects to pass guard check).
+- Component: `packages/ui/components/home/FaqAccordion.tsx` ï¿½ uses React Native primitives + tokens (multiline style objects to pass guard check).
 - Renderer: `packages/app/features/home/renderers/renderFaqAccordionBlock.tsx`.
-- Dispatch: `HomeBlocksRenderer.tsx` — `if (block.type === 'faq_accordion')`.
+- Dispatch: `HomeBlocksRenderer.tsx` ï¿½ `if (block.type === 'faq_accordion')`.
 - Seed: 4 FAQ items in `packages/adapters/mock/cms/index.ts` (shipping, returns, authenticity, loyalty).
 
-## 2026-04-30 — Platform.OS Cleanup Pattern
+## 2026-04-30 ï¿½ Platform.OS Cleanup Pattern
 
 - `useHeaderScroll.ts` ? `useHeaderScroll.native.ts`: web uses `addEventListener('scroll')`, native uses `subscribeNativeScrollOffset()`.
 - Guard check: `style={{...}}` with tokens on SAME LINE triggers violation. Multiline style objects pass.
 
 ## 2026-04-30 - Admin Auth Smoke + Full API Suite Rerun
 
-- `apps/next/scripts/smoke-admin-auth.mjs` — self-contained admin auth smoke using real route handlers + mocked Better Auth. Tests login?session?admin RBAC for admin, customer, ops, unauthenticated roles across catalog/CMS/ops domains.
-- `admin-route-auth.test.ts` requires `NODE_ENV=test` — `resolveAppOwnedRoleForUser` bypasses Prisma in test mode via `inferRoleFromEmail`. With `NODE_ENV=development`, Prisma query fails ? 401.
+- `apps/next/scripts/smoke-admin-auth.mjs` ï¿½ self-contained admin auth smoke using real route handlers + mocked Better Auth. Tests login?session?admin RBAC for admin, customer, ops, unauthenticated roles across catalog/CMS/ops domains.
+- `admin-route-auth.test.ts` requires `NODE_ENV=test` ï¿½ `resolveAppOwnedRoleForUser` bypasses Prisma in test mode via `inferRoleFromEmail`. With `NODE_ENV=development`, Prisma query fails ? 401.
 - Full API suite (225/225) runs clean via direct `node`/`tsx` command. Previous ENOSPC was Yarn pipe buffer issue, not disk space. Always use direct Node command (`node ../../node_modules/tsx/dist/cli.mjs --test`) for full suite, not `yarn test:api`.
-- Line 285 was last code-verifiable `[ ]` in checklist — all remaining items deferred, blocked by device/credentials/infra, or pre-launch.
+- Line 285 was last code-verifiable `[ ]` in checklist ï¿½ all remaining items deferred, blocked by device/credentials/infra, or pre-launch.
 
 ## 2026-04-30 - Payments Checkout Reconciliation Gate
 
@@ -138,7 +178,7 @@
 - `scripts/new-client.ts` is the idempotent provisioning command for new tenant/client deployments.
 - Usage: `npx tsx scripts/new-client.ts --slug <slug> [--name <name>] [--domains <domains>] [--force] [--dry-run]`
 - Generates `clients/<slug>/.env` with strong random secrets and `clients/<slug>/client.json` with adapter config and provisioning checklist.
-- Idempotent by default — exits clean if `.env` already exists. `--force` regenerates.
+- Idempotent by default ï¿½ exits clean if `.env` already exists. `--force` regenerates.
 - `clients/` directory is gitignored. Generated secrets are per-client, never committed.
 - Tracking: Aspect 11 (DevOps), Aspect 14 (Platform Operations), checklist queue item.
 
@@ -212,14 +252,14 @@
 
 ## 2026-04-30 - CampaignCard Hydration Fix
 
-- `CampaignCard` had a nested `<button>` bug: outer `ReusableButton` renders `<button>`, inner CTA `Button` also rendered `<button>` — invalid HTML causing React hydration mismatch.
+- `CampaignCard` had a nested `<button>` bug: outer `ReusableButton` renders `<button>`, inner CTA `Button` also rendered `<button>` ï¿½ invalid HTML causing React hydration mismatch.
 - Fix: replaced inner `<Button size='sm'>` with a styled `<Box>` + `<Text>` (pilled label). Whole card remains clickable via outer button.
 - Detected by `yarn e2e:a11y` (now 6/6 passing).
 
 ## 2026-04-30 - Odoo Connection Runbook And Smoke Script
 
 - Aspect 05-001 landed: `docs/delivery/runbooks/odoo-connection.md` + `scripts/smoke-odoo-connection.mjs` + `scripts/smoke-odoo-connection-live.ts`.
-- Static smoke (44 checks) validates env vars, adapter topology, provider contract conformance, runbook coverage, and data mapping test coverage — no real Odoo required.
+- Static smoke (44 checks) validates env vars, adapter topology, provider contract conformance, runbook coverage, and data mapping test coverage ï¿½ no real Odoo required.
 - `--health` and `--full` flags delegate to `tsx scripts/smoke-odoo-connection-live.ts` for live adapter execution against real Odoo.
 - Static verification baseline: `node scripts/smoke-odoo-connection.mjs`, `yarn guard:checks`, `yarn tsc`.
 - Live verification requires client Odoo credentials/endpoints (blocker noted in Aspect 05).
@@ -377,7 +417,7 @@
 - Those findings were fixed later on `2026-04-22`; see the "Better Auth Audit Findings Fixed" memory entry above.
 - Original targeted auth/checkout/order verification passed (`38/38`); full `yarn --cwd apps/next test:api` timed out after roughly `124s` in this environment.
 
-## 2026-04-13 — Homepage "Souk Energy" Redesign Complete (All 11 Phases)
+## 2026-04-13 ï¿½ Homepage "Souk Energy" Redesign Complete (All 11 Phases)
 
 All 11 phases from `joyful-stirring-breeze.md` implemented and verified. Key decisions baked in:
 
@@ -394,15 +434,15 @@ All 11 phases from `joyful-stirring-breeze.md` implemented and verified. Key dec
 - **Phase 2 (Flash deals):** `HomeFlashDealsSection` component ready; CMS block has no products field so `FlashSaleBand` remains fallback
 
 ### Pre-existing type errors fixed
-- `HeaderMainRow.tsx:303` — `style` removed from `Button`, child wrapped in `<Text>`
-- `TopBrandsGrid.tsx:170` — `as const` on `textAlign` and `maxWidth`
+- `HeaderMainRow.tsx:303` ï¿½ `style` removed from `Button`, child wrapped in `<Text>`
+- `TopBrandsGrid.tsx:170` ï¿½ `as const` on `textAlign` and `maxWidth`
 
 ### Audit finding fixed
 - `HeroSlideCard.tsx` had `rgba(0,0,0,0.40)` ? replaced with `colors.black` + `opacity.overlayLight`
 
 ### Verification baseline
-- `yarn guard:checks` ? — all 15 checks
-- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? — zero errors
+- `yarn guard:checks` ? ï¿½ all 15 checks
+- `yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false` ? ï¿½ zero errors
 
 ---
 
@@ -900,3 +940,57 @@ Verification:
 - Keep project-level Vercel Preview env persistence noted as branch-gated; current working Preview used deployment-scoped env vars.
 
 
+
+- FAS-17 execution now has a child-issue delegation pack at docs/delivery/runbooks/technical-org-staffing-child-issues.md with role-mapped lanes and done-means.
+
+## 2026-05-06 - Provider Readiness Tier/Source Consistency Rule
+
+- Provider readiness must not report `release-ready` when source authority is still `mock`.
+- Enforced in both `packages/providers/registry.ts` and `scripts/verify-provider-readiness.mjs` for product/category/brand/order/payment domains.
+- This keeps FAS-20/FAS-17C progress tracking trustworthy by preventing false-positive readiness tiers.
+
+## 2026-05-06 - FAS-22 Ops + Mobile Lane Gate
+
+- `docs/delivery/runbooks/production-ops-mobile-lane.md` is the runbook source for combined preview->production rehearsal and mobile production readiness handoff.
+- `yarn verify:production-ops-mobile-lane` is the static proof gate for lane artifacts, delivery wiring, and acceptance-checklist presence.
+- `ops-mobile-lane` is wired into `scripts/verify-delivery.mjs` deploy and full profiles.
+- Lane close still requires credential/device-gated deep-link and physical push evidence with named owners.
+
+## 2026-05-06 - Catalog Provider Readiness Gate
+
+- `yarn verify:catalog-providers` is the dedicated FAS-19 gate for product/category/brand customer-readiness.
+- The gate enforces `USE_MOCK=false` and validates `ODOO_BASE_URL`, `ODOO_DB`, and `ODOO_API_KEY` are configured with non-placeholder values.
+- Optional live verification is available through `yarn verify:catalog-providers --live`, which runs `scripts/smoke-odoo-connection-live.ts`.
+- Delivery wiring updated in `docs/delivery/DELIVERY_MATRIX.md` and `docs/delivery/aspects/05-backend-integration.md`.
+- In the current local environment, provider readiness remains `demo-only` for `product/category/brand/order/payment` until real provider credentials and non-mock toggles are applied.
+
+## 2026-05-06 - Release Provider Readiness Classification
+
+- `providerReadiness.release` should classify to `source: app-cms`, `tier: release-ready` when `DATABASE_URL` is present because release lifecycle persistence is app-CMS/Prisma-backed.
+- `scripts/verify-provider-readiness.mjs` must stay aligned with `packages/providers/registry.ts` for release domain classification.
+- Current required readiness blockers after this change: `product`, `category`, `brand`, `order`, `payment`.
+
+## 2026-05-06 - Mobile Deep-Link Routing Baseline
+
+- Expo native app now has explicit deep-link routing via `apps/expo/app/_hooks/useDeepLinkRouting.ts`.
+- Supported deep-link targets: core views (`home`, `categories`, `shop`, `deals`, `search`, `cart`, `checkout`, `account`, `orders`) and detail routes (`product/:id`, `orders/:id`, `account/tests/:id`).
+- Deep-link routing listens to both initial launch URL (`Linking.getInitialURL`) and runtime events (`Linking.addEventListener('url', ...)`).
+- `scripts/verify-expo-functional.mjs` now guards deep-link wiring and route-pattern presence to prevent regressions.
+- Device-level universal-link verification is still required for production readiness and remains a separate execution step.
+
+## 2026-05-06 - FAS-21 Tenant Scoping Service Slice
+
+- Referral service stores must scope queries by tenant context, not store-only filters or hardcoded tenant ids.
+- `referral-program-store.ts` no longer uses a hardcoded `tenantId: 'default'` for upsert keys.
+- `referral-profile-store.ts` and `referral-ledger-store.ts` now resolve tenant context and include tenant filters on reads and creates.
+- `pharmacist-consultation.service.ts` must persist consultations and notifications with the resolved tenant id.
+- Current follow-up gap: CMS singleton tables use global singleton IDs (`id='default'`) without tenant-composite unique keys, so true per-tenant singleton scoping needs schema evolution before full service-level completion.
+
+## 2026-05-06 - Better Auth Cookie Prefix Rule For Hosted Environments
+
+- Proxy/session gate logic must treat Better Auth session cookies as a set, not a single hardcoded name.
+- Accept at least:
+  - `better-auth.session_token`
+  - `__Secure-better-auth.session_token`
+  - `__Host-better-auth.session_token`
+- This prevents false unauthenticated redirects on HTTPS hosts (for example Vercel) where cookie prefixes can differ from local HTTP behavior.

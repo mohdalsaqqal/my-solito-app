@@ -1,5 +1,47 @@
 # RECENT_CONTEXT.md — Auto-Updated Highlights
 
+## 2026-05-07 - Production DB Schema Drift Fix + Customer Users List Fix + Full API Audit (Complete)
+
+- Applied `20260501000000_rls_tenant_policies/migration.sql` to production Neon DB to fix missing `tenantId` columns and 14 missing tables.
+- Migration initially failed with `ERROR: policy "tenant_release" for table "Release" already exists` — partial prior application left some RLS policies in place.
+- Fixed migration idempotency: added `DROP POLICY IF EXISTS` before all 29 `CREATE POLICY` statements.
+- Re-ran migration successfully against production DB.
+- Verified all 31 tenant-scoped tables have `tenantId` column via `scripts/check-tenant-columns.ts`.
+- DB audit shows 34/41 expected tables present; 7 "missing" (User, Tenant, Session, Account, Verification, TenantUser, AppAuthRoleMapping) exist with lowercase names — Better Auth naming convention, not real missing tables.
+- This resolves the `ADMIN_USER_CREATE_UNEXPECTED` / `P2022: The column tenantId does not exist in the current database` error on `CmsAuditLog.upsert()`.
+- Fixed customer users not appearing in list: `GET /api/admin/users` at `apps/next/app/api/admin/users/route.ts:35` had `where: { role: { not: 'customer' } }` — removed it. Now all users returned; client splits by role.
+- Full production DB connectivity audit: 36/36 tables accessible, all RLS policies working, no blocking issues.
+- Auth tables: 4 users, 4 accounts, 5 sessions, 4 role mappings.
+- CMS tables with data: CmsSiteConfig (1 row), CmsTickerSettings (1 row), AdminUserOverride (2 rows) — all tenantId='default'.
+- All other tables empty but accessible and ready for use.
+
+## 2026-05-06 - Shopping Journey Cart Scope Fix (Complete)
+
+- Fixed P0 cart scope bug: 8 server services now use `withCartScope` via new `resolveCartScope` helper.
+- Services fixed: cart-page, checkout-page, checkout-success-page, checkout-quote, place-order, order-detail, account-page, account-test-detail.
+- Checkout quote and place-order now read/write the correct user/guest scoped cart instead of the default global cart.
+- Added referral code input to checkout UI; `CheckoutQuoteInput` now includes `referralCode`.
+- Updated en/ar checkout translations for referral code.
+- Functional storefront smoke passes after adjusting test quantity from 3 to 5 to meet referral minimum.
+- Added drift warning in `checkout-quote.service.ts` when scoped cart items differ from body items.
+- Created `e2e/guest-cart-journey.spec.ts` for browser-click regression coverage (guest add-to-cart -> cart page -> checkout page).
+
+## 2026-05-06 - OpenCode MCP + GitHub MCP Installation
+
+- Added `opencode.json` with Vercel and GitHub remote MCP servers.
+- GitHub auth uses `GITHUB_MCP_PAT` env var; no secrets in repo.
+- `.mcp.json` updated for Claude/Cursor Vercel compatibility and gitignored.
+- Repo-local skills created under `.opencode/skills/vercel-mcp/` and `.opencode/skills/github-mcp/`.
+- Missing `verify:ai-development-process` script added to `package.json`.
+- `yarn guard:checks` and `node scripts/verify-delivery.mjs --profile ai` both pass.
+
+## 2026-05-06 - Guest Cart On Vercel
+
+- Fixed `/api/cart`, `/api/cart/add`, `/api/cart/remove`, and `/api/cart/set-quantity` so storefront cart read/mutations no longer require authentication.
+- Cart mutations still enforce same-origin trusted mutation checks.
+- Anonymous carts are scoped by `rc_cart_id`; logged-in carts are scoped by `userId`; the mock cart adapter now stores per-scope cart files instead of a single shared cart.
+- Verification: `yarn --cwd apps/next test:api` cart tests passed while unrelated referral tests failed; `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false` passed; `yarn guard:checks` passed.
+
 ## 2026-05-06 - Environment/Data Source Audit Slice
 
 ## 2026-05-06 - FAS-17 Architecture And Technical Org Staffing
@@ -1285,3 +1327,77 @@ Launch/post-launch local gate is green.
   - `yarn verify:delivery --profile deploy`
 
 
+
+- Added docs/delivery/runbooks/technical-org-staffing-child-issues.md with five ready-to-delegate child issue lanes, owner roles, and verification commands.
+
+- FAS-17 executed delegation in Paperclip: created FAS-18..FAS-22 child lanes and closed FAS-17 as done.
+
+## 2026-05-06 - FAS-20 Readiness Tier Consistency
+
+- Fixed provider-readiness classification mismatch where catalog/order/payment could show `release-ready` while still mock-backed.
+- `packages/providers/registry.ts` now aligns tier with source authority for product/category/brand/order/payment.
+- `scripts/verify-provider-readiness.mjs` now mirrors the same tier logic so CLI output matches provider registry semantics.
+- Focused readiness tests passed:
+  - `node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test packages/providers/registry.test.ts apps/next/app/api/provider-readiness.test.ts`
+  - `yarn verify:provider-readiness`
+- Current blockers remain unchanged by design: release, product, category, brand, order, payment.
+
+## 2026-05-06 - FAS-22 Production Ops + Mobile Lane
+
+- Added `docs/delivery/runbooks/production-ops-mobile-lane.md` for one combined operations rehearsal + mobile production checklist lane.
+- Added `scripts/verify-production-ops-mobile-lane.mjs` and root command `yarn verify:production-ops-mobile-lane`.
+- Wired `ops-mobile-lane` into delivery profiles and matrix to keep lane evidence repeatable.
+- Updated Aspect 11 and Aspect 03 plus checklist tracking.
+- Verification passed: `yarn verify:production-ops-mobile-lane`.
+
+## 2026-05-06 - FAS-19 Catalog Providers Readiness Slice
+
+- Added `scripts/verify-catalog-providers.mjs` and root script `yarn verify:catalog-providers`.
+- Gate behavior: fails when `USE_MOCK` is not `false`; validates `ODOO_BASE_URL`, `ODOO_DB`, and `ODOO_API_KEY`; supports optional live smoke with `--live`.
+- Updated delivery wiring in `docs/delivery/DELIVERY_MATRIX.md` and `docs/delivery/aspects/05-backend-integration.md`.
+- Updated `checklist.md` backend integration section to track the catalog readiness verifier.
+- Verification this session:
+  - `node scripts/verify-catalog-providers.mjs` (expected fail in current mock env)
+  - `$env:USE_MOCK='false'; $env:ODOO_BASE_URL='https://example.com'; $env:ODOO_DB='demo'; $env:ODOO_API_KEY='demo-key'; node scripts/verify-catalog-providers.mjs` (pass)
+  - `node scripts/verify-provider-readiness.mjs` (pass; still demo-only for catalog/order/payment in current env)
+  - `node scripts/guard-checks.mjs` (pass)
+- Next action: run `yarn verify:catalog-providers --live` with real Odoo credentials and clear product/category/brand readiness blockers.
+
+## 2026-05-06 - FAS-18 Release Lifecycle Readiness
+
+- Release domain now resolves as `app-cms (release-ready)` in both `packages/providers/registry.ts` and `scripts/verify-provider-readiness.mjs` when `DATABASE_URL` is configured.
+- `yarn verify:provider-readiness` no longer reports `release` as a demo-only blocker.
+- Remaining required demo-only blockers are now `product`, `category`, `brand`, `order`, and `payment`.
+- Focused readiness tests pass (`apps/next/app/api/provider-readiness.test.ts`, `packages/providers/registry.test.ts`).
+
+## 2026-05-06 - FAS-23 Mobile Deep-Link Readiness Slice
+
+- Implemented native deep-link routing in `apps/expo/app/_hooks/useDeepLinkRouting.ts`.
+- Expo now handles both initial URL and runtime URL events, routing to product (`product/:id`), order detail (`orders/:id`), and account test detail (`account/tests/:id`) plus core views.
+- Wired hook in `apps/expo/app/index.tsx` and exposed `setActiveTestId` from `useAccountData`.
+- `yarn verify:expo-functional` now includes deep-link wiring/pattern assertions.
+- Verified: `yarn verify:expo-functional` PASS, `yarn --cwd apps/expo tsc --noEmit --incremental false` PASS.
+- Remaining for full mobile production readiness: physical-device universal-link and push smoke with real credentials.
+
+## 2026-05-06 - FAS-21 Tenant Scoping Service Slice
+
+- Referral service stores now scope read/write queries using resolved tenant context:
+  - `apps/next/server/services/referral/referral-program-store.ts`
+  - `apps/next/server/services/referral/referral-profile-store.ts`
+  - `apps/next/server/services/referral/referral-ledger-store.ts`
+- Pharmacist consultation persistence and result-ready notifications now carry resolved tenant id:
+  - `apps/next/server/services/pharmacist/pharmacist-consultation.service.ts`
+- Verification passed:
+  - `node scripts/guard-checks.mjs`
+  - `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+  - `node --max-old-space-size=4096 ./node_modules/tsx/dist/cli.mjs --test --test-concurrency=1 --test-timeout=30000 apps/next/server/services/pharmacist/pharmacist-consultation.service.test.ts`
+- Follow-up: referral route tests need DB-up verification in this environment; CMS singleton tenant scoping still needs schema-safe singleton key strategy.
+
+## 2026-05-06 - FAS-25 Vercel Admin Login Redirect/Credential Regression
+
+- Fixed hosted admin login redirect loop risk in `apps/next/proxy.ts` by accepting Better Auth secure cookie variants (`better-auth.session_token`, `__Secure-better-auth.session_token`, `__Host-better-auth.session_token`).
+- Root cause: proxy session gate only checked the unprefixed cookie name, which can differ on HTTPS deployments and lead to false unauthenticated redirects.
+- Verification passed:
+  - `node scripts/guard-checks.mjs`
+  - `node --max-old-space-size=4096 node_modules/typescript/bin/tsc -p apps/next/tsconfig.json --noEmit --incremental false`
+- Next: browser smoke on Vercel Preview for `/auth/login` -> `/admin`.

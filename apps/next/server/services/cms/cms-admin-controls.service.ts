@@ -2,10 +2,7 @@
  * CMS Admin Controls — canonical read/write service for toggles, spotlights, offer banners, and audit.
  *
  * Owns Prisma-backed admin controls persistence.
- * User overrides remain in JSON file (identity system, not yet migrated).
  */
-import fs from 'node:fs/promises'
-import path from 'node:path'
 import {
   CMSHome,
   AuthRole,
@@ -90,8 +87,6 @@ type DbAuditLogRow = {
   changes: unknown
 }
 
-const STORAGE_DIR = path.join(process.cwd(), '.data')
-const USER_OVERRIDES_FILE = path.join(STORAGE_DIR, 'admin-user-overrides.json')
 const MAX_AUDIT = 80
 
 function initialAdminControlsState(): AdminControlsState {
@@ -230,7 +225,6 @@ export async function readAdminControlsState(): Promise<AdminControlsState> {
 }
 
 export async function writeAdminControlsState(state: AdminControlsState): Promise<void> {
-  await fs.mkdir(STORAGE_DIR, { recursive: true })
   await writeUserOverridesFile(state.userOverrides)
 
   try {

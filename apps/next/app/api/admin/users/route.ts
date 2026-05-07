@@ -32,7 +32,6 @@ function defaultAdminPermissions(role: AuthRole): AdminPermissionSet {
 async function readDbAdminUsers(): Promise<AdminUserControlRecord[]> {
   const state = await readAdminControlsState()
   const dbRoleMappings = await prisma.appAuthRoleMapping.findMany({
-    where: { role: { not: 'customer' } },
     include: { user: true },
     orderBy: { updatedAt: 'desc' },
   })
@@ -160,40 +159,59 @@ export async function POST(request: Request) {
     }
 
     const email = body.email.toLowerCase().trim()
-    const existing = await prisma.user.findUnique({ where: { email } })
-    if (existing) {
-      return fail('ADMIN_USER_CREATE_DUPLICATE_EMAIL', 'A user with this email already exists.', 409)
+    const existingUser = await prisma.user.findUnique({ where: { email } })
+
+    let created: { id: string; name: string; email: string }
+    let isUpgraded = false
+
+    if (existingUser) {
+      // Check if existing user is a customer — if so, upgrade role instead of failing
+      const existingMapping = await prisma.appAuthRoleMapping.findUnique({
+        where: { userId: existingUser.id },
+      })
+      if (existingMapping && existingMapping.role === 'customer') {
+        await prisma.appAuthRoleMapping.update({
+          where: { userId: existingUser.id },
+          data: {
+            role: body.role,
+            updatedByEmail: session.email,
+          },
+        })
+        created = existingUser
+        isUpgraded = true
+      } else {
+        return fail('ADMIN_USER_CREATE_DUPLICATE_EMAIL', 'A user with this email already exists.', 409)
+      }
+    } else {
+      const hashedPassword = hashBetterAuthPassword(body.password)
+      created = await prisma.$transaction(async (tx: any) => {
+        const user = await tx.user.create({
+          data: {
+            id: crypto.randomUUID(),
+            name: body.name.trim(),
+            email,
+            emailVerified: true,
+          },
+        })
+        await tx.account.create({
+          data: {
+            id: crypto.randomUUID(),
+            accountId: user.id,
+            providerId: 'credential',
+            userId: user.id,
+            password: hashedPassword,
+          },
+        })
+        await tx.appAuthRoleMapping.create({
+          data: {
+            userId: user.id,
+            role: body.role,
+            updatedByEmail: session.email,
+          },
+        })
+        return user
+      })
     }
-
-    const hashedPassword = hashBetterAuthPassword(body.password)
-
-    const created = await prisma.$transaction(async (tx: any) => {
-      const user = await tx.user.create({
-        data: {
-          id: crypto.randomUUID(),
-          name: body.name.trim(),
-          email,
-          emailVerified: true,
-        },
-      })
-      await tx.account.create({
-        data: {
-          id: crypto.randomUUID(),
-          accountId: user.id,
-          providerId: 'credential',
-          userId: user.id,
-          password: hashedPassword,
-        },
-      })
-      await tx.appAuthRoleMapping.create({
-        data: {
-          userId: user.id,
-          role: body.role,
-          updatedByEmail: session.email,
-        },
-      })
-      return user
-    })
 
     const state = await readAdminControlsState()
     state.userOverrides[created.id] = {
@@ -209,7 +227,7 @@ export async function POST(request: Request) {
       targetId: created.id,
       actor: { userId: session.userId, email: session.email },
       changes: {
-        action: 'created',
+        action: isUpgraded ? 'upgraded' : 'created',
         name: body.name.trim(),
         email,
         role: body.role,
@@ -224,11 +242,13 @@ export async function POST(request: Request) {
       email: created.email,
       role: body.role,
       status: 'active',
-    }, 201)
+      upgraded: isUpgraded,
+    }, isUpgraded ? 200 : 201)
   } catch (cause) {
+    console.error('[ADMIN_USER_CREATE_ERROR]', cause)
     return fail('ADMIN_USER_CREATE_UNEXPECTED', 'Unexpected error while creating user.', 500, {
       scope: 'POST /api/admin/users',
-      cause,
+      cause: cause instanceof Error ? cause.message : String(cause),
     })
   }
 }

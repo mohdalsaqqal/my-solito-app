@@ -344,89 +344,125 @@ CREATE INDEX IF NOT EXISTS "AdminUserOverride_tenantId_idx" ON "AdminUserOverrid
 
 -- Commerce tables
 ALTER TABLE "Release" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_release ON "Release";
+DROP POLICY IF EXISTS tenant_release ON "Release";
 CREATE POLICY tenant_release ON "Release" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "ReleaseBlock" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_release_block ON "ReleaseBlock";
+DROP POLICY IF EXISTS tenant_release_block ON "ReleaseBlock";
 CREATE POLICY tenant_release_block ON "ReleaseBlock" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "Promotion" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_promotion ON "Promotion";
+DROP POLICY IF EXISTS tenant_promotion ON "Promotion";
 CREATE POLICY tenant_promotion ON "Promotion" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "PricingQuote" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_pricing_quote ON "PricingQuote";
+DROP POLICY IF EXISTS tenant_pricing_quote ON "PricingQuote";
 CREATE POLICY tenant_pricing_quote ON "PricingQuote" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "RateLimitBucket" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_rate_limit ON "RateLimitBucket";
+DROP POLICY IF EXISTS tenant_rate_limit ON "RateLimitBucket";
 CREATE POLICY tenant_rate_limit ON "RateLimitBucket" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 -- CMS tables
 ALTER TABLE "CmsSiteConfig" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_site_config ON "CmsSiteConfig";
+DROP POLICY IF EXISTS tenant_site_config ON "CmsSiteConfig";
 CREATE POLICY tenant_site_config ON "CmsSiteConfig" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsTickerSettings" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_ticker_settings ON "CmsTickerSettings";
+DROP POLICY IF EXISTS tenant_ticker_settings ON "CmsTickerSettings";
 CREATE POLICY tenant_ticker_settings ON "CmsTickerSettings" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsTickerItem" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_ticker_item ON "CmsTickerItem";
 CREATE POLICY tenant_ticker_item ON "CmsTickerItem" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsEducationBanner" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_education_banner ON "CmsEducationBanner";
 CREATE POLICY tenant_education_banner ON "CmsEducationBanner" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsUgcItem" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_ugc_item ON "CmsUgcItem";
 CREATE POLICY tenant_ugc_item ON "CmsUgcItem" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsToggleOverride" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_toggle_override ON "CmsToggleOverride";
 CREATE POLICY tenant_toggle_override ON "CmsToggleOverride" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsBrandSpotlight" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_brand_spotlight ON "CmsBrandSpotlight";
 CREATE POLICY tenant_brand_spotlight ON "CmsBrandSpotlight" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsOfferBanner" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_offer_banner ON "CmsOfferBanner";
 CREATE POLICY tenant_offer_banner ON "CmsOfferBanner" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsAuditLog" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_audit_log ON "CmsAuditLog";
 CREATE POLICY tenant_audit_log ON "CmsAuditLog" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsPageBlock" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_page_block ON "CmsPageBlock";
 CREATE POLICY tenant_page_block ON "CmsPageBlock" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsMarketingRail" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_marketing_rail ON "CmsMarketingRail";
 CREATE POLICY tenant_marketing_rail ON "CmsMarketingRail" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsCampaign" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_campaign ON "CmsCampaign";
 CREATE POLICY tenant_campaign ON "CmsCampaign" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsHeroCard" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_hero_card ON "CmsHeroCard";
 CREATE POLICY tenant_hero_card ON "CmsHeroCard" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsEditorialHotspot" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_editorial_hotspot ON "CmsEditorialHotspot";
 CREATE POLICY tenant_editorial_hotspot ON "CmsEditorialHotspot" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsNewsletterCta" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_newsletter_cta ON "CmsNewsletterCta";
 CREATE POLICY tenant_newsletter_cta ON "CmsNewsletterCta" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsPersonalization" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_personalization ON "CmsPersonalization";
 CREATE POLICY tenant_personalization ON "CmsPersonalization" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsRailAutoplay" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_rail_autoplay ON "CmsRailAutoplay";
 CREATE POLICY tenant_rail_autoplay ON "CmsRailAutoplay" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsFeaturedSlot" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_featured_slot ON "CmsFeaturedSlot";
 CREATE POLICY tenant_featured_slot ON "CmsFeaturedSlot" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "CmsCompleteSet" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_complete_set ON "CmsCompleteSet";
 CREATE POLICY tenant_complete_set ON "CmsCompleteSet" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "PharmacistConsultation" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_pharmacist_consultation ON "PharmacistConsultation";
 CREATE POLICY tenant_pharmacist_consultation ON "PharmacistConsultation" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "ReferralProgram" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_referral_program ON "ReferralProgram";
 CREATE POLICY tenant_referral_program ON "ReferralProgram" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "ReferralProfile" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_referral_profile ON "ReferralProfile";
 CREATE POLICY tenant_referral_profile ON "ReferralProfile" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "ReferralLedgerEntry" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_referral_ledger ON "ReferralLedgerEntry";
 CREATE POLICY tenant_referral_ledger ON "ReferralLedgerEntry" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
 
 ALTER TABLE "AdminUserOverride" ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS tenant_admin_user_override ON "AdminUserOverride";
 CREATE POLICY tenant_admin_user_override ON "AdminUserOverride" USING ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default')) WITH CHECK ("tenantId" = COALESCE(current_setting('app.current_tenant_id', true), 'default'));
