@@ -91,6 +91,7 @@ export function PageContainer({
     <div
       style={{
         width: '100%',
+        minWidth: 0,
         maxWidth: fullWidth
           ? 'none'
           : dense
@@ -188,10 +189,14 @@ export function AdminCommandBar({
         display: 'grid',
         gap: spacing['16'],
         marginBottom: spacing['24'],
+        width: '100%',
+        minWidth: 0,
       }}
     >
       <div
         style={{
+          width: '100%',
+          minWidth: 0,
           border: `1px solid ${colors.border}`,
           borderRadius: cardRadius + 4,
           background: adminSurfaceTokens.commandBarBackground,
@@ -286,6 +291,7 @@ export function Panel({
             ? spacing['16']
             : `clamp(${spacing['16']}px, 2.4vw, ${spacing['24']}px)`,
         boxShadow: elevation.xs,
+        minWidth: 0,
       }}
     >
       {children}
@@ -354,6 +360,8 @@ export function AdminKpiGrid({ children }: PropsWithChildren) {
         gap: spacing['16'],
         gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
         marginBottom: spacing['24'],
+        width: '100%',
+        minWidth: 0,
       }}
     >
       {children}
@@ -503,6 +511,8 @@ export function WorkspaceLayout({
           ? 'minmax(0, 1.6fr) minmax(280px, 0.82fr)'
           : 'minmax(0, 1fr)',
         alignItems: 'start',
+        width: '100%',
+        minWidth: 0,
       }}
     >
       <div style={{ display: 'grid', gap: spacing['20'], minWidth: 0 }}>{main}</div>

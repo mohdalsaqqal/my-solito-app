@@ -17,6 +17,8 @@ import {
 import { AdminOpsAuditEntry, OrderSummary } from '@real/app/lib/types'
 import { colors, fontWeights, radius, spacing, typography } from '@real/tokens'
 import { apiClient } from '../../apiClient'
+import { Card, CardContent, CardHeader } from '../../../components/ui/card'
+import { Skeleton } from '../../../components/ui/skeleton'
 import {
   ActivityFeed,
   AdminCommandBar,
@@ -26,7 +28,6 @@ import {
   AdminTrendPill,
   Button,
   EmptyState,
-  InlineLoading,
   MetricList,
   PageContainer,
   Panel,
@@ -106,6 +107,102 @@ const dashboardSurfaceTokens = {
   revenuePanelBackground: colors.surfaceLowest,
   revenueBarFill: colors.brandPrimary,
 } as const
+
+function DashboardSkeleton() {
+  const cardClasses = 'overflow-hidden border-border/80 bg-card shadow-sm'
+
+  return (
+    <div
+      aria-label={copy.loading}
+      aria-busy='true'
+      style={{
+        display: 'grid',
+        gap: spacing['24'],
+        width: '100%',
+        minWidth: 0,
+      }}
+    >
+      <div
+        style={{
+          display: 'grid',
+          gap: spacing['16'],
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+          width: '100%',
+          minWidth: 0,
+        }}
+      >
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Card key={index} className={cardClasses}>
+            <CardHeader className='space-y-3 p-4'>
+              <div className='flex items-center justify-between gap-3'>
+                <Skeleton className='h-3 w-28' />
+                <Skeleton className='h-8 w-8 rounded-lg' />
+              </div>
+              <Skeleton className='h-8 w-24' />
+            </CardHeader>
+            <CardContent className='p-4 pt-0'>
+              <Skeleton className='h-3 w-36' />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gap: spacing['20'],
+          gridTemplateColumns: 'minmax(0, 1.6fr) minmax(280px, 0.82fr)',
+          alignItems: 'start',
+          width: '100%',
+          minWidth: 0,
+        }}
+      >
+        <div style={{ display: 'grid', gap: spacing['20'], minWidth: 0 }}>
+          <Card className={cardClasses}>
+            <CardHeader className='space-y-3 p-6'>
+              <Skeleton className='h-5 w-40' />
+              <Skeleton className='h-4 w-full max-w-[520px]' />
+            </CardHeader>
+            <CardContent className='grid gap-4 p-6 pt-0'>
+              <Skeleton className='h-20 w-full' />
+              <div className='grid gap-3 md:grid-cols-3'>
+                <Skeleton className='h-20 w-full rounded-xl' />
+                <Skeleton className='h-20 w-full rounded-xl' />
+                <Skeleton className='h-20 w-full rounded-xl' />
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={cardClasses}>
+            <CardHeader className='space-y-3 p-6'>
+              <Skeleton className='h-5 w-36' />
+              <Skeleton className='h-4 w-full max-w-[480px]' />
+            </CardHeader>
+            <CardContent className='grid gap-3 p-6 pt-0'>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className='h-14 w-full rounded-xl' />
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+        <aside style={{ display: 'grid', gap: spacing['20'], minWidth: 0 }}>
+          {Array.from({ length: 3 }).map((_, index) => (
+            <Card key={index} className={cardClasses}>
+              <CardHeader className='space-y-3 p-5'>
+                <Skeleton className='h-5 w-32' />
+                <Skeleton className='h-4 w-full' />
+              </CardHeader>
+              <CardContent className='grid gap-3 p-5 pt-0'>
+                <Skeleton className='h-10 w-full rounded-lg' />
+                <Skeleton className='h-10 w-full rounded-lg' />
+                <Skeleton className='h-10 w-full rounded-lg' />
+              </CardContent>
+            </Card>
+          ))}
+        </aside>
+      </div>
+    </div>
+  )
+}
 
 export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<OrderSummary[]>([])
@@ -282,11 +379,7 @@ export default function AdminDashboardPage() {
         }
       />
 
-      {loading ? (
-        <Panel>
-          <InlineLoading label={copy.loading} />
-        </Panel>
-      ) : null}
+      {loading ? <DashboardSkeleton /> : null}
 
       {error ? (
         <Panel tone='danger'>
