@@ -5,20 +5,25 @@ import { createAdminMockSeed, type AdminMockState } from './seed'
 const stateFilePath = path.join(process.cwd(), '.data', 'admin-mock-state.json')
 
 let writeChain = Promise.resolve()
+let memoryState: AdminMockState | null = null
+let fileStoreAvailable: boolean | null = null
 
-async function ensureStoreFile() {
-  await fs.mkdir(path.dirname(stateFilePath), { recursive: true })
-  try {
-    await fs.access(stateFilePath)
-  } catch {
-    await fs.writeFile(stateFilePath, `${JSON.stringify(createAdminMockSeed(), null, 2)}\n`, 'utf8')
-  }
+function cloneState(state: AdminMockState): AdminMockState {
+  return JSON.parse(JSON.stringify(state)) as AdminMockState
 }
 
-export async function readAdminMockState(): Promise<AdminMockState> {
-  await ensureStoreFile()
-  const raw = await fs.readFile(stateFilePath, 'utf8')
-  const parsed = JSON.parse(raw) as Partial<AdminMockState>
+function getMemoryState() {
+  if (!memoryState) {
+    memoryState = createAdminMockSeed()
+  }
+  return cloneState(memoryState)
+}
+
+function setMemoryState(state: AdminMockState) {
+  memoryState = cloneState(state)
+}
+
+function normalizeState(parsed: Partial<AdminMockState>): AdminMockState | null {
   if (
     !Array.isArray(parsed.products) ||
     !Array.isArray(parsed.orders) ||
@@ -26,9 +31,7 @@ export async function readAdminMockState(): Promise<AdminMockState> {
     !Array.isArray(parsed.vendors) ||
     !Array.isArray(parsed.jobs)
   ) {
-    const seed = createAdminMockSeed()
-    await fs.writeFile(stateFilePath, `${JSON.stringify(seed, null, 2)}\n`, 'utf8')
-    return seed
+    return null
   }
 
   const state = parsed as AdminMockState
@@ -36,22 +39,62 @@ export async function readAdminMockState(): Promise<AdminMockState> {
     /^SKU-\d+$/.test(product.sku ?? '') || / Product \d+$/i.test(product.title)
   )
 
-  if (needsProductReseed) {
-    const seed = createAdminMockSeed()
-    const migratedState: AdminMockState = {
-      ...state,
-      products: seed.products,
-    }
-    await fs.writeFile(stateFilePath, `${JSON.stringify(migratedState, null, 2)}\n`, 'utf8')
-    return migratedState
+  if (!needsProductReseed) {
+    return state
   }
 
-  return state
+  const seed = createAdminMockSeed()
+  return {
+    ...state,
+    products: seed.products,
+  }
+}
+
+async function ensureStoreFile() {
+  if (fileStoreAvailable === false) return false
+  const seed = createAdminMockSeed()
+  try {
+    await fs.mkdir(path.dirname(stateFilePath), { recursive: true })
+    try {
+      await fs.access(stateFilePath)
+    } catch {
+      await fs.writeFile(stateFilePath, `${JSON.stringify(seed, null, 2)}\n`, 'utf8')
+    }
+    fileStoreAvailable = true
+    return true
+  } catch {
+    fileStoreAvailable = false
+    setMemoryState(seed)
+    return false
+  }
+}
+
+export async function readAdminMockState(): Promise<AdminMockState> {
+  if (!(await ensureStoreFile())) {
+    return getMemoryState()
+  }
+
+  try {
+    const raw = await fs.readFile(stateFilePath, 'utf8')
+    const parsed = JSON.parse(raw) as Partial<AdminMockState>
+    const state = normalizeState(parsed) ?? createAdminMockSeed()
+    await fs.writeFile(stateFilePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
+    setMemoryState(state)
+    return state
+  } catch {
+    fileStoreAvailable = false
+    return getMemoryState()
+  }
 }
 
 export async function writeAdminMockState(state: AdminMockState) {
-  await ensureStoreFile()
-  await fs.writeFile(stateFilePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
+  setMemoryState(state)
+  if (!(await ensureStoreFile())) return
+  try {
+    await fs.writeFile(stateFilePath, `${JSON.stringify(state, null, 2)}\n`, 'utf8')
+  } catch {
+    fileStoreAvailable = false
+  }
 }
 
 export async function updateAdminMockState(
