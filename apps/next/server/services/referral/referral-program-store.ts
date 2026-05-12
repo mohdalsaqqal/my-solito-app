@@ -45,27 +45,26 @@ const DEFAULT_PROGRAM = normalizeReferralProgramSettings({
 })
 
 export async function readReferralProgramSettings(storeId = DEFAULT_STORE_ID): Promise<ReferralProgramSettings> {
-  const row = await prisma.referralProgram.findFirst({ where: { storeId } })
-  if (!row) {
-    // Auto-seed: create default program settings on first read
-    const created = await prisma.referralProgram.create({
-      data: {
-        storeId,
-        mode: DEFAULT_PROGRAM.mode,
-        accessMode: DEFAULT_PROGRAM.accessMode,
-        followerRewardType: DEFAULT_PROGRAM.policy.followerReward.type,
-        followerRewardValue: DEFAULT_PROGRAM.policy.followerReward.value,
-        influencerRewardType: DEFAULT_PROGRAM.policy.influencerReward.type,
-        influencerRewardValue: DEFAULT_PROGRAM.policy.influencerReward.value,
-        attributionWindowDays: DEFAULT_PROGRAM.policy.attributionWindowDays,
-        firstOrderOnly: DEFAULT_PROGRAM.policy.firstOrderOnly,
-        allowStackingWithPromotions: DEFAULT_PROGRAM.policy.allowStackingWithPromotions,
-        minimumOrderAmount: DEFAULT_PROGRAM.policy.minimumOrderAmount ?? 0,
-      },
-    })
-    return rowToSettings(created)
-  }
-  return rowToSettings(row)
+  const created = await prisma.referralProgram.upsert({
+    where: {
+      tenantId_storeId: { tenantId: 'default', storeId },
+    },
+    update: {},
+    create: {
+      storeId,
+      mode: DEFAULT_PROGRAM.mode,
+      accessMode: DEFAULT_PROGRAM.accessMode,
+      followerRewardType: DEFAULT_PROGRAM.policy.followerReward.type,
+      followerRewardValue: DEFAULT_PROGRAM.policy.followerReward.value,
+      influencerRewardType: DEFAULT_PROGRAM.policy.influencerReward.type,
+      influencerRewardValue: DEFAULT_PROGRAM.policy.influencerReward.value,
+      attributionWindowDays: DEFAULT_PROGRAM.policy.attributionWindowDays,
+      firstOrderOnly: DEFAULT_PROGRAM.policy.firstOrderOnly,
+      allowStackingWithPromotions: DEFAULT_PROGRAM.policy.allowStackingWithPromotions,
+      minimumOrderAmount: DEFAULT_PROGRAM.policy.minimumOrderAmount ?? 0,
+    },
+  })
+  return rowToSettings(created)
 }
 
 export async function writeReferralProgramSettings(settings: ReferralProgramSettings) {

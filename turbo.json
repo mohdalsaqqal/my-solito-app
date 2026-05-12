@@ -1,9 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
 
+  "globalEnv": [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "BETTER_AUTH_SECRET",
+    "AUTH_SESSION_SECRET",
+    "TRUSTED_REQUEST_BYPASS_SECRET",
+    "APP_ENV",
+    "REQUIRE_PRODUCTION_AUTH",
+    "USE_MOCK",
+    "NODE_ENV"
+  ],
+
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "NEXT_PUBLIC_VERCEL_ENV",
+        "NEXT_PUBLIC_SITE_URL"
+      ],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "test": {
