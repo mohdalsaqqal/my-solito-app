@@ -1,5 +1,5 @@
 export const AUTH_SESSION_COOKIE = 'rc_auth_session'
-export const AUTH_SESSION_FALLBACK_SECRET = 'dev-auth-secret-change-me'
+export const AUTH_SESSION_FALLBACK_SECRET = 'dev-auth-change-me-not-for-production'
 export const AUTH_SESSION_MAX_AGE_SECONDS = 7 * 24 * 60 * 60
 export const TRUSTED_REQUEST_BYPASS_HEADER = 'x-rc-trusted-request'
 export const BETTER_AUTH_FALLBACK_URL = 'http://localhost:3000'

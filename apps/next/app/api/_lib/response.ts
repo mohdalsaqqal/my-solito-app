@@ -55,12 +55,13 @@ export function fail(
   headers?: Record<string, string>,
 ) {
   if (meta?.cause !== undefined && !isExpectedPrerenderBailout(meta.cause)) {
+    const isProd = process.env.NODE_ENV === 'production'
     console.error('[BFF_FAIL]', {
       code,
       message,
       status,
       scope: meta.scope ?? 'unknown',
-      cause: meta.cause,
+      ...(isProd ? {} : { cause: meta.cause }),
     })
   }
 

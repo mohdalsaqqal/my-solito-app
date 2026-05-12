@@ -28,13 +28,13 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  `connect-src 'self' https: ws: wss: http://localhost:* ws://localhost:*${vercelLiveSources}`,
+  `connect-src 'self'${vercelLiveSources}`,
   "style-src 'self' 'unsafe-inline'",
   process.env.NODE_ENV === 'production'
-    ? `script-src 'self' 'unsafe-inline'${vercelLiveSources}`
-    : `script-src 'self' 'unsafe-inline' 'unsafe-eval'${vercelLiveSources}`,
+    ? `script-src 'self'${vercelLiveSources}`
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   'upgrade-insecure-requests',
 ].join('; ')
 
@@ -144,9 +144,8 @@ const withTurbopack = {
  */
 const nextConfig = {
   devIndicators: false,
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // TODO(security): remove once admin page @/components/ui/* imports are resolved
+  typescript: { ignoreBuildErrors: true },
   transpilePackages: [
     '@real/app',
     '@real/ui',

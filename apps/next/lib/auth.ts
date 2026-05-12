@@ -34,10 +34,9 @@ function createAuth() {
           throw new Error('Better Auth password reset delivery is not configured in this environment.')
         }
 
-        if (process.env.NODE_ENV !== 'test') {
+        if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'production') {
           console.info('[auth] password-reset-link-created', {
             email: user.email,
-            url,
           })
         }
       },

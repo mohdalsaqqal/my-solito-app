@@ -1,0 +1,20 @@
+# CODEOWNERS — required reviewers for critical paths
+
+# CI/CD and security
+.github/workflows/       @mohdalsaqqal
+
+# Server layer — all data access, auth, business logic
+apps/next/server/        @mohdalsaqqal
+
+# API routes and auth
+apps/next/app/api/       @mohdalsaqqal
+
+# Prisma schema and migrations
+apps/next/prisma/        @mohdalsaqqal
+
+# Provider contracts
+packages/providers/      @mohdalsaqqal
+
+# Environment config
+vercel.json              @mohdalsaqqal
+turbo.json               @mohdalsaqqal

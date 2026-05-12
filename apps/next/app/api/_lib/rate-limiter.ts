@@ -200,7 +200,7 @@ export class RateLimiter {
     } catch (error) {
       if (!prismaRateLimitFallbackWarned && resolveRateLimitStoreBackend() === 'prisma') {
         prismaRateLimitFallbackWarned = true
-        console.warn('[rate-limiter] Falling back to in-memory store after Prisma failure.', error)
+        console.warn('[rate-limiter] Falling back to in-memory store after Prisma failure.', error instanceof Error ? error.message : String(error))
       }
 
       sharedRateLimitStore = new MemoryRateLimitStore()
