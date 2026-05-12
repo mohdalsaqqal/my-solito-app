@@ -170,12 +170,31 @@ export async function POST(request: Request) {
         where: { userId: existingUser.id },
       })
       if (existingMapping && existingMapping.role === 'customer') {
-        await prisma.appAuthRoleMapping.update({
-          where: { userId: existingUser.id },
-          data: {
-            role: body.role,
-            updatedByEmail: session.email,
-          },
+        const hashedPassword = hashBetterAuthPassword(body.password)
+        await prisma.$transaction(async (tx: any) => {
+          await tx.appAuthRoleMapping.update({
+            where: { userId: existingUser.id },
+            data: {
+              role: body.role,
+              updatedByEmail: session.email,
+            },
+          })
+          await tx.account.upsert({
+            where: {
+              userId_providerId: {
+                userId: existingUser.id,
+                providerId: 'credential',
+              },
+            },
+            update: { password: hashedPassword },
+            create: {
+              id: crypto.randomUUID(),
+              accountId: existingUser.id,
+              providerId: 'credential',
+              userId: existingUser.id,
+              password: hashedPassword,
+            },
+          })
         })
         created = existingUser
         isUpgraded = true
