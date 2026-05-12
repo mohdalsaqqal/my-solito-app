@@ -1,5 +1,6 @@
 import { AdminDomainPermissionSet, AdminPermissionSet, AuthRole, CMSHome } from '@real/app/lib/types'
 import { cmsProvider } from '@real/providers'
+import { prisma } from '../../../../../server/lib/prisma'
 import { fail, ok } from '../../../_lib/response'
 import { requireAdminDomainSession } from '../../../_lib/request-auth'
 import { AdminDomain, hasAdminDomainPermission, isAdminPanelRole } from '../../../_lib/admin-rbac'
@@ -88,7 +89,31 @@ export async function POST(
 
     const state = await readAdminControlsState()
     const home = applyAdminControlsToCms(cmsResult.data, state)
-    const user = findUser(home, id)
+    let user = findUser(home, id)
+    let isDbUser = false
+
+    if (!user) {
+      const dbUser = await prisma.user.findUnique({ where: { id } })
+      if (dbUser) {
+        const dbRoleMapping = await prisma.appAuthRoleMapping.findUnique({ where: { userId: id } })
+        const existingOverride = state.userOverrides[id]
+        user = {
+          id: dbUser.id,
+          name: dbUser.name,
+          email: dbUser.email,
+          role: existingOverride?.role ?? dbRoleMapping?.role ?? 'customer',
+          status: existingOverride?.status ?? 'active',
+          permissions: existingOverride?.permissions ?? {
+            canManageCmsToggles: false,
+            canManageUsers: false,
+            canRunCacheOps: false,
+          },
+          lastActiveAt: undefined,
+        }
+        isDbUser = true
+      }
+    }
+
     if (!user) {
       return fail('ADMIN_USER_NOT_FOUND', 'Admin user record not found.', 404)
     }
