@@ -144,6 +144,7 @@ const withTurbopack = {
  */
 const nextConfig = {
   devIndicators: false,
+  poweredByHeader: false,
   // TODO(security): remove once admin page @/components/ui/* imports are resolved
   typescript: { ignoreBuildErrors: true },
   transpilePackages: [

@@ -4,6 +4,8 @@ import { ClientHomeFeatures } from './_components/ClientHomeFeatures'
 import { getHomeLayoutData } from '../server/services/home/home-layout-data.service'
 import { createStorefrontServiceContext } from '../server/services/_lib/storefront-service-context'
 
+export const revalidate = 60
+
 /**
  * Homepage - Server Component
  * 

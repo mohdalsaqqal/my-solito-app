@@ -120,26 +120,30 @@ async function readUserOverridesFile(): Promise<Record<string, UserOverride>> {
 }
 
 async function writeUserOverridesFile(data: Record<string, UserOverride>) {
-  for (const [userId, override] of Object.entries(data)) {
-    await prisma.adminUserOverride.upsert({
-      where: { id: userId },
-      create: {
-        id: userId,
-        role: override.role,
-        status: override.status,
-        permissionsJson: override.permissions as never,
-        domainPermissions: override.domainPermissions as never,
-        updatedByEmail: override.updatedBy?.email,
-      },
-      update: {
-        role: override.role,
-        status: override.status,
-        permissionsJson: override.permissions as never,
-        domainPermissions: override.domainPermissions as never,
-        updatedByEmail: override.updatedBy?.email,
-      },
-    })
-  }
+  const entries = Object.entries(data)
+  if (entries.length === 0) return
+  await prisma.$transaction(
+    entries.map(([userId, override]) =>
+      prisma.adminUserOverride.upsert({
+        where: { id: userId },
+        create: {
+          id: userId,
+          role: override.role,
+          status: override.status,
+          permissionsJson: override.permissions as never,
+          domainPermissions: override.domainPermissions as never,
+          updatedByEmail: override.updatedBy?.email,
+        },
+        update: {
+          role: override.role,
+          status: override.status,
+          permissionsJson: override.permissions as never,
+          domainPermissions: override.domainPermissions as never,
+          updatedByEmail: override.updatedBy?.email,
+        },
+      })
+    )
+  )
 }
 
 export async function readAdminControlsState(): Promise<AdminControlsState> {
@@ -230,66 +234,62 @@ export async function writeAdminControlsState(state: AdminControlsState): Promis
   try {
     await prisma.$transaction(async (tx: any) => {
       await tx.cmsToggleOverride.deleteMany()
-      for (const [id, toggle] of Object.entries(state.toggleOverrides)) {
-        await tx.cmsToggleOverride.create({
-          data: {
+      const toggleEntries = Object.entries(state.toggleOverrides)
+      if (toggleEntries.length > 0) {
+        await tx.cmsToggleOverride.createMany({
+          data: toggleEntries.map(([id, toggle]) => ({
             id,
             enabled: toggle.enabled,
             updatedByUserId: toggle.updatedBy.userId,
             updatedByEmail: toggle.updatedBy.email,
-          },
+          })),
         })
       }
 
       await tx.cmsBrandSpotlight.deleteMany()
-      if (state.brandSpotlightsOverride) {
-        for (let i = 0; i < state.brandSpotlightsOverride.length; i++) {
-          const s = state.brandSpotlightsOverride[i]
-          const meta = state.brandSpotlightMeta[s.id]
-          await tx.cmsBrandSpotlight.create({
-            data: {
+      if (state.brandSpotlightsOverride && state.brandSpotlightsOverride.length > 0) {
+        await tx.cmsBrandSpotlight.createMany({
+          data: state.brandSpotlightsOverride.map((s, i) => {
+            const meta = state.brandSpotlightMeta[s.id]
+            return {
               id: s.id,
               position: i,
               spotlightJson: JSON.parse(JSON.stringify(s)),
               updatedByUserId: meta?.updatedBy.userId ?? 'unknown',
               updatedByEmail: meta?.updatedBy.email ?? 'unknown',
-            },
-          })
-        }
+            }
+          }),
+        })
       }
 
       await tx.cmsOfferBanner.deleteMany()
-      if (state.offerBannersOverride) {
-        for (let i = 0; i < state.offerBannersOverride.length; i++) {
-          const b = state.offerBannersOverride[i]
-          const meta = state.offerBannerMeta[b.id]
-          await tx.cmsOfferBanner.create({
-            data: {
+      if (state.offerBannersOverride && state.offerBannersOverride.length > 0) {
+        await tx.cmsOfferBanner.createMany({
+          data: state.offerBannersOverride.map((b, i) => {
+            const meta = state.offerBannerMeta[b.id]
+            return {
               id: b.id,
               position: i,
               bannerJson: JSON.parse(JSON.stringify(b)),
               updatedByUserId: meta?.updatedBy.userId ?? '',
               updatedByEmail: meta?.updatedBy.email ?? '',
-            },
-          })
-        }
+            }
+          }),
+        })
       }
 
       if (state.audits.length > 0) {
-        for (const audit of state.audits) {
-          await tx.cmsAuditLog.upsert({
-            where: { id: audit.id },
-            create: {
-              id: audit.id,
-              type: audit.type,
-              targetId: audit.targetId,
-              actorUserId: audit.actor.userId,
-              actorEmail: audit.actor.email,
-              changes: audit.changes,
-            },
-            update: {},
-          })
-        }
+        await tx.cmsAuditLog.createMany({
+          data: state.audits.map((audit) => ({
+            id: audit.id,
+            type: audit.type,
+            targetId: audit.targetId,
+            actorUserId: audit.actor.userId,
+            actorEmail: audit.actor.email,
+            changes: audit.changes,
+          })),
+          skipDuplicates: true,
+        })
       }
     })
   } catch (cause) {

@@ -31,7 +31,7 @@ jobs:
           cache: yarn
       - run: corepack enable
       - run: yarn install --immutable
-      - run: yarn workspace next-app lint
+      - run: npx turbo run lint
 
   typecheck-next:
     name: Type Check (Next)
@@ -45,7 +45,7 @@ jobs:
           cache: yarn
       - run: corepack enable
       - run: yarn install --immutable
-      - run: yarn tsc -p apps/next/tsconfig.json --noEmit --incremental false
+      - run: npx turbo run tsc --filter=next-app
 
   guard-architecture:
     name: Guard: Architecture
@@ -59,7 +59,7 @@ jobs:
           cache: yarn
       - run: corepack enable
       - run: yarn install --immutable
-      - run: yarn guard:checks
+      - run: npx turbo run guard:checks
 
   guard-hygiene:
     name: Guard: Hygiene
@@ -139,15 +139,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e  # v4.4.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.4.0
         with:
           node-version: 22
           cache: yarn
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn workspace next-app prisma:generate
-      - run: yarn workspace next-app build
+      - run: npx turbo run build --filter=next-app
         env:
           USE_MOCK: true
           USE_TRANSLATION_MOCK: true
@@ -163,15 +163,15 @@ jobs:
     timeout-minutes: 15
     needs: [build]
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e  # v4.4.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4.4.0
         with:
           node-version: 22
           cache: yarn
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn workspace next-app prisma:generate
-      - run: yarn workspace next-app build
+      - run: npx turbo run build --filter=next-app
         env:
           USE_MOCK: true
           USE_TRANSLATION_MOCK: true
