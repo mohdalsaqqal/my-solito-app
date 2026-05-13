@@ -166,6 +166,10 @@ const nextConfig = {
     },
   },
   reactStrictMode: true,
+  images: {
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 86400,
+  },
   // ── Security Headers ──────────────────────────────────────────────────
   async headers() {
     return [
